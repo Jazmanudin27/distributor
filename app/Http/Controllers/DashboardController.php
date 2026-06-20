@@ -1,0 +1,113 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Penjualan;
+use App\Models\Pembelian;
+use App\Models\Barang;
+use App\Models\AjuanLimitKredit;
+use App\Models\PenjualanCheckin;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+
+class DashboardController extends Controller
+{
+    public function index()
+    {
+        $today = Carbon::today()->toDateString();
+        $startOfMonth = Carbon::now()->startOfMonth()->toDateString();
+        $endOfMonth = Carbon::now()->endOfMonth()->toDateString();
+
+        // 1. Stats Cards
+        $totalPenjualanHariIni = Penjualan::where('batal', 0)
+            ->where('tanggal', $today)
+            ->sum('grand_total');
+
+        $totalPenjualanBulanIni = Penjualan::where('batal', 0)
+            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+            ->sum('grand_total');
+
+        $totalPembelianHariIni = Pembelian::where('tanggal', $today)
+            ->sum('grand_total');
+
+        // Total Piutang (Outstanding)
+        $totalPiutang = Penjualan::where('batal', 0)
+            ->selectRaw('SUM(grand_total - (
+                COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran WHERE penjualan_pembayaran.no_faktur = penjualan.no_faktur), 0) + 
+                COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_transfer WHERE penjualan_pembayaran_transfer.no_faktur = penjualan.no_faktur), 0) + 
+                COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_giro WHERE penjualan_pembayaran_giro.no_faktur = penjualan.no_faktur), 0)
+            )) as outstanding')
+            ->value('outstanding') ?: 0;
+
+        $pendingApprovalKredit = AjuanLimitKredit::where('status', 'pending')->count();
+
+        $lowStockCount = Barang::where('status', 1)
+            ->where('stok', '<=', 10)
+            ->count();
+
+        // 2. Charts Data
+        // Monthly Sales (Last 6 Months)
+        $monthlySales = DB::table('penjualan')
+            ->where('batal', 0)
+            ->where('tanggal', '>=', Carbon::now()->subMonths(5)->startOfMonth()->toDateString())
+            ->select(
+                DB::raw("DATE_FORMAT(tanggal, '%M %Y') as month_name"),
+                DB::raw("DATE_FORMAT(tanggal, '%Y-%m') as month_key"),
+                DB::raw("SUM(grand_total) as total")
+            )
+            ->groupBy('month_key', 'month_name')
+            ->orderBy('month_key', 'asc')
+            ->get();
+
+        // Top 5 Sales per Salesman (Current Month)
+        $topSalesmen = DB::table('penjualan')
+            ->join('users', 'penjualan.kode_sales', '=', 'users.nik')
+            ->where('penjualan.batal', 0)
+            ->whereMonth('penjualan.tanggal', Carbon::now()->month)
+            ->whereYear('penjualan.tanggal', Carbon::now()->year)
+            ->select(
+                'users.name',
+                DB::raw("SUM(penjualan.grand_total) as total")
+            )
+            ->groupBy('users.nik', 'users.name')
+            ->orderBy('total', 'desc')
+            ->take(5)
+            ->get();
+
+        // 3. Lists
+        // Active Salesmen Checked-in Today
+        $activeCheckins = PenjualanCheckin::where('tanggal', $today)
+            ->with(['sales', 'pelanggan'])
+            ->orderBy('checkin', 'desc')
+            ->get();
+
+        // Low Stock Items List
+        $lowStockItems = Barang::where('status', 1)
+            ->where('stok', '<=', 10)
+            ->with('satuans')
+            ->orderBy('stok', 'asc')
+            ->take(5)
+            ->get();
+
+        // Latest Credit Limit Requests
+        $latestLimitRequests = AjuanLimitKredit::with(['pelanggan', 'requester'])
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('welcome', compact(
+            'totalPenjualanHariIni',
+            'totalPenjualanBulanIni',
+            'totalPembelianHariIni',
+            'totalPiutang',
+            'pendingApprovalKredit',
+            'lowStockCount',
+            'monthlySales',
+            'topSalesmen',
+            'activeCheckins',
+            'lowStockItems',
+            'latestLimitRequests'
+        ));
+    }
+}

@@ -1,0 +1,811 @@
+/* =============================================
+   DIS - Main App Styles (Dark Mode)
+   ============================================= */
+
+/* ROOT FONT SIZE — turunkan ke 14px agar semua elemen (rem) ikut mengecil */
+html {
+    font-size: 14px;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg, #0F1117);
+    color: var(--text-primary, #F1F5F9);
+}
+
+.wrapper {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+}
+
+/* =============================================
+   OFFCANVAS SIDEBAR - Dark Premium
+   ============================================= */
+.offcanvas-start {
+    width: 260px !important;
+    border-right: none;
+}
+
+.offcanvas-sidebar {
+    background: linear-gradient(160deg, #1e1b4b 0%, #0f172a 100%);
+    color: #fff;
+    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.4);
+    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.offcanvas-sidebar .offcanvas-header {
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    text-align: center;
+    justify-content: center;
+    padding: 24px 20px;
+    position: relative;
+}
+
+.offcanvas-sidebar .offcanvas-title {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    background: linear-gradient(120deg, #a78bfa, #818cf8, #38bdf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    width: auto;
+}
+
+.offcanvas-sidebar .btn-close {
+    position: absolute;
+    right: 15px;
+    top: 25px;
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 0.4;
+    transition: all 0.3s ease;
+}
+
+.offcanvas-sidebar .btn-close:hover {
+    opacity: 1;
+    transform: rotate(90deg) scale(1.1);
+}
+
+/* =============================================
+   SIDEBAR MENU (Accordion)
+   ============================================= */
+.sidebar-menu-accordion {
+    padding: 10px 12px;
+}
+
+.sidebar-menu-accordion .accordion-item {
+    background: transparent;
+    border: none;
+    margin-bottom: 2px;
+}
+
+.sidebar-menu-accordion .accordion-header {
+    margin-bottom: 0;
+}
+
+.sidebar-menu-accordion .accordion-button,
+.sidebar-main-item {
+    background: transparent !important;
+    color: #cbd5e1 !important;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    border: none;
+}
+
+.sidebar-menu-accordion .accordion-button:not(.collapsed),
+.sidebar-menu-accordion .accordion-button:hover,
+.sidebar-main-item:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #fff !important;
+    transform: translateX(4px);
+}
+
+.sidebar-menu-accordion .accordion-button:not(.collapsed) {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.sidebar-menu-accordion .accordion-button::after {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    width: 14px;
+    height: 14px;
+    background-size: 14px;
+    opacity: 0.6;
+}
+
+.sidebar-menu-accordion .accordion-button.no-chevron::after {
+    display: none;
+}
+
+.sidebar-menu-accordion .accordion-body {
+    padding: 5px 10px 10px 20px;
+}
+
+.sidebar-submenu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sidebar-submenu-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.sidebar-submenu-item:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateX(3px);
+}
+
+.sidebar-submenu-item i {
+    width: 24px;
+    text-align: center;
+    margin-right: 8px;
+    font-size: 1rem;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-submenu-item:hover i,
+.sidebar-menu-accordion .accordion-button:hover i,
+.sidebar-main-item:hover i {
+    transform: scale(1.15);
+}
+
+/* =============================================
+   UTILITY CLASSES
+   ============================================= */
+.border-white-10 {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.text-light-indigo {
+    color: #a78bfa !important;
+}
+
+/* =============================================
+   MAIN CONTENT LAYOUT
+   ============================================= */
+#content {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg, #0F1117);
+}
+
+/* TOPBAR / NAVBAR */
+.navbar {
+    background: var(--bg-card, #1A1D27) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 12px 20px;
+    box-shadow: 0 1px 12px rgba(0, 0, 0, 0.3);
+}
+
+.content-area {
+    padding: 24px 28px;
+    flex: 1;
+}
+
+/* =============================================
+   BOOTSTRAP CARD OVERRIDES
+   ============================================= */
+.card {
+    background: var(--bg-card, #1A1D27) !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+    margin-bottom: 24px;
+    color: var(--text-primary, #F1F5F9);
+}
+
+.card-header {
+    background: var(--bg-card2, #1F2333) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+    padding: 14px 20px;
+    font-weight: 600;
+    border-radius: 14px 14px 0 0 !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-primary, #F1F5F9);
+}
+
+.card-body {
+    color: var(--text-primary, #F1F5F9);
+}
+
+/* =============================================
+   TABLE OVERRIDES
+   ============================================= */
+.table {
+    color: var(--text-primary, #F1F5F9) !important;
+    --bs-table-bg: transparent;
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.03);
+    --bs-table-hover-bg: rgba(108, 99, 255, 0.07);
+    --bs-table-border-color: rgba(255, 255, 255, 0.07);
+}
+
+.table th {
+    background: rgba(255, 255, 255, 0.04) !important;
+    color: #94A3B8 !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    border-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+.table td {
+    border-color: rgba(255, 255, 255, 0.05) !important;
+    vertical-align: middle;
+}
+
+/* =============================================
+   FORM OVERRIDES
+   ============================================= */
+.form-control,
+.form-select {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: var(--text-primary, #F1F5F9) !important;
+    border-radius: 8px;
+}
+
+.form-control:focus,
+.form-select:focus {
+    background: rgba(108, 99, 255, 0.08) !important;
+    border-color: var(--primary, #6C63FF) !important;
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2) !important;
+    color: var(--text-primary, #F1F5F9) !important;
+}
+
+.form-control::placeholder {
+    color: #64748B !important;
+}
+
+.form-label {
+    color: #94A3B8;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+/* Input group */
+.input-group-text {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #94A3B8 !important;
+}
+
+/* =============================================
+   MODAL OVERRIDES
+   ============================================= */
+.modal-content {
+    background: var(--bg-card, #1A1D27) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary, #F1F5F9);
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+/* =============================================
+   ALERT OVERRIDES
+   ============================================= */
+.alert-success {
+    background: rgba(16, 185, 129, 0.12) !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+    color: #6EE7B7 !important;
+}
+
+.alert-danger {
+    background: rgba(239, 68, 68, 0.12) !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
+    color: #FCA5A5 !important;
+}
+
+.alert-warning {
+    background: rgba(245, 158, 11, 0.12) !important;
+    border-color: rgba(245, 158, 11, 0.3) !important;
+    color: #FCD34D !important;
+}
+
+.alert-info {
+    background: rgba(6, 182, 212, 0.12) !important;
+    border-color: rgba(6, 182, 212, 0.3) !important;
+    color: #67E8F9 !important;
+}
+
+/* =============================================
+   BADGE & MISC
+   ============================================= */
+.badge.bg-secondary {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #94A3B8 !important;
+}
+
+/* Pagination */
+.page-link {
+    background: var(--bg-card2, #1F2333) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #94A3B8 !important;
+}
+
+.page-link:hover {
+    background: rgba(108, 99, 255, 0.15) !important;
+    color: #a78bfa !important;
+}
+
+.page-item.active .page-link {
+    background: var(--primary, #6C63FF) !important;
+    border-color: var(--primary, #6C63FF) !important;
+    color: #fff !important;
+}
+
+/* =============================================
+   PREMIUM HELPERS
+   ============================================= */
+.card-premium-header {
+    background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%) !important;
+    border-bottom: none !important;
+    color: #fff !important;
+}
+
+.hover-scale {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s;
+}
+
+.hover-scale:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.fs-7 {
+    font-size: 0.85rem !important;
+}
+
+.tracking-wider {
+    letter-spacing: 0.05em !important;
+}
+
+/* =============================================
+   TABLE FONT SIZE (compact)
+   ============================================= */
+.table-sm,
+.table-sm th,
+.table-sm td,
+.table-sm div,
+.table-sm span:not(.badge),
+.table-sm small {
+    font-size: 13px !important;
+}
+
+/* =============================================
+   SELECT2 DARK OVERRIDES
+   ============================================= */
+.select2-container--bootstrap-5 .select2-selection {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: var(--text-primary, #F1F5F9) !important;
+}
+
+.select2-container--bootstrap-5 .select2-dropdown {
+    background-color: var(--bg-card2, #1F2333) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: var(--text-primary, #F1F5F9) !important;
+}
+
+.select2-container--bootstrap-5 .select2-results__option--highlighted {
+    background-color: rgba(108, 99, 255, 0.2) !important;
+    color: #fff !important;
+}
+
+.select2-container--bootstrap-5 .select2-search__field {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: var(--text-primary, #F1F5F9) !important;
+}
+
+/* =============================================
+   BOOTSTRAP UTILITY DARK MODE OVERRIDES
+   Mengatasi kelas bg-light, table-light, text-dark,
+   btn-light, dll yang dipakai di semua view
+   ============================================= */
+
+/* BG utilities */
+.bg-light {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.bg-white {
+    background-color: var(--bg-card, #1A1D27) !important;
+}
+
+.bg-body-tertiary,
+.bg-secondary-subtle {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Text utilities */
+.text-dark {
+    color: var(--text-primary, #F1F5F9) !important;
+}
+
+.text-black {
+    color: var(--text-primary, #F1F5F9) !important;
+}
+
+.text-body {
+    color: var(--text-primary, #F1F5F9) !important;
+}
+
+/* TABLE overrides */
+.table-light,
+.table-light>th,
+.table-light>td {
+    --bs-table-bg: rgba(255, 255, 255, 0.04) !important;
+    --bs-table-color: #94A3B8 !important;
+    color: #94A3B8 !important;
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.table-striped>tbody>tr:nth-of-type(odd)>* {
+    --bs-table-accent-bg: rgba(255, 255, 255, 0.025) !important;
+    color: var(--text-primary, #F1F5F9) !important;
+}
+
+/* BTN-LIGHT override */
+.btn-light {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    color: var(--text-primary, #F1F5F9) !important;
+}
+
+.btn-light:hover {
+    background-color: rgba(255, 255, 255, 0.18) !important;
+    color: #fff !important;
+}
+
+/* BTN-OUTLINE overrides - agar border terlihat di dark background */
+.btn-outline-secondary {
+    --bs-btn-color: #94A3B8;
+    --bs-btn-border-color: rgba(148, 163, 184, 0.4);
+    --bs-btn-hover-bg: rgba(148, 163, 184, 0.15);
+    --bs-btn-hover-color: #F1F5F9;
+    --bs-btn-active-bg: rgba(148, 163, 184, 0.25);
+}
+
+/* BADGE subtle variants (Bootstrap 5.3) */
+.badge.bg-success-subtle {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+}
+
+.badge.bg-danger-subtle {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+}
+
+.badge.bg-warning-subtle {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+}
+
+.badge.bg-secondary-subtle {
+    background-color: rgba(148, 163, 184, 0.12) !important;
+}
+
+.badge.bg-info-subtle {
+    background-color: rgba(6, 182, 212, 0.15) !important;
+}
+
+.badge.bg-primary-subtle {
+    background-color: rgba(108, 99, 255, 0.15) !important;
+}
+
+/* Text inside subtle badges */
+.text-success {
+    color: #34D399 !important;
+}
+
+.text-danger {
+    color: #F87171 !important;
+}
+
+.text-warning {
+    color: #FCD34D !important;
+}
+
+.text-info {
+    color: #67E8F9 !important;
+}
+
+/* BADGE bg-light text-dark */
+.badge.bg-light {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #CBD5E1 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* BORDER overrides */
+.border,
+.border-1 {
+    border-color: rgba(255, 255, 255, 0.09) !important;
+}
+
+.border-top {
+    border-top-color: rgba(255, 255, 255, 0.09) !important;
+}
+
+.border-bottom {
+    border-bottom-color: rgba(255, 255, 255, 0.09) !important;
+}
+
+/* DROPDOWN */
+.dropdown-menu {
+    background-color: var(--bg-card2, #1F2333) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dropdown-item {
+    color: #CBD5E1 !important;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: rgba(108, 99, 255, 0.15) !important;
+    color: #fff !important;
+}
+
+.dropdown-divider {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* TABS */
+.nav-tabs {
+    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.nav-tabs .nav-link {
+    color: #94A3B8 !important;
+    border-color: transparent !important;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary, #F1F5F9) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: var(--bg-card, #1A1D27) !important;
+    border-color: rgba(255, 255, 255, 0.1) rgba(255, 255, 255, 0.1) transparent !important;
+    color: #a78bfa !important;
+}
+
+/* LIST GROUP */
+.list-group-item {
+    background-color: var(--bg-card, #1A1D27) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: var(--text-primary, #F1F5F9) !important;
+}
+
+.list-group-item:hover {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+.list-group-item.active {
+    background-color: var(--primary, #6C63FF) !important;
+    border-color: var(--primary, #6C63FF) !important;
+}
+
+/* BREADCRUMB */
+.breadcrumb-item.active {
+    color: #94A3B8 !important;
+}
+
+.breadcrumb-item+.breadcrumb-item::before {
+    color: #64748B !important;
+}
+
+/* PROGRESS BAR */
+.progress {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-radius: 999px;
+}
+
+/* ACCORDION */
+.accordion-item {
+    background-color: var(--bg-card, #1A1D27) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.accordion-button {
+    background-color: var(--bg-card2, #1F2333) !important;
+    color: var(--text-primary, #F1F5F9) !important;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: rgba(108, 99, 255, 0.12) !important;
+    color: #a78bfa !important;
+}
+
+.accordion-button::after {
+    filter: invert(1) brightness(0.7) !important;
+}
+
+/* PAGINATION dark (Bootstrap native) */
+.pagination {
+    --bs-pagination-bg: var(--bg-card2, #1F2333);
+    --bs-pagination-border-color: rgba(255, 255, 255, 0.1);
+    --bs-pagination-color: #94A3B8;
+    --bs-pagination-hover-bg: rgba(108, 99, 255, 0.15);
+    --bs-pagination-hover-color: #a78bfa;
+    --bs-pagination-hover-border-color: rgba(255, 255, 255, 0.15);
+    --bs-pagination-active-bg: var(--primary, #6C63FF);
+    --bs-pagination-active-border-color: var(--primary, #6C63FF);
+    --bs-pagination-disabled-bg: rgba(255, 255, 255, 0.03);
+    --bs-pagination-disabled-color: #475569;
+    --bs-pagination-disabled-border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* CLOSE BUTTON */
+.btn-close {
+    filter: invert(1) brightness(0.7);
+}
+
+.btn-close:hover {
+    filter: invert(1) brightness(1);
+}
+
+/* TOOLTIP & POPOVER */
+.tooltip-inner {
+    background-color: var(--bg-card2, #1F2333) !important;
+    color: var(--text-primary, #F1F5F9) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* HR dividers */
+hr {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    opacity: 1;
+}
+
+/* PLACEHOLDER / EMPTY state */
+.text-muted {
+    color: #64748B !important;
+}
+
+.text-secondary {
+    color: #94A3B8 !important;
+}
+
+/* FILTER SECTION di semua index view */
+.filter-section,
+.card-body .bg-light.rounded {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+/* PRINT views — laporan cetak tetap putih */
+@media print {
+
+    body,
+    .card,
+    .table,
+    .table th,
+    .table td {
+        background: #fff !important;
+        color: #000 !important;
+    }
+}
+
+/* =============================================
+   SELECT2 DARK MODE OVERRIDES
+   Mengatasi teks hitam pada selection sebelum diklik
+   ============================================= */
+
+/* Container utama */
+.select2-container--bootstrap-5 .select2-selection {
+    background-color: #1e2130 !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #F1F5F9 !important;
+}
+
+/* Teks selected item - PENYEBAB UTAMA teks hitam */
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+    color: #F1F5F9 !important;
+}
+
+/* Placeholder */
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder {
+    color: #64748B !important;
+}
+
+/* Arrow/caret */
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow b {
+    border-color: #94A3B8 transparent transparent transparent !important;
+}
+
+.select2-container--bootstrap-5.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-color: transparent transparent #94A3B8 transparent !important;
+}
+
+/* Multi select tags */
+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
+    color: #F1F5F9 !important;
+}
+
+.select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+    background-color: rgba(108, 99, 255, 0.2) !important;
+    border-color: rgba(108, 99, 255, 0.4) !important;
+    color: #a78bfa !important;
+}
+
+/* Dropdown panel */
+.select2-container--bootstrap-5 .select2-dropdown {
+    background-color: #1F2333 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Search field di dalam dropdown */
+.select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: #F1F5F9 !important;
+}
+
+.select2-container--bootstrap-5 .select2-search--dropdown .select2-search__field::placeholder {
+    color: #64748B !important;
+}
+
+/* Options list */
+.select2-container--bootstrap-5 .select2-results__option {
+    color: #CBD5E1 !important;
+    padding: 6px 12px !important;
+}
+
+.select2-container--bootstrap-5 .select2-results__option--highlighted {
+    background-color: rgba(108, 99, 255, 0.2) !important;
+    color: #a78bfa !important;
+}
+
+.select2-container--bootstrap-5 .select2-results__option--selected {
+    background-color: rgba(108, 99, 255, 0.12) !important;
+    color: #a78bfa !important;
+}
+
+.select2-container--bootstrap-5 .select2-results__option[aria-disabled="true"] {
+    color: #475569 !important;
+}
+
+/* Focus border */
+.select2-container--bootstrap-5.select2-container--focus .select2-selection {
+    border-color: rgba(108, 99, 255, 0.5) !important;
+    box-shadow: 0 0 0 0.2rem rgba(108, 99, 255, 0.15) !important;
+}
+
+/* Small variant */
+.select2--small .select2-results__option {
+    font-size: 0.875rem !important;
+    padding: 4px 10px !important;
+}

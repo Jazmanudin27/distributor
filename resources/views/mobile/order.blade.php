@@ -1,0 +1,1050 @@
+@extends('layouts.mobile')
+
+@section('title', 'Input Order Baru')
+
+@push('styles')
+    <style>
+        .cart-item-card {
+            background: rgba(30, 41, 59, 0.45) !important;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
+            transition: all 0.25s ease;
+        }
+
+        .cart-item-card:hover {
+            border-color: rgba(99, 102, 241, 0.25) !important;
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.1) !important;
+        }
+
+        .btn-qty-minus,
+        .btn-qty-plus {
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            background-color: rgba(255, 255, 255, 0.03) !important;
+            color: #f8fafc !important;
+            transition: all 0.15s ease-in-out;
+            width: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-qty-minus:hover,
+        .btn-qty-plus:hover {
+            background-color: rgba(99, 102, 241, 0.15) !important;
+            border-color: rgba(99, 102, 241, 0.3) !important;
+        }
+
+        .btn-qty-minus:active,
+        .btn-qty-plus:active {
+            transform: scale(0.9);
+            background-color: rgba(99, 102, 241, 0.3) !important;
+        }
+
+        .cart-item-card .form-control,
+        .cart-item-card .form-select {
+            border-radius: 8px !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            background-color: rgba(15, 23, 42, 0.6) !important;
+            color: #fff !important;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .cart-item-card .form-control:focus,
+        .cart-item-card .form-select:focus {
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
+        }
+
+        .btn-remove-item {
+            transition: all 0.2s ease;
+        }
+
+        .btn-remove-item:active {
+            transform: scale(0.85);
+        }
+    </style>
+@endpush
+
+@section('content')
+    <h5 class="fw-bold mb-3" style="font-size: 1.1rem; letter-spacing: 0.5px;">Input Order Penjualan</h5>
+
+    <form action="{{ route('mobile.order.store') }}" method="POST" id="order-form">
+        @csrf
+
+        <!-- Form Header Info -->
+        <div class="mobile-card" style="position: relative; z-index: 11;">
+            <div class="mb-2">
+                <label class="form-label text-secondary small mb-1">Nomor Faktur</label>
+                <input type="text" name="no_faktur"
+                    class="form-control form-control-sm font-monospace bg-dark text-white border-secondary"
+                    value="{{ $noFaktur }}" readonly style="background-color: rgba(255,255,255,0.03) !important;">
+            </div>
+
+            <div class="row g-2 mb-2">
+                <div class="col-12">
+                    <label class="form-label text-secondary small mb-1">Tanggal</label>
+                    <input type="date" name="tanggal" id="tanggal"
+                        class="form-control form-control-sm bg-dark text-white border-secondary" value="{{ date('Y-m-d') }}"
+                        required>
+                </div>
+                <input type="hidden" name="tanggal_kirim" value="">
+            </div>
+
+            <!-- Customer Selection -->
+            <div class="mb-2 position-relative">
+                <label class="form-label text-secondary small mb-1">Pilih Pelanggan</label>
+                @if ($pelanggan)
+                    <!-- Locked Customer (Pre-selected) -->
+                    <div class="p-2 rounded border border-primary bg-dark bg-opacity-50">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-white small" id="selected-customer-name"
+                                data-kode="{{ $pelanggan->kode_pelanggan }}"
+                                data-overdue="{{ $pelanggan->hasOverdueInvoices() ? 1 : 0 }}"
+                                data-sisa-limit="{{ $pelanggan->getSisaLimitKredit() }}">
+                                {{ $pelanggan->nama_pelanggan }}
+                            </span>
+                            <span class="badge bg-secondary btn-sm" style="font-size: 0.65rem;">Terkunci</span>
+                        </div>
+                        <div class="text-secondary mt-1" style="font-size: 0.7rem;">Kode: {{ $pelanggan->kode_pelanggan }}
+                        </div>
+                        <input type="hidden" name="kode_pelanggan" id="kode_pelanggan"
+                            value="{{ $pelanggan->kode_pelanggan }}">
+                    </div>
+                @else
+                    <!-- Autocomplete Dropdown Search -->
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-dark text-secondary border-secondary">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" id="customer-search-input"
+                            class="form-control form-control-sm bg-dark text-white border-secondary"
+                            placeholder="Cari nama atau kode pelanggan..." required>
+                    </div>
+                    <input type="hidden" name="kode_pelanggan" id="kode_pelanggan" required>
+
+                    <div id="customer-search-results" class="list-group position-absolute w-100 shadow-lg mt-1 d-none"
+                        style="z-index: 1050; max-height: 200px; overflow-y: auto; background-color: #161e31; border: 1px solid var(--border-color); border-radius: 8px;">
+                        <!-- results by js -->
+                    </div>
+                @endif
+            </div>
+
+            <!-- Selected Customer Quick Info (e.g. Credit Limits / Overdue Warning) -->
+            <div id="customer-info-box"
+                class="{{ $pelanggan ? '' : 'd-none' }} p-2 rounded border border-secondary mt-2 bg-dark bg-opacity-20"
+                style="font-size: 0.75rem;">
+
+                <div class="mb-2 pb-1 border-bottom border-secondary border-opacity-20">
+                    <span class="text-secondary d-block mb-1"
+                        style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Detail
+                        Pelanggan</span>
+                    <h6 class="fw-bold text-white mb-0" id="detail-nama-display" style="font-size: 0.8rem;">
+                        {{ $pelanggan ? $pelanggan->nama_pelanggan : '' }}</h6>
+                    <div class="text-secondary small mt-1">
+                        <span id="detail-hp-display"><i class="fa-solid fa-phone me-1 fs-8"></i>
+                            {{ $pelanggan ? $pelanggan->no_hp_pelanggan : '-' }}</span>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-1">
+                    <div class="col-4 text-secondary">Alamat:</div>
+                    <div class="col-8 text-end text-white" id="info-alamat" style="word-break: break-word;">
+                        {{ $pelanggan ? $pelanggan->alamat_pelanggan : '-' }}
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-1">
+                    <div class="col-4 text-secondary">Wilayah:</div>
+                    <div class="col-8 text-end text-white" id="info-wilayah">
+                        {{ $pelanggan && $pelanggan->wilayah ? $pelanggan->wilayah->nama_wilayah : '-' }}
+                        @if ($pelanggan && $pelanggan->subWilayah)
+                            / {{ $pelanggan->subWilayah->nama_wilayah }}
+                        @endif
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-1">
+                    <div class="col-5 text-secondary">Limit Kredit:</div>
+                    <div class="col-7 text-end fw-semibold text-white" id="info-limit-kredit">
+                        Rp {{ $pelanggan ? number_format($pelanggan->limit_pelanggan, 0, ',', '.') : '0' }}
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-1">
+                    <div class="col-5 text-secondary">Sisa Limit Kredit:</div>
+                    <div class="col-7 text-end fw-bold text-success" id="info-sisa-limit">
+                        Rp {{ $pelanggan ? number_format($pelanggan->getSisaLimitKredit(), 0, ',', '.') : '0' }}
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-5 text-secondary">Metode Bayar:</div>
+                    <div class="col-7 text-end fw-semibold text-info" id="info-metode-bayar">
+                        {{ $pelanggan ? ($pelanggan->metode_bayar ?: '-') : '-' }}
+                    </div>
+                </div>
+
+                <div id="overdue-warning"
+                    class="{{ $pelanggan && $pelanggan->hasOverdueInvoices() ? '' : 'd-none' }} mt-2">
+                    <div class="alert alert-danger p-1 mb-0 d-flex align-items-center rounded-3"
+                        style="font-size: 0.7rem; background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                        <span>Toko diblokir (Overdue)!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Search & Add Section -->
+        <div class="mobile-card" style="position: relative; z-index: 10;">
+            <h6 class="fw-bold mb-2 small">Cari & Tambah Barang</h6>
+            <div class="position-relative mb-1">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-dark text-secondary border-secondary">
+                        <i class="fa-solid fa-box-open"></i>
+                    </span>
+                    <input type="text" id="product-search-input"
+                        class="form-control form-control-sm bg-dark text-white border-secondary"
+                        placeholder="Ketik nama atau kode barang...">
+                </div>
+                <div id="product-search-results" class="list-group position-absolute w-100 shadow-lg mt-1 d-none"
+                    style="z-index: 1050; max-height: 220px; overflow-y: auto; background-color: #161e31; border: 1px solid var(--border-color); border-radius: 8px;">
+                    <!-- results by js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart Items Container -->
+        <h5 class="fw-bold mb-2" style="font-size: 0.9rem; letter-spacing: 0.5px;">Daftar Belanja (Keranjang)</h5>
+        <div id="cart-container">
+            <!-- Cart Item Cards will be appended here -->
+            <div class="mobile-card text-center py-4" id="empty-cart-message">
+                <i class="fa-solid fa-cart-shopping text-secondary mb-2" style="font-size: 2.2rem; opacity: 0.4;"></i>
+                <p class="text-secondary mb-0" style="font-size: 0.8rem;">Keranjang kosong. Silakan tambah barang di atas.
+                </p>
+            </div>
+        </div>
+
+        <!-- Summary & Settings Card -->
+        <div class="mobile-card mt-3">
+            <h6 class="fw-bold mb-2 small">Pembayaran & Keterangan</h6>
+
+            <div class="row g-2 mb-2">
+                <div class="col-6">
+                    <label class="form-label text-secondary small mb-1">Metode Bayar</label>
+                    <select name="jenis_transaksi" id="jenis_transaksi"
+                        class="form-select form-select-sm bg-dark text-white border-secondary" required>
+                        <option value="Kredit"
+                            {{ $pelanggan && $pelanggan->metode_bayar === 'Kredit' ? 'selected' : '' }}>Kredit (Tempo)
+                        </option>
+                        <option value="Tunai" {{ $pelanggan && $pelanggan->metode_bayar === 'Tunai' ? 'selected' : '' }}>
+                            Tunai (Cash)
+                        </option>
+                    </select>
+                </div>
+                <div class="col-6">
+                    <label class="form-label text-secondary small mb-1">Potongan Global (Rp)</label>
+                    <input type="number" name="diskon_global" id="diskon_global"
+                        class="form-control form-control-sm bg-dark text-white border-secondary text-end rupiah-input"
+                        value="0" min="0">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label text-secondary small mb-1">Keterangan / Catatan Order</label>
+                <input type="text" name="keterangan"
+                    class="form-control form-control-sm bg-dark text-white border-secondary"
+                    placeholder="Catatan tambahan (opsional)...">
+            </div>
+
+            <!-- Calculations Summary -->
+            <div class="p-2 rounded border border-secondary mb-3 bg-dark bg-opacity-20" style="font-size: 0.75rem;">
+                <div class="d-flex justify-content-between text-secondary mb-1">
+                    <span>Subtotal Barang:</span>
+                    <span id="summary-subtotal" class="text-white">Rp 0</span>
+                </div>
+                <div class="d-flex justify-content-between text-secondary mb-1">
+                    <span>Total Diskon Strata:</span>
+                    <span id="summary-diskon-item" class="text-danger">- Rp 0</span>
+                </div>
+                <div class="d-flex justify-content-between text-secondary mb-1">
+                    <span>Potongan Global:</span>
+                    <span id="summary-diskon-global" class="text-danger">- Rp 0</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-1 border-top border-secondary mt-1">
+                    <span class="fw-bold text-white">Grand Total:</span>
+                    <span class="fw-bold text-info fs-6" id="summary-grandtotal">Rp 0</span>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-sm btn-mobile-primary w-100 py-2 fs-7" id="btn-submit-order" disabled>
+                <i class="fa-solid fa-cloud-arrow-up me-1"></i> Simpan & Kirim Pesanan
+            </button>
+        </div>
+    </form>
+@endsection
+
+@push('scripts')
+    <script>
+        // In-memory data passing from Laravel
+        const diskonStrata = @json($diskonStrata);
+
+        // In-memory cached products structures
+        let barangsCache = {};
+        let rowIndex = 0;
+
+        function formatStokJS(stok, satuans) {
+            let remaining = Math.abs(stok);
+            let isNegative = stok < 0;
+            let breakdowns = [];
+            if (satuans && satuans.length > 0) {
+                let sorted = [...satuans].sort((a, b) => b.isi - a.isi);
+                sorted.forEach(sat => {
+                    let factor = parseFloat(sat.isi) || 1;
+                    let unitQty = Math.floor(remaining / factor);
+                    if (unitQty > 0) {
+                        breakdowns.push(`${unitQty} ${sat.satuan}`);
+                        remaining = remaining % factor;
+                    }
+                });
+                if (remaining > 0 && sorted.length > 0) {
+                    let last = sorted[sorted.length - 1];
+                    breakdowns.push(`${remaining} ${last.satuan}`);
+                }
+            } else {
+                breakdowns.push(`${remaining} PCS`);
+            }
+            let formatted = breakdowns.join(', ') || '0 PCS';
+            return isNegative ? '-' + formatted : formatted;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const customerSearchInput = document.getElementById('customer-search-input');
+            const customerSearchResults = document.getElementById('customer-search-results');
+            const customerInfoBox = document.getElementById('customer-info-box');
+            const infoSisaLimit = document.getElementById('info-sisa-limit');
+            const overdueWarning = document.getElementById('overdue-warning');
+            const hiddenKodePelanggan = document.getElementById('kode_pelanggan');
+
+            const productSearchInput = document.getElementById('product-search-input');
+            const productSearchResults = document.getElementById('product-search-results');
+
+            const cartContainer = document.getElementById('cart-container');
+            const emptyCartMessage = document.getElementById('empty-cart-message');
+            const btnSubmitOrder = document.getElementById('btn-submit-order');
+
+            const jenisTransaksiEl = document.getElementById('jenis_transaksi');
+            const diskonGlobalEl = document.getElementById('diskon_global');
+
+            function parseCleanNumber(val) {
+                if (typeof val === 'number') return val;
+                if (!val) return 0;
+                let clean = val.toString().replace(/\./g, '').replace(/,/g, '.');
+                return parseFloat(clean) || 0;
+            }
+
+            // Debounce search function helper
+            function debounce(func, wait) {
+                let timeout;
+                return function(...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), wait);
+                };
+            }
+
+            // --- 1. Customer Autocomplete Search ---
+            if (customerSearchInput) {
+                customerSearchInput.addEventListener('input', debounce(function() {
+                    const q = this.value.trim();
+                    if (q.length < 2) {
+                        customerSearchResults.classList.add('d-none');
+                        return;
+                    }
+
+                    fetch(`{{ route('pelanggan.search') }}?q=${encodeURIComponent(q)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            customerSearchResults.innerHTML = '';
+                            if (data.length === 0) {
+                                customerSearchResults.innerHTML =
+                                    '<div class="p-2 text-secondary text-center" style="font-size: 0.75rem;">Pelanggan tidak ditemukan.</div>';
+                                customerSearchResults.classList.remove('d-none');
+                                return;
+                            }
+
+                            data.forEach(item => {
+                                const btn = document.createElement('button');
+                                btn.type = 'button';
+                                btn.className =
+                                    'list-group-item list-group-item-action text-white border-0 py-2 px-3 d-flex flex-column';
+                                btn.style.backgroundColor = 'transparent';
+                                btn.style.borderBottom =
+                                    '1px solid rgba(255,255,255,0.05) !important';
+                                btn.innerHTML = `
+                                <span class="fw-semibold text-white" style="font-size: 0.8rem;">${item.text}</span>
+                                <span class="text-secondary mt-1" style="font-size: 0.7rem;">${item.alamat}</span>
+                            `;
+                                btn.addEventListener('click', () => {
+                                    selectCustomer(item);
+                                });
+                                customerSearchResults.appendChild(btn);
+                            });
+                            customerSearchResults.classList.remove('d-none');
+                        });
+                }, 300));
+
+                document.addEventListener('click', function(e) {
+                    if (!customerSearchInput.contains(e.target) && !customerSearchResults.contains(e
+                            .target)) {
+                        customerSearchResults.classList.add('d-none');
+                    }
+                });
+            }
+
+            function selectCustomer(customer) {
+                customerSearchResults.classList.add('d-none');
+                customerSearchInput.value = customer.text;
+                hiddenKodePelanggan.value = customer.id;
+
+                // Populate Info box
+                document.getElementById('detail-nama-display').innerText = customer.nama || '';
+                document.getElementById('detail-hp-display').innerHTML =
+                    '<i class="fa-solid fa-phone me-1 fs-8"></i> ' + (customer.hp || '-');
+                document.getElementById('info-alamat').innerText = customer.alamat || '-';
+                document.getElementById('info-wilayah').innerText = customer.wilayah || '-';
+                document.getElementById('info-limit-kredit').innerText = 'Rp ' + Number(customer.limit)
+                    .toLocaleString('id-ID');
+                document.getElementById('info-sisa-limit').innerText = 'Rp ' + Number(customer.sisa_limit)
+                    .toLocaleString('id-ID');
+                document.getElementById('info-metode-bayar').innerText = customer.metode || '-';
+
+                // Set data attributes on input for validation checks
+                hiddenKodePelanggan.setAttribute('data-overdue', customer.has_overdue);
+                hiddenKodePelanggan.setAttribute('data-sisa-limit', customer.sisa_limit);
+
+                if (customer.has_overdue === 1) {
+                    overdueWarning.classList.remove('d-none');
+                } else {
+                    overdueWarning.classList.add('d-none');
+                }
+
+                // Set default payment mode if matching
+                if (customer.metode === 'Tunai' || customer.metode === 'Kredit') {
+                    jenisTransaksiEl.value = customer.metode;
+                }
+
+                customerInfoBox.classList.remove('d-none');
+                validateFormState();
+                calculateTotals();
+            }
+
+            // --- 2. Product Autocomplete Search ---
+            productSearchInput.addEventListener('input', debounce(function() {
+                const q = this.value.trim();
+                if (q.length < 2) {
+                    productSearchResults.classList.add('d-none');
+                    return;
+                }
+
+                fetch(`{{ route('barang.search') }}?q=${encodeURIComponent(q)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        productSearchResults.innerHTML = '';
+                        if (data.length === 0) {
+                            productSearchResults.innerHTML =
+                                '<div class="p-2 text-secondary text-center" style="font-size: 0.75rem;">Barang tidak ditemukan.</div>';
+                            productSearchResults.classList.remove('d-none');
+                            return;
+                        }
+
+                        data.forEach(item => {
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className =
+                                'list-group-item list-group-item-action text-white border-0 py-2 px-3 d-flex flex-column';
+                            btn.style.backgroundColor = 'transparent';
+                            btn.style.borderBottom =
+                                '1px solid rgba(255,255,255,0.05) !important';
+                            btn.innerHTML = `
+                            <span class="fw-semibold text-white" style="font-size: 0.8rem;">${item.text}</span>
+                            <span class="text-secondary mt-1" style="font-size: 0.7rem;">Kode: ${item.kode_barang} | Merk: ${item.merk || '-'}</span>
+                        `;
+                            btn.addEventListener('click', () => {
+                                addProductToCart(item);
+                            });
+                            productSearchResults.appendChild(btn);
+                        });
+                        productSearchResults.classList.remove('d-none');
+                    });
+            }, 300));
+
+            document.addEventListener('click', function(e) {
+                if (!productSearchInput.contains(e.target) && !productSearchResults.contains(e.target)) {
+                    productSearchResults.classList.add('d-none');
+                }
+            });
+
+            // --- 3. Cart Management ---
+            function checkStockLimit(card) {
+                const code = card.getAttribute('data-code');
+                const product = barangsCache[code];
+                if (!product) return true;
+
+                const qtyInput = card.querySelector('.input-qty');
+                const selectSatuan = card.querySelector('.select-satuan');
+                const selectedOpt = selectSatuan.options[selectSatuan.selectedIndex];
+
+                const qty = parseFloat(qtyInput.value) || 0;
+                const isi = parseFloat(selectedOpt.getAttribute('data-isi')) || 1;
+                const qtySmallest = qty * isi;
+
+                if (qtySmallest > product.stok) {
+                    const formattedStok = formatStokJS(product.stok, product.satuans);
+                    Swal.fire({
+                        title: 'Stok Tidak Mencukupi',
+                        html: `Stok barang <b>${product.nama_barang}</b> tidak mencukupi!<br><br>` +
+                            `Stok tersedia: <b>${formattedStok}</b><br>` +
+                            `Jumlah diinput: <b>${qty} ${selectedOpt.getAttribute('data-name')}</b> (Setara ${qtySmallest} PCS)`,
+                        icon: 'error',
+                        background: '#161e31',
+                        color: '#f8fafc',
+                        confirmButtonColor: '#6366f1'
+                    });
+
+                    // Clamp quantity
+                    const maxQtyInUnit = Math.floor(product.stok / isi);
+                    qtyInput.value = maxQtyInUnit;
+
+                    if (maxQtyInUnit === 0 && product.stok > 0) {
+                        Swal.fire({
+                            title: 'Satuan Terlalu Besar',
+                            html: `Stok barang <b>${product.nama_barang}</b> hanya tersisa <b>${formattedStok}</b>.<br><br>` +
+                                `Unit <b>${selectedOpt.getAttribute('data-name')}</b> (Isi ${isi}) terlalu besar. Silakan pilih satuan yang lebih kecil.`,
+                            icon: 'warning',
+                            background: '#161e31',
+                            color: '#f8fafc',
+                            confirmButtonColor: '#6366f1'
+                        });
+                    }
+                    return false;
+                }
+                return true;
+            }
+
+            function addProductToCart(product) {
+                productSearchResults.classList.add('d-none');
+                productSearchInput.value = '';
+
+                if (product.stok <= 0) {
+                    Swal.fire({
+                        title: 'Stok Habis',
+                        text: `Barang "${product.nama_barang}" tidak dapat ditambahkan karena stok habis.`,
+                        icon: 'error',
+                        background: '#161e31',
+                        color: '#f8fafc',
+                        confirmButtonColor: '#6366f1'
+                    });
+                    return;
+                }
+
+                // Register in Cache
+                barangsCache[product.kode_barang] = {
+                    kode_barang: product.kode_barang,
+                    nama_barang: product.nama_barang,
+                    kategori: product.kategori,
+                    merk: product.merk,
+                    kode_supplier: product.kode_supplier,
+                    stok: product.stok,
+                    satuans: product.satuans
+                };
+
+                // Check if product already exists in cart, if so, just increment qty
+                const existingCard = document.querySelector(`.cart-item-card[data-code="${product.kode_barang}"]`);
+                if (existingCard) {
+                    const qtyInput = existingCard.querySelector('.input-qty');
+                    const oldVal = parseFloat(qtyInput.value) || 0;
+                    qtyInput.value = oldVal + 1;
+
+                    if (!checkStockLimit(existingCard)) {
+                        calculateTotals();
+                        return;
+                    }
+
+                    qtyInput.dispatchEvent(new Event('change'));
+                    calculateTotals();
+                    return;
+                }
+
+                // Create custom card item
+                const card = document.createElement('div');
+                card.className =
+                    'card-item bg-dark bg-opacity-40 border border-secondary border-opacity-30 rounded-4 p-3 mb-2 cart-item-card';
+                card.setAttribute('data-code', product.kode_barang);
+                card.setAttribute('id', `row_${rowIndex}`);
+
+                // Build units option: sorted by capacity (already sorted descending from backend)
+                let unitOptions = '';
+                product.satuans.forEach((sat, i) => {
+                    unitOptions +=
+                        `<option value="${sat.id}" data-name="${sat.satuan}" data-harga="${sat.harga_jual}" data-isi="${sat.isi}" ${i === 0 ? 'selected' : ''}>${sat.satuan} (${sat.isi})</option>`;
+                });
+
+                // Get initial default price of first unit
+                const defaultPrice = product.satuans.length > 0 ? product.satuans[0].harga_jual : 0;
+
+                card.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start mb-2 border-bottom border-secondary border-opacity-20 pb-2">
+                        <div>
+                            <h6 class="fw-bold text-white mb-0" style="font-size: 0.9rem; line-height: 1.3;">${product.nama_barang}</h6>
+                            <div class="d-flex gap-2 align-items-center mt-1">
+                                <span class="badge bg-secondary" style="font-size: 0.6rem; opacity: 0.8;">${product.kode_barang}</span>
+                                ${product.merk ? `<span class="badge bg-dark text-secondary border border-secondary" style="font-size: 0.6rem; border-color: rgba(255,255,255,0.15) !important;">${product.merk}</span>` : ''}
+                            </div>
+                            <input type="hidden" name="items[${rowIndex}][kode_barang]" value="${product.kode_barang}">
+                        </div>
+                        <button type="button" class="btn btn-sm rounded-circle d-flex align-items-center justify-content-center btn-remove-item" style="width: 28px; height: 28px; background: rgba(239, 68, 68, 0.15); color: #f87171; border: none; transition: background 0.2s;">
+                            <i class="fa-solid fa-trash-can" style="font-size: 0.8rem;"></i>
+                        </button>
+                    </div>
+
+                    <div class="row g-2 mb-2 align-items-end">
+                        <div class="col-6">
+                            <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Satuan</label>
+                            <select name="items[${rowIndex}][satuan_id]" class="form-select form-select-sm bg-dark text-white border-secondary select-satuan" style="font-size: 0.75rem; border-radius: 8px; height: 34px;">
+                                ${unitOptions}
+                            </select>
+                            <input type="hidden" name="items[${rowIndex}][satuan]" class="hidden-satuan-name" value="${product.satuans.length > 0 ? product.satuans[0].satuan : ''}">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Jumlah (Qty)</label>
+                            <div class="input-group input-group-sm">
+                                <button type="button" class="btn btn-outline-secondary btn-qty-minus text-white px-2" style="border-radius: 8px 0 0 8px; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">-</button>
+                                <input type="number" name="items[${rowIndex}][qty]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-qty px-1" min="0.01" step="any" value="1" required style="font-size: 0.8rem; border-color: rgba(255,255,255,0.15); height: 34px;">
+                                <button type="button" class="btn btn-outline-secondary btn-qty-plus text-white px-2" style="border-radius: 0 8px 8px 0; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-2">
+                        <div class="col-12">
+                            <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Harga Jual</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-dark text-secondary border-secondary" style="font-size: 0.75rem; border-radius: 8px 0 0 8px;">Rp</span>
+                                <input type="number" name="items[${rowIndex}][harga]" class="form-control form-control-sm bg-dark text-white border-secondary text-end input-harga rupiah-input" value="${defaultPrice}" required style="font-size: 0.8rem; border-radius: 0 8px 8px 0;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-2 rounded-3 mb-2 bg-black bg-opacity-20 border border-secondary border-opacity-10">
+                        <div class="d-flex align-items-center justify-content-between mb-1" style="font-size: 0.65rem;">
+                            <span class="text-secondary fw-semibold">Diskon Strata (D1 & D2)</span>
+                            <span class="text-secondary fw-semibold">Diskon Manual (D3)</span>
+                        </div>
+                        <div class="row g-1">
+                            <div class="col-4">
+                                <div class="input-group input-group-sm">
+                                    <input type="number" name="items[${rowIndex}][diskon1_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon1" min="0" max="100" step="any" value="0" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px;" placeholder="D1">
+                                    <span class="input-group-text bg-transparent text-secondary border-0 px-1" style="font-size: 0.7rem;">%</span>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="input-group input-group-sm">
+                                    <input type="number" name="items[${rowIndex}][diskon2_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon2" min="0" max="100" step="any" value="0" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px;" placeholder="D2">
+                                    <span class="input-group-text bg-transparent text-secondary border-0 px-1" style="font-size: 0.7rem;">%</span>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="input-group input-group-sm">
+                                    <input type="number" name="items[${rowIndex}][diskon3_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon3" min="0" max="100" step="any" value="0" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px;" placeholder="D3">
+                                    <span class="input-group-text bg-transparent text-secondary border-0 px-1" style="font-size: 0.7rem;">%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-10">
+                        <span class="text-secondary" style="font-size: 0.7rem; font-weight: 500;">Nett Subtotal:</span>
+                        <span class="fw-bold text-info row-subtotal-display" style="font-size: 0.9rem;">Rp 0</span>
+                    </div>
+                `;
+
+                // Hide empty cart msg
+                emptyCartMessage.classList.add('d-none');
+                cartContainer.appendChild(card);
+
+                // Bind Event Listeners on inputs
+                const selectSatuan = card.querySelector('.select-satuan');
+                const hiddenSatuanName = card.querySelector('.hidden-satuan-name');
+                const inputHarga = card.querySelector('.input-harga');
+                const btnRemove = card.querySelector('.btn-remove-item');
+                const inputQty = card.querySelector('.input-qty');
+                const inputDis1 = card.querySelector('.input-diskon1');
+                const inputDis2 = card.querySelector('.input-diskon2');
+                const inputDis3 = card.querySelector('.input-diskon3');
+                const btnQtyMinus = card.querySelector('.btn-qty-minus');
+                const btnQtyPlus = card.querySelector('.btn-qty-plus');
+
+                selectSatuan.addEventListener('change', function() {
+                    const selectedOpt = this.options[this.selectedIndex];
+                    hiddenSatuanName.value = selectedOpt.getAttribute('data-name');
+                    inputHarga.value = selectedOpt.getAttribute('data-harga');
+                    inputHarga.dispatchEvent(new Event('input')); // Trigger formatting!
+                    checkStockLimit(card);
+                    calculateTotals();
+                });
+
+                btnRemove.addEventListener('click', function() {
+                    card.remove();
+                    if (cartContainer.querySelectorAll('.cart-item-card').length === 0) {
+                        emptyCartMessage.classList.remove('d-none');
+                    }
+                    calculateTotals();
+                    validateFormState();
+                });
+
+                [inputQty, inputHarga, inputDis1, inputDis2, inputDis3].forEach(input => {
+                    input.addEventListener('input', calculateTotals);
+                });
+
+                inputQty.addEventListener('change', function() {
+                    checkStockLimit(card);
+                    calculateTotals();
+                });
+
+                btnQtyMinus.addEventListener('click', function() {
+                    let val = parseFloat(inputQty.value) || 0;
+                    if (val > 0.01) {
+                        let newVal = val - 1;
+                        if (newVal < 0.01) newVal = 0.01;
+                        inputQty.value = parseFloat(newVal.toFixed(2));
+                        inputQty.dispatchEvent(new Event('input'));
+                        inputQty.dispatchEvent(new Event('change'));
+                    }
+                });
+
+                btnQtyPlus.addEventListener('click', function() {
+                    let val = parseFloat(inputQty.value) || 0;
+                    let newVal = val + 1;
+                    inputQty.value = parseFloat(newVal.toFixed(2));
+                    inputQty.dispatchEvent(new Event('input'));
+                    inputQty.dispatchEvent(new Event('change'));
+                });
+
+                rowIndex++;
+                validateFormState();
+
+                // Trigger check on addition
+                checkStockLimit(card);
+                calculateTotals();
+            }
+
+            jenisTransaksiEl.addEventListener('change', calculateTotals);
+            diskonGlobalEl.addEventListener('input', calculateTotals);
+
+            // --- 4. Strata Discount & Totals Calculation ---
+            function calculateStrataDiscounts() {
+                const jenisTransaksi = jenisTransaksiEl.value; // 'Tunai' or 'Kredit'
+
+                // Group subtotal by supplier code
+                const supplierSubtotals = {};
+                cartContainer.querySelectorAll('.cart-item-card').forEach(card => {
+                    const barangCode = card.getAttribute('data-code');
+                    const qty = parseFloat(card.querySelector('.input-qty').value) || 0;
+                    const harga = parseCleanNumber(card.querySelector('.input-harga').value) || 0;
+                    const sub = qty * harga;
+
+                    const b = barangsCache[barangCode];
+                    if (b && b.kode_supplier) {
+                        supplierSubtotals[b.kode_supplier] = (supplierSubtotals[b.kode_supplier] || 0) +
+                            sub;
+                    }
+                });
+
+                // Evaluate rules
+                cartContainer.querySelectorAll('.cart-item-card').forEach(card => {
+                    const barangCode = card.getAttribute('data-code');
+                    const qty = parseFloat(card.querySelector('.input-qty').value) || 0;
+                    const harga = parseCleanNumber(card.querySelector('.input-harga').value) || 0;
+                    const sub = qty * harga;
+
+                    const b = barangsCache[barangCode];
+                    if (!b) return;
+
+                    let bestRate = 0;
+                    let bestRule = null;
+                    let bestDetail = null;
+
+                    const findRule = (tipe) => {
+                        return diskonStrata.filter(r => r.tipe === tipe && r.is_active);
+                    };
+
+                    const checkRule = (r, d) => {
+                        const rate = parseFloat(d.dis1) || 0;
+                        if (rate >= bestRate) {
+                            bestRate = rate;
+                            bestRule = r;
+                            bestDetail = d;
+                        }
+                    };
+
+                    // Priority 1: Per Barang
+                    const rulesBarang = findRule('barang');
+                    rulesBarang.forEach(r => {
+                        if (r.barangs && r.barangs.some(item => item.kode_barang === barangCode)) {
+                            r.details.forEach(d => {
+                                if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <=
+                                        d.max_qty)) {
+                                    checkRule(r, d);
+                                }
+                            });
+                        }
+                    });
+
+                    // Priority 2: Per Beberapa Barang
+                    if (!bestRule) {
+                        const rulesBeberapa = findRule('beberapa_barang');
+                        rulesBeberapa.forEach(r => {
+                            if (r.barangs && r.barangs.some(item => item.kode_barang ===
+                                    barangCode)) {
+                                r.details.forEach(d => {
+                                    if (qty >= (d.min_qty || 0) && (d.max_qty === null ||
+                                            qty <= d.max_qty)) {
+                                        checkRule(r, d);
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    // Priority 3: Per Kategori
+                    if (!bestRule && b.kategori) {
+                        const rulesKategori = findRule('kategori');
+                        rulesKategori.forEach(r => {
+                            if (r.kategori && r.kategori.nama_kategori === b.kategori) {
+                                r.details.forEach(d => {
+                                    if (qty >= (d.min_qty || 0) && (d.max_qty === null ||
+                                            qty <= d.max_qty)) {
+                                        checkRule(r, d);
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    // Priority 4: Per Merk
+                    if (!bestRule && b.merk) {
+                        const rulesMerk = findRule('merk');
+                        rulesMerk.forEach(r => {
+                            if (r.merk && r.merk.nama_merk === b.merk) {
+                                r.details.forEach(d => {
+                                    if (qty >= (d.min_qty || 0) && (d.max_qty === null ||
+                                            qty <= d.max_qty)) {
+                                        checkRule(r, d);
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    // Priority 5: Per Supplier
+                    if (!bestRule && b.kode_supplier) {
+                        const rulesSupplier = findRule('supplier');
+                        const totalSupplierNominal = supplierSubtotals[b.kode_supplier] || 0;
+                        rulesSupplier.forEach(r => {
+                            if (r.kode_supplier === b.kode_supplier) {
+                                r.details.forEach(d => {
+                                    const minNom = parseFloat(d.min_nominal) || 0;
+                                    const maxNom = d.max_nominal ? parseFloat(d
+                                        .max_nominal) : null;
+                                    if (totalSupplierNominal >= minNom && (maxNom ===
+                                            null || totalSupplierNominal <= maxNom)) {
+                                        checkRule(r, d);
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    // Apply discount values
+                    const inputDis1 = card.querySelector('.input-diskon1');
+                    const inputDis2 = card.querySelector('.input-diskon2');
+                    if (bestRule && bestDetail) {
+                        let d1_pct = 0;
+                        let d2_pct = 0;
+
+                        const rawDis1 = parseFloat(bestDetail.dis1) || 0;
+                        const rawDis2 = parseFloat(bestDetail.dis2) || 0;
+
+                        if (bestDetail.tipe_nilai === 'persen') {
+                            d1_pct = rawDis1;
+                            d2_pct = rawDis2;
+                        } else {
+                            if (bestRule.tipe === 'supplier') {
+                                const totalSupplierNominal = supplierSubtotals[b.kode_supplier] || 1;
+                                d1_pct = (rawDis1 / totalSupplierNominal) * 100;
+                                d2_pct = (rawDis2 / totalSupplierNominal) * 100;
+                            } else {
+                                if (sub > 0) {
+                                    d1_pct = (rawDis1 / sub) * 100;
+                                    d2_pct = (rawDis2 / sub) * 100;
+                                }
+                            }
+                        }
+
+                        // Apply Diskon 1
+                        inputDis1.value = d1_pct.toFixed(2);
+                        inputDis1.setAttribute('readonly', 'true');
+                        inputDis1.style.backgroundColor = 'rgba(255,255,255,0.05)';
+
+                        // Apply Diskon 2 only if Tunai
+                        if (jenisTransaksi === 'Tunai') {
+                            inputDis2.value = d2_pct.toFixed(2);
+                            inputDis2.setAttribute('readonly', 'true');
+                            inputDis2.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                        } else {
+                            inputDis2.value = '0';
+                            inputDis2.setAttribute('readonly', 'true');
+                            inputDis2.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                        }
+                    } else {
+                        if (inputDis1.hasAttribute('readonly')) {
+                            inputDis1.removeAttribute('readonly');
+                            inputDis1.style.backgroundColor = '';
+                            inputDis1.value = '0';
+                        }
+                        if (inputDis2.hasAttribute('readonly')) {
+                            inputDis2.removeAttribute('readonly');
+                            inputDis2.style.backgroundColor = '';
+                            inputDis2.value = '0';
+                        }
+                    }
+                });
+            }
+
+            function calculateTotals() {
+                // First run strata calculations
+                calculateStrataDiscounts();
+
+                let subtotalSum = 0;
+                let totalDiskon = 0;
+
+                cartContainer.querySelectorAll('.cart-item-card').forEach(card => {
+                    const qty = parseFloat(card.querySelector('.input-qty').value) || 0;
+                    const harga = parseCleanNumber(card.querySelector('.input-harga').value) || 0;
+                    const sub = qty * harga;
+
+                    const d1_pct = parseFloat(card.querySelector('.input-diskon1').value) || 0;
+                    const d2_pct = parseFloat(card.querySelector('.input-diskon2').value) || 0;
+                    const d3_pct = parseFloat(card.querySelector('.input-diskon3').value) || 0;
+
+                    const d1 = sub * (d1_pct / 100);
+                    const d2 = (sub - d1) * (d2_pct / 100);
+                    const d3 = (sub - d1 - d2) * (d3_pct / 100);
+                    const diskon = Math.round(d1 + d2 + d3);
+
+                    subtotalSum += sub;
+                    totalDiskon += diskon;
+
+                    const nett = sub - diskon;
+                    card.querySelector('.row-subtotal-display').innerText = 'Rp ' + nett.toLocaleString(
+                        'id-ID');
+                });
+
+                const diskonGlobal = parseCleanNumber(diskonGlobalEl.value) || 0;
+                const grandTotal = subtotalSum - totalDiskon - diskonGlobal;
+
+                document.getElementById('summary-subtotal').innerText = 'Rp ' + subtotalSum.toLocaleString('id-ID');
+                document.getElementById('summary-diskon-item').innerText = '- Rp ' + totalDiskon.toLocaleString(
+                    'id-ID');
+                document.getElementById('summary-diskon-global').innerText = '- Rp ' + diskonGlobal.toLocaleString(
+                    'id-ID');
+                document.getElementById('summary-grandtotal').innerText = 'Rp ' + grandTotal.toLocaleString(
+                    'id-ID');
+
+                // Save temporary total for validation
+                btnSubmitOrder.setAttribute('data-grand-total', grandTotal);
+            }
+
+            // --- 5. Form Validation & Guards ---
+            function validateFormState() {
+                const hasCustomer = hiddenKodePelanggan.value !== '';
+                const hasItems = cartContainer.querySelectorAll('.cart-item-card').length > 0;
+
+                if (hasCustomer && hasItems) {
+                    btnSubmitOrder.removeAttribute('disabled');
+                } else {
+                    btnSubmitOrder.setAttribute('disabled', 'true');
+                }
+            }
+
+            document.getElementById('order-form').addEventListener('submit', function(e) {
+                const overdueStatus = parseInt(hiddenKodePelanggan.getAttribute('data-overdue')) || 0;
+
+                // 1. Double check Overdue blocker
+                if (overdueStatus === 1) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Transaksi Ditolak',
+                        text: 'Pelanggan ini memiliki tagihan jatuh tempo (Overdue)! Selesaikan pembayaran terlebih dahulu.',
+                        icon: 'error',
+                        background: '#161e31',
+                        color: '#f8fafc',
+                        confirmButtonColor: '#6366f1'
+                    });
+                    return false;
+                }
+
+                // 2. Double check credit limit
+                const paymentMode = jenisTransaksiEl.value;
+                if (paymentMode === 'Kredit') {
+                    const sisaLimit = parseFloat(hiddenKodePelanggan.getAttribute('data-sisa-limit')) || 0;
+                    const grandTotal = parseFloat(btnSubmitOrder.getAttribute('data-grand-total')) || 0;
+
+                    if (grandTotal > sisaLimit) {
+                        e.preventDefault();
+                        Swal.fire({
+                            title: 'Limit Kredit Terlampaui',
+                            text: `Total order (Rp ${grandTotal.toLocaleString('id-ID')}) melebihi sisa limit kredit pelanggan (Rp ${sisaLimit.toLocaleString('id-ID')})!`,
+                            icon: 'error',
+                            background: '#161e31',
+                            color: '#f8fafc',
+                            confirmButtonColor: '#6366f1'
+                        });
+                        return false;
+                    }
+                }
+
+                // 3. Double check stock limits
+                let stockOk = true;
+                cartContainer.querySelectorAll('.cart-item-card').forEach(card => {
+                    if (!checkStockLimit(card)) {
+                        stockOk = false;
+                    }
+                });
+                if (!stockOk) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // Initialize state if pre-populated customer exists
+            @if ($pelanggan)
+                const mockCustomer = {
+                    id: "{{ $pelanggan->kode_pelanggan }}",
+                    text: "{{ $pelanggan->nama_pelanggan }}",
+                    has_overdue: {{ $pelanggan->hasOverdueInvoices() ? 1 : 0 }},
+                    sisa_limit: {{ $pelanggan->getSisaLimitKredit() }},
+                    metode: "{{ $pelanggan->metode_bayar }}"
+                };
+                hiddenKodePelanggan.value = mockCustomer.id;
+                hiddenKodePelanggan.setAttribute('data-overdue', mockCustomer.has_overdue);
+                hiddenKodePelanggan.setAttribute('data-sisa-limit', mockCustomer.sisa_limit);
+            @endif
+
+            validateFormState();
+        });
+    </script>
+@endpush
