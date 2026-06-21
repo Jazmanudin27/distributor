@@ -4,7 +4,8 @@
 
 @push('styles')
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <style>
         #map {
             height: 520px;
@@ -63,11 +64,14 @@
                             <h5 class="fw-bold text-white mb-1">
                                 <i class="fa-solid fa-map-location-dot text-danger me-2"></i>Pelacakan GPS Kunjungan Sales
                             </h5>
-                            <p class="text-secondary small mb-0">Visualisasi rute dan lokasi kunjungan sales berdasarkan check-in di lapangan.</p>
+                            <p class="text-secondary small mb-0">Visualisasi rute dan lokasi kunjungan sales berdasarkan
+                                check-in di lapangan.</p>
                         </div>
-                        <form action="{{ route('sales-tracking.index') }}" method="GET" class="d-flex align-items-center gap-2">
+                        <form action="{{ route('sales-tracking.index') }}" method="GET"
+                            class="d-flex align-items-center gap-2">
                             <label class="text-secondary small fw-semibold text-nowrap mb-0">Filter Tanggal:</label>
-                            <input type="date" name="tanggal" class="form-control form-control-sm w-auto" value="{{ $tanggal }}" onchange="this.form.submit()">
+                            <input type="date" name="tanggal" class="form-control form-control-sm w-auto"
+                                value="{{ $tanggal }}" onchange="this.form.submit()">
                         </form>
                     </div>
                 </div>
@@ -89,14 +93,14 @@
                         <h6 class="fw-bold text-white mb-0">Daftar Kunjungan Hari Ini</h6>
                     </div>
                     <div class="card-body p-0" style="max-height: 480px; overflow-y: auto;">
-                        @if($checkins->isEmpty())
+                        @if ($checkins->isEmpty())
                             <div class="p-5 text-center text-secondary small">
                                 <i class="fa-solid fa-location-crosshairs d-block fs-3 mb-2 opacity-50"></i>
                                 Tidak ada data kunjungan / GPS check-in untuk tanggal terpilih.
                             </div>
                         @else
                             <div class="list-group list-group-flush">
-                                @foreach($checkins as $c)
+                                @foreach ($checkins as $c)
                                     @php
                                         // Calculate duration
                                         $duration = '-';
@@ -108,22 +112,25 @@
                                             $duration = 'Sedang Berlangsung';
                                         }
                                     @endphp
-                                    <div class="list-group-item bg-transparent border-white-10 py-3 px-4 checkin-row" 
-                                         data-lat="{{ $c->latitude }}" 
-                                         data-lng="{{ $c->longitude }}"
-                                         data-sales="{{ $c->sales->name ?? 'Sales' }}"
-                                         data-toko="{{ $c->pelanggan->nama_pelanggan ?? 'Toko' }}">
+                                    <div class="list-group-item bg-transparent border-white-10 py-3 px-4 checkin-row"
+                                        data-lat="{{ $c->latitude }}" data-lng="{{ $c->longitude }}"
+                                        data-sales="{{ $c->sales->name ?? 'Sales' }}"
+                                        data-toko="{{ $c->pelanggan->nama_pelanggan ?? 'Toko' }}">
                                         <div class="d-flex justify-content-between align-items-start mb-1">
                                             <span class="fw-bold text-white small">{{ $c->sales->name ?? 'Sales' }}</span>
-                                            <span class="badge bg-{{ $c->checkout ? 'success' : 'warning' }}-subtle text-{{ $c->checkout ? 'success' : 'warning' }} fs-9">
+                                            <span
+                                                class="badge bg-{{ $c->checkout ? 'success' : 'warning' }}-subtle text-{{ $c->checkout ? 'success' : 'warning' }} fs-9">
                                                 {{ $c->checkout ? 'Selesai' : 'Aktif' }}
                                             </span>
                                         </div>
                                         <p class="text-secondary mb-1" style="font-size: 0.78rem;">
-                                            Toko: <strong class="text-light-indigo">{{ $c->pelanggan->nama_pelanggan ?? 'Toko' }}</strong>
+                                            Toko: <strong
+                                                class="text-light-indigo">{{ $c->pelanggan->nama_pelanggan ?? 'Toko' }}</strong>
                                         </p>
                                         <div class="d-flex justify-content-between text-muted" style="font-size: 0.72rem;">
-                                            <span><i class="fa-regular fa-clock me-1"></i>{{ date('H:i', strtotime($c->checkin)) }} {{ $c->checkout ? '- ' . date('H:i', strtotime($c->checkout)) : '' }}</span>
+                                            <span><i
+                                                    class="fa-regular fa-clock me-1"></i>{{ date('H:i', strtotime($c->checkin)) }}
+                                                {{ $c->checkout ? '- ' . date('H:i', strtotime($c->checkout)) : '' }}</span>
                                             <span><i class="fa-solid fa-hourglass-half me-1"></i>{{ $duration }}</span>
                                         </div>
                                     </div>
@@ -139,7 +146,8 @@
 
 @push('scripts')
     <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
         $(document).ready(function() {
             // Default center of map (Surabaya/Indonesia or center of marker group)
@@ -180,9 +188,15 @@
                     });
 
                     // Prepare Popup HTML content
-                    let checkinTime = new Date(c.checkin).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-                    let checkoutTime = c.checkout ? new Date(c.checkout).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'Masih Berkunjung';
-                    
+                    let checkinTime = new Date(c.checkin).toLocaleTimeString('id-ID', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    let checkoutTime = c.checkout ? new Date(c.checkout).toLocaleTimeString('id-ID', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : 'Masih Berkunjung';
+
                     let popupHtml = `
                         <div style="font-family: sans-serif; font-size: 11px; min-width: 160px; padding: 2px;">
                             <strong style="color: #6C63FF; font-size: 12px; display: block; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; margin-bottom: 6px;">${c.sales ? c.sales.name : 'Sales'}</strong>
@@ -193,7 +207,9 @@
                         </div>
                     `;
 
-                    const marker = L.marker([lat, lng], { icon: customIcon })
+                    const marker = L.marker([lat, lng], {
+                            icon: customIcon
+                        })
                         .bindPopup(popupHtml)
                         .addTo(map);
 

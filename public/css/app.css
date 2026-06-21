@@ -1769,5 +1769,11 @@ select.form-input option {
    TABLES - Global size
    ============================================= */
 .table {
-    font-size: 0.82rem;
+    font-size: 0.78rem;
+}
+.table th {
+    font-size: 0.7rem;
+}
+.table td {
+    font-size: 0.78rem;
 }
