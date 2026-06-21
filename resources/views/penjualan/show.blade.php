@@ -259,6 +259,18 @@
                                     <span class="fw-bold text-success fs-5">Rp
                                         {{ number_format((float) $item->grand_total, 0, ',', '.') }}</span>
                                 </div>
+                                @if (isset($totalRetur) && $totalRetur > 0)
+                                    <div class="d-flex justify-content-between mb-2 mt-2 border-top pt-2">
+                                        <span class="text-secondary small">Total Retur (PF)</span>
+                                        <span class="fw-semibold text-danger">-Rp
+                                            {{ number_format((float) $totalRetur, 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between border-top pt-2">
+                                        <span class="fw-bold text-success">Grand Total Netto</span>
+                                        <span class="fw-bold text-success fs-5">Rp
+                                            {{ number_format((float) ($item->grand_total - $totalRetur), 0, ',', '.') }}</span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
