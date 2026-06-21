@@ -144,6 +144,41 @@
     <script>
         $(document).ready(function() {
 
+            // Override Select2 to automatically handle zoom/alignment and Bootstrap modal focus issues
+            if ($.fn.select2) {
+                const originalSelect2 = $.fn.select2;
+                $.fn.select2 = function(options) {
+                    if (this.length === 0) {
+                        return originalSelect2.apply(this, arguments);
+                    }
+                    if (typeof options === 'string') {
+                        return originalSelect2.apply(this, arguments);
+                    }
+
+                    options = options || {};
+
+                    if (!options.dropdownParent) {
+                        this.each(function() {
+                            const $el = $(this);
+                            let parent = $el.parent();
+                            if ($el.closest('.modal').length > 0) {
+                                parent = $el.closest('.modal');
+                            } else if ($el.closest('.table-responsive').length > 0) {
+                                parent = $el.closest('.table-responsive').parent();
+                            }
+
+                            const elementOptions = $.extend({}, options, {
+                                dropdownParent: parent
+                            });
+                            originalSelect2.apply($el, [elementOptions]);
+                        });
+                        return this;
+                    }
+
+                    return originalSelect2.apply(this, [options]);
+                };
+            }
+
             // Initialize Select2 globally, keeping small size if .form-select-sm is used
             $('.form-select').each(function() {
                 $(this).select2({
