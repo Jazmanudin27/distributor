@@ -3,20 +3,130 @@
 
 @push('styles')
 <style>
+    /* Tab filters styled as premium SaaS-like pill links with bottom bar active state */
+    .filter-tabs-container {
+        display: flex;
+        gap: 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        padding-bottom: 0.75rem;
+        margin-bottom: 1.5rem;
+        overflow-x: auto;
+        scrollbar-width: none; /* Firefox */
+    }
+    .filter-tabs-container::-webkit-scrollbar {
+        display: none; /* Safari and Chrome */
+    }
     .filter-tab {
         border: none;
         background: transparent;
-        padding: 6px 16px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: var(--bs-secondary);
+        padding: 8px 16px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #64748B;
+        position: relative;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
     }
-    .filter-tab.active, .filter-tab:hover {
-        background: var(--bs-primary);
-        color: #fff;
+    .filter-tab:hover {
+        color: #F1F5F9;
+    }
+    .filter-tab.active {
+        color: #6C63FF; /* Violet / Primary */
+    }
+    .filter-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -0.75rem;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background-color: #6C63FF;
+        border-radius: 3px 3px 0 0;
+    }
+    .tab-badge {
+        font-size: 0.75rem;
+        padding: 0.15rem 0.45rem;
+        border-radius: 999px;
+        font-weight: 700;
+        margin-left: 0.25rem;
+    }
+
+    /* Filter Row container styling */
+    .search-filter-row {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 1rem;
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 1.75rem;
+    }
+    .filter-input-wrapper {
+        position: relative;
+        flex: 1;
+        min-width: 220px;
+    }
+    .filter-input-wrapper i {
+        position: absolute;
+        left: 0.9rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748B;
+        font-size: 0.85rem;
+    }
+    .filter-input-wrapper input {
+        padding-left: 2.3rem !important;
+    }
+    .filter-select {
+        min-width: 140px;
+        flex: 0 1 auto;
+    }
+
+    /* Meta badge pills styling */
+    .meta-pill {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 6px;
+        padding: 2px 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: #94A3B8 !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+    }
+    .meta-pill:hover {
+        background: rgba(108, 99, 255, 0.08);
+        border-color: rgba(108, 99, 255, 0.2);
+        color: #a78bfa !important;
+    }
+    .meta-pill-primary {
+        color: #a78bfa !important;
+        background: rgba(108, 99, 255, 0.05);
+        border-color: rgba(108, 99, 255, 0.1);
+    }
+    .meta-pill-success {
+        color: #34D399 !important;
+        background: rgba(52, 211, 153, 0.05);
+        border-color: rgba(52, 211, 153, 0.1);
+    }
+
+    @media (max-width: 768px) {
+        .filter-select {
+            flex: 1 1 120px;
+        }
+        .search-filter-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
     }
 </style>
 @endpush
@@ -44,67 +154,72 @@
                     $q->whereNull('approve')->orWhere('approve', 0);
                 })->count();
             @endphp
-            <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
-                <form action="{{ route('pelanggan.index') }}" method="GET" class="d-flex gap-2 flex-wrap align-items-center w-100">
-                    <div class="d-flex gap-1 flex-wrap">
-                        <button type="submit" name="approve" value="" class="filter-tab {{ !request('approve') ? 'active' : '' }}">
-                            Semua
-                        </button>
-                        <button type="submit" name="approve" value="pending" class="filter-tab {{ request('approve') === 'pending' ? 'active' : '' }}">
-                            <i class="fa-solid fa-hourglass-half me-1"></i> Menunggu Persetujuan
-                            @if($pendingPelangganCount > 0)
-                                <span class="badge bg-warning text-dark rounded-pill ms-1" style="font-size: 0.7rem; padding: 0.2em 0.5em;">{{ $pendingPelangganCount }}</span>
-                            @endif
-                        </button>
-                        <button type="submit" name="approve" value="1" class="filter-tab {{ request('approve') === '1' ? 'active' : '' }}">
-                            <i class="fa-solid fa-check me-1"></i> Disetujui
-                        </button>
-                        <button type="submit" name="approve" value="2" class="filter-tab {{ request('approve') === '2' ? 'active' : '' }}">
-                            <i class="fa-solid fa-xmark me-1"></i> Ditolak
-                        </button>
-                    </div>
-                    
-                    {{-- SEARCH & OTHERS ON THE RIGHT --}}
-                    <div class="ms-auto d-flex gap-2 align-items-center flex-wrap">
-                        <input type="text" name="search" class="form-control form-control-sm" style="width: 180px"
+            
+            <form action="{{ route('pelanggan.index') }}" method="GET" class="w-100">
+                {{-- Row 1: Tab Filters --}}
+                <div class="filter-tabs-container">
+                    <button type="submit" name="approve" value="" class="filter-tab {{ !request('approve') ? 'active' : '' }}">
+                        Semua
+                    </button>
+                    <button type="submit" name="approve" value="pending" class="filter-tab {{ request('approve') === 'pending' ? 'active' : '' }}">
+                        <i class="fa-solid fa-hourglass-half"></i> Menunggu Persetujuan
+                        @if($pendingPelangganCount > 0)
+                            <span class="badge bg-warning text-dark tab-badge">{{ $pendingPelangganCount }}</span>
+                        @endif
+                    </button>
+                    <button type="submit" name="approve" value="1" class="filter-tab {{ request('approve') === '1' ? 'active' : '' }}">
+                        <i class="fa-solid fa-check"></i> Disetujui
+                    </button>
+                    <button type="submit" name="approve" value="2" class="filter-tab {{ request('approve') === '2' ? 'active' : '' }}">
+                        <i class="fa-solid fa-xmark"></i> Ditolak
+                    </button>
+                </div>
+                
+                {{-- Row 2: Search & Filter Row --}}
+                <div class="search-filter-row">
+                    <div class="filter-input-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" name="search" class="form-control form-control-sm"
                             placeholder="Cari pelanggan..." value="{{ request('search') }}">
-                            
-                        <select name="kode_wilayah" class="form-select form-select-sm" style="width: 120px">
-                            <option value="">Wilayah</option>
-                            @foreach ($wilayahs as $w)
-                                <option value="{{ $w->kode_wilayah }}"
-                                    {{ request('kode_wilayah') == $w->kode_wilayah ? 'selected' : '' }}>
-                                    {{ $w->nama_wilayah }}</option>
-                            @endforeach
-                        </select>
+                    </div>
                         
-                        <select name="sub_wilayah" class="form-select form-select-sm" style="width: 120px">
-                            <option value="">Sub Wilayah</option>
-                            @foreach ($subWilayahs as $sw)
-                                <option value="{{ $sw->kode_wilayah }}"
-                                    {{ request('sub_wilayah') == $sw->kode_wilayah ? 'selected' : '' }}>
-                                    {{ $sw->nama_wilayah }}</option>
-                            @endforeach
-                        </select>
-                        
-                        <select name="status" class="form-select form-select-sm" style="width: 100px">
-                            <option value="">Status</option>
-                            <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Aktif</option>
-                            <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Non-Aktif</option>
-                        </select>
-                        
-                        <button type="submit" class="btn btn-primary btn-sm">
-                            <i class="fa-solid fa-magnifying-glass"></i>
+                    <select name="kode_wilayah" class="form-select form-select-sm filter-select">
+                        <option value="">Wilayah</option>
+                        @foreach ($wilayahs as $w)
+                            <option value="{{ $w->kode_wilayah }}"
+                                {{ request('kode_wilayah') == $w->kode_wilayah ? 'selected' : '' }}>
+                                {{ $w->nama_wilayah }}</option>
+                        @endforeach
+                    </select>
+                    
+                    <select name="sub_wilayah" class="form-select form-select-sm filter-select">
+                        <option value="">Sub Wilayah</option>
+                        @foreach ($subWilayahs as $sw)
+                            <option value="{{ $sw->kode_wilayah }}"
+                                {{ request('sub_wilayah') == $sw->kode_wilayah ? 'selected' : '' }}>
+                                {{ $sw->nama_wilayah }}</option>
+                        @endforeach
+                    </select>
+                    
+                    <select name="status" class="form-select form-select-sm filter-select" style="min-width: 100px">
+                        <option value="">Status</option>
+                        <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Aktif</option>
+                        <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Non-Aktif</option>
+                    </select>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-sm px-3">
+                            <i class="fa-solid fa-filter me-1"></i> Filter
                         </button>
                         
                         @if(request()->hasAny(['approve','search','kode_wilayah','sub_wilayah','status']))
-                            <a href="{{ route('pelanggan.index') }}" class="btn btn-outline-secondary btn-sm" title="Reset Filter">
-                                <i class="fa-solid fa-rotate-left"></i>
+                            <a href="{{ route('pelanggan.index') }}" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1" title="Reset Filter">
+                                <i class="fa-solid fa-rotate-left"></i> Reset
                             </a>
                         @endif
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
 
             <div class="table-responsive">
                 <table class="table table-sm table-hover align-middle">
@@ -131,41 +246,36 @@
                                         {{ $item->kode_pelanggan }}
                                     </span>
                                 </td>
-                                <td class="fw-bold text-dark">
-                                    <div>{{ $item->nama_pelanggan }}</div>
-                                    <div class="text-muted small fw-normal mt-1 d-flex flex-wrap gap-2 align-items-center"
-                                        style="font-size: 0.78rem;">
-                                        <span>
-                                            <i class="fa-solid fa-map-location-dot me-1 text-secondary opacity-75"></i>
-                                            <span
-                                                class="text-primary fw-semibold">{{ $item->wilayah->nama_wilayah ?? '-' }}</span>
+                                <td class="fw-bold">
+                                    <div class="text-white">{{ $item->nama_pelanggan }}</div>
+                                    <div class="mt-2 d-flex flex-wrap gap-1.5 align-items-center">
+                                        <span class="meta-pill meta-pill-primary">
+                                            <i class="fa-solid fa-map-location-dot opacity-75"></i>
+                                            <span>{{ $item->wilayah->nama_wilayah ?? '-' }}</span>
                                         </span>
-                                        <span class="text-muted opacity-50">|</span>
-                                        <span>
-                                            <i class="fa-solid fa-location-crosshairs me-1 text-secondary opacity-75"></i>
-                                            <span
-                                                class="text-success fw-semibold">{{ $item->subWilayah->nama_wilayah ?? '-' }}</span>
+                                        
+                                        <span class="meta-pill meta-pill-success">
+                                            <i class="fa-solid fa-location-crosshairs opacity-75"></i>
+                                            <span>{{ $item->subWilayah->nama_wilayah ?? '-' }}</span>
                                         </span>
+                                        
                                         @if($item->latitude && $item->longitude)
-                                            <span class="text-muted opacity-50">|</span>
-                                            <span>
-                                                <i class="fa-solid fa-map-pin me-1 text-danger"></i>
-                                                <a href="https://www.google.com/maps/search/?api=1&query={{ $item->latitude }},{{ $item->longitude }}" target="_blank" class="text-info text-decoration-none fw-semibold">Peta</a>
-                                            </span>
+                                            <a href="https://www.google.com/maps/search/?api=1&query={{ $item->latitude }},{{ $item->longitude }}" target="_blank" class="meta-pill">
+                                                <i class="fa-solid fa-map-pin text-danger"></i>
+                                                <span>Peta</span>
+                                            </a>
                                         @endif
                                         @if($item->foto)
-                                            <span class="text-muted opacity-50">|</span>
-                                            <span>
-                                                <i class="fa-solid fa-image me-1 text-secondary"></i>
-                                                <a href="{{ asset($item->foto) }}" target="_blank" class="text-secondary text-decoration-none fw-semibold">Foto Toko</a>
-                                            </span>
+                                            <a href="{{ asset($item->foto) }}" target="_blank" class="meta-pill">
+                                                <i class="fa-solid fa-image text-secondary"></i>
+                                                <span>Foto Toko</span>
+                                            </a>
                                         @endif
                                         @if($item->foto_ktp)
-                                            <span class="text-muted opacity-50">|</span>
-                                            <span>
-                                                <i class="fa-solid fa-id-card me-1 text-secondary"></i>
-                                                <a href="{{ asset($item->foto_ktp) }}" target="_blank" class="text-secondary text-decoration-none fw-semibold">KTP</a>
-                                            </span>
+                                            <a href="{{ asset($item->foto_ktp) }}" target="_blank" class="meta-pill">
+                                                <i class="fa-solid fa-id-card text-secondary"></i>
+                                                <span>KTP</span>
+                                            </a>
                                         @endif
                                     </div>
                                 </td>
