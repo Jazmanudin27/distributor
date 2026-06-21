@@ -1248,14 +1248,24 @@ class LaporanController extends Controller
                 ->pluck('total', 'no_faktur')
                 ->toArray();
 
+            // Pre-aggregate potong-faktur returns (linked to invoices via no_faktur)
+            $potongFakturReturs = DB::table('retur_penjualan')
+                ->select('no_faktur', DB::raw('SUM(total) as total'))
+                ->where('tanggal', '<=', $tanggal)
+                ->whereIn('no_faktur', $invoiceIds)
+                ->groupBy('no_faktur')
+                ->pluck('total', 'no_faktur')
+                ->toArray();
+
             foreach ($invoices as $inv) {
                 $cashPaid = $cashPayments[$inv->no_faktur] ?? 0;
                 $transferPaid = $transferPayments[$inv->no_faktur] ?? 0;
                 $giroPaid = $giroPayments[$inv->no_faktur] ?? 0;
                 $returPaid = $returPayments[$inv->no_faktur] ?? 0;
+                $pfRetur = $potongFakturReturs[$inv->no_faktur] ?? 0;
 
                 $paid = $cashPaid + $transferPaid + $giroPaid;
-                $sisa_piutang = (float)($inv->grand_total - $paid - $returPaid);
+                $sisa_piutang = (float)($inv->grand_total - $paid - $returPaid - $pfRetur);
 
                 if ($sisa_piutang > 0.01) {
                     $items->push([
@@ -1265,7 +1275,7 @@ class LaporanController extends Controller
                         'sales' => $inv->sales,
                         'grand_total' => $inv->grand_total,
                         'total_bayar' => $paid,
-                        'total_retur' => $returPaid,
+                        'total_retur' => $returPaid + $pfRetur,
                         'sisa_piutang' => $sisa_piutang,
                     ]);
                 }

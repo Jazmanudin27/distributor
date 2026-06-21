@@ -26,6 +26,13 @@
                                 data-no-faktur="{{ $item->no_faktur }}" data-cetak="{{ $item->cetak ?? 0 }}">
                                 <i class="fa-solid fa-print me-1"></i> Cetak Faktur
                             </a>
+                            @if (!$isPaid)
+                                <button type="button"
+                                    class="btn btn-white btn-sm fw-bold hover-scale text-success bg-white border"
+                                    data-bs-toggle="modal" data-bs-target="#paymentModal">
+                                    <i class="fa-solid fa-cash-register me-1"></i> Input Bayar
+                                </button>
+                            @endif
                             @can('edit-penjualan')
                                 <a href="{{ route('penjualan.edit', $item->no_faktur) }}"
                                     class="btn btn-white btn-sm fw-bold hover-scale text-success bg-white border">
@@ -33,7 +40,7 @@
                                 </a>
                             @endcan
                             @can('delete-penjualan')
-                                <button type="button" 
+                                <button type="button"
                                     class="btn btn-danger btn-sm fw-bold hover-scale btn-batal-faktur border border-white border-opacity-10"
                                     data-no-faktur="{{ $item->no_faktur }}"
                                     data-action="{{ route('penjualan.batal', $item->no_faktur) }}">
@@ -64,7 +71,8 @@
                             <div class="border border-4 border-danger rounded-3 px-4 py-2 text-danger fw-bold text-uppercase shadow-sm bg-white bg-opacity-90 d-flex flex-column align-items-center"
                                 style="font-size: 1.5rem; letter-spacing: 4px; border-style: double !important; border-width: 6px !important; opacity: 0.85;">
                                 <span>BATAL</span>
-                                <small style="font-size: 0.62rem; letter-spacing: 1.5px;" class="fw-semibold mt-1">VOID / CANCELED</small>
+                                <small style="font-size: 0.62rem; letter-spacing: 1.5px;" class="fw-semibold mt-1">VOID /
+                                    CANCELED</small>
                             </div>
                         @elseif ($isPaid)
                             <div class="border border-4 border-success rounded-3 px-4 py-2 text-success fw-bold text-uppercase shadow-sm bg-white bg-opacity-90 d-flex flex-column align-items-center"
@@ -150,7 +158,8 @@
                                     <tr>
                                         <td class="text-danger fw-semibold py-1">Alasan Batal</td>
                                         <td class="py-1">: <span
-                                                class="badge bg-danger-subtle text-danger px-2 py-1 ms-2 fw-semibold">{{ $item->alasan_batal }}</span></td>
+                                                class="badge bg-danger-subtle text-danger px-2 py-1 ms-2 fw-semibold">{{ $item->alasan_batal }}</span>
+                                        </td>
                                     </tr>
                                 @endif
                             </table>
@@ -323,83 +332,6 @@
             </div>
         </div>
 
-        {{-- BOTTOM PANELS: STATUS TAGIHAN + BAYAR --}}
-        <div class="col-lg-6 col-md-12">
-            {{-- FORM TAMBAH PEMBAYARAN --}}
-            @if (!$isPaid && $item->batal == 0)
-                <div class="card shadow-sm border-0 rounded-4 mb-4">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h6 class="mb-0 fw-bold text-dark">
-                            <i class="fa-solid fa-cash-register me-2 text-success"></i> Catat Pembayaran Baru
-                        </h6>
-                    </div>
-                    <div class="card-body p-4">
-                        <form action="{{ route('penjualan.payment', $item->no_faktur) }}" method="POST"
-                            id="formPembayaran">
-                            @csrf
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fs-7 fw-bold text-secondary">Tanggal <span
-                                            class="text-danger">*</span></label>
-                                    <input type="date" name="tanggal" class="form-control form-control-sm"
-                                        value="{{ date('Y-m-d') }}" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fs-7 fw-bold text-secondary">No Bukti / BKK</label>
-                                    <input type="text" name="no_bukti"
-                                        class="form-control form-control-sm font-monospace"
-                                        placeholder="Auto jika kosong">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fs-7 fw-bold text-secondary">Jenis Pembayaran <span
-                                            class="text-danger">*</span></label>
-                                    <select name="jenis_bayar" class="form-select form-select-sm" required>
-                                        <option value="tunai" selected>Tunai</option>
-                                        <option value="transfer">Transfer</option>
-                                        <option value="giro">Giro</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fs-7 fw-bold text-secondary">Jumlah Bayar <span
-                                            class="text-danger">*</span></label>
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text">Rp</span>
-                                        <input type="text" name="jumlah" id="payment_jumlah"
-                                            class="form-control form-control-sm text-end fw-bold text-success input-number-format"
-                                            value="{{ (int) $sisaBayar }}" required>
-                                    </div>
-                                    <div id="payment_limit_warning" class="text-danger small mt-1 d-none">
-                                        <i class="fa-solid fa-circle-exclamation me-1"></i>Jumlah melebihi sisa piutang!
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fs-7 fw-bold text-secondary">Salesman <span
-                                            class="text-danger">*</span></label>
-                                    <select name="kode_sales" class="form-select form-select-sm" required>
-                                        <option value="">-- Pilih Salesman --</option>
-                                        @foreach ($salesmen as $s)
-                                            <option value="{{ $s->nik }}"
-                                                {{ (old('kode_sales') ?? $item->kode_sales) === $s->nik ? 'selected' : '' }}>
-                                                {{ $s->name }} ({{ $s->nik }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fs-7 fw-bold text-secondary">Keterangan</label>
-                                    <input type="text" name="keterangan" class="form-control form-control-sm"
-                                        placeholder="Nama bank, no ref, catatan...">
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-success btn-sm w-100 fw-bold py-2 mt-3 hover-scale"
-                                id="btnSubmitPembayaran">
-                                <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Pembayaran
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            @endif
-        </div>
 
         {{-- RIWAYAT PEMBAYARAN --}}
         <div class="row">
@@ -592,6 +524,91 @@
             </div>
         </div>
     </div>
+
+    {{-- MODAL TAMBAH PEMBAYARAN --}}
+    @if (!$isPaid && $item->batal == 0)
+        <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content border-0 rounded-4 shadow">
+                    <div class="modal-header bg-success text-white py-3 border-0">
+                        <h6 class="modal-title fw-bold" id="paymentModalLabel">
+                            <i class="fa-solid fa-cash-register me-2"></i> Catat Pembayaran Baru
+                        </h6>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <form action="{{ route('penjualan.payment', $item->no_faktur) }}" method="POST"
+                            id="formPembayaran">
+                            @csrf
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fs-7 fw-bold text-secondary">Tanggal <span
+                                            class="text-danger">*</span></label>
+                                    <input type="date" name="tanggal" class="form-control form-control-sm"
+                                        value="{{ date('Y-m-d') }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fs-7 fw-bold text-secondary">No Bukti / BKK</label>
+                                    <input type="text" name="no_bukti"
+                                        class="form-control form-control-sm font-monospace"
+                                        placeholder="Auto jika kosong">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fs-7 fw-bold text-secondary">Jenis Pembayaran <span
+                                            class="text-danger">*</span></label>
+                                    <select name="jenis_bayar" class="form-select form-select-sm" required>
+                                        <option value="tunai" selected>Tunai</option>
+                                        <option value="transfer">Transfer</option>
+                                        <option value="giro">Giro</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fs-7 fw-bold text-secondary">Jumlah Bayar <span
+                                            class="text-danger">*</span></label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">Rp</span>
+                                        <input type="text" name="jumlah" id="payment_jumlah"
+                                            class="form-control form-control-sm text-end fw-bold text-success input-number-format"
+                                            value="{{ (int) $sisaBayar }}" required>
+                                    </div>
+                                    <div id="payment_limit_warning" class="text-danger small mt-1 d-none">
+                                        <i class="fa-solid fa-circle-exclamation me-1"></i>Jumlah melebihi sisa piutang!
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fs-7 fw-bold text-secondary">Salesman <span
+                                            class="text-danger">*</span></label>
+                                    <select name="kode_sales" class="form-select form-select-sm" required>
+                                        <option value="">-- Pilih Salesman --</option>
+                                        @foreach ($salesmen as $s)
+                                            <option value="{{ $s->nik }}"
+                                                {{ (old('kode_sales') ?? $item->kode_sales) === $s->nik ? 'selected' : '' }}>
+                                                {{ $s->name }} ({{ $s->nik }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fs-7 fw-bold text-secondary">Keterangan</label>
+                                    <input type="text" name="keterangan" class="form-control form-control-sm"
+                                        placeholder="Nama bank, no ref, catatan...">
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                                <button type="button" class="btn btn-light btn-sm fw-semibold border"
+                                    data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="btn btn-success btn-sm fw-bold" id="btnSubmitPembayaran">
+                                    <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Pembayaran
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 @endsection
 
 @push('scripts')
