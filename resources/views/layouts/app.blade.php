@@ -146,6 +146,44 @@
 
             // Override Select2 to automatically handle zoom/alignment and Bootstrap modal focus issues
             if ($.fn.select2) {
+                // Hook into Select2's internal positioning adapter to fix coordinate misalignment under zoom
+                if ($.fn.select2.amd) {
+                    try {
+                        const AttachBody = $.fn.select2.amd.require('select2/dropdown/attachBody');
+                        if (AttachBody && AttachBody.prototype && AttachBody.prototype._positionDropdown) {
+                            const _oldPositionDropdown = AttachBody.prototype._positionDropdown;
+                            AttachBody.prototype._positionDropdown = function() {
+                                _oldPositionDropdown.apply(this, arguments);
+                                
+                                let zoom = 1;
+                                const bodyZoom = window.getComputedStyle(document.body).zoom || document.body.style.zoom;
+                                if (bodyZoom) {
+                                    zoom = parseFloat(bodyZoom);
+                                    if (zoom > 10) {
+                                        zoom = zoom / 100;
+                                    }
+                                }
+                                
+                                if (zoom !== 1 && this.$dropdown) {
+                                    const cssTop = this.$dropdown.css('top');
+                                    const cssLeft = this.$dropdown.css('left');
+                                    
+                                    if (cssTop && cssTop.indexOf('px') !== -1) {
+                                        const topVal = parseFloat(cssTop);
+                                        this.$dropdown.css('top', (topVal / zoom) + 'px');
+                                    }
+                                    if (cssLeft && cssLeft.indexOf('px') !== -1) {
+                                        const leftVal = parseFloat(cssLeft);
+                                        this.$dropdown.css('left', (leftVal / zoom) + 'px');
+                                    }
+                                }
+                            };
+                        }
+                    } catch (e) {
+                        console.error('Error overriding Select2 positioning:', e);
+                    }
+                }
+
                 const originalSelect2 = $.fn.select2;
                 $.fn.select2 = function(options) {
                     if (this.length === 0) {
@@ -160,28 +198,21 @@
                     if (!options.dropdownParent) {
                         this.each(function() {
                             const $el = $(this);
-                            let parent = $el.parent();
+                            let parent = null;
                             if ($el.closest('.modal').length > 0) {
                                 parent = $el.closest('.modal');
-                            } else if ($el.closest('.table-responsive').length > 0) {
-                                parent = $el.closest('.table-responsive').parent();
                             }
 
-                            if (!parent.hasClass('modal') && !parent.hasClass('modal-content')) {
-                                parent.addClass('position-relative');
+                            if (parent) {
+                                const elementOptions = $.extend({}, options, {
+                                    dropdownParent: parent
+                                });
+                                originalSelect2.apply($el, [elementOptions]);
+                            } else {
+                                originalSelect2.apply($el, [options]);
                             }
-
-                            const elementOptions = $.extend({}, options, {
-                                dropdownParent: parent
-                            });
-                            originalSelect2.apply($el, [elementOptions]);
                         });
                         return this;
-                    } else {
-                        const dp = $(options.dropdownParent);
-                        if (!dp.hasClass('modal') && !dp.hasClass('modal-content')) {
-                            dp.addClass('position-relative');
-                        }
                     }
 
                     return originalSelect2.apply(this, [options]);

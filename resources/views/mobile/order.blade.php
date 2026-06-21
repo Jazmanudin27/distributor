@@ -251,7 +251,8 @@
                     <label class="form-label text-secondary small mb-1">Potongan Global (Rp)</label>
                     <input type="number" name="diskon_global" id="diskon_global"
                         class="form-control form-control-sm bg-dark text-white border-secondary text-end rupiah-input"
-                        value="0" min="0">
+                        value="0" min="0" readonly
+                        style="background-color: rgba(255, 255, 255, 0.05) !important;">
                 </div>
             </div>
 
@@ -652,19 +653,19 @@
                         <div class="row g-1">
                             <div class="col-4">
                                 <div class="input-group input-group-sm">
-                                    <input type="number" name="items[${rowIndex}][diskon1_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon1" min="0" max="100" step="any" value="0" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px;" placeholder="D1">
+                                    <input type="number" name="items[${rowIndex}][diskon1_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon1" min="0" max="100" step="any" value="0" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px; background-color: rgba(255, 255, 255, 0.05);" placeholder="D1" readonly>
                                     <span class="input-group-text bg-transparent text-secondary border-0 px-1" style="font-size: 0.7rem;">%</span>
                                 </div>
                             </div>
                             <div class="col-4">
                                 <div class="input-group input-group-sm">
-                                    <input type="number" name="items[${rowIndex}][diskon2_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon2" min="0" max="100" step="any" value="0" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px;" placeholder="D2">
+                                    <input type="number" name="items[${rowIndex}][diskon2_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon2" min="0" max="100" step="any" value="0" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px; background-color: rgba(255, 255, 255, 0.05);" placeholder="D2" readonly>
                                     <span class="input-group-text bg-transparent text-secondary border-0 px-1" style="font-size: 0.7rem;">%</span>
                                 </div>
                             </div>
                             <div class="col-4">
                                 <div class="input-group input-group-sm">
-                                    <input type="number" name="items[${rowIndex}][diskon3_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon3" min="0" max="100" step="any" value="0" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px;" placeholder="D3">
+                                    <input type="number" name="items[${rowIndex}][diskon3_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon3" min="0" max="100" step="any" value="0" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px; background-color: rgba(255, 255, 255, 0.05);" placeholder="D3" readonly>
                                     <span class="input-group-text bg-transparent text-secondary border-0 px-1" style="font-size: 0.7rem;">%</span>
                                 </div>
                             </div>
@@ -916,16 +917,8 @@
                             inputDis2.style.backgroundColor = 'rgba(255,255,255,0.05)';
                         }
                     } else {
-                        if (inputDis1.hasAttribute('readonly')) {
-                            inputDis1.removeAttribute('readonly');
-                            inputDis1.style.backgroundColor = '';
-                            inputDis1.value = '0';
-                        }
-                        if (inputDis2.hasAttribute('readonly')) {
-                            inputDis2.removeAttribute('readonly');
-                            inputDis2.style.backgroundColor = '';
-                            inputDis2.value = '0';
-                        }
+                        inputDis1.value = '0';
+                        inputDis2.value = '0';
                     }
                 });
             }

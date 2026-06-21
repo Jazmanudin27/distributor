@@ -181,18 +181,186 @@ class MobileOrderController extends Controller
             }
         }
 
-        // Calculate Grand Total for validation
+        // Fetch active diskon strata rules for recalculating
+        $diskonStrata = DiskonStrata::where('is_active', true)
+            ->where(function($q) {
+                $q->whereNull('berlaku_dari')->orWhere('berlaku_dari', '<=', now());
+            })
+            ->where(function($q) {
+                $q->whereNull('berlaku_sampai')->orWhere('berlaku_sampai', '>=', now());
+            })
+            ->with(['details', 'barangs', 'kategori', 'merk'])
+            ->get();
+
+        // Calculate supplier subtotals for supplier-level strata
+        $supplierSubtotals = [];
+        foreach ($request->items as $row) {
+            $barang = Barang::find($row['kode_barang']);
+            if ($barang && $barang->kode_supplier) {
+                $qty = floatval($row['qty']);
+                $harga = floatval($row['harga']);
+                $sub = $qty * $harga;
+                $supplierSubtotals[$barang->kode_supplier] = ($supplierSubtotals[$barang->kode_supplier] ?? 0) + $sub;
+            }
+        }
+
+        // Strata matching closure matching JS logic
+        $calculateStrata = function($barangCode, $qty, $sub, $barang) use ($diskonStrata, $supplierSubtotals, $request) {
+            if (!$barang) return ['d1' => 0, 'd2' => 0];
+
+            $bestRate = 0;
+            $bestRule = null;
+            $bestDetail = null;
+
+            $checkRule = function($r, $d) use (&$bestRate, &$bestRule, &$bestDetail) {
+                $rate = floatval($d->dis1 ?? 0);
+                if ($rate >= $bestRate) {
+                    $bestRate = $rate;
+                    $bestRule = $r;
+                    $bestDetail = $d;
+                }
+            };
+
+            // Priority 1: Per Barang
+            foreach ($diskonStrata as $r) {
+                if ($r->tipe === 'barang') {
+                    if ($r->barangs && $r->barangs->contains('kode_barang', $barangCode)) {
+                        foreach ($r->details as $d) {
+                            $minQty = floatval($d->min_qty ?? 0);
+                            $maxQty = $d->max_qty !== null ? floatval($d->max_qty) : null;
+                            if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty)) {
+                                $checkRule($r, $d);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Priority 2: Per Beberapa Barang
+            if (!$bestRule) {
+                foreach ($diskonStrata as $r) {
+                    if ($r->tipe === 'beberapa_barang') {
+                        if ($r->barangs && $r->barangs->contains('kode_barang', $barangCode)) {
+                            foreach ($r->details as $d) {
+                                $minQty = floatval($d->min_qty ?? 0);
+                                $maxQty = $d->max_qty !== null ? floatval($d->max_qty) : null;
+                                if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty)) {
+                                    $checkRule($r, $d);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Priority 3: Per Kategori
+            if (!$bestRule && $barang->kategori) {
+                foreach ($diskonStrata as $r) {
+                    if ($r->tipe === 'kategori') {
+                        if ($r->kategori && $r->kategori->nama_kategori === $barang->kategori) {
+                            foreach ($r->details as $d) {
+                                $minQty = floatval($d->min_qty ?? 0);
+                                $maxQty = $d->max_qty !== null ? floatval($d->max_qty) : null;
+                                if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty)) {
+                                    $checkRule($r, $d);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Priority 4: Per Merk
+            if (!$bestRule && $barang->merk) {
+                foreach ($diskonStrata as $r) {
+                    if ($r->tipe === 'merk') {
+                        if ($r->merk && $r->merk->nama_merk === $barang->merk) {
+                            foreach ($r->details as $d) {
+                                $minQty = floatval($d->min_qty ?? 0);
+                                $maxQty = $d->max_qty !== null ? floatval($d->max_qty) : null;
+                                if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty)) {
+                                    $checkRule($r, $d);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Priority 5: Per Supplier
+            if (!$bestRule && $barang->kode_supplier) {
+                $totalSupplierNominal = $supplierSubtotals[$barang->kode_supplier] ?? 0;
+                foreach ($diskonStrata as $r) {
+                    if ($r->tipe === 'supplier') {
+                        if ($r->kode_supplier === $barang->kode_supplier) {
+                            foreach ($r->details as $d) {
+                                $minNom = floatval($d->min_nominal ?? 0);
+                                $maxNom = $d->max_nominal !== null ? floatval($d->max_nominal) : null;
+                                if ($totalSupplierNominal >= $minNom && ($maxNom === null || $totalSupplierNominal <= $maxNom)) {
+                                    $checkRule($r, $d);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Convert raw values to percentage
+            $d1_pct = 0;
+            $d2_pct = 0;
+
+            if ($bestRule && $bestDetail) {
+                $rawDis1 = floatval($bestDetail->dis1 ?? 0);
+                $rawDis2 = floatval($bestDetail->dis2 ?? 0);
+
+                if ($bestDetail->tipe_nilai === 'persen') {
+                    $d1_pct = $rawDis1;
+                    $d2_pct = $rawDis2;
+                } else {
+                    if ($bestRule->tipe === 'supplier') {
+                        $totalSupplierNominal = $supplierSubtotals[$barang->kode_supplier] ?? 1;
+                        if ($totalSupplierNominal <= 0) $totalSupplierNominal = 1;
+                        $d1_pct = ($rawDis1 / $totalSupplierNominal) * 100;
+                        $d2_pct = ($rawDis2 / $totalSupplierNominal) * 100;
+                    } else {
+                        if ($sub > 0) {
+                            $d1_pct = ($rawDis1 / $sub) * 100;
+                            $d2_pct = ($rawDis2 / $sub) * 100;
+                        }
+                    }
+                }
+
+                // D2 only if Tunai
+                if ($request->jenis_transaksi !== 'Tunai') {
+                    $d2_pct = 0;
+                }
+            }
+
+            return [
+                'd1' => round($d1_pct, 5),
+                'd2' => round($d2_pct, 5)
+            ];
+        };
+
+        // Calculate Grand Total for validation using recalculated strata discounts
         $tempSubtotalSum = 0;
         $tempTotalDiskon = 0;
         foreach ($request->items as $row) {
+            $barang = Barang::find($row['kode_barang']);
             $sub = $row['qty'] * $row['harga'];
-            $d1 = $sub * (floatval($row['diskon1_persen'] ?? 0) / 100);
-            $d2 = ($sub - $d1) * (floatval($row['diskon2_persen'] ?? 0) / 100);
-            $d3 = ($sub - $d1 - $d2) * (floatval($row['diskon3_persen'] ?? 0) / 100);
+            $strata = $calculateStrata($row['kode_barang'], $row['qty'], $sub, $barang);
+            
+            $d1_pct = $strata['d1'];
+            $d2_pct = $strata['d2'];
+            $d3_pct = 0; // Salesman cannot input manual D3 discount
+
+            $d1 = $sub * ($d1_pct / 100);
+            $d2 = ($sub - $d1) * ($d2_pct / 100);
+            $d3 = ($sub - $d1 - $d2) * ($d3_pct / 100);
             $tempSubtotalSum += $sub;
             $tempTotalDiskon += round($d1 + $d2 + $d3, 2);
         }
-        $tempGrandTotal = $tempSubtotalSum - $tempTotalDiskon - ($request->diskon_global ?? 0);
+        $tempGrandTotal = $tempSubtotalSum - $tempTotalDiskon; // Salesman cannot input global discount
 
         // 2. Verify Credit Limit
         if ($request->jenis_transaksi === 'Kredit') {
@@ -204,7 +372,7 @@ class MobileOrderController extends Controller
 
         // 3. Process Transaction
         try {
-            DB::transaction(function () use ($request, $tempGrandTotal, $pelanggan) {
+            DB::transaction(function () use ($request, $tempGrandTotal, $pelanggan, $calculateStrata) {
                 $subtotalSum  = 0;
                 $totalDiskon  = 0;
                 $details      = [];
@@ -222,9 +390,12 @@ class MobileOrderController extends Controller
                     $barang->decrement('stok', $qtySmallest);
 
                     $subtotal    = $row['qty'] * $row['harga'];
-                    $d1_pct      = floatval($row['diskon1_persen'] ?? 0);
-                    $d2_pct      = floatval($row['diskon2_persen'] ?? 0);
-                    $d3_pct      = floatval($row['diskon3_persen'] ?? 0);
+                    
+                    // Recalculate strata discounts
+                    $strata      = $calculateStrata($row['kode_barang'], $row['qty'], $subtotal, $barang);
+                    $d1_pct      = $strata['d1'];
+                    $d2_pct      = $strata['d2'];
+                    $d3_pct      = 0; // Salesman cannot input manual D3 discount
 
                     $d1          = $subtotal * ($d1_pct / 100);
                     $d2          = ($subtotal - $d1) * ($d2_pct / 100);
@@ -251,7 +422,7 @@ class MobileOrderController extends Controller
                     ]);
                 }
 
-                $diskonGlobal = $request->diskon_global ?? 0;
+                $diskonGlobal = 0; // Salesman cannot input global discount
                 $grandTotal   = $subtotalSum - $totalDiskon - $diskonGlobal;
 
                 // Save Penjualan (Order)
