@@ -730,7 +730,7 @@ class LaporanController extends Controller
 
         if ($isPrintOrExcel) {
             if ($jenis_laporan === 'rekap') {
-                $query = Penjualan::with(['pelanggan', 'sales', 'user'])
+                $query = Penjualan::with(['pelanggan.wilayah', 'sales', 'user'])
                     ->where('batal', 0);
                 
                 if ($tanggal_mulai) $query->where('tanggal', '>=', $tanggal_mulai);
@@ -741,7 +741,7 @@ class LaporanController extends Controller
                 $items = $query->orderBy('tanggal', 'asc')->orderBy('no_faktur', 'asc')->get();
             } else {
                 // detail
-                $query = \App\Models\PenjualanDetail::with(['penjualan.pelanggan', 'penjualan.sales', 'barang', 'barangSatuan'])
+                $query = \App\Models\PenjualanDetail::with(['penjualan.pelanggan.wilayah', 'penjualan.sales', 'barang', 'barangSatuan'])
                     ->whereHas('penjualan', function ($q) use ($tanggal_mulai, $tanggal_akhir, $kode_sales, $kode_pelanggan) {
                         $q->where('batal', 0);
                         if ($tanggal_mulai) $q->where('tanggal', '>=', $tanggal_mulai);

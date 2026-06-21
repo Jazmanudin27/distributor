@@ -7,10 +7,14 @@
     <title>Cetak Laporan Stok Barang</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             background-color: #fff;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: "Inter", sans-serif;
             font-size: 11px;
             color: #000;
         }
@@ -83,7 +87,7 @@
         @if ($jenis_laporan === 'rekap')
             {{-- REKAP STOK --}}
             <div class="rekap-report-container"
-                style="font-family: Tahoma, sans-serif; font-size: 13px; color: #000; margin: 5px;">
+                style="font-family: 'Inter', sans-serif; font-size: 13px; color: #000; margin: 5px;">
                 <table class="table-bordered table-sm w-100"
                     style="font-size: 11px; border-collapse: collapse; border: 1px solid #ccc; width: 100%;">
                     <thead>
@@ -126,7 +130,7 @@
                 </div>
             @else
                 <div class="detail-report-container"
-                    style="font-family: Tahoma, sans-serif; font-size: 13px; color: #000; margin: 5px;">
+                    style="font-family: 'Inter', sans-serif; font-size: 13px; color: #000; margin: 5px;">
 
                     <table class="table-bordered table-sm w-100"
                         style="font-size: 11px; border-collapse: collapse; border: 1px solid #ccc; width: 100%;">

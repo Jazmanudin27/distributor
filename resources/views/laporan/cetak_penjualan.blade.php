@@ -7,10 +7,14 @@
     <title>Cetak Laporan Penjualan</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             background-color: #fff;
-            font-family: 'Tahoma', Courier, monospace;
+            font-family: "Inter", sans-serif;
             font-size: 11px;
             color: #000;
         }
@@ -81,6 +85,7 @@
                             <th>No Faktur</th>
                             <th>Tanggal</th>
                             <th>Pelanggan</th>
+                            <th>Wilayah</th>
                             <th>Salesman</th>
                             <th class="text-end">Total</th>
                             <th class="text-end">Diskon</th>
@@ -105,6 +110,7 @@
                                 <td>{{ $invoice->no_faktur }}</td>
                                 <td>{{ \Carbon\Carbon::parse($invoice->tanggal)->format('d-m-Y') }}</td>
                                 <td>{{ $invoice->pelanggan->nama_pelanggan ?? '-' }}</td>
+                                <td>{{ $invoice->pelanggan->wilayah->nama_wilayah ?? '-' }}</td>
                                 <td>{{ $invoice->sales->name ?? '-' }}</td>
                                 <td class="text-end">{{ number_format($invoice->total, 0, ',', '.') }}</td>
                                 <td class="text-end">{{ number_format($invoice->diskon, 0, ',', '.') }}</td>
@@ -115,7 +121,7 @@
                     </tbody>
                     <tfoot class="fw-bold">
                         <tr class="table-light">
-                            <td colspan="6" class="text-end">TOTAL KESELURUHAN:</td>
+                            <td colspan="7" class="text-end">TOTAL KESELURUHAN:</td>
                             <td class="text-end">{{ number_format($totTotal, 0, ',', '.') }}</td>
                             <td class="text-end">{{ number_format($totDiskon, 0, ',', '.') }}</td>
                             <td class="text-end">{{ number_format($totGrand, 0, ',', '.') }}</td>
@@ -131,6 +137,7 @@
                             <th>No Faktur</th>
                             <th>Tanggal</th>
                             <th>Pelanggan</th>
+                            <th>Wilayah</th>
                             <th>Kode Barang</th>
                             <th>Nama Barang</th>
                             <th class="text-end">Qty</th>
@@ -158,6 +165,7 @@
                                 <td>{{ $detail->no_faktur }}</td>
                                 <td>{{ \Carbon\Carbon::parse($detail->penjualan->tanggal)->format('d-m-Y') }}</td>
                                 <td>{{ $detail->penjualan->pelanggan->nama_pelanggan ?? '-' }}</td>
+                                <td>{{ $detail->penjualan->pelanggan->wilayah->nama_wilayah ?? '-' }}</td>
                                 <td>{{ $detail->kode_barang }}</td>
                                 <td>{{ $detail->barang->nama_barang ?? '-' }}</td>
                                 <td class="text-end">{{ number_format($detail->qty, 0, ',', '.') }}</td>
@@ -170,7 +178,7 @@
                     </tbody>
                     <tfoot class="fw-bold">
                         <tr class="table-light">
-                            <td colspan="6" class="text-end">TOTAL KESELURUHAN:</td>
+                            <td colspan="7" class="text-end">TOTAL KESELURUHAN:</td>
                             <td class="text-end">{{ number_format($totQty, 0, ',', '.') }}</td>
                             <td></td>
                             <td></td>
