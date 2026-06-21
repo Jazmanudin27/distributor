@@ -238,6 +238,20 @@
                     const waLink = p.no_hp_pelanggan ? `https://wa.me/${p.no_hp_pelanggan.replace(/[^0-9]/g, '')}` : null;
                     const wilayahText = (p.wilayah ? p.wilayah.nama_wilayah : '-') + (p.sub_wilayah ? ` / ${p.sub_wilayah.nama_wilayah}` : '');
 
+                    let photoHtml = '';
+                    if (p.foto || p.foto_ktp) {
+                        photoHtml += `<div style="margin-bottom: 4px;"><strong>Media:</strong> `;
+                        if (p.foto) {
+                            const fotoUrl = p.foto.includes('/') ? `{{ asset('') }}${p.foto}` : `{{ asset('storage/pelanggan') }}/${p.foto}`;
+                            photoHtml += `<a href="${fotoUrl}" target="_blank" style="color: #6366f1; text-decoration: none; margin-right: 8px;"><i class="fa-solid fa-image me-0.5"></i>Toko</a>`;
+                        }
+                        if (p.foto_ktp) {
+                            const fotoKtpUrl = p.foto_ktp.includes('/') ? `{{ asset('') }}${p.foto_ktp}` : `{{ asset('storage/pelanggan_ktp') }}/${p.foto_ktp}`;
+                            photoHtml += `<a href="${fotoKtpUrl}" target="_blank" style="color: #10b981; text-decoration: none;"><i class="fa-solid fa-id-card me-0.5"></i>KTP</a>`;
+                        }
+                        photoHtml += `</div>`;
+                    }
+
                     let popupHtml = `
                         <div style="font-family: sans-serif; font-size: 11px; min-width: 180px; padding: 2px;">
                             <strong style="color: #6366f1; font-size: 12px; display: block; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; margin-bottom: 6px;">
@@ -247,6 +261,7 @@
                             <div style="margin-bottom: 4px;"><strong>Alamat:</strong> ${p.alamat_pelanggan || '-'}</div>
                             <div style="margin-bottom: 4px;"><strong>Wilayah:</strong> ${wilayahText}</div>
                             <div style="margin-bottom: 4px;"><strong>Metode Bayar:</strong> ${p.metode_bayar || '-'}</div>
+                            ${photoHtml}
                             <div style="margin-bottom: 6px;"><strong>HP/WA:</strong> ${p.no_hp_pelanggan || '-'}</div>
                             <div style="display: flex; gap: 5px; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px;">
                                 <a href="${editUrl}" target="_blank" class="btn btn-xs btn-primary text-white" style="font-size: 9px; padding: 2px 6px; border-radius: 4px; text-decoration: none;">

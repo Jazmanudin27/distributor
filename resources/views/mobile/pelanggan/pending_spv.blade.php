@@ -56,21 +56,27 @@
                     </div>
 
                     <!-- Attachments -->
-                    @if ($p->foto || $p->foto_ktp)
+                     @if ($p->foto || $p->foto_ktp)
                         <div class="row g-2 mb-3 pt-2 border-top border-secondary border-opacity-10">
                             @if ($p->foto)
+                                @php
+                                    $fotoUrl = Str::contains($p->foto, '/') ? asset($p->foto) : asset('storage/pelanggan/' . $p->foto);
+                                @endphp
                                 <div class="col-6">
                                     <span class="text-secondary d-block mb-1" style="font-size: 0.65rem;">FOTO TOKO:</span>
-                                    <a href="{{ asset($p->foto) }}" target="_blank">
-                                        <img src="{{ asset($p->foto) }}" class="img-fluid rounded-3 border border-secondary border-opacity-10" style="max-height: 80px; width: 100%; object-fit: cover;">
+                                    <a href="{{ $fotoUrl }}" target="_blank">
+                                        <img src="{{ $fotoUrl }}" class="img-fluid rounded-3 border border-secondary border-opacity-10" style="max-height: 80px; width: 100%; object-fit: cover;">
                                     </a>
                                 </div>
                             @endif
                             @if ($p->foto_ktp)
+                                @php
+                                    $fotoKtpUrl = Str::contains($p->foto_ktp, '/') ? asset($p->foto_ktp) : asset('storage/pelanggan_ktp/' . $p->foto_ktp);
+                                @endphp
                                 <div class="col-6">
                                     <span class="text-secondary d-block mb-1" style="font-size: 0.65rem;">FOTO KTP:</span>
-                                    <a href="{{ asset($p->foto_ktp) }}" target="_blank">
-                                        <img src="{{ asset($p->foto_ktp) }}" class="img-fluid rounded-3 border border-secondary border-opacity-10" style="max-height: 80px; width: 100%; object-fit: cover;">
+                                    <a href="{{ $fotoKtpUrl }}" target="_blank">
+                                        <img src="{{ $fotoKtpUrl }}" class="img-fluid rounded-3 border border-secondary border-opacity-10" style="max-height: 80px; width: 100%; object-fit: cover;">
                                     </a>
                                 </div>
                             @endif
