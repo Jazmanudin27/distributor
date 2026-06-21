@@ -46,7 +46,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"
                     style="filter: invert(1) grayscale(100%) brightness(200%); opacity: 0.6; transition: all 0.3s ease;"></button>
             </div>
-            <div class="offcanvas-body p-0">
+            <div class=" p-0">
                 @include('layouts.sidebar')
             </div>
         </div>
