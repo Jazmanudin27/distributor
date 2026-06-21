@@ -167,12 +167,21 @@
                                 parent = $el.closest('.table-responsive').parent();
                             }
 
+                            if (!parent.hasClass('modal') && !parent.hasClass('modal-content')) {
+                                parent.addClass('position-relative');
+                            }
+
                             const elementOptions = $.extend({}, options, {
                                 dropdownParent: parent
                             });
                             originalSelect2.apply($el, [elementOptions]);
                         });
                         return this;
+                    } else {
+                        const dp = $(options.dropdownParent);
+                        if (!dp.hasClass('modal') && !dp.hasClass('modal-content')) {
+                            dp.addClass('position-relative');
+                        }
                     }
 
                     return originalSelect2.apply(this, [options]);
