@@ -710,7 +710,9 @@ class LaporanController extends Controller
     {
         $this->authorizeReport('penjualan');
 
-        $salesmen = \App\Models\User::where('role', 'sales')->orWhere('role', 'Salesman')->orderBy('name')->get();
+        $salesmen = \App\Models\User::where(function ($q) {
+            $q->where('role', 'sales')->orWhere('role', 'Salesman');
+        })->where('status', '1')->orderBy('name')->get();
         
         $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
         $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
@@ -1162,7 +1164,9 @@ class LaporanController extends Controller
         // Fetch master data for dropdown filters
         $wilayahs = \App\Models\Wilayah::orderBy('nama_wilayah')->get();
         $subWilayahs = \App\Models\SubWilayah::orderBy('nama_wilayah')->get();
-        $salesmen = \App\Models\User::where('role', 'sales')->orWhere('role', 'Salesman')->orderBy('name')->get();
+        $salesmen = \App\Models\User::where(function ($q) {
+            $q->where('role', 'sales')->orWhere('role', 'Salesman');
+        })->where('status', '1')->orderBy('name')->get();
 
         $pelanggans = collect();
         if ($kode_pelanggan) {
@@ -1292,7 +1296,9 @@ class LaporanController extends Controller
     {
         $this->authorizeReport('setoran');
 
-        $salesmen = \App\Models\User::where('role', 'sales')->orWhere('role', 'Salesman')->orderBy('name')->get();
+        $salesmen = \App\Models\User::where(function ($q) {
+            $q->where('role', 'sales')->orWhere('role', 'Salesman');
+        })->where('status', '1')->orderBy('name')->get();
         
         $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
         $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));

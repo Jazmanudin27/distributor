@@ -60,7 +60,9 @@ class PenjualanController extends Controller
             });
         }
 
-        $salesmen = User::where('role', 'sales')->orWhere('role', 'Salesman')->orderBy('name')->get();
+        $salesmen = User::where(function ($q) {
+            $q->where('role', 'sales')->orWhere('role', 'Salesman');
+        })->where('status', '1')->orderBy('name')->get();
         $wilayahs = \App\Models\Wilayah::orderBy('nama_wilayah')->get();
         $items = $query->orderBy('tanggal', 'desc')->orderBy('no_faktur', 'desc')->paginate(15)->appends($request->query());
         return view('penjualan.index', compact('items', 'salesmen', 'wilayahs'));
@@ -326,7 +328,9 @@ class PenjualanController extends Controller
 
         $sisaBayar = $item->grand_total - $totalBayar - $totalRetur;
 
-        $salesmen = User::where('role', 'sales')->orWhere('role', 'Salesman')->orderBy('name')->get();
+        $salesmen = User::where(function ($q) {
+            $q->where('role', 'sales')->orWhere('role', 'Salesman');
+        })->where('status', '1')->orderBy('name')->get();
 
         return view('penjualan.show', compact('item', 'totalBayar', 'totalPending', 'sisaBayar', 'salesmen', 'allPembayarans', 'returs', 'totalRetur'));
     }
