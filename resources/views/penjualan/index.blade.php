@@ -39,8 +39,10 @@
                         <label class="form-label fs-7 fw-semibold text-secondary mb-1">Status Pembayaran</label>
                         <select name="status_pembayaran" class="form-select form-select-sm">
                             <option value="">Semua</option>
-                            <option value="lunas" {{ request('status_pembayaran') === 'lunas' ? 'selected' : '' }}>Lunas</option>
-                            <option value="belum_lunas" {{ request('status_pembayaran') === 'belum_lunas' ? 'selected' : '' }}>Belum Lunas</option>
+                            <option value="lunas" {{ request('status_pembayaran') === 'lunas' ? 'selected' : '' }}>Lunas
+                            </option>
+                            <option value="belum_lunas"
+                                {{ request('status_pembayaran') === 'belum_lunas' ? 'selected' : '' }}>Belum Lunas</option>
                         </select>
                     </div>
 
@@ -74,7 +76,8 @@
                             <button type="submit" class="btn btn-primary btn-sm flex-fill fw-bold" title="Filter Data">
                                 <i class="fa-solid fa-filter me-1"></i> Filter
                             </button>
-                            <a href="{{ route('penjualan.index') }}" class="btn btn-outline-secondary btn-sm flex-fill fw-bold" title="Reset">
+                            <a href="{{ route('penjualan.index') }}"
+                                class="btn btn-outline-secondary btn-sm flex-fill fw-bold" title="Reset">
                                 <i class="fa-solid fa-rotate-right me-1"></i> Reset
                             </a>
                         </div>
@@ -124,9 +127,11 @@
                                 </td>
                                 <td>
                                     @if ($item->pelanggan && $item->pelanggan->wilayah)
-                                        <div class="fw-semibold text-dark">{{ $item->pelanggan->wilayah->nama_wilayah }}</div>
+                                        <div class="fw-semibold text-dark">{{ $item->pelanggan->wilayah->nama_wilayah }}
+                                        </div>
                                         <div class="text-muted small fw-normal" style="font-size: 0.78rem;">
-                                            <span class="font-monospace text-secondary">{{ $item->pelanggan->kode_wilayah }}</span>
+                                            <span
+                                                class="font-monospace text-secondary">{{ $item->pelanggan->kode_wilayah }}</span>
                                         </div>
                                     @else
                                         <span class="text-muted">-</span>
