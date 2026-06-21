@@ -1,5 +1,16 @@
 @extends('layouts.app')
 @section('title', $item->exists ? 'Edit Penjualan' : 'Transaksi Penjualan Baru')
+@push('styles')
+    <style>
+        .promo-row, .promo-row td {
+            background-color: rgba(253, 126, 20, 0.12) !important;
+            color: #d97706 !important;
+        }
+        .promo-row input {
+            color: #d97706 !important;
+        }
+    </style>
+@endpush
 @section('content')
     <div class="card shadow-sm border-0 rounded-3 mb-4">
         <div class="card-header card-premium-header text-white py-3 d-flex justify-content-between align-items-center">
@@ -231,6 +242,12 @@
                                     readonly>
                             </div>
                         </div>
+                        <div class="col-lg-1 col-md-2 col-6 pb-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="quick_is_promo" value="1">
+                                <label class="form-check-label fs-8 fw-bold text-secondary mb-0" for="quick_is_promo">Promo</label>
+                            </div>
+                        </div>
                         <div class="col-lg-1 col-md-2">
                             <button type="button" class="btn btn-primary btn-sm w-100 fw-bold" id="btn-add-quick">
                                 <i class="fa-solid fa-plus"></i>
@@ -252,6 +269,7 @@
                                     <th width="100">Kode</th>
                                     <th>Nama Barang</th>
                                     <th width="90" class="text-center">Satuan</th>
+                                    <th width="60" class="text-center">Promo</th>
                                     <th width="70" class="text-end">Qty</th>
                                     <th width="120" class="text-end">Harga Jual</th>
                                     <th width="65" class="text-end">D1 %</th>
@@ -615,8 +633,9 @@
                 }
 
                 const satuanName = $('#quick_satuan').find(':selected').data('name');
+                const isPromo = $('#quick_is_promo').is(':checked');
 
-                appendRow(barangCode, barang.nama_barang, satuanId, satuanName, qty, harga, d1, d2, d3);
+                appendRow(barangCode, barang.nama_barang, satuanId, satuanName, qty, harga, d1, d2, d3, isPromo);
 
                 // Reset
                 $('#quick_barang').val('').trigger('change');
@@ -626,11 +645,61 @@
                 $('#quick_diskon2_percent').val(0);
                 $('#quick_diskon3_percent').val(0);
                 $('#quick_diskon').val(0);
+                $('#quick_is_promo').prop('checked', false).trigger('change');
 
                 calculateTotals();
             });
 
-            function appendRow(barangCode, barangName, satuanId, satuanName, qty, harga, d1 = 0, d2 = 0, d3 = 0) {
+            // Handle quick promo checkbox changes
+            $('#quick_is_promo').on('change', function() {
+                const isChecked = $(this).is(':checked');
+                if (isChecked) {
+                    const currentPrice = $('#quick_harga').val();
+                    $('#quick_harga').data('temp-original-price', currentPrice);
+                    $('#quick_harga').val('0').attr('readonly', true);
+                    $('#quick_diskon1_percent').val('0').attr('readonly', true);
+                    $('#quick_diskon2_percent').val('0').attr('readonly', true);
+                    $('#quick_diskon3_percent').val('0').attr('readonly', true);
+                } else {
+                    const originalPrice = $('#quick_harga').data('temp-original-price') || '0';
+                    $('#quick_harga').val(originalPrice).removeAttr('readonly');
+                    $('#quick_diskon1_percent').val('0').removeAttr('readonly');
+                    $('#quick_diskon2_percent').val('0').removeAttr('readonly');
+                    $('#quick_diskon3_percent').val('0').removeAttr('readonly');
+                }
+                recalcDiskon();
+            });
+
+            // Handle row promo checkbox changes
+            $(document).on('change', '.input-promo', function() {
+                const row = $(this).closest('tr');
+                const isChecked = $(this).is(':checked');
+                
+                const inputHarga = row.find('.input-harga');
+                const inputDis1 = row.find('.input-diskon1');
+                const inputDis2 = row.find('.input-diskon2');
+                const inputDis3 = row.find('.input-diskon3');
+                
+                if (isChecked) {
+                    row.addClass('promo-row');
+                    const currentPrice = inputHarga.val();
+                    inputHarga.attr('data-original-harga', currentPrice);
+                    inputHarga.val('0').attr('readonly', true);
+                    inputDis1.val('0').attr('readonly', true);
+                    inputDis2.val('0').attr('readonly', true);
+                    inputDis3.val('0').attr('readonly', true);
+                } else {
+                    row.removeClass('promo-row');
+                    const originalPrice = inputHarga.attr('data-original-harga') || '0';
+                    inputHarga.val(originalPrice).removeAttr('readonly');
+                    inputDis1.removeAttr('readonly');
+                    inputDis2.removeAttr('readonly');
+                    inputDis3.removeAttr('readonly');
+                }
+                calculateTotals();
+            });
+
+            function appendRow(barangCode, barangName, satuanId, satuanName, qty, harga, d1 = 0, d2 = 0, d3 = 0, isPromo = false) {
                 const trId = `row_${rowIndex}`;
                 const fmtHarga = formatNumber(cleanNumber(harga));
 
@@ -640,11 +709,11 @@
                     const sat = barang.satuans.find(s => s.id == satuanId);
                     if (sat) {
                         isi = parseFloat(sat.isi) || 1;
-                    }
+                      }
                 }
 
                 const html = `
-                    <tr id="${trId}" class="item-row" data-isi="${isi}">
+                    <tr id="${trId}" class="item-row ${isPromo ? 'promo-row' : ''}" data-isi="${isi}">
                         <td class="text-center row-number"></td>
                         <td class="font-monospace small text-secondary">
                             ${barangCode}
@@ -656,23 +725,26 @@
                             <input type="hidden" name="items[${rowIndex}][satuan_id]" value="${satuanId}">
                             <input type="hidden" name="items[${rowIndex}][satuan]" value="${satuanName}">
                         </td>
+                        <td class="text-center">
+                            <input type="checkbox" name="items[${rowIndex}][is_promo]" value="1" class="form-check-input input-promo" ${isPromo ? 'checked' : ''}>
+                        </td>
                         <td>
                             <input type="number" name="items[${rowIndex}][qty]" class="form-control form-control-sm text-end input-qty" step="any" min="0.01" value="${qty}" style="max-width: 70px; margin-left: auto;" required>
                         </td>
                         <td>
                             <div class="input-group input-group-sm" style="max-width: 120px; margin-left: auto;">
                                 <span class="input-group-text">Rp</span>
-                                <input type="text" name="items[${rowIndex}][harga]" class="form-control form-control-sm text-end input-harga input-number-format" value="${fmtHarga}" required>
+                                <input type="text" name="items[${rowIndex}][harga]" class="form-control form-control-sm text-end input-harga input-number-format" value="${isPromo ? '0' : fmtHarga}" ${isPromo ? 'readonly' : ''} data-original-harga="${fmtHarga}" required>
                             </div>
                         </td>
                         <td>
-                            <input type="number" name="items[${rowIndex}][diskon1_persen]" class="form-control form-control-sm text-end input-diskon1" min="0" max="100" step="any" value="${d1}" style="max-width: 60px; margin-left: auto;">
+                            <input type="number" name="items[${rowIndex}][diskon1_persen]" class="form-control form-control-sm text-end input-diskon1" min="0" max="100" step="any" value="${d1}" style="max-width: 60px; margin-left: auto;" ${isPromo ? 'readonly' : ''}>
                         </td>
                         <td>
-                            <input type="number" name="items[${rowIndex}][diskon2_persen]" class="form-control form-control-sm text-end input-diskon2" min="0" max="100" step="any" value="${d2}" style="max-width: 60px; margin-left: auto;">
+                            <input type="number" name="items[${rowIndex}][diskon2_persen]" class="form-control form-control-sm text-end input-diskon2" min="0" max="100" step="any" value="${d2}" style="max-width: 60px; margin-left: auto;" ${isPromo ? 'readonly' : ''}>
                         </td>
                         <td>
-                            <input type="number" name="items[${rowIndex}][diskon3_persen]" class="form-control form-control-sm text-end input-diskon3" min="0" max="100" step="any" value="${d3}" style="max-width: 60px; margin-left: auto;">
+                            <input type="number" name="items[${rowIndex}][diskon3_persen]" class="form-control form-control-sm text-end input-diskon3" min="0" max="100" step="any" value="${d3}" style="max-width: 60px; margin-left: auto;" ${isPromo ? 'readonly' : ''}>
                         </td>
                         <td>
                             <div class="input-group input-group-sm" style="max-width: 110px; margin-left: auto;">
@@ -755,6 +827,9 @@
                 const supplierSubtotals = {};
                 $('#itemsTable tbody tr').each(function() {
                     const row = $(this);
+                    const isPromo = row.find('.input-promo').is(':checked');
+                    if (isPromo) return;
+
                     const barangCode = row.find('input[name*="[kode_barang]"]').val();
                     const qty = parseFloat(row.find('.input-qty').val()) || 0;
                     const harga = parseFloat(cleanNumber(row.find('.input-harga').val())) || 0;
@@ -770,6 +845,14 @@
                 // 2. Iterate rows and evaluate rules
                 $('#itemsTable tbody tr').each(function() {
                     const row = $(this);
+                    const isPromo = row.find('.input-promo').is(':checked');
+                    if (isPromo) {
+                        row.find('.input-diskon1').val('0').attr('readonly', true);
+                        row.find('.input-diskon2').val('0').attr('readonly', true);
+                        row.find('.input-diskon3').val('0').attr('readonly', true);
+                        return;
+                    }
+
                     const barangCode = row.find('input[name*="[kode_barang]"]').val();
                     const qty = parseFloat(row.find('.input-qty').val()) || 0;
                     const harga = parseFloat(cleanNumber(row.find('.input-harga').val())) || 0;
@@ -928,26 +1011,40 @@
                 let num = 1;
 
                 $('#itemsTable tbody tr').each(function() {
-                    $(this).find('.row-number').text(num++);
-                    const qty = parseFloat($(this).find('.input-qty').val()) || 0;
-                    const harga = parseFloat(cleanNumber($(this).find('.input-harga').val())) || 0;
+                    const row = $(this);
+                    const isPromo = row.find('.input-promo').is(':checked');
+
+                    if (isPromo) {
+                        row.addClass('promo-row');
+                        row.find('.input-harga').val('0').attr('readonly', true);
+                        row.find('.input-diskon1').val('0').attr('readonly', true);
+                        row.find('.input-diskon2').val('0').attr('readonly', true);
+                        row.find('.input-diskon3').val('0').attr('readonly', true);
+                    } else {
+                        row.removeClass('promo-row');
+                        row.find('.input-harga').removeAttr('readonly');
+                    }
+
+                    row.find('.row-number').text(num++);
+                    const qty = parseFloat(row.find('.input-qty').val()) || 0;
+                    const harga = parseFloat(cleanNumber(row.find('.input-harga').val())) || 0;
                     const sub = qty * harga;
 
-                    const d1_pct = parseFloat($(this).find('.input-diskon1').val()) || 0;
-                    const d2_pct = parseFloat($(this).find('.input-diskon2').val()) || 0;
-                    const d3_pct = parseFloat($(this).find('.input-diskon3').val()) || 0;
+                    const d1_pct = parseFloat(row.find('.input-diskon1').val()) || 0;
+                    const d2_pct = parseFloat(row.find('.input-diskon2').val()) || 0;
+                    const d3_pct = parseFloat(row.find('.input-diskon3').val()) || 0;
 
                     const d1 = sub * (d1_pct / 100);
                     const d2 = (sub - d1) * (d2_pct / 100);
                     const d3 = (sub - d1 - d2) * (d3_pct / 100);
                     const diskon = Math.round(d1 + d2 + d3);
 
-                    $(this).find('.input-diskon').val(formatNumber(diskon));
+                    row.find('.input-diskon').val(formatNumber(diskon));
 
                     const nett = sub - diskon;
                     subtotalSum += sub;
                     totalDiskon += diskon;
-                    $(this).find('.row-subtotal').text(formatCurrency(nett));
+                    row.find('.row-subtotal').text(formatCurrency(nett));
                 });
 
                 const diskonGlobal = parseFloat(cleanNumber($('#diskon_global').val())) || 0;
@@ -966,9 +1063,10 @@
                     const barang = barangsCache[d.kode_barang];
                     const name = barang ? barang.nama_barang : (d.barang ? d.barang.nama_barang : 'Barang');
                     const satuan = d.barang_satuan ? d.barang_satuan.satuan : '';
+                    const isPromo = parseInt(d.is_promo) === 1;
                     appendRow(d.kode_barang, name, d.satuan_id, satuan, d.qty, parseInt(d.harga),
                         parseFloat(d.diskon1_persen || 0), parseFloat(d.diskon2_persen || 0),
-                        parseFloat(d.diskon3_persen || 0));
+                        parseFloat(d.diskon3_persen || 0), isPromo);
                 });
                 calculateTotals();
             }
