@@ -28,10 +28,10 @@ body {
 }
 
 .offcanvas-sidebar {
-    background: linear-gradient(160deg, #1e1b4b 0%, #0f172a 100%);
+    background: linear-gradient(180deg, #090B11 0%, #0F121C 100%);
     color: #fff;
-    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.4);
-    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
+    border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 
 .offcanvas-sidebar .offcanvas-header {
@@ -150,6 +150,25 @@ body {
     color: #fff;
     background: rgba(255, 255, 255, 0.06);
     transform: translateX(3px);
+}
+
+.sidebar-submenu-item.active {
+    color: #fff !important;
+    background: rgba(108, 99, 255, 0.16) !important;
+    font-weight: 600;
+    box-shadow: inset 3px 0 0 #6C63FF;
+}
+
+.sidebar-submenu-item.active i {
+    color: #a78bfa !important;
+    transform: scale(1.1);
+}
+
+.sidebar-main-item.active {
+    background: rgba(108, 99, 255, 0.16) !important;
+    color: #fff !important;
+    font-weight: 700;
+    box-shadow: inset 3px 0 0 #6C63FF !important;
 }
 
 .sidebar-submenu-item i {
