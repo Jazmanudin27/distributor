@@ -10,7 +10,7 @@
                 <small class="text-white-50">Kelola transaksi penjualan dan piutang pelanggan</small>
             </div>
             @can('create-penjualan')
-                <a href="{{ route('penjualan.create') }}" class="btn btn-light btn-sm fw-bold hover-scale">
+                <a href="{{ route('penjualan.create') }}" class="btn btn-primary btn-sm fw-bold hover-scale">
                     <i class="fa-solid fa-circle-plus me-1 text-primary"></i> Transaksi Baru
                 </a>
             @endcan
