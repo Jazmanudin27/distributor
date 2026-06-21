@@ -566,48 +566,49 @@
                 </div>
             </div>
         </div>
-    @endsection
+    </div>
+@endsection
 
-    @push('scripts')
-        <script>
-            $(document).ready(function() {
-                const sisaBayar = {{ (float) $sisaBayar }};
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            const sisaBayar = {{ (float) $sisaBayar }};
 
-                function formatNumber(num) {
-                    return num.toString().replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-                }
+            function formatNumber(num) {
+                return num.toString().replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            }
 
-                function cleanNumber(str) {
-                    return str.toString().replace(/\./g, "").replace(/\D/g, "") || "0";
-                }
+            function cleanNumber(str) {
+                return str.toString().replace(/\./g, "").replace(/\D/g, "") || "0";
+            }
 
-                $(document).on('input', '.input-number-format', function() {
-                    const start = this.selectionStart;
-                    const prev = this.value.length;
-                    const raw = cleanNumber($(this).val());
-                    $(this).val(formatNumber(raw));
-                    const diff = this.value.length - prev;
-                    this.setSelectionRange(start + diff, start + diff);
-                });
-
-                if ($('#payment_jumlah').val()) {
-                    $('#payment_jumlah').val(formatNumber(cleanNumber($('#payment_jumlah').val())));
-                }
-
-                $('#payment_jumlah').on('input', function() {
-                    const val = parseFloat(cleanNumber($(this).val())) || 0;
-                    if (val > sisaBayar) {
-                        $('#payment_limit_warning').removeClass('d-none');
-                        $('#btnSubmitPembayaran').attr('disabled', true);
-                    } else {
-                        $('#payment_limit_warning').addClass('d-none');
-                        $('#btnSubmitPembayaran').attr('disabled', false);
-                    }
-                });
-
-                $('#formPembayaran').on('submit', function() {
-                    $('#payment_jumlah').val(cleanNumber($('#payment_jumlah').val()));
-                });
+            $(document).on('input', '.input-number-format', function() {
+                const start = this.selectionStart;
+                const prev = this.value.length;
+                const raw = cleanNumber($(this).val());
+                $(this).val(formatNumber(raw));
+                const diff = this.value.length - prev;
+                this.setSelectionRange(start + diff, start + diff);
             });
-        </script>
-    @endpush
+
+            if ($('#payment_jumlah').val()) {
+                $('#payment_jumlah').val(formatNumber(cleanNumber($('#payment_jumlah').val())));
+            }
+
+            $('#payment_jumlah').on('input', function() {
+                const val = parseFloat(cleanNumber($(this).val())) || 0;
+                if (val > sisaBayar) {
+                    $('#payment_limit_warning').removeClass('d-none');
+                    $('#btnSubmitPembayaran').attr('disabled', true);
+                } else {
+                    $('#payment_limit_warning').addClass('d-none');
+                    $('#btnSubmitPembayaran').attr('disabled', false);
+                }
+            });
+
+            $('#formPembayaran').on('submit', function() {
+                $('#payment_jumlah').val(cleanNumber($('#payment_jumlah').val()));
+            });
+        });
+    </script>
+@endpush
