@@ -12,17 +12,10 @@
                 </div>
                 <div class="card-body p-4">
                     <form action="{{ route('laporan.rekap-sisa-piutang.cetak') }}" method="GET" target="_blank">
-                        <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <label class="form-label fw-semibold text-secondary mb-1">Tanggal Mulai</label>
-                                <input type="date" name="tanggal_mulai" class="form-control form-control-sm"
-                                    value="{{ $tanggal_akhir }}" required>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label fw-semibold text-secondary mb-1">Tanggal Akhir</label>
-                                <input type="date" name="tanggal_akhir" class="form-control form-control-sm"
-                                    value="{{ $tanggal_akhir }}" required>
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary mb-1">Per Tanggal</label>
+                            <input type="date" name="tanggal" class="form-control form-control-sm"
+                                value="{{ $tanggal }}" required>
                         </div>
 
                         <div class="mb-3">

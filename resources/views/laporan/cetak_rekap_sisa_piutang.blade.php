@@ -115,9 +115,12 @@
     <section class="sheet">
         <header style="text-align: center; margin-bottom: 20px;">
             <h1 style="margin: 0; font-size: 22px;">CV MITRA JAYA ABADI PERSADA</h1>
-            <h2 style="margin: 5px 0; font-size: 18px; text-transform: uppercase;">
+            <h2 style="margin: 5px 0; font-size: 18px; text-transform: uppercase; margin-bottom: 0;">
                 Rekap Sisa Piutang Penjualan Customer
             </h2>
+            <div style="font-size: 14px; font-weight: bold; margin-top: 5px;">
+                PER TANGGAL: {{ \Carbon\Carbon::parse($tanggal)->format('d-M-Y') }}
+            </div>
             <hr style="border: 1px solid #000; margin-top: 10px;">
         </header>
 
@@ -144,13 +147,13 @@
                 }
             }
 
-            // Count overdue invoices
+            // Count overdue invoices relative to selected $tanggal
             $overdueCount = 0;
-            $today = \Carbon\Carbon::now();
+            $reportDate = \Carbon\Carbon::parse($tanggal);
             foreach ($items as $item) {
-                $ljt = $item['pelanggan']->ljt ?? 14;
+                $ljt = $item['pelanggan'] ? ($item['pelanggan']->ljt ?? 14) : 14;
                 $jatuh_tempo = \Carbon\Carbon::parse($item['tanggal'])->addDays($ljt);
-                if ($today->greaterThan($jatuh_tempo)) {
+                if ($reportDate->greaterThan($jatuh_tempo)) {
                     $overdueCount++;
                 }
             }

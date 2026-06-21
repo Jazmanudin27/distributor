@@ -236,10 +236,13 @@
                     <label class="form-label text-secondary small mb-1">Metode Bayar</label>
                     <select name="jenis_transaksi" id="jenis_transaksi"
                         class="form-select form-select-sm bg-dark text-white border-secondary" required>
-                        <option value="Kredit"
-                            {{ $pelanggan && $pelanggan->metode_bayar === 'Kredit' ? 'selected' : '' }}>Kredit (Tempo)
-                        </option>
-                        <option value="Tunai" {{ $pelanggan && $pelanggan->metode_bayar === 'Tunai' ? 'selected' : '' }}>
+                        @if (Auth::user()->jenis_sales != '1')
+                            <option value="K" {{ $pelanggan && $pelanggan->metode_bayar === 'K' ? 'selected' : '' }}>
+                                Kredit (Tempo)
+                            </option>
+                        @endif
+                        <option value="T"
+                            {{ Auth::user()->jenis_sales == '1' || ($pelanggan && $pelanggan->metode_bayar === 'T') ? 'selected' : '' }}>
                             Tunai (Cash)
                         </option>
                     </select>
@@ -432,8 +435,11 @@
                 }
 
                 // Set default payment mode if matching
-                if (customer.metode === 'Tunai' || customer.metode === 'Kredit') {
+                const isRestrictedSales = @json(Auth::user()->jenis_sales == '1');
+                if (customer.metode === 'Tunai' || (customer.metode === 'Kredit' && !isRestrictedSales)) {
                     jenisTransaksiEl.value = customer.metode;
+                } else if (isRestrictedSales) {
+                    jenisTransaksiEl.value = 'Tunai';
                 }
 
                 customerInfoBox.classList.remove('d-none');

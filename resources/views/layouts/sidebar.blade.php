@@ -291,8 +291,8 @@
                         @endcan
                         @can('view-laporan_piutang')
                             <a href="{{ route('laporan.rekap-sisa-piutang') }}"
-                                class="{{ request()->routeIs('laporan.rekap-sisa-piutang') ? 'active' : '' }}">Rekap Sisa
-                                Piutang</a>
+                                class="{{ request()->routeIs('laporan.rekap-sisa-piutang') ? 'active' : '' }}">Rekap
+                                Tagihan</a>
                         @endcan
                         @can('view-laporan_laba_rugi')
                             <a href="{{ route('laporan.laba-rugi') }}"

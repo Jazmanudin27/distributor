@@ -134,7 +134,15 @@ class MobileOrderController extends Controller
             'tanggal'           => 'required|date',
             'tanggal_kirim'     => 'nullable|date',
             'kode_pelanggan'    => 'required|string|exists:pelanggan,kode_pelanggan',
-            'jenis_transaksi'   => 'required|in:Tunai,Kredit',
+            'jenis_transaksi'   => [
+                'required',
+                'in:Tunai,Kredit',
+                function ($attribute, $value, $fail) {
+                    if (Auth::user()->jenis_sales == '1' && $value === 'Kredit') {
+                        $fail('Salesman dengan tipe ini tidak diizinkan untuk melakukan transaksi Kredit.');
+                    }
+                }
+            ],
             'diskon_global'     => 'nullable|numeric|min:0',
             'keterangan'        => 'nullable|string',
             'items'             => 'required|array|min:1',

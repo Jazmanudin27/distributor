@@ -66,11 +66,11 @@
                                     <span class="text-danger">*</span></label>
                                 <select name="jenis_transaksi" id="jenis_transaksi" class="form-select form-select-sm"
                                     required>
-                                    <option value="Kredit"
-                                        {{ old('jenis_transaksi', $item->jenis_transaksi) === 'Kredit' ? 'selected' : '' }}>
+                                    <option value="K"
+                                        {{ old('jenis_transaksi', $item->jenis_transaksi) === 'K' ? 'selected' : '' }}>
                                         Kredit / Tempo</option>
-                                    <option value="Tunai"
-                                        {{ old('jenis_transaksi', $item->jenis_transaksi) === 'Tunai' ? 'selected' : '' }}>
+                                    <option value="T"
+                                        {{ old('jenis_transaksi', $item->jenis_transaksi) === 'T' ? 'selected' : '' }}>
                                         Tunai / Cash</option>
                                 </select>
                             </div>
@@ -903,7 +903,7 @@
 
                         inputDis1.val(d1_pct.toFixed(2)).attr('readonly', true);
 
-                        if (jenisTransaksi === 'Tunai') {
+                        if (jenisTransaksi === 'T') {
                             inputDis2.val(d2_pct.toFixed(2)).attr('readonly', true);
                         } else {
                             inputDis2.val('0').attr('readonly', true);
@@ -1002,7 +1002,7 @@
 
                 // Credit Limit Check
                 const jenisTransaksi = $('#jenis_transaksi').val();
-                if (jenisTransaksi === 'Kredit') {
+                if (jenisTransaksi === 'K') {
                     const opt = $('#kode_pelanggan').find(':selected');
                     if (opt.val()) {
                         const sisaLimit = parseFloat(opt.data('sisa-limit')) || 0;

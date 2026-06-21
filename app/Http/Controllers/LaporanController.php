@@ -7,7 +7,6 @@ use App\Models\Pembelian;
 use App\Models\PembelianDetail;
 use App\Models\ReturPembelian;
 use App\Models\ReturPembelianDetail;
-use App\Models\StokOpname;
 use App\Models\StokOpnameDetail;
 use App\Models\Barang;
 use App\Models\Supplier;
@@ -17,6 +16,10 @@ use App\Models\Penjualan;
 use App\Models\PenjualanDetail;
 use App\Models\ReturPenjualan;
 use App\Models\ReturPenjualanDetail;
+use App\Models\User;
+use App\Models\Pelanggan;
+use App\Models\Wilayah;
+use App\Models\SubWilayah;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -710,7 +713,7 @@ class LaporanController extends Controller
     {
         $this->authorizeReport('penjualan');
 
-        $salesmen = \App\Models\User::where(function ($q) {
+        $salesmen = User::where(function ($q) {
             $q->where('role', 'sales')->orWhere('role', 'Salesman');
         })->where('status', '1')->orderBy('name')->get();
         
@@ -722,7 +725,7 @@ class LaporanController extends Controller
 
         $pelanggans = collect();
         if ($kode_pelanggan) {
-            $pelanggans = \App\Models\Pelanggan::where('kode_pelanggan', $kode_pelanggan)->get();
+            $pelanggans = Pelanggan::where('kode_pelanggan', $kode_pelanggan)->get();
         }
 
         $items = collect();
@@ -743,7 +746,7 @@ class LaporanController extends Controller
                 $items = $query->orderBy('tanggal', 'asc')->orderBy('no_faktur', 'asc')->get();
             } else {
                 // detail
-                $query = \App\Models\PenjualanDetail::with(['penjualan.pelanggan.wilayah', 'penjualan.sales', 'barang', 'barangSatuan'])
+                $query = PenjualanDetail::with(['penjualan.pelanggan.wilayah', 'penjualan.sales', 'barang', 'barangSatuan'])
                     ->whereHas('penjualan', function ($q) use ($tanggal_mulai, $tanggal_akhir, $kode_sales, $kode_pelanggan) {
                         $q->where('batal', 0);
                         if ($tanggal_mulai) $q->where('tanggal', '>=', $tanggal_mulai);
@@ -791,7 +794,7 @@ class LaporanController extends Controller
 
         $pelanggans = collect();
         if ($kode_pelanggan) {
-            $pelanggans = \App\Models\Pelanggan::where('kode_pelanggan', $kode_pelanggan)->get();
+            $pelanggans = Pelanggan::where('kode_pelanggan', $kode_pelanggan)->get();
         }
 
         $items = collect();
@@ -801,7 +804,7 @@ class LaporanController extends Controller
 
         if ($isPrintOrExcel) {
             if ($jenis_laporan === 'rekap') {
-                $query = \App\Models\ReturPenjualan::with(['pelanggan', 'sales']);
+                $query = ReturPenjualan::with(['pelanggan', 'sales']);
                 
                 if ($tanggal_mulai) $query->where('tanggal', '>=', $tanggal_mulai);
                 if ($tanggal_akhir) $query->where('tanggal', '<=', $tanggal_akhir);
@@ -810,7 +813,7 @@ class LaporanController extends Controller
                 $items = $query->orderBy('tanggal', 'asc')->orderBy('no_retur', 'asc')->get();
             } else {
                 // detail
-                $query = \App\Models\ReturPenjualanDetail::with(['returPenjualan.pelanggan', 'barang', 'barangSatuan'])
+                $query = ReturPenjualanDetail::with(['returPenjualan.pelanggan', 'barang', 'barangSatuan'])
                     ->whereHas('returPenjualan', function ($q) use ($tanggal_mulai, $tanggal_akhir, $kode_pelanggan) {
                         if ($tanggal_mulai) $q->where('tanggal', '>=', $tanggal_mulai);
                         if ($tanggal_akhir) $q->where('tanggal', '<=', $tanggal_akhir);
@@ -854,7 +857,7 @@ class LaporanController extends Controller
 
         $pelanggans = collect();
         if ($kode_pelanggan) {
-            $pelanggans = \App\Models\Pelanggan::where('kode_pelanggan', $kode_pelanggan)->get();
+            $pelanggans = Pelanggan::where('kode_pelanggan', $kode_pelanggan)->get();
         }
 
         $items = collect();
@@ -864,7 +867,7 @@ class LaporanController extends Controller
 
         if ($isPrintOrExcel) {
             if ($jenis_laporan === 'rekap') {
-                $query = \App\Models\Pelanggan::with('wilayah');
+                $query = Pelanggan::with('wilayah');
                 if ($kode_pelanggan) {
                     $query->where('kode_pelanggan', $kode_pelanggan);
                 }
@@ -950,7 +953,7 @@ class LaporanController extends Controller
                     }
                 }
             } elseif ($jenis_laporan === 'aging') {
-                $query = \App\Models\Pelanggan::with('wilayah');
+                $query = Pelanggan::with('wilayah');
                 if ($kode_pelanggan) {
                     $query->where('kode_pelanggan', $kode_pelanggan);
                 }
@@ -1055,7 +1058,7 @@ class LaporanController extends Controller
                 }
             } else {
                 // detail (per unpaid invoice)
-                $query = \App\Models\Penjualan::with(['pelanggan.wilayah'])
+                $query = Penjualan::with(['pelanggan.wilayah'])
                     ->whereIn('jenis_transaksi', ['K', 'Kredit'])
                     ->where('batal', 0);
                 
@@ -1155,22 +1158,21 @@ class LaporanController extends Controller
         $this->authorizeReport('piutang');
 
         $kode_pelanggan = $request->input('kode_pelanggan');
-        $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
-        $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
+        $tanggal = $request->input('tanggal', date('Y-m-d'));
         $wilayah_id = $request->input('wilayah_id');
         $sub_wilayah_id = $request->input('sub_wilayah_id');
         $kode_sales = $request->input('kode_sales');
 
         // Fetch master data for dropdown filters
-        $wilayahs = \App\Models\Wilayah::orderBy('nama_wilayah')->get();
-        $subWilayahs = \App\Models\SubWilayah::orderBy('nama_wilayah')->get();
-        $salesmen = \App\Models\User::where(function ($q) {
+        $wilayahs = Wilayah::orderBy('nama_wilayah')->get();
+        $subWilayahs = SubWilayah::orderBy('nama_wilayah')->get();
+        $salesmen = User::where(function ($q) {
             $q->where('role', 'sales')->orWhere('role', 'Salesman');
         })->where('status', '1')->orderBy('name')->get();
 
         $pelanggans = collect();
         if ($kode_pelanggan) {
-            $pelanggans = \App\Models\Pelanggan::where('kode_pelanggan', $kode_pelanggan)->get();
+            $pelanggans = Pelanggan::where('kode_pelanggan', $kode_pelanggan)->get();
         }
 
         $items = collect();
@@ -1179,16 +1181,11 @@ class LaporanController extends Controller
         $isPrintOrExcel = $isCetak || $isExcel;
 
         if ($isPrintOrExcel) {
-            $query = \App\Models\Penjualan::with(['pelanggan.wilayah', 'pelanggan.subWilayah', 'sales'])
+            $query = Penjualan::with(['pelanggan.wilayah', 'pelanggan.subWilayah', 'sales'])
                 ->whereIn('jenis_transaksi', ['K', 'Kredit'])
-                ->where('batal', 0);
+                ->where('batal', 0)
+                ->where('tanggal', '<=', $tanggal);
             
-            if ($tanggal_mulai) {
-                $query->where('tanggal', '>=', $tanggal_mulai);
-            }
-            if ($tanggal_akhir) {
-                $query->where('tanggal', '<=', $tanggal_akhir);
-            }
             if ($kode_sales) {
                 $query->where('kode_sales', $kode_sales);
             }
@@ -1212,11 +1209,12 @@ class LaporanController extends Controller
 
             $invoiceIds = $invoices->pluck('no_faktur')->toArray();
 
-            // Pre-aggregate payments for these specific invoices
+            // Pre-aggregate payments for these specific invoices up to $tanggal
             $cashPayments = DB::table('penjualan_pembayaran')
                 ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
                 ->where('status', 'disetujui')
                 ->where('jenis_bayar', '!=', 'Retur')
+                ->where('tanggal', '<=', $tanggal)
                 ->whereIn('no_faktur', $invoiceIds)
                 ->groupBy('no_faktur')
                 ->pluck('total', 'no_faktur')
@@ -1226,6 +1224,7 @@ class LaporanController extends Controller
                 ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
                 ->where('status', 'disetujui')
                 ->where('jenis_bayar', 'Retur')
+                ->where('tanggal', '<=', $tanggal)
                 ->whereIn('no_faktur', $invoiceIds)
                 ->groupBy('no_faktur')
                 ->pluck('total', 'no_faktur')
@@ -1234,6 +1233,7 @@ class LaporanController extends Controller
             $transferPayments = DB::table('penjualan_pembayaran_transfer')
                 ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
                 ->where('status', 'disetujui')
+                ->where('tanggal', '<=', $tanggal)
                 ->whereIn('no_faktur', $invoiceIds)
                 ->groupBy('no_faktur')
                 ->pluck('total', 'no_faktur')
@@ -1242,6 +1242,7 @@ class LaporanController extends Controller
             $giroPayments = DB::table('penjualan_pembayaran_giro')
                 ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
                 ->where('status', 'disetujui')
+                ->where('tanggal', '<=', $tanggal)
                 ->whereIn('no_faktur', $invoiceIds)
                 ->groupBy('no_faktur')
                 ->pluck('total', 'no_faktur')
@@ -1275,7 +1276,7 @@ class LaporanController extends Controller
 
         $compactData = compact(
             'pelanggans', 'items', 'kode_pelanggan',
-            'tanggal_mulai', 'tanggal_akhir', 'wilayah_id', 'sub_wilayah_id', 'kode_sales',
+            'tanggal', 'wilayah_id', 'sub_wilayah_id', 'kode_sales',
             'wilayahs', 'subWilayahs', 'salesmen'
         );
 
@@ -1296,7 +1297,7 @@ class LaporanController extends Controller
     {
         $this->authorizeReport('setoran');
 
-        $salesmen = \App\Models\User::where(function ($q) {
+        $salesmen = User::where(function ($q) {
             $q->where('role', 'sales')->orWhere('role', 'Salesman');
         })->where('status', '1')->orderBy('name')->get();
         
@@ -1419,7 +1420,7 @@ class LaporanController extends Controller
 
         if ($isPrintOrExcel) {
             // 1. Penjualan Kotor
-            $salesGross = (float) \App\Models\Penjualan::where('batal', 0)
+            $salesGross = (float) Penjualan::where('batal', 0)
                 ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
                 ->sum('grand_total');
 
