@@ -561,7 +561,7 @@ body {
    PREMIUM HELPERS
    ============================================= */
 .card-premium-header {
-    background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%) !important;
+    background: var(--bs-primary) !important;
     border-bottom: none !important;
     color: #fff !important;
 }
