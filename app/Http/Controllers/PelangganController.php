@@ -212,6 +212,36 @@ class PelangganController extends Controller
         return response()->json($results);
     }
 
+    public function map(Request $request)
+    {
+        $query = Pelanggan::with(['wilayah', 'subWilayah'])
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->where('latitude', '!=', '')
+            ->where('longitude', '!=', '');
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_pelanggan', 'like', '%' . $request->search . '%')
+                    ->orWhere('kode_pelanggan', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->filled('kode_wilayah')) {
+            $query->where('kode_wilayah', $request->kode_wilayah);
+        }
+
+        if ($request->filled('sub_wilayah')) {
+            $query->where('sub_wilayah', $request->sub_wilayah);
+        }
+
+        $pelanggans = $query->orderBy('nama_pelanggan')->get();
+        $wilayahs = Wilayah::all();
+        $subWilayahs = SubWilayah::all();
+
+        return view('master.pelanggan.map', compact('pelanggans', 'wilayahs', 'subWilayahs', 'request'));
+    }
+
     public function approve($kode_pelanggan)
     {
         $pelanggan = Pelanggan::findOrFail($kode_pelanggan);

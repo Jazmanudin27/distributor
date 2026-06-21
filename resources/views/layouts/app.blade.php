@@ -154,9 +154,10 @@
                             const _oldPositionDropdown = AttachBody.prototype._positionDropdown;
                             AttachBody.prototype._positionDropdown = function() {
                                 _oldPositionDropdown.apply(this, arguments);
-                                
+
                                 let zoom = 1;
-                                const bodyZoom = window.getComputedStyle(document.body).zoom || document.body.style.zoom;
+                                const bodyZoom = window.getComputedStyle(document.body).zoom || document.body
+                                    .style.zoom;
                                 if (bodyZoom && bodyZoom !== 'normal') {
                                     const parsed = parseFloat(bodyZoom);
                                     if (!isNaN(parsed) && parsed > 0) {
@@ -166,12 +167,12 @@
                                         }
                                     }
                                 }
-                                
+
                                 const container = this.$dropdownContainer || this.$dropdown;
                                 if (zoom !== 1 && container && container[0]) {
                                     const styleTop = container[0].style.top || container.css('top');
                                     const styleLeft = container[0].style.left || container.css('left');
-                                    
+
                                     if (styleTop && styleTop.indexOf('px') !== -1) {
                                         const topVal = parseFloat(styleTop);
                                         container[0].style.top = (topVal / zoom) + 'px';

@@ -123,13 +123,15 @@
                         @endcan
                         @can('view-pelanggan')
                             <a href="{{ route('pelanggan.index') }}"
-                                class="{{ request()->routeIs('pelanggan.*') ? 'active' : '' }} d-flex justify-content-between align-items-center">
+                                class="{{ (request()->routeIs('pelanggan.*') && !request()->routeIs('pelanggan.map')) ? 'active' : '' }} d-flex justify-content-between align-items-center">
                                 <span>Data Pelanggan</span>
                                 @if ($pendingPelangganCount > 0)
                                     <span class="badge bg-danger text-light rounded-pill"
                                         style="font-size: 0.7rem; padding: 0.25em 0.6em;">{{ $pendingPelangganCount }}</span>
                                 @endif
                             </a>
+                            <a href="{{ route('pelanggan.map') }}"
+                                class="{{ request()->routeIs('pelanggan.map') ? 'active' : '' }}">Mapping Pelanggan</a>
                         @endcan
                         @can('view-diskon_strata')
                             <a href="{{ route('diskon-strata.index') }}"
