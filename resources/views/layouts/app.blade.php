@@ -23,11 +23,12 @@
     <!-- SweetAlert2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <link rel="stylesheet"
+        href="{{ asset('css/style.css') }}?v={{ file_exists(public_path('css/style.css')) ? filemtime(public_path('css/style.css')) : '1.0.1' }}">
     @stack('styles')
 </head>
 
-<body>
+<body style="zoom: 90%;">
 
     <div class="wrapper">
         <!-- Sidebar Offcanvas -->
