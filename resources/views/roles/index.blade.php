@@ -372,11 +372,11 @@ $actionColors = [
                                 <div class="col-md-12">
                                     <label for="perm_name" class="form-label fw-semibold">Nama Permission</label>
                                     <div class="input-group">
-                                        <span class="input-group-text"><i
-                                                class="fa-solid fa-key text-primary"></i></span>
+                                        <span class="input-group-text"><i class="fa-solid fa-key text-primary"></i></span>
                                         <input type="text" name="name" id="perm_name"
                                             class="form-control @error('name') is-invalid @enderror"
-                                            placeholder="Contoh: batal-penjualan, view-barang..." value="{{ old('name') }}" required>
+                                            placeholder="Contoh: batal-penjualan, view-barang..." value="{{ old('name') }}"
+                                            required>
                                     </div>
                                     @error('name')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
