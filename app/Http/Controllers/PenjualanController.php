@@ -19,7 +19,7 @@ class PenjualanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Penjualan::with(['pelanggan', 'pembayarans', 'sales'])
+        $query = Penjualan::with(['pelanggan.wilayah', 'pembayarans', 'sales'])
             ->where('batal', 0);
 
         if ($request->filled('search')) {
@@ -54,9 +54,16 @@ class PenjualanController extends Controller
             $query->where('kode_sales', $request->kode_sales);
         }
 
+        if ($request->filled('kode_wilayah')) {
+            $query->whereHas('pelanggan', function ($q) use ($request) {
+                $q->where('kode_wilayah', $request->kode_wilayah);
+            });
+        }
+
         $salesmen = User::where('role', 'sales')->orWhere('role', 'Salesman')->orderBy('name')->get();
+        $wilayahs = \App\Models\Wilayah::orderBy('nama_wilayah')->get();
         $items = $query->orderBy('tanggal', 'desc')->orderBy('no_faktur', 'desc')->paginate(15)->appends($request->query());
-        return view('penjualan.index', compact('items', 'salesmen'));
+        return view('penjualan.index', compact('items', 'salesmen', 'wilayahs'));
     }
 
     public function create()

@@ -19,23 +19,44 @@
         <div class="card-body p-4">
             {{-- FILTER SECTION --}}
             <div class="bg-light p-3 rounded mb-4 border">
-                <form action="{{ route('penjualan.index') }}" method="GET" class="row g-2 align-items-end">
-                    <div class="col-md-2">
+                <form action="{{ route('penjualan.index') }}" method="GET" class="row g-3 align-items-end">
+                    <div class="col-md-3">
                         <label class="form-label fs-7 fw-semibold text-secondary mb-1">Cari Transaksi</label>
                         <input type="text" name="search" class="form-control form-control-sm"
                             placeholder="No Faktur, Nama Pelanggan..." value="{{ request('search') }}">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label fs-7 fw-semibold text-secondary mb-1">Tanggal Mulai</label>
                         <input type="date" name="tanggal_mulai" class="form-control form-control-sm"
                             value="{{ request('tanggal_mulai') }}">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <label class="form-label fs-7 fw-semibold text-secondary mb-1">Tanggal Akhir</label>
                         <input type="date" name="tanggal_akhir" class="form-control form-control-sm"
                             value="{{ request('tanggal_akhir') }}">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-3">
+                        <label class="form-label fs-7 fw-semibold text-secondary mb-1">Status Pembayaran</label>
+                        <select name="status_pembayaran" class="form-select form-select-sm">
+                            <option value="">Semua</option>
+                            <option value="lunas" {{ request('status_pembayaran') === 'lunas' ? 'selected' : '' }}>Lunas</option>
+                            <option value="belum_lunas" {{ request('status_pembayaran') === 'belum_lunas' ? 'selected' : '' }}>Belum Lunas</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fs-7 fw-semibold text-secondary mb-1">Wilayah</label>
+                        <select name="kode_wilayah" class="form-select form-select-sm">
+                            <option value="">Semua Wilayah</option>
+                            @foreach ($wilayahs as $w)
+                                <option value="{{ $w->kode_wilayah }}"
+                                    {{ request('kode_wilayah') == $w->kode_wilayah ? 'selected' : '' }}>
+                                    {{ $w->nama_wilayah }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label fs-7 fw-semibold text-secondary mb-1">Salesman</label>
                         <select name="kode_sales" class="form-select form-select-sm">
                             <option value="">Semua</option>
@@ -47,26 +68,16 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label fs-7 fw-semibold text-secondary mb-1">Status Pembayaran</label>
-                        <select name="status_pembayaran" class="form-select form-select-sm">
-                            <option value="">Semua</option>
-                            <option value="lunas" {{ request('status_pembayaran') === 'lunas' ? 'selected' : '' }}>Lunas
-                            </option>
-                            <option value="belum_lunas"
-                                {{ request('status_pembayaran') === 'belum_lunas' ? 'selected' : '' }}>Belum Lunas</option>
-                        </select>
-                    </div>
-                    <div class="col-md-1">
-                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold" title="Filter Data">
-                            <i class="fa-solid fa-filter"></i>
-                        </button>
-                    </div>
-                    <div class="col-md-1">
-                        <a href="{{ route('penjualan.index') }}" class="btn btn-outline-secondary btn-sm w-100"
-                            title="Reset">
-                            <i class="fa-solid fa-rotate-right"></i>
-                        </a>
+                    <div class="col-md-4">
+                        <label class="form-label fs-7 fw-semibold text-transparent mb-1">Aksi</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm flex-fill fw-bold" title="Filter Data">
+                                <i class="fa-solid fa-filter me-1"></i> Filter
+                            </button>
+                            <a href="{{ route('penjualan.index') }}" class="btn btn-outline-secondary btn-sm flex-fill fw-bold" title="Reset">
+                                <i class="fa-solid fa-rotate-right me-1"></i> Reset
+                            </a>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -79,6 +90,7 @@
                             <th width="160">No Faktur</th>
                             <th width="110">Tanggal</th>
                             <th>Pelanggan</th>
+                            <th width="140">Wilayah</th>
                             <th width="120">Sales</th>
                             <th width="80" class="text-center">Jenis</th>
                             <th class="text-end">Grand Total</th>
@@ -109,6 +121,16 @@
                                     <div class="text-muted small fw-normal" style="font-size: 0.78rem;">
                                         <span class="font-monospace text-secondary">{{ $item->kode_pelanggan }}</span>
                                     </div>
+                                </td>
+                                <td>
+                                    @if ($item->pelanggan && $item->pelanggan->wilayah)
+                                        <div class="fw-semibold text-dark">{{ $item->pelanggan->wilayah->nama_wilayah }}</div>
+                                        <div class="text-muted small fw-normal" style="font-size: 0.78rem;">
+                                            <span class="font-monospace text-secondary">{{ $item->pelanggan->kode_wilayah }}</span>
+                                        </div>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
                                 </td>
                                 <td class="fw-bold text-dark">
                                     @if ($item->sales)
@@ -188,7 +210,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="11" class="text-center py-5 text-muted">
+                                <td colspan="12" class="text-center py-5 text-muted">
                                     <i class="fa-solid fa-file-invoice-dollar d-block fs-3 mb-2 opacity-50"></i>
                                     Tidak ada data transaksi penjualan.
                                 </td>
