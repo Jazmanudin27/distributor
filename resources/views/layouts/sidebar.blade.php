@@ -78,126 +78,149 @@
         </a>
 
         <!-- MASTER -->
-        <div class="section-title">Master</div>
-        <div>
-            <div class="dropdown-trigger {{ $isMasterActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
-                data-bs-target="#collapseMaster" role="button" aria-expanded="{{ $isMasterActive ? 'true' : 'false' }}"
-                aria-controls="collapseMaster">
-                <i class="fa-solid fa-database"></i>
-                <span>Data Master</span>
-                @if ($pendingPelangganCount > 0 && $user->can('view-pelanggan'))
-                    <span class="badge bg-danger text-light rounded-pill ms-2"
-                        style="font-size: 0.65rem; padding: 0.25em 0.55em;">{{ $pendingPelangganCount }}</span>
-                @endif
-                <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
-            </div>
-            <div class="collapse {{ $isMasterActive ? 'show' : '' }}" id="collapseMaster">
-                <div class="submenu-container">
-                    @can('view-kategori')
-                        <a href="{{ route('kategori.index') }}"
-                            class="{{ request()->routeIs('kategori.*') ? 'active' : '' }}">Data Kategori</a>
-                    @endcan
-                    @can('view-merk')
-                        <a href="{{ route('merk.index') }}"
-                            class="{{ request()->routeIs('merk.*') ? 'active' : '' }}">Data Merk</a>
-                    @endcan
-                    @can('view-supplier')
-                        <a href="{{ route('supplier.index') }}"
-                            class="{{ request()->routeIs('supplier.*') ? 'active' : '' }}">Data Supplier</a>
-                    @endcan
-                    @can('view-barang')
-                        <a href="{{ route('barang.index') }}"
-                            class="{{ request()->routeIs('barang.*') ? 'active' : '' }}">Data Barang</a>
-                    @endcan
-                    @can('view-satuan')
-                        <a href="{{ route('barang_satuan.index') }}"
-                            class="{{ request()->routeIs('barang_satuan.*') ? 'active' : '' }}">Barang Satuan</a>
-                    @endcan
-                    @can('view-pelanggan')
-                        <a href="{{ route('pelanggan.index') }}"
-                            class="{{ request()->routeIs('pelanggan.*') ? 'active' : '' }} d-flex justify-content-between align-items-center">
-                            <span>Data Pelanggan</span>
-                            @if ($pendingPelangganCount > 0)
-                                <span class="badge bg-danger text-light rounded-pill"
-                                    style="font-size: 0.7rem; padding: 0.25em 0.6em;">{{ $pendingPelangganCount }}</span>
-                            @endif
-                        </a>
-                    @endcan
-                    @can('view-diskon_strata')
-                        <a href="{{ route('diskon-strata.index') }}"
-                            class="{{ request()->routeIs('diskon-strata.*') ? 'active' : '' }}">Diskon Strata</a>
-                    @endcan
+        @if (
+            $user->can('view-kategori') ||
+            $user->can('view-merk') ||
+            $user->can('view-supplier') ||
+            $user->can('view-barang') ||
+            $user->can('view-satuan') ||
+            $user->can('view-pelanggan') ||
+            $user->can('view-diskon_strata')
+        )
+            <div class="section-title">Master</div>
+            <div>
+                <div class="dropdown-trigger {{ $isMasterActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
+                    data-bs-target="#collapseMaster" role="button" aria-expanded="{{ $isMasterActive ? 'true' : 'false' }}"
+                    aria-controls="collapseMaster">
+                    <i class="fa-solid fa-database"></i>
+                    <span>Data Master</span>
+                    @if ($pendingPelangganCount > 0 && $user->can('view-pelanggan'))
+                        <span class="badge bg-danger text-light rounded-pill ms-2"
+                            style="font-size: 0.65rem; padding: 0.25em 0.55em;">{{ $pendingPelangganCount }}</span>
+                    @endif
+                    <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
+                </div>
+                <div class="collapse {{ $isMasterActive ? 'show' : '' }}" id="collapseMaster">
+                    <div class="submenu-container">
+                        @can('view-kategori')
+                            <a href="{{ route('kategori.index') }}"
+                                class="{{ request()->routeIs('kategori.*') ? 'active' : '' }}">Data Kategori</a>
+                        @endcan
+                        @can('view-merk')
+                            <a href="{{ route('merk.index') }}"
+                                class="{{ request()->routeIs('merk.*') ? 'active' : '' }}">Data Merk</a>
+                        @endcan
+                        @can('view-supplier')
+                            <a href="{{ route('supplier.index') }}"
+                                class="{{ request()->routeIs('supplier.*') ? 'active' : '' }}">Data Supplier</a>
+                        @endcan
+                        @can('view-barang')
+                            <a href="{{ route('barang.index') }}"
+                                class="{{ request()->routeIs('barang.*') ? 'active' : '' }}">Data Barang</a>
+                        @endcan
+                        @can('view-satuan')
+                            <a href="{{ route('barang_satuan.index') }}"
+                                class="{{ request()->routeIs('barang_satuan.*') ? 'active' : '' }}">Barang Satuan</a>
+                        @endcan
+                        @can('view-pelanggan')
+                            <a href="{{ route('pelanggan.index') }}"
+                                class="{{ request()->routeIs('pelanggan.*') ? 'active' : '' }} d-flex justify-content-between align-items-center">
+                                <span>Data Pelanggan</span>
+                                @if ($pendingPelangganCount > 0)
+                                    <span class="badge bg-danger text-light rounded-pill"
+                                        style="font-size: 0.7rem; padding: 0.25em 0.6em;">{{ $pendingPelangganCount }}</span>
+                                @endif
+                            </a>
+                        @endcan
+                        @can('view-diskon_strata')
+                            <a href="{{ route('diskon-strata.index') }}"
+                                class="{{ request()->routeIs('diskon-strata.*') ? 'active' : '' }}">Diskon Strata</a>
+                        @endcan
+                    </div>
                 </div>
             </div>
-        </div>
+        @endif
 
         <!-- TRANSAKSI -->
-        <div class="section-title">Transaksi</div>
-        <div>
-            <div class="dropdown-trigger {{ $isTransaksiActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
-                data-bs-target="#collapseTransaksi" role="button"
-                aria-expanded="{{ $isTransaksiActive ? 'true' : 'false' }}" aria-controls="collapseTransaksi">
-                <i class="fa-solid fa-receipt"></i>
-                <span>Transaksi</span>
-                @if ($totalTransaksiPending > 0)
-                    <span class="badge bg-danger text-light rounded-pill ms-2"
-                        style="font-size: 0.65rem; padding: 0.25em 0.55em;">{{ $totalTransaksiPending }}</span>
-                @endif
-                <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
-            </div>
-            <div class="collapse {{ $isTransaksiActive ? 'show' : '' }}" id="collapseTransaksi">
-                <div class="submenu-container">
-                    @can('view-penjualan')
-                        <a href="{{ route('penjualan.index') }}"
-                            class="{{ request()->routeIs('penjualan.*') ? 'active' : '' }}">Penjualan</a>
-                    @endcan
-                    @can('view-retur_penjualan')
-                        <a href="{{ route('retur-penjualan.index') }}"
-                            class="{{ request()->routeIs('retur-penjualan.*') ? 'active' : '' }}">Retur Penjualan</a>
-                    @endcan
-                    @can('view-penjualan_kiriman')
-                        <a href="{{ route('penjualan-kiriman.index') }}"
-                            class="{{ request()->routeIs('penjualan-kiriman.*') ? 'active' : '' }}">Kiriman Penjualan</a>
-                    @endcan
-                    @can('view-pembelian')
-                        <a href="{{ route('pembelian.index') }}"
-                            class="{{ request()->routeIs('pembelian.*') ? 'active' : '' }}">Pembelian</a>
-                    @endcan
-                    @can('view-retur_pembelian')
-                        <a href="{{ route('retur-pembelian.index') }}"
-                            class="{{ request()->routeIs('retur-pembelian.*') ? 'active' : '' }}">Retur Pembelian</a>
-                    @endcan
-                    @can('view-stok_opname')
-                        <a href="{{ route('stok-opname.index') }}"
-                            class="{{ request()->routeIs('stok-opname.*') ? 'active' : '' }}">Stok Opname</a>
-                    @endcan
-                    @can('view-ajuan_limit_kredit')
-                        <a href="{{ route('ajuan-limit-kredit.index') }}"
-                            class="{{ request()->routeIs('ajuan-limit-kredit.*') ? 'active' : '' }} d-flex justify-content-between align-items-center">
-                            <span>Ajuan Limit Kredit</span>
-                            @if ($pendingLimitCount > 0)
-                                <span class="badge bg-danger text-light rounded-pill"
-                                    style="font-size: 0.7rem; padding: 0.25em 0.6em;">{{ $pendingLimitCount }}</span>
-                            @endif
-                        </a>
-                    @endcan
-                    @if ($user->hasRole('Super Admin') || $user->hasRole('Admin'))
-                        <a href="{{ route('pembayaran.pending.index') }}"
-                            class="{{ request()->routeIs('pembayaran.pending.*') ? 'active' : '' }} d-flex justify-content-between align-items-center">
-                            <span>Pembayaran</span>
-                            @if ($pendingPembayaranCount > 0)
-                                <span class="badge bg-danger text-light rounded-pill"
-                                    style="font-size: 0.7rem; padding: 0.25em 0.6em;">{{ $pendingPembayaranCount }}</span>
-                            @endif
-                        </a>
+        @if (
+            $user->can('view-penjualan') ||
+            $user->can('view-retur_penjualan') ||
+            $user->can('view-penjualan_kiriman') ||
+            $user->can('view-pembelian') ||
+            $user->can('view-retur_pembelian') ||
+            $user->can('view-stok_opname') ||
+            $user->can('view-ajuan_limit_kredit') ||
+            $user->hasRole('Super Admin') ||
+            $user->hasRole('Admin') ||
+            $user->can('view-kas_bank')
+        )
+            <div class="section-title">Transaksi</div>
+            <div>
+                <div class="dropdown-trigger {{ $isTransaksiActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
+                    data-bs-target="#collapseTransaksi" role="button"
+                    aria-expanded="{{ $isTransaksiActive ? 'true' : 'false' }}" aria-controls="collapseTransaksi">
+                    <i class="fa-solid fa-receipt"></i>
+                    <span>Transaksi</span>
+                    @if ($totalTransaksiPending > 0)
+                        <span class="badge bg-danger text-light rounded-pill ms-2"
+                            style="font-size: 0.65rem; padding: 0.25em 0.55em;">{{ $totalTransaksiPending }}</span>
                     @endif
-                    @if ($user->hasRole('Super Admin') || $user->hasRole('Admin') || $user->can('view-kas_bank'))
-                        <a href="{{ route('kas-bank.index') }}"
-                            class="{{ request()->routeIs('kas-bank.*') ? 'active' : '' }}">Kas & Bank</a>
-                    @endif
+                    <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
+                </div>
+                <div class="collapse {{ $isTransaksiActive ? 'show' : '' }}" id="collapseTransaksi">
+                    <div class="submenu-container">
+                        @can('view-penjualan')
+                            <a href="{{ route('penjualan.index') }}"
+                                class="{{ request()->routeIs('penjualan.*') ? 'active' : '' }}">Penjualan</a>
+                        @endcan
+                        @can('view-retur_penjualan')
+                            <a href="{{ route('retur-penjualan.index') }}"
+                                class="{{ request()->routeIs('retur-penjualan.*') ? 'active' : '' }}">Retur Penjualan</a>
+                        @endcan
+                        @can('view-penjualan_kiriman')
+                            <a href="{{ route('penjualan-kiriman.index') }}"
+                                class="{{ request()->routeIs('penjualan-kiriman.*') ? 'active' : '' }}">Kiriman Penjualan</a>
+                        @endcan
+                        @can('view-pembelian')
+                            <a href="{{ route('pembelian.index') }}"
+                                class="{{ request()->routeIs('pembelian.*') ? 'active' : '' }}">Pembelian</a>
+                        @endcan
+                        @can('view-retur_pembelian')
+                            <a href="{{ route('retur-pembelian.index') }}"
+                                class="{{ request()->routeIs('retur-pembelian.*') ? 'active' : '' }}">Retur Pembelian</a>
+                        @endcan
+                        @can('view-stok_opname')
+                            <a href="{{ route('stok-opname.index') }}"
+                                class="{{ request()->routeIs('stok-opname.*') ? 'active' : '' }}">Stok Opname</a>
+                        @endcan
+                        @can('view-ajuan_limit_kredit')
+                            <a href="{{ route('ajuan-limit-kredit.index') }}"
+                                class="{{ request()->routeIs('ajuan-limit-kredit.*') ? 'active' : '' }} d-flex justify-content-between align-items-center">
+                                <span>Ajuan Limit Kredit</span>
+                                @if ($pendingLimitCount > 0)
+                                    <span class="badge bg-danger text-light rounded-pill"
+                                        style="font-size: 0.7rem; padding: 0.25em 0.6em;">{{ $pendingLimitCount }}</span>
+                                @endif
+                            </a>
+                        @endcan
+                        @if ($user->hasRole('Super Admin') || $user->hasRole('Admin'))
+                            <a href="{{ route('pembayaran.pending.index') }}"
+                                class="{{ request()->routeIs('pembayaran.pending.*') ? 'active' : '' }} d-flex justify-content-between align-items-center">
+                                <span>Pembayaran</span>
+                                @if ($pendingPembayaranCount > 0)
+                                    <span class="badge bg-danger text-light rounded-pill"
+                                        style="font-size: 0.7rem; padding: 0.25em 0.6em;">{{ $pendingPembayaranCount }}</span>
+                                @endif
+                            </a>
+                        @endif
+                        @if ($user->hasRole('Super Admin') || $user->hasRole('Admin') || $user->can('view-kas_bank'))
+                            <a href="{{ route('kas-bank.index') }}"
+                                class="{{ request()->routeIs('kas-bank.*') ? 'active' : '' }}">Kas & Bank</a>
+                        @endif
+                    </div>
                 </div>
             </div>
-        </div>
+        @endif
 
         {{-- AKTIVITAS SALES --}}
         @if ($user->hasRole('Super Admin') || $user->can('view-penjualan'))
@@ -281,28 +304,30 @@
         @endif
 
         {{-- SETTING --}}
-        <div class="section-title">Setting</div>
-        <div>
-            <div class="dropdown-trigger {{ $isSettingActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
-                data-bs-target="#collapseSetting" role="button"
-                aria-expanded="{{ $isSettingActive ? 'true' : 'false' }}" aria-controls="collapseSetting">
-                <i class="fa-solid fa-gear"></i>
-                <span>Setting</span>
-                <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
-            </div>
-            <div class="collapse {{ $isSettingActive ? 'show' : '' }}" id="collapseSetting">
-                <div class="submenu-container">
-                    @can('view-users')
-                        <a href="{{ route('users.index') }}"
-                            class="{{ request()->routeIs('users.*') ? 'active' : '' }}">Data Users</a>
-                    @endcan
-                    @can('view-roles')
-                        <a href="{{ route('roles.index') }}"
-                            class="{{ request()->routeIs('roles.*') ? 'active' : '' }}">Hak Akses Menu</a>
-                    @endcan
+        @if ($user->can('view-users') || $user->can('view-roles'))
+            <div class="section-title">Setting</div>
+            <div>
+                <div class="dropdown-trigger {{ $isSettingActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
+                    data-bs-target="#collapseSetting" role="button"
+                    aria-expanded="{{ $isSettingActive ? 'true' : 'false' }}" aria-controls="collapseSetting">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Setting</span>
+                    <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
+                </div>
+                <div class="collapse {{ $isSettingActive ? 'show' : '' }}" id="collapseSetting">
+                    <div class="submenu-container">
+                        @can('view-users')
+                            <a href="{{ route('users.index') }}"
+                                class="{{ request()->routeIs('users.*') ? 'active' : '' }}">Data Users</a>
+                        @endcan
+                        @can('view-roles')
+                            <a href="{{ route('roles.index') }}"
+                                class="{{ request()->routeIs('roles.*') ? 'active' : '' }}">Hak Akses Menu</a>
+                        @endcan
+                    </div>
                 </div>
             </div>
-        </div>
+        @endif
 
     </div>
 
