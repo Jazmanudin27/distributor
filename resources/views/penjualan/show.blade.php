@@ -499,7 +499,9 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
+            <div class="col-lg-6 col-md-12">
                 {{-- HISTORI RETUR POTONG FAKTUR (PF) --}}
                 <div class="card shadow-sm border-0 rounded-4">
                     <div class="card-header bg-white py-3 border-bottom">
