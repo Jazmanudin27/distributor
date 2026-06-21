@@ -11,7 +11,7 @@
                 </div>
                 <div class="card-body p-4">
                     <form action="{{ route('laporan.laba-rugi.cetak') }}" method="GET" target="_blank">
-                        <div class="row g-2 mb-4">
+                        <div class="row g-2 mb-3">
                             <div class="col-6">
                                 <label class="form-label fw-semibold text-secondary mb-1">Tanggal Mulai</label>
                                 <input type="date" name="tanggal_mulai" class="form-control form-control-sm"
@@ -22,6 +22,28 @@
                                 <input type="date" name="tanggal_akhir" class="form-control form-control-sm"
                                     value="{{ date('Y-m-d') }}" required>
                             </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary mb-1">Supplier</label>
+                            <select name="kode_supplier" class="form-select form-select-sm select2-init">
+                                <option value="">-- Semua Supplier --</option>
+                                @foreach ($suppliersList as $s)
+                                    <option value="{{ $s->kode_supplier }}">
+                                        {{ $s->nama_supplier }} ({{ $s->kode_supplier }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-secondary mb-1">Jenis Laporan</label>
+                            <select name="jenis_laporan" class="form-select form-select-sm">
+                                <option value="rekap">Rekap (Laporan Keuangan)</option>
+                                <option value="per_supplier">Per Supplier</option>
+                                <option value="per_tanggal_supplier">Per Tanggal & Per Supplier</option>
+                                <option value="detail">Detail (Per Barang)</option>
+                            </select>
                         </div>
 
                         <div class="row g-2">
@@ -46,3 +68,15 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('.select2-init').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
+        });
+    </script>
+@endpush
+
