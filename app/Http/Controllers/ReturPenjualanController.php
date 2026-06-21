@@ -9,7 +9,6 @@ use App\Models\Penjualan;
 use App\Models\Pelanggan;
 use App\Models\Barang;
 use App\Models\BarangSatuan;
-use App\Models\PenjualanPembayaran;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -156,28 +155,6 @@ class ReturPenjualanController extends Controller
 
             $retur->details()->saveMany($details);
 
-            // Create automatic payment record to deduct piutang if linked to an invoice
-            if ($retur->no_faktur) {
-                $kodeSales = $retur->kode_sales;
-                if (!$kodeSales) {
-                    $penj = Penjualan::find($retur->no_faktur);
-                    $kodeSales = $penj ? $penj->kode_sales : null;
-                }
-
-                PenjualanPembayaran::create([
-                    'no_bukti' => $retur->no_retur,
-                    'tanggal' => $retur->tanggal,
-                    'no_faktur' => $retur->no_faktur,
-                    'kode_pelanggan' => $retur->kode_pelanggan,
-                    'kode_sales' => $kodeSales,
-                    'jenis_bayar' => 'Retur',
-                    'jumlah' => $retur->total,
-                    'keterangan' => 'Potong Piutang dari Retur: ' . $retur->no_retur,
-                    'id_user' => Auth::id() ?? 1,
-                    'status' => 'disetujui',
-                ]);
-            }
-
             \App\Models\ActivityLog::create([
                 'user_id' => Auth::id() ?? 1,
                 'action' => 'Input Retur',
@@ -323,44 +300,6 @@ class ReturPenjualanController extends Controller
             $retur->details()->delete();
             $retur->details()->saveMany($details);
 
-            // Manage payment history
-            $payment = PenjualanPembayaran::where('no_bukti', $retur->no_retur)->first();
-            if ($retur->no_faktur) {
-                $kodeSales = $retur->kode_sales;
-                if (!$kodeSales) {
-                    $penj = Penjualan::find($retur->no_faktur);
-                    $kodeSales = $penj ? $penj->kode_sales : null;
-                }
-
-                if ($payment) {
-                    $payment->update([
-                        'tanggal' => $retur->tanggal,
-                        'no_faktur' => $retur->no_faktur,
-                        'kode_pelanggan' => $retur->kode_pelanggan,
-                        'kode_sales' => $kodeSales,
-                        'jumlah' => $retur->total,
-                        'keterangan' => 'Potong Piutang dari Retur: ' . $retur->no_retur,
-                    ]);
-                } else {
-                    PenjualanPembayaran::create([
-                        'no_bukti' => $retur->no_retur,
-                        'tanggal' => $retur->tanggal,
-                        'no_faktur' => $retur->no_faktur,
-                        'kode_pelanggan' => $retur->kode_pelanggan,
-                        'kode_sales' => $kodeSales,
-                        'jenis_bayar' => 'Retur',
-                        'jumlah' => $retur->total,
-                        'keterangan' => 'Potong Piutang dari Retur: ' . $retur->no_retur,
-                        'id_user' => Auth::id() ?? 1,
-                        'status' => 'disetujui',
-                    ]);
-                }
-            } else {
-                if ($payment) {
-                    $payment->delete();
-                }
-            }
-
             \App\Models\ActivityLog::create([
                 'user_id' => Auth::id() ?? 1,
                 'action' => 'Edit Retur',
@@ -384,9 +323,6 @@ class ReturPenjualanController extends Controller
                 $qtySmallest = $detail->qty * ($satuan->isi ?? 1);
                 Barang::where('kode_barang', $detail->kode_barang)->decrement('stok', $qtySmallest);
             }
-            // Delete associated payment record
-            PenjualanPembayaran::where('no_bukti', $retur->no_retur)->delete();
-
             $retur->delete();
 
             \App\Models\ActivityLog::create([

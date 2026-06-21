@@ -41,7 +41,10 @@
                 <div class="card-body p-4 position-relative">
                     @php
                         $isPaid = $sisaBayar <= 0;
-                        $percentPaid = $item->grand_total > 0 ? min(100, round((($totalBayar + $totalRetur) / $item->grand_total) * 100)) : 0;
+                        $percentPaid =
+                            $item->grand_total > 0
+                                ? min(100, round((($totalBayar + $totalRetur) / $item->grand_total) * 100))
+                                : 0;
                     @endphp
 
                     {{-- STATUS STAMP --}}
@@ -262,7 +265,7 @@
                                     <span class="fw-bold text-dark">Rp
                                         {{ number_format((float) $item->grand_total, 0, ',', '.') }}</span>
                                 </div>
-                                
+
                                 <div class="d-flex justify-content-between mb-2 text-success">
                                     <span class="small">Total Terbayar</span>
                                     <span class="fw-semibold">Rp
@@ -282,7 +285,8 @@
                                 </div>
 
                                 <div class="progress mb-1" style="height: 8px;">
-                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ $percentPaid }}%">
+                                    <div class="progress-bar bg-success" role="progressbar"
+                                        style="width: {{ $percentPaid }}%">
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-between text-muted" style="font-size: 0.72rem;">
@@ -375,7 +379,7 @@
         </div>
 
         {{-- RIWAYAT PEMBAYARAN --}}
-        <div class="col-lg-6 col-md-12">
+        <div class="col-lg-12 col-md-12">
             <div class="card shadow-sm border-0 rounded-4 mb-4">
                 <div class="card-header bg-white py-3 border-bottom">
                     <h6 class="mb-0 fw-bold text-dark">
