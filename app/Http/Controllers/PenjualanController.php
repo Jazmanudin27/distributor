@@ -55,7 +55,7 @@ class PenjualanController extends Controller
         }
 
         $salesmen = User::where('role', 'sales')->orWhere('role', 'Salesman')->orderBy('name')->get();
-        $items = $query->orderBy('tanggal', 'desc')->paginate(15)->appends($request->query());
+        $items = $query->orderBy('tanggal', 'desc')->orderBy('no_faktur', 'desc')->paginate(15)->appends($request->query());
         return view('penjualan.index', compact('items', 'salesmen'));
     }
 
