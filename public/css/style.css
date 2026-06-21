@@ -5,13 +5,13 @@
 /* ROOT FONT SIZE — turunkan ke 14px agar semua elemen (rem) ikut mengecil */
 html {
     font-size: 14px;
-    zoom: 90%;
 }
 
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg, #0F1117);
     color: var(--text-primary, #F1F5F9);
+    zoom: 90%;
 }
 
 .wrapper {

@@ -43,7 +43,8 @@
                         <small class="brand-subtitle">ERP Distributor</small>
                     </div>
                 </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close" style="filter: invert(1) grayscale(100%) brightness(200%); opacity: 0.6; transition: all 0.3s ease;"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"
+                    style="filter: invert(1) grayscale(100%) brightness(200%); opacity: 0.6; transition: all 0.3s ease;"></button>
             </div>
             <div class="offcanvas-body p-0">
                 @include('layouts.sidebar')
@@ -96,14 +97,16 @@
     </div>
 
     <!-- Modal Riwayat Aktivitas -->
-    <div class="modal fade" id="activityLogModal" tabindex="-1" aria-labelledby="activityLogModalLabel" aria-hidden="true">
+    <div class="modal fade" id="activityLogModal" tabindex="-1" aria-labelledby="activityLogModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content shadow border-0 rounded-4">
                 <div class="modal-header bg-primary text-white py-3">
                     <h5 class="modal-title fw-bold" id="activityLogModalLabel">
                         <i class="fa-solid fa-clock-rotate-left me-2"></i> Riwayat Aktivitas
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="table-responsive">
@@ -179,7 +182,9 @@
                 if (!noFaktur) return;
 
                 const $tbody = $('#activityLogTable tbody');
-                $tbody.html('<tr><td colspan="4" class="text-center py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i> Memuat data...</td></tr>');
+                $tbody.html(
+                    '<tr><td colspan="4" class="text-center py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i> Memuat data...</td></tr>'
+                );
                 $('#activityLogModal').modal('show');
 
                 $.ajax({
@@ -188,7 +193,9 @@
                     success: function(data) {
                         $tbody.empty();
                         if (data.length === 0) {
-                            $tbody.append('<tr><td colspan="4" class="text-center py-4 text-muted">Belum ada riwayat aktivitas untuk transaksi ini.</td></tr>');
+                            $tbody.append(
+                                '<tr><td colspan="4" class="text-center py-4 text-muted">Belum ada riwayat aktivitas untuk transaksi ini.</td></tr>'
+                            );
                             return;
                         }
                         data.forEach(function(log) {
@@ -199,7 +206,8 @@
                             const hour = String(date.getHours()).padStart(2, '0');
                             const minute = String(date.getMinutes()).padStart(2, '0');
                             const second = String(date.getSeconds()).padStart(2, '0');
-                            const formattedDate = `${day}/${month}/${year}, ${hour}.${minute}.${second}`;
+                            const formattedDate =
+                                `${day}/${month}/${year}, ${hour}.${minute}.${second}`;
 
                             $tbody.append(`
                                 <tr>
@@ -212,7 +220,9 @@
                         });
                     },
                     error: function() {
-                        $tbody.html('<tr><td colspan="4" class="text-center py-4 text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i> Gagal memuat data. Silakan coba lagi.</td></tr>');
+                        $tbody.html(
+                            '<tr><td colspan="4" class="text-center py-4 text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i> Gagal memuat data. Silakan coba lagi.</td></tr>'
+                        );
                     }
                 });
             });
@@ -236,7 +246,7 @@
                         cancelButtonColor: '#6c757d',
                         inputValidator: (value) => {
                             if (!value) {
-                                            return 'Alasan cetak ulang harus diisi!';
+                                return 'Alasan cetak ulang harus diisi!';
                             }
                         }
                     }).then((result) => {
