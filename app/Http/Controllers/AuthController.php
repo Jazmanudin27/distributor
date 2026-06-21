@@ -11,7 +11,7 @@ class AuthController extends Controller
     {
         if (Auth::check()) {
             $role = strtolower(Auth::user()->role ?? '');
-            if (in_array($role, ['sales', 'spv sales'])) {
+            if (in_array($role, ['sales'])) {
                 return redirect()->route('mobile.dashboard');
             }
             return redirect('/');
@@ -40,7 +40,7 @@ class AuthController extends Controller
 
             // Cek jika user adalah sales / spv sales
             $role = strtolower($user->role ?? '');
-            if (in_array($role, ['sales', 'spv sales'])) {
+            if (in_array($role, ['sales'])) {
                 Auth::logout();
                 return back()->withErrors([
                     'username' => 'Sales hanya diperbolehkan login melalui aplikasi mobile.',
@@ -64,7 +64,7 @@ class AuthController extends Controller
     {
         $role = strtolower($user->role ?? '');
 
-        if (in_array($role, ['sales', 'spv sales'])) {
+        if (in_array($role, ['sales'])) {
             return redirect()->route('mobile.dashboard');
         }
 

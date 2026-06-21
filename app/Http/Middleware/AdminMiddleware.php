@@ -19,8 +19,8 @@ class AdminMiddleware
         if (Auth::check()) {
             $role = strtolower(Auth::user()->role ?? '');
             
-            // Jika user adalah sales atau spv sales, larang akses ke admin panel
-            if (in_array($role, ['sales', 'spv sales'])) {
+            // Jika user adalah sales, larang akses ke admin panel
+            if (in_array($role, ['sales'])) {
                 return redirect()->route('mobile.dashboard')->with('error', 'Anda tidak memiliki akses ke halaman admin/desktop.');
             }
         }
