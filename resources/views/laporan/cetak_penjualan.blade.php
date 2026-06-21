@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,27 +10,33 @@
     <style>
         body {
             background-color: #fff;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Tahoma', Courier, monospace;
             font-size: 11px;
             color: #000;
         }
-        .table-sm th, .table-sm td {
+
+        .table-sm th,
+        .table-sm td {
             font-size: 11px !important;
             padding: 4px 6px !important;
             border: 1px solid #000 !important;
         }
+
         .table-light th {
             background-color: #f2f2f2 !important;
             color: #000 !important;
         }
+
         hr {
             border-top: 1px dashed #000;
             opacity: 1;
         }
+
         @media print {
             .no-print {
                 display: none !important;
             }
+
             body {
                 margin: 0;
                 padding: 10px;
@@ -37,19 +44,21 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container-fluid py-3">
         {{-- HEADER --}}
         <div class="text-center mb-4">
             <h4 class="fw-bold mb-1">LAPORAN PENJUALAN BARANG</h4>
             <div class="small">
-                Periode: {{ \Carbon\Carbon::parse($tanggal_mulai)->format('d/m/Y') }} s/d {{ \Carbon\Carbon::parse($tanggal_akhir)->format('d/m/Y') }}
+                Periode: {{ \Carbon\Carbon::parse($tanggal_mulai)->format('d/m/Y') }} s/d
+                {{ \Carbon\Carbon::parse($tanggal_akhir)->format('d/m/Y') }}
             </div>
-            @if($kode_sales)
+            @if ($kode_sales)
                 @php $salesName = $salesmen->firstWhere('nik', $kode_sales)->name ?? $kode_sales; @endphp
                 <div class="small">Salesman: {{ $salesName }}</div>
             @endif
-            @if($kode_pelanggan)
+            @if ($kode_pelanggan)
                 @php $pelangganName = $pelanggans->firstWhere('kode_pelanggan', $kode_pelanggan)->nama_pelanggan ?? $kode_pelanggan; @endphp
                 <div class="small">Pelanggan: {{ $pelangganName }}</div>
             @endif
@@ -73,7 +82,6 @@
                             <th>Tanggal</th>
                             <th>Pelanggan</th>
                             <th>Salesman</th>
-                            <th>Cara Bayar</th>
                             <th class="text-end">Total</th>
                             <th class="text-end">Diskon</th>
                             <th class="text-end">Grand Total</th>
@@ -98,10 +106,10 @@
                                 <td>{{ \Carbon\Carbon::parse($invoice->tanggal)->format('d-m-Y') }}</td>
                                 <td>{{ $invoice->pelanggan->nama_pelanggan ?? '-' }}</td>
                                 <td>{{ $invoice->sales->name ?? '-' }}</td>
-                                <td>{{ $invoice->jenis_bayar }}</td>
                                 <td class="text-end">{{ number_format($invoice->total, 0, ',', '.') }}</td>
                                 <td class="text-end">{{ number_format($invoice->diskon, 0, ',', '.') }}</td>
-                                <td class="text-end fw-bold">{{ number_format($invoice->grand_total, 0, ',', '.') }}</td>
+                                <td class="text-end fw-bold">{{ number_format($invoice->grand_total, 0, ',', '.') }}
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -177,4 +185,5 @@
 
 
 </body>
+
 </html>

@@ -254,9 +254,9 @@
                                     <th width="90" class="text-center">Satuan</th>
                                     <th width="70" class="text-end">Qty</th>
                                     <th width="120" class="text-end">Harga Jual</th>
-                                    <th width="65" class="text-end">Disc 1 %</th>
-                                    <th width="65" class="text-end">Disc 2 %</th>
-                                    <th width="65" class="text-end">Disc 3 %</th>
+                                    <th width="65" class="text-end">D1 %</th>
+                                    <th width="65" class="text-end">D2 %</th>
+                                    <th width="65" class="text-end">D3 %</th>
                                     <th width="110" class="text-end">Potongan</th>
                                     <th width="130" class="text-end">Subtotal</th>
                                     <th width="40" class="text-center">Aksi</th>
@@ -298,10 +298,12 @@
 
                 {{-- Action Buttons --}}
                 <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                    <a href="{{ route('penjualan.index') }}" class="btn btn-light btn-sm px-4 fw-semibold border hover-scale">
+                    <a href="{{ route('penjualan.index') }}"
+                        class="btn btn-light btn-sm px-4 fw-semibold border hover-scale">
                         <i class="fa-solid fa-arrow-left me-1"></i> Batal
                     </a>
-                    <button type="submit" class="btn btn-success btn-sm px-4 fw-semibold hover-scale" id="btn-save-penjualan">
+                    <button type="submit" class="btn btn-success btn-sm px-4 fw-semibold hover-scale"
+                        id="btn-save-penjualan">
                         <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Transaksi
                     </button>
                 </div>
@@ -323,7 +325,8 @@
                 if (d.barang) {
                     const isi = d.barang_satuan ? (parseFloat(d.barang_satuan.isi) || 1) : 1;
                     const qtySmallest = (parseFloat(d.qty) || 0) * isi;
-                    originalInvoiceQuantities[d.kode_barang] = (originalInvoiceQuantities[d.kode_barang] || 0) + qtySmallest;
+                    originalInvoiceQuantities[d.kode_barang] = (originalInvoiceQuantities[d.kode_barang] ||
+                        0) + qtySmallest;
 
                     barangsCache[d.kode_barang] = {
                         kode_barang: d.kode_barang,
@@ -581,7 +584,8 @@
                 const barang = barangsCache[barangCode];
                 if (barang) {
                     const selectedSatuanOpt = $('#quick_satuan').find(':selected');
-                    const isi = parseFloat(selectedSatuanOpt.attr('data-isi') || selectedSatuanOpt.data('isi')) || 1;
+                    const isi = parseFloat(selectedSatuanOpt.attr('data-isi') || selectedSatuanOpt.data(
+                        'isi')) || 1;
                     const newQtySmallest = qty * isi;
 
                     // Calculate current total in cart for this product
@@ -602,9 +606,9 @@
                         return Swal.fire({
                             title: 'Stok Tidak Mencukupi',
                             html: `Stok barang <b>${barang.nama_barang}</b> tidak mencukupi!<br><br>` +
-                                  `Stok tersedia: <b>${formatStokJS(barang.stok, barang.satuans)}</b><br>` +
-                                  `Jumlah diminta: <b>${qty} ${selectedSatuanOpt.data('name')}</b> (Setara ${newQtySmallest} PCS)<br>` +
-                                  `Sudah di keranjang: <b>${currentCartQtySmallest} PCS</b>`,
+                                `Stok tersedia: <b>${formatStokJS(barang.stok, barang.satuans)}</b><br>` +
+                                `Jumlah diminta: <b>${qty} ${selectedSatuanOpt.data('name')}</b> (Setara ${newQtySmallest} PCS)<br>` +
+                                `Sudah di keranjang: <b>${currentCartQtySmallest} PCS</b>`,
                             icon: 'error'
                         });
                     }
@@ -629,7 +633,7 @@
             function appendRow(barangCode, barangName, satuanId, satuanName, qty, harga, d1 = 0, d2 = 0, d3 = 0) {
                 const trId = `row_${rowIndex}`;
                 const fmtHarga = formatNumber(cleanNumber(harga));
-                
+
                 const barang = barangsCache[barangCode];
                 let isi = 1;
                 if (barang && barang.satuans) {
@@ -712,7 +716,7 @@
 
                 const qty = parseFloat($(this).val()) || 0;
                 const isi = parseFloat(row.attr('data-isi')) || 1;
-                
+
                 // Recalculate other rows' quantities for this product
                 let otherCartQtySmallest = 0;
                 $('#itemsTable tbody tr').not(row).each(function() {
@@ -732,8 +736,8 @@
                     Swal.fire({
                         title: 'Stok Tidak Mencukupi',
                         html: `Stok barang <b>${barang.nama_barang}</b> tidak mencukupi!<br><br>` +
-                              `Stok tersedia: <b>${formatStokJS(barang.stok, barang.satuans)}</b><br>` +
-                              `Jumlah diinput: <b>${qty}</b> (Setara ${newQtySmallest} PCS)`,
+                            `Stok tersedia: <b>${formatStokJS(barang.stok, barang.satuans)}</b><br>` +
+                            `Jumlah diinput: <b>${qty}</b> (Setara ${newQtySmallest} PCS)`,
                         icon: 'error'
                     });
 
@@ -1055,7 +1059,8 @@
                         let otherCartQtySmallest = 0;
                         $('#itemsTable tbody tr').not(row).each(function() {
                             const r = $(this);
-                            if (r.find('input[name*="[kode_barang]"]').val() === barangCode) {
+                            if (r.find('input[name*="[kode_barang]"]').val() ===
+                                barangCode) {
                                 const rQty = parseFloat(r.find('.input-qty').val()) || 0;
                                 const rIsi = parseFloat(r.attr('data-isi')) || 1;
                                 otherCartQtySmallest += rQty * rIsi;
@@ -1070,11 +1075,12 @@
                             Swal.fire({
                                 title: 'Stok Tidak Mencukupi',
                                 html: `Stok barang <b>${barang.nama_barang}</b> tidak mencukupi!<br><br>` +
-                                      `Stok tersedia: <b>${formatStokJS(barang.stok, barang.satuans)}</b>`,
+                                    `Stok tersedia: <b>${formatStokJS(barang.stok, barang.satuans)}</b>`,
                                 icon: 'error'
                             });
                             // Clamp
-                            const maxQtyAllowed = Math.floor((availableStock - otherCartQtySmallest) / isi);
+                            const maxQtyAllowed = Math.floor((availableStock -
+                                otherCartQtySmallest) / isi);
                             row.find('.input-qty').val(maxQtyAllowed > 0 ? maxQtyAllowed : 0);
                         }
                     }

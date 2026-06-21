@@ -1071,6 +1071,16 @@ class LaporanController extends Controller
                 $cashPayments = DB::table('penjualan_pembayaran')
                     ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
                     ->where('status', 'disetujui')
+                    ->where('jenis_bayar', '!=', 'Retur')
+                    ->whereIn('no_faktur', $invoiceIds)
+                    ->groupBy('no_faktur')
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                $returPayments = DB::table('penjualan_pembayaran')
+                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
+                    ->where('status', 'disetujui')
+                    ->where('jenis_bayar', 'Retur')
                     ->whereIn('no_faktur', $invoiceIds)
                     ->groupBy('no_faktur')
                     ->pluck('total', 'no_faktur')
@@ -1093,8 +1103,13 @@ class LaporanController extends Controller
                     ->toArray();
 
                 foreach ($invoices as $inv) {
-                    $paid = ($cashPayments[$inv->no_faktur] ?? 0) + ($transferPayments[$inv->no_faktur] ?? 0) + ($giroPayments[$inv->no_faktur] ?? 0);
-                    $sisa_piutang = (float)($inv->grand_total - $paid);
+                    $cashPaid = $cashPayments[$inv->no_faktur] ?? 0;
+                    $transferPaid = $transferPayments[$inv->no_faktur] ?? 0;
+                    $giroPaid = $giroPayments[$inv->no_faktur] ?? 0;
+                    $returPaid = $returPayments[$inv->no_faktur] ?? 0;
+
+                    $paid = $cashPaid + $transferPaid + $giroPaid;
+                    $sisa_piutang = (float)($inv->grand_total - $paid - $returPaid);
 
                     if ($sisa_piutang > 0.01) {
                         $ljt = $inv->pelanggan->ljt ?? 14;
@@ -1109,6 +1124,7 @@ class LaporanController extends Controller
                             'pelanggan' => $inv->pelanggan,
                             'grand_total' => $inv->grand_total,
                             'total_bayar' => $paid,
+                            'total_retur' => $returPaid,
                             'sisa_piutang' => $sisa_piutang,
                             'umur_piutang' => $umur_piutang,
                             'status' => $status,

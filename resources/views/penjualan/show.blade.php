@@ -32,7 +32,7 @@
                             </a>
                         @endcan
                         <a href="{{ route('penjualan.index') }}"
-                            class="btn btn-light btn-sm fw-bold hover-scale border border-white border-opacity-10">
+                            class="btn btn-secondary btn-sm fw-bold hover-scale border border-white border-opacity-10">
                             <i class="fa-solid fa-arrow-left me-1"></i> Kembali
                         </a>
                     </div>
