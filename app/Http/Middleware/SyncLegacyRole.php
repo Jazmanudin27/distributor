@@ -25,16 +25,21 @@ class SyncLegacyRole
     {
         $user = $request->user();
 
-        if ($user && $user->roles->isEmpty() && !empty($user->role)) {
-            $spatieRoleName = $this->roleMapping[$user->role] ?? $user->role;
-            $roleObj = Role::where('name', $spatieRoleName)->first();
+        if ($user && !empty($user->role)) {
+            $targetRoleName = $this->roleMapping[$user->role] ?? $user->role;
+            $currentRoleName = $user->roles->first()?->name;
 
-            if ($roleObj) {
-                $user->syncRoles([$spatieRoleName]);
-                // Reset cached permissions for this request
-                $user->unsetRelation('roles');
-                $user->unsetRelation('permissions');
-                app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+            // Koreksi jika role Spatie tidak ada atau tidak sesuai dengan kolom role
+            if ($currentRoleName !== $targetRoleName) {
+                $roleObj = Role::where('name', $targetRoleName)->first();
+
+                if ($roleObj) {
+                    $user->syncRoles([$targetRoleName]);
+                    // Reload relasi agar perubahan terbaca di request ini
+                    $user->unsetRelation('roles');
+                    $user->unsetRelation('permissions');
+                    app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+                }
             }
         }
 
