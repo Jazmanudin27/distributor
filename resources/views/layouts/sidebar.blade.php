@@ -23,30 +23,31 @@
     }
 
     // Active state checks for accordion expansion
-    $isMasterActive = request()->routeIs('kategori.*') || 
-                      request()->routeIs('merk.*') || 
-                      request()->routeIs('supplier.*') || 
-                      request()->routeIs('barang.*') || 
-                      request()->routeIs('barang_satuan.*') || 
-                      request()->routeIs('pelanggan.*') || 
-                      request()->routeIs('diskon-strata.*');
+    $isMasterActive =
+        request()->routeIs('kategori.*') ||
+        request()->routeIs('merk.*') ||
+        request()->routeIs('supplier.*') ||
+        request()->routeIs('barang.*') ||
+        request()->routeIs('barang_satuan.*') ||
+        request()->routeIs('pelanggan.*') ||
+        request()->routeIs('diskon-strata.*');
 
-    $isTransaksiActive = request()->routeIs('penjualan.*') || 
-                         request()->routeIs('retur-penjualan.*') || 
-                         request()->routeIs('penjualan-kiriman.*') || 
-                         request()->routeIs('pembelian.*') || 
-                         request()->routeIs('retur-pembelian.*') || 
-                         request()->routeIs('stok-opname.*') || 
-                         request()->routeIs('ajuan-limit-kredit.*') || 
-                         request()->routeIs('pembayaran.pending.*') || 
-                         request()->routeIs('kas-bank.*');
+    $isTransaksiActive =
+        request()->routeIs('penjualan.*') ||
+        request()->routeIs('retur-penjualan.*') ||
+        request()->routeIs('penjualan-kiriman.*') ||
+        request()->routeIs('pembelian.*') ||
+        request()->routeIs('retur-pembelian.*') ||
+        request()->routeIs('stok-opname.*') ||
+        request()->routeIs('ajuan-limit-kredit.*') ||
+        request()->routeIs('pembayaran.pending.*') ||
+        request()->routeIs('kas-bank.*');
 
     $isSalesActive = request()->routeIs('sales-tracking.*');
 
     $isLaporanActive = request()->routeIs('laporan.*');
 
-    $isSettingActive = request()->routeIs('users.*') || 
-                       request()->routeIs('roles.*');
+    $isSettingActive = request()->routeIs('users.*') || request()->routeIs('roles.*');
 @endphp
 
 @if ($user)
@@ -54,7 +55,8 @@
         {{-- DASHBOARD --}}
         <div class="accordion-item">
             <h2 class="accordion-header">
-                <a href="{{ url('/') }}" class="accordion-button no-chevron text-decoration-none sidebar-main-item {{ request()->is('/') || request()->is('dashboard') ? 'active' : '' }}">
+                <a href="{{ url('/') }}"
+                    class="accordion-button no-chevron text-decoration-none sidebar-main-item {{ request()->is('/') || request()->is('dashboard') ? 'active' : '' }}">
                     <span><i class="fa-solid fa-gauge-high me-2 text-primary"></i> Dashboard</span>
                 </a>
             </h2>
@@ -63,8 +65,9 @@
         {{-- DATA MASTER --}}
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingMaster">
-                <button class="accordion-button {{ $isMasterActive ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#collapseMaster" aria-expanded="{{ $isMasterActive ? 'true' : 'false' }}" aria-controls="collapseMaster">
+                <button class="accordion-button {{ $isMasterActive ? '' : 'collapsed' }}" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#collapseMaster"
+                    aria-expanded="{{ $isMasterActive ? 'true' : 'false' }}" aria-controls="collapseMaster">
                     <span>
                         <i class="fa-solid fa-folder me-2 text-primary"></i> Data Master
                         @if ($pendingPelangganCount > 0 && $user->can('view-pelanggan'))
@@ -74,32 +77,37 @@
                     </span>
                 </button>
             </h2>
-            <div id="collapseMaster" class="accordion-collapse collapse {{ $isMasterActive ? 'show' : '' }}" aria-labelledby="headingMaster"
-                data-bs-parent="#sidebarMenuAccordion">
+            <div id="collapseMaster" class="accordion-collapse collapse {{ $isMasterActive ? 'show' : '' }}"
+                aria-labelledby="headingMaster" data-bs-parent="#sidebarMenuAccordion">
                 <div class="accordion-body">
                     <div class="sidebar-submenu-list">
                         @can('view-kategori')
-                            <a href="{{ route('kategori.index') }}" class="sidebar-submenu-item {{ request()->routeIs('kategori.*') ? 'active' : '' }}">
+                            <a href="{{ route('kategori.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('kategori.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-tags text-primary"></i> Data Kategori
                             </a>
                         @endcan
                         @can('view-merk')
-                            <a href="{{ route('merk.index') }}" class="sidebar-submenu-item {{ request()->routeIs('merk.*') ? 'active' : '' }}">
+                            <a href="{{ route('merk.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('merk.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-copyright text-info"></i> Data Merk
                             </a>
                         @endcan
                         @can('view-supplier')
-                            <a href="{{ route('supplier.index') }}" class="sidebar-submenu-item {{ request()->routeIs('supplier.*') ? 'active' : '' }}">
+                            <a href="{{ route('supplier.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('supplier.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-truck text-success"></i> Data Supplier
                             </a>
                         @endcan
                         @can('view-barang')
-                            <a href="{{ route('barang.index') }}" class="sidebar-submenu-item {{ request()->routeIs('barang.*') ? 'active' : '' }}">
+                            <a href="{{ route('barang.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('barang.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-boxes-stacked text-warning"></i> Data Barang
                             </a>
                         @endcan
                         @can('view-satuan')
-                            <a href="{{ route('barang_satuan.index') }}" class="sidebar-submenu-item {{ request()->routeIs('barang_satuan.*') ? 'active' : '' }}">
+                            <a href="{{ route('barang_satuan.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('barang_satuan.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-balance-scale text-primary"></i> Barang Satuan
                             </a>
                         @endcan
@@ -117,7 +125,8 @@
                             </a>
                         @endcan
                         @can('view-diskon_strata')
-                            <a href="{{ route('diskon-strata.index') }}" class="sidebar-submenu-item {{ request()->routeIs('diskon-strata.*') ? 'active' : '' }}">
+                            <a href="{{ route('diskon-strata.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('diskon-strata.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-percent text-primary"></i> Diskon Strata
                             </a>
                         @endcan
@@ -129,8 +138,9 @@
         {{-- TRANSAKSI --}}
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingTransaksi">
-                <button class="accordion-button {{ $isTransaksiActive ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#collapseTransaksi" aria-expanded="{{ $isTransaksiActive ? 'true' : 'false' }}" aria-controls="collapseTransaksi">
+                <button class="accordion-button {{ $isTransaksiActive ? '' : 'collapsed' }}" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#collapseTransaksi"
+                    aria-expanded="{{ $isTransaksiActive ? 'true' : 'false' }}" aria-controls="collapseTransaksi">
                     <span>
                         <i class="fa-solid fa-receipt me-2 text-primary"></i> Transaksi
                         @if ($totalTransaksiPending > 0)
@@ -140,37 +150,43 @@
                     </span>
                 </button>
             </h2>
-            <div id="collapseTransaksi" class="accordion-collapse collapse {{ $isTransaksiActive ? 'show' : '' }}" aria-labelledby="headingTransaksi"
-                data-bs-parent="#sidebarMenuAccordion">
+            <div id="collapseTransaksi" class="accordion-collapse collapse {{ $isTransaksiActive ? 'show' : '' }}"
+                aria-labelledby="headingTransaksi" data-bs-parent="#sidebarMenuAccordion">
                 <div class="accordion-body">
                     <div class="sidebar-submenu-list">
                         @can('view-penjualan')
-                            <a href="{{ route('penjualan.index') }}" class="sidebar-submenu-item {{ request()->routeIs('penjualan.*') ? 'active' : '' }}">
+                            <a href="{{ route('penjualan.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('penjualan.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-file-invoice-dollar text-success"></i> Penjualan
                             </a>
                         @endcan
                         @can('view-retur_penjualan')
-                            <a href="{{ route('retur-penjualan.index') }}" class="sidebar-submenu-item {{ request()->routeIs('retur-penjualan.*') ? 'active' : '' }}">
+                            <a href="{{ route('retur-penjualan.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('retur-penjualan.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-rotate-right text-success"></i> Retur Penjualan
                             </a>
                         @endcan
                         @can('view-penjualan_kiriman')
-                            <a href="{{ route('penjualan-kiriman.index') }}" class="sidebar-submenu-item {{ request()->routeIs('penjualan-kiriman.*') ? 'active' : '' }}">
+                            <a href="{{ route('penjualan-kiriman.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('penjualan-kiriman.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-truck-ramp-box text-info"></i> Kiriman Penjualan
                             </a>
                         @endcan
                         @can('view-pembelian')
-                            <a href="{{ route('pembelian.index') }}" class="sidebar-submenu-item {{ request()->routeIs('pembelian.*') ? 'active' : '' }}">
+                            <a href="{{ route('pembelian.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('pembelian.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-cart-shopping text-warning"></i> Pembelian
                             </a>
                         @endcan
                         @can('view-retur_pembelian')
-                            <a href="{{ route('retur-pembelian.index') }}" class="sidebar-submenu-item {{ request()->routeIs('retur-pembelian.*') ? 'active' : '' }}">
+                            <a href="{{ route('retur-pembelian.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('retur-pembelian.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-rotate-left text-danger"></i> Retur Pembelian
                             </a>
                         @endcan
                         @can('view-stok_opname')
-                            <a href="{{ route('stok-opname.index') }}" class="sidebar-submenu-item {{ request()->routeIs('stok-opname.*') ? 'active' : '' }}">
+                            <a href="{{ route('stok-opname.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('stok-opname.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-clipboard-list text-info"></i> Stok Opname
                             </a>
                         @endcan
@@ -200,7 +216,8 @@
                             </a>
                         @endif
                         @if ($user->hasRole('Super Admin') || $user->hasRole('Admin') || $user->can('view-kas_bank'))
-                            <a href="{{ route('kas-bank.index') }}" class="sidebar-submenu-item {{ request()->routeIs('kas-bank.*') ? 'active' : '' }}">
+                            <a href="{{ route('kas-bank.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('kas-bank.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-wallet text-warning"></i> Kas & Bank
                             </a>
                         @endif
@@ -213,16 +230,18 @@
         @if ($user->hasRole('Super Admin') || $user->can('view-penjualan'))
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingSales">
-                    <button class="accordion-button {{ $isSalesActive ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapseSales" aria-expanded="{{ $isSalesActive ? 'true' : 'false' }}" aria-controls="collapseSales">
+                    <button class="accordion-button {{ $isSalesActive ? '' : 'collapsed' }}" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#collapseSales"
+                        aria-expanded="{{ $isSalesActive ? 'true' : 'false' }}" aria-controls="collapseSales">
                         <span><i class="fa-solid fa-person-running me-2 text-primary"></i> Aktivitas Sales</span>
                     </button>
                 </h2>
-                <div id="collapseSales" class="accordion-collapse collapse {{ $isSalesActive ? 'show' : '' }}" aria-labelledby="headingSales"
-                    data-bs-parent="#sidebarMenuAccordion">
+                <div id="collapseSales" class="accordion-collapse collapse {{ $isSalesActive ? 'show' : '' }}"
+                    aria-labelledby="headingSales" data-bs-parent="#sidebarMenuAccordion">
                     <div class="accordion-body">
                         <div class="sidebar-submenu-list">
-                            <a href="{{ route('sales-tracking.index') }}" class="sidebar-submenu-item {{ request()->routeIs('sales-tracking.*') ? 'active' : '' }}">
+                            <a href="{{ route('sales-tracking.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('sales-tracking.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-map-location-dot text-danger"></i> Tracking Sales (Peta)
                             </a>
                         </div>
@@ -241,47 +260,55 @@
                 $user->can('view-laporan_piutang'))
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingLaporan">
-                    <button class="accordion-button {{ $isLaporanActive ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapseLaporan" aria-expanded="{{ $isLaporanActive ? 'true' : 'false' }}" aria-controls="collapseLaporan">
+                    <button class="accordion-button {{ $isLaporanActive ? '' : 'collapsed' }}" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#collapseLaporan"
+                        aria-expanded="{{ $isLaporanActive ? 'true' : 'false' }}" aria-controls="collapseLaporan">
                         <span><i class="fa-solid fa-chart-line me-2 text-primary"></i> Laporan</span>
                     </button>
                 </h2>
-                <div id="collapseLaporan" class="accordion-collapse collapse {{ $isLaporanActive ? 'show' : '' }}" aria-labelledby="headingLaporan"
-                    data-bs-parent="#sidebarMenuAccordion">
+                <div id="collapseLaporan" class="accordion-collapse collapse {{ $isLaporanActive ? 'show' : '' }}"
+                    aria-labelledby="headingLaporan" data-bs-parent="#sidebarMenuAccordion">
                     <div class="accordion-body">
                         <div class="sidebar-submenu-list">
                             @can('view-laporan_pembelian')
-                                <a href="{{ route('laporan.pembelian') }}" class="sidebar-submenu-item {{ request()->routeIs('laporan.pembelian') ? 'active' : '' }}">
+                                <a href="{{ route('laporan.pembelian') }}"
+                                    class="sidebar-submenu-item {{ request()->routeIs('laporan.pembelian') ? 'active' : '' }}">
                                     <i class="fa-solid fa-file-invoice-dollar text-warning"></i> Pembelian
                                 </a>
                             @endcan
                             @can('view-laporan_retur_pembelian')
-                                <a href="{{ route('laporan.retur-pembelian') }}" class="sidebar-submenu-item {{ request()->routeIs('laporan.retur-pembelian') ? 'active' : '' }}">
+                                <a href="{{ route('laporan.retur-pembelian') }}"
+                                    class="sidebar-submenu-item {{ request()->routeIs('laporan.retur-pembelian') ? 'active' : '' }}">
                                     <i class="fa-solid fa-file-invoice text-danger"></i> Retur Pembelian
                                 </a>
                             @endcan
                             @can('view-laporan_stok')
-                                <a href="{{ route('laporan.stok') }}" class="sidebar-submenu-item {{ request()->routeIs('laporan.stok') ? 'active' : '' }}">
+                                <a href="{{ route('laporan.stok') }}"
+                                    class="sidebar-submenu-item {{ request()->routeIs('laporan.stok') ? 'active' : '' }}">
                                     <i class="fa-solid fa-boxes-stacked text-info"></i> Stok Barang
                                 </a>
                             @endcan
                             @can('view-laporan_penjualan')
-                                <a href="{{ route('laporan.penjualan') }}" class="sidebar-submenu-item {{ request()->routeIs('laporan.penjualan') ? 'active' : '' }}">
+                                <a href="{{ route('laporan.penjualan') }}"
+                                    class="sidebar-submenu-item {{ request()->routeIs('laporan.penjualan') ? 'active' : '' }}">
                                     <i class="fa-solid fa-file-invoice-dollar text-success"></i> Penjualan
                                 </a>
                             @endcan
                             @can('view-laporan_retur_penjualan')
-                                <a href="{{ route('laporan.retur-penjualan') }}" class="sidebar-submenu-item {{ request()->routeIs('laporan.retur-penjualan') ? 'active' : '' }}">
+                                <a href="{{ route('laporan.retur-penjualan') }}"
+                                    class="sidebar-submenu-item {{ request()->routeIs('laporan.retur-penjualan') ? 'active' : '' }}">
                                     <i class="fa-solid fa-file-invoice text-danger"></i> Retur Penjualan
                                 </a>
                             @endcan
                             @can('view-laporan_piutang')
-                                <a href="{{ route('laporan.piutang') }}" class="sidebar-submenu-item {{ request()->routeIs('laporan.piutang') ? 'active' : '' }}">
+                                <a href="{{ route('laporan.piutang') }}"
+                                    class="sidebar-submenu-item {{ request()->routeIs('laporan.piutang') ? 'active' : '' }}">
                                     <i class="fa-solid fa-address-card text-info"></i> Piutang Pelanggan
                                 </a>
                             @endcan
                             @can('view-laporan_laba_rugi')
-                                <a href="{{ route('laporan.laba-rugi') }}" class="sidebar-submenu-item {{ request()->routeIs('laporan.laba-rugi') ? 'active' : '' }}">
+                                <a href="{{ route('laporan.laba-rugi') }}"
+                                    class="sidebar-submenu-item {{ request()->routeIs('laporan.laba-rugi') ? 'active' : '' }}">
                                     <i class="fa-solid fa-calculator text-success"></i> Laba Rugi
                                 </a>
                             @endcan
@@ -294,22 +321,25 @@
         {{-- SETTING --}}
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingSetting">
-                <button class="accordion-button {{ $isSettingActive ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#collapseSetting" aria-expanded="{{ $isSettingActive ? 'true' : 'false' }}" aria-controls="collapseSetting">
+                <button class="accordion-button {{ $isSettingActive ? '' : 'collapsed' }}" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#collapseSetting"
+                    aria-expanded="{{ $isSettingActive ? 'true' : 'false' }}" aria-controls="collapseSetting">
                     <span><i class="fa-solid fa-gear me-2 text-secondary"></i> Setting</span>
                 </button>
             </h2>
-            <div id="collapseSetting" class="accordion-collapse collapse {{ $isSettingActive ? 'show' : '' }}" aria-labelledby="headingSetting"
-                data-bs-parent="#sidebarMenuAccordion">
+            <div id="collapseSetting" class="accordion-collapse collapse {{ $isSettingActive ? 'show' : '' }}"
+                aria-labelledby="headingSetting" data-bs-parent="#sidebarMenuAccordion">
                 <div class="accordion-body">
                     <div class="sidebar-submenu-list">
                         @can('view-users')
-                            <a href="{{ route('users.index') }}" class="sidebar-submenu-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
+                            <a href="{{ route('users.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-users text-info"></i> Data Users
                             </a>
                         @endcan
                         @can('view-roles')
-                            <a href="{{ route('roles.index') }}" class="sidebar-submenu-item {{ request()->routeIs('roles.*') ? 'active' : '' }}">
+                            <a href="{{ route('roles.index') }}"
+                                class="sidebar-submenu-item {{ request()->routeIs('roles.*') ? 'active' : '' }}">
                                 <i class="fa-solid fa-user-shield text-warning"></i> Hak Akses Menu
                             </a>
                         @endcan
