@@ -81,8 +81,8 @@
         <div class="section-title">Master</div>
         <div>
             <div class="dropdown-trigger {{ $isMasterActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
-                data-bs-target="#collapseMaster" role="button"
-                aria-expanded="{{ $isMasterActive ? 'true' : 'false' }}" aria-controls="collapseMaster">
+                data-bs-target="#collapseMaster" role="button" aria-expanded="{{ $isMasterActive ? 'true' : 'false' }}"
+                aria-controls="collapseMaster">
                 <i class="fa-solid fa-database"></i>
                 <span>Data Master</span>
                 @if ($pendingPelangganCount > 0 && $user->can('view-pelanggan'))
@@ -213,7 +213,8 @@
                 <div class="collapse {{ $isSalesActive ? 'show' : '' }}" id="collapseSales">
                     <div class="submenu-container">
                         <a href="{{ route('sales-tracking.index') }}"
-                            class="{{ request()->routeIs('sales-tracking.*') ? 'active' : '' }}">Tracking Sales (Peta)</a>
+                            class="{{ request()->routeIs('sales-tracking.*') ? 'active' : '' }}">Tracking Sales
+                            (Peta)</a>
                     </div>
                 </div>
             </div>
@@ -244,7 +245,8 @@
                         @endcan
                         @can('view-laporan_retur_pembelian')
                             <a href="{{ route('laporan.retur-pembelian') }}"
-                                class="{{ request()->routeIs('laporan.retur-pembelian') ? 'active' : '' }}">Retur Pembelian</a>
+                                class="{{ request()->routeIs('laporan.retur-pembelian') ? 'active' : '' }}">Retur
+                                Pembelian</a>
                         @endcan
                         @can('view-laporan_stok')
                             <a href="{{ route('laporan.stok') }}"
@@ -256,7 +258,8 @@
                         @endcan
                         @can('view-laporan_retur_penjualan')
                             <a href="{{ route('laporan.retur-penjualan') }}"
-                                class="{{ request()->routeIs('laporan.retur-penjualan') ? 'active' : '' }}">Retur Penjualan</a>
+                                class="{{ request()->routeIs('laporan.retur-penjualan') ? 'active' : '' }}">Retur
+                                Penjualan</a>
                         @endcan
                         @can('view-laporan_piutang')
                             <a href="{{ route('laporan.piutang') }}"
