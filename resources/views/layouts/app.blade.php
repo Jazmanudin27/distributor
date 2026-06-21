@@ -33,18 +33,17 @@
         <!-- Sidebar Offcanvas -->
         <div class="offcanvas offcanvas-start offcanvas-sidebar" tabindex="-1" id="sidebarOffcanvas"
             aria-labelledby="sidebarOffcanvasLabel">
-            <div class="offcanvas-header d-flex align-items-center justify-content-center position-relative py-4">
-                <div class="logo-icon d-flex align-items-center justify-content-center rounded-4 me-3"
-                    style="width: 45px; height: 45px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5); transform: rotate(-10deg); transition: all 0.3s ease;">
-                    <i class="fa-solid fa-layer-group text-white"
-                        style="font-size: 1.3rem; transform: rotate(10deg);"></i>
+            <div class="sidebar-header">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="logo-box">
+                        <i class="fa-solid fa-layer-group logo-icon"></i>
+                    </div>
+                    <div class="lh-sm text-start" style="line-height: 1.3;">
+                        <h4 class="mb-0 brand-title">ASPARTECH</h4>
+                        <small class="brand-subtitle">ERP Distributor</small>
+                    </div>
                 </div>
-                <h5 class="offcanvas-title mb-0" id="sidebarOffcanvasLabel"
-                    style="font-size: 1.8rem; letter-spacing: 4px; font-weight: 900; width: auto; margin-top: 2px;">
-                    DIS
-                </h5>
-                <button type="button" class="btn-close position-absolute end-0 me-3" data-bs-dismiss="offcanvas"
-                    aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close" style="filter: invert(1) grayscale(100%) brightness(200%); opacity: 0.6; transition: all 0.3s ease;"></button>
             </div>
             <div class="offcanvas-body p-0">
                 @include('layouts.sidebar')
