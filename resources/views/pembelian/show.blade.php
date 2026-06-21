@@ -238,19 +238,26 @@
                     @endphp
 
                     <div class="row g-2 text-start mt-1">
-                        <div class="col-4">
+                        <div class="{{ $totalRetur > 0 ? 'col-3' : 'col-4' }}">
                             <small class="text-secondary d-block">Grand Total</small>
-                            <span class="fw-bold text-dark fs-6">Rp
+                            <span class="fw-bold text-dark fs-6" style="font-size: 0.92rem;">Rp
                                 {{ number_format((float) $item->grand_total, 0, ',', '.') }}</span>
                         </div>
-                        <div class="col-4 border-start ps-3">
+                        <div class="{{ $totalRetur > 0 ? 'col-3' : 'col-4' }} border-start ps-3">
                             <small class="text-secondary d-block">Terbayar</small>
-                            <span class="fw-bold text-success fs-6">Rp
+                            <span class="fw-bold text-success fs-6" style="font-size: 0.92rem;">Rp
                                 {{ number_format((float) $totalBayar, 0, ',', '.') }}</span>
                         </div>
-                        <div class="col-4 border-start ps-3">
+                        @if ($totalRetur > 0)
+                            <div class="col-3 border-start ps-3 text-warning">
+                                <small class="text-secondary d-block">Retur (Potong)</small>
+                                <span class="fw-bold fs-6" style="font-size: 0.92rem;">Rp
+                                    {{ number_format((float) $totalRetur, 0, ',', '.') }}</span>
+                            </div>
+                        @endif
+                        <div class="{{ $totalRetur > 0 ? 'col-3' : 'col-4' }} border-start ps-3">
                             <small class="text-secondary d-block">Sisa Tagihan</small>
-                            <span class="fw-bold text-danger fs-6">Rp
+                            <span class="fw-bold text-danger fs-6" style="font-size: 0.92rem;">Rp
                                 {{ number_format((float) max(0, $sisaBayar), 0, ',', '.') }}</span>
                         </div>
                     </div>
@@ -336,7 +343,7 @@
 
         <!-- Right: Riwayat Pembayaran logs table -->
         <div class="col-lg-6 col-md-12">
-            <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
                 <div class="card-header bg-white py-3 border-bottom">
                     <h6 class="mb-0 fw-bold text-dark">
                         <i class="fa-solid fa-history me-2 text-primary"></i> Riwayat Pembayaran
@@ -387,6 +394,56 @@
                     </div>
                 </div>
             </div>
+
+            @if($totalRetur > 0)
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h6 class="mb-0 fw-bold text-dark">
+                            <i class="fa-solid fa-arrow-rotate-left me-2 text-warning"></i> Histori Retur Potong Tagihan
+                        </h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light text-secondary text-uppercase fs-8 tracking-wider">
+                                    <tr>
+                                        <th>No Retur / Tgl</th>
+                                        <th>Kondisi</th>
+                                        <th>Keterangan</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($returs as $retur)
+                                        <tr>
+                                            <td>
+                                                <a href="{{ route('retur-pembelian.show', $retur->no_retur) }}"
+                                                    class="fw-bold text-primary d-block font-monospace small text-decoration-none">
+                                                    {{ $retur->no_retur }}
+                                                </a>
+                                                <small class="text-muted font-monospace" style="font-size: 0.72rem;">
+                                                    {{ \Carbon\Carbon::parse($retur->tanggal)->format('d-m-Y') }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-warning-subtle text-warning-emphasis px-2 py-1 fs-8">
+                                                    {{ $retur->kondisi }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-secondary small">{{ $retur->keterangan ?? '-' }}</span>
+                                            </td>
+                                            <td class="text-end fw-bold text-danger">
+                                                Rp {{ number_format((float) $retur->total, 0, ',', '.') }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 @endsection

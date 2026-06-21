@@ -40,9 +40,9 @@ class PembelianController extends Controller
             // Filter by Paid or Unpaid (Lunas / Belum Lunas)
             $query->where(function ($q) use ($status) {
                 if ($status === 'lunas') {
-                    $q->whereRaw('(SELECT COALESCE(SUM(jumlah), 0) FROM pembelian_pembayaran WHERE pembelian_pembayaran.no_faktur = pembelian.no_faktur) >= grand_total');
+                    $q->whereRaw('(SELECT COALESCE(SUM(jumlah), 0) FROM pembelian_pembayaran WHERE pembelian_pembayaran.no_faktur = pembelian.no_faktur) + (SELECT COALESCE(SUM(total), 0) FROM retur_pembelian WHERE retur_pembelian.no_faktur = pembelian.no_faktur AND jenis_retur = \'Potong Tagihan\') >= grand_total');
                 } else {
-                    $q->whereRaw('(SELECT COALESCE(SUM(jumlah), 0) FROM pembelian_pembayaran WHERE pembelian_pembayaran.no_faktur = pembelian.no_faktur) < grand_total');
+                    $q->whereRaw('(SELECT COALESCE(SUM(jumlah), 0) FROM pembelian_pembayaran WHERE pembelian_pembayaran.no_faktur = pembelian.no_faktur) + (SELECT COALESCE(SUM(total), 0) FROM retur_pembelian WHERE retur_pembelian.no_faktur = pembelian.no_faktur AND jenis_retur = \'Potong Tagihan\') < grand_total');
                 }
             });
         }
@@ -160,8 +160,14 @@ class PembelianController extends Controller
     {
         $item = Pembelian::with(['supplier', 'details.barang', 'pembayarans'])->findOrFail($no_faktur);
         $totalBayar = $item->pembayarans->sum('jumlah');
-        $sisaBayar = $item->grand_total - $totalBayar;
-        return view('pembelian.show', compact('item', 'totalBayar', 'sisaBayar'));
+        
+        $returs = \App\Models\ReturPembelian::where('no_faktur', $no_faktur)
+            ->where('jenis_retur', 'Potong Tagihan')
+            ->get();
+        $totalRetur = $returs->sum('total');
+
+        $sisaBayar = $item->grand_total - $totalBayar - $totalRetur;
+        return view('pembelian.show', compact('item', 'totalBayar', 'sisaBayar', 'returs', 'totalRetur'));
     }
 
     public function edit($no_faktur)
@@ -297,7 +303,10 @@ class PembelianController extends Controller
 
         // Validate that payment does not exceed sisaBayar
         $totalBayar = $item->pembayarans->sum('jumlah');
-        $sisaBayar = $item->grand_total - $totalBayar;
+        $totalRetur = \App\Models\ReturPembelian::where('no_faktur', $no_faktur)
+            ->where('jenis_retur', 'Potong Tagihan')
+            ->sum('total');
+        $sisaBayar = $item->grand_total - $totalBayar - $totalRetur;
 
         if ($request->jumlah > $sisaBayar) {
             return redirect()->back()->with('error', 'Jumlah pembayaran melebihi sisa tagihan! Sisa tagihan saat ini: Rp ' . number_format($sisaBayar, 0, ',', '.'));
