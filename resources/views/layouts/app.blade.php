@@ -157,24 +157,28 @@
                                 
                                 let zoom = 1;
                                 const bodyZoom = window.getComputedStyle(document.body).zoom || document.body.style.zoom;
-                                if (bodyZoom) {
-                                    zoom = parseFloat(bodyZoom);
-                                    if (zoom > 10) {
-                                        zoom = zoom / 100;
+                                if (bodyZoom && bodyZoom !== 'normal') {
+                                    const parsed = parseFloat(bodyZoom);
+                                    if (!isNaN(parsed) && parsed > 0) {
+                                        zoom = parsed;
+                                        if (zoom > 10) {
+                                            zoom = zoom / 100;
+                                        }
                                     }
                                 }
                                 
-                                if (zoom !== 1 && this.$dropdown && this.$dropdown[0]) {
-                                    const styleTop = this.$dropdown[0].style.top || this.$dropdown.css('top');
-                                    const styleLeft = this.$dropdown[0].style.left || this.$dropdown.css('left');
+                                const container = this.$dropdownContainer || this.$dropdown;
+                                if (zoom !== 1 && container && container[0]) {
+                                    const styleTop = container[0].style.top || container.css('top');
+                                    const styleLeft = container[0].style.left || container.css('left');
                                     
                                     if (styleTop && styleTop.indexOf('px') !== -1) {
                                         const topVal = parseFloat(styleTop);
-                                        this.$dropdown[0].style.top = (topVal / zoom) + 'px';
+                                        container[0].style.top = (topVal / zoom) + 'px';
                                     }
                                     if (styleLeft && styleLeft.indexOf('px') !== -1) {
                                         const leftVal = parseFloat(styleLeft);
-                                        this.$dropdown[0].style.left = (leftVal / zoom) + 'px';
+                                        container[0].style.left = (leftVal / zoom) + 'px';
                                     }
                                 }
                             };
