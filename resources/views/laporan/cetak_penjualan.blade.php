@@ -121,7 +121,7 @@
                     </tbody>
                     <tfoot class="fw-bold">
                         <tr class="table-light">
-                            <td colspan="7" class="text-end">TOTAL KESELURUHAN:</td>
+                            <td colspan="6" class="text-end">TOTAL KESELURUHAN:</td>
                             <td class="text-end">{{ number_format($totTotal, 0, ',', '.') }}</td>
                             <td class="text-end">{{ number_format($totDiskon, 0, ',', '.') }}</td>
                             <td class="text-end">{{ number_format($totGrand, 0, ',', '.') }}</td>
