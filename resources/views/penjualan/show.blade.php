@@ -20,17 +20,27 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2">
-                        <a href="{{ route('penjualan.print', $item->no_faktur) }}"
-                            class="btn btn-white btn-sm fw-bold hover-scale text-primary bg-white border btn-print-faktur"
-                            data-no-faktur="{{ $item->no_faktur }}" data-cetak="{{ $item->cetak ?? 0 }}">
-                            <i class="fa-solid fa-print me-1"></i> Cetak Faktur
-                        </a>
-                        @can('edit-penjualan')
-                            <a href="{{ route('penjualan.edit', $item->no_faktur) }}"
-                                class="btn btn-white btn-sm fw-bold hover-scale text-success bg-white border">
-                                <i class="fa-solid fa-pen-to-square me-1"></i> Edit Faktur
+                        @if ($item->batal == 0)
+                            <a href="{{ route('penjualan.print', $item->no_faktur) }}"
+                                class="btn btn-white btn-sm fw-bold hover-scale text-primary bg-white border btn-print-faktur"
+                                data-no-faktur="{{ $item->no_faktur }}" data-cetak="{{ $item->cetak ?? 0 }}">
+                                <i class="fa-solid fa-print me-1"></i> Cetak Faktur
                             </a>
-                        @endcan
+                            @can('edit-penjualan')
+                                <a href="{{ route('penjualan.edit', $item->no_faktur) }}"
+                                    class="btn btn-white btn-sm fw-bold hover-scale text-success bg-white border">
+                                    <i class="fa-solid fa-pen-to-square me-1"></i> Edit Faktur
+                                </a>
+                            @endcan
+                            @can('delete-penjualan')
+                                <button type="button" 
+                                    class="btn btn-danger btn-sm fw-bold hover-scale btn-batal-faktur border border-white border-opacity-10"
+                                    data-no-faktur="{{ $item->no_faktur }}"
+                                    data-action="{{ route('penjualan.batal', $item->no_faktur) }}">
+                                    <i class="fa-solid fa-ban me-1"></i> Batalkan Faktur
+                                </button>
+                            @endcan
+                        @endif
                         <a href="{{ route('penjualan.index') }}"
                             class="btn btn-secondary btn-sm fw-bold hover-scale border border-white border-opacity-10">
                             <i class="fa-solid fa-arrow-left me-1"></i> Kembali
@@ -50,7 +60,13 @@
                     {{-- STATUS STAMP --}}
                     <div class="position-absolute"
                         style="right: 40px; top: 25px; z-index: 2; pointer-events: none; transform: rotate(8deg);">
-                        @if ($isPaid)
+                        @if ($item->batal == 1)
+                            <div class="border border-4 border-danger rounded-3 px-4 py-2 text-danger fw-bold text-uppercase shadow-sm bg-white bg-opacity-90 d-flex flex-column align-items-center"
+                                style="font-size: 1.5rem; letter-spacing: 4px; border-style: double !important; border-width: 6px !important; opacity: 0.85;">
+                                <span>BATAL</span>
+                                <small style="font-size: 0.62rem; letter-spacing: 1.5px;" class="fw-semibold mt-1">VOID / CANCELED</small>
+                            </div>
+                        @elseif ($isPaid)
                             <div class="border border-4 border-success rounded-3 px-4 py-2 text-success fw-bold text-uppercase shadow-sm bg-white bg-opacity-90 d-flex flex-column align-items-center"
                                 style="font-size: 1.5rem; letter-spacing: 4px; border-style: double !important; border-width: 6px !important; opacity: 0.85;">
                                 <span>LUNAS</span>
@@ -130,6 +146,13 @@
                                     <td class="py-1">: <span
                                             class="text-dark ms-2 small">{{ $item->keterangan ?? '-' }}</span></td>
                                 </tr>
+                                @if ($item->batal == 1)
+                                    <tr>
+                                        <td class="text-danger fw-semibold py-1">Alasan Batal</td>
+                                        <td class="py-1">: <span
+                                                class="badge bg-danger-subtle text-danger px-2 py-1 ms-2 fw-semibold">{{ $item->alasan_batal }}</span></td>
+                                    </tr>
+                                @endif
                             </table>
                         </div>
 
@@ -303,7 +326,7 @@
         {{-- BOTTOM PANELS: STATUS TAGIHAN + BAYAR --}}
         <div class="col-lg-6 col-md-12">
             {{-- FORM TAMBAH PEMBAYARAN --}}
-            @if (!$isPaid)
+            @if (!$isPaid && $item->batal == 0)
                 <div class="card shadow-sm border-0 rounded-4 mb-4">
                     <div class="card-header bg-white py-3 border-bottom">
                         <h6 class="mb-0 fw-bold text-dark">
@@ -610,6 +633,47 @@
 
             $('#formPembayaran').on('submit', function() {
                 $('#payment_jumlah').val(cleanNumber($('#payment_jumlah').val()));
+            });
+
+            $(document).on('click', '.btn-batal-faktur', function(e) {
+                e.preventDefault();
+                const actionUrl = $(this).data('action');
+                const noFaktur = $(this).data('no-faktur');
+
+                Swal.fire({
+                    title: 'Batalkan Transaksi?',
+                    text: `Apakah Anda yakin ingin membatalkan transaksi ${noFaktur}? Sediaan stok akan dikembalikan.`,
+                    icon: 'warning',
+                    input: 'text',
+                    inputPlaceholder: 'Masukkan alasan pembatalan...',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Batalkan!',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#f59e0b',
+                    cancelButtonColor: '#6c757d',
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return 'Alasan pembatalan harus diisi!';
+                        }
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = $('<form>', {
+                            action: actionUrl,
+                            method: 'POST'
+                        }).append($('<input>', {
+                            type: 'hidden',
+                            name: '_token',
+                            value: '{{ csrf_token() }}'
+                        })).append($('<input>', {
+                            type: 'hidden',
+                            name: 'alasan_batal',
+                            value: result.value
+                        }));
+                        $('body').append(form);
+                        form.submit();
+                    }
+                });
             });
         });
     </script>

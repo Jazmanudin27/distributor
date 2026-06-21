@@ -595,6 +595,64 @@ class PenjualanController extends Controller
         return redirect()->route('penjualan.index')->with('success', 'Transaksi penjualan berhasil dihapus.');
     }
 
+    public function batal(Request $request, $no_faktur)
+    {
+        $request->validate([
+            'alasan_batal' => 'required|string|max:255',
+        ]);
+
+        $penjualan = Penjualan::with(['details', 'pembayarans'])->findOrFail($no_faktur);
+
+        if ($penjualan->batal == 1) {
+            return redirect()->back()->with('error', 'Transaksi ini sudah dibatalkan sebelumnya.');
+        }
+
+        try {
+            DB::transaction(function () use ($penjualan, $request) {
+                // Revert stock
+                foreach ($penjualan->details as $detail) {
+                    $satuan = BarangSatuan::find($detail->satuan_id);
+                    $qty = $detail->qty * ($satuan->isi ?? 1);
+                    Barang::where('kode_barang', $detail->kode_barang)->increment('stok', $qty);
+                }
+
+                // Update penjualan status to canceled
+                $penjualan->update([
+                    'batal' => 1,
+                    'alasan_batal' => $request->alasan_batal,
+                ]);
+
+                // Update status of all associated payments to ditolak
+                DB::table('penjualan_pembayaran')->where('no_faktur', $penjualan->no_faktur)->update([
+                    'status' => 'ditolak',
+                    'keterangan' => DB::raw("CONCAT(COALESCE(keterangan, ''), ' (Faktur Dibatalkan)')")
+                ]);
+
+                DB::table('penjualan_pembayaran_transfer')->where('no_faktur', $penjualan->no_faktur)->update([
+                    'status' => 'ditolak',
+                    'keterangan' => DB::raw("CONCAT(COALESCE(keterangan, ''), ' (Faktur Dibatalkan)')")
+                ]);
+
+                DB::table('penjualan_pembayaran_giro')->where('no_faktur', $penjualan->no_faktur)->update([
+                    'status' => 'ditolak',
+                    'keterangan' => DB::raw("CONCAT(COALESCE(keterangan, ''), ' (Faktur Dibatalkan)')")
+                ]);
+
+                ActivityLog::create([
+                    'user_id' => Auth::id() ?? 1,
+                    'action' => 'Batal Penjualan',
+                    'description' => 'Membatalkan faktur ' . $penjualan->no_faktur . ' dengan alasan: ' . $request->alasan_batal,
+                    'ip_address' => $request->ip(),
+                    'no_faktur' => $penjualan->no_faktur,
+                ]);
+            });
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal membatalkan transaksi: ' . $e->getMessage());
+        }
+
+        return redirect()->route('penjualan.index')->with('success', 'Transaksi penjualan berhasil dibatalkan.');
+    }
+
     public function storePayment(Request $request, $no_faktur)
     {
         $item = Penjualan::findOrFail($no_faktur);

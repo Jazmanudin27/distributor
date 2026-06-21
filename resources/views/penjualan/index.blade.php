@@ -195,6 +195,13 @@
                                             </a>
                                         @endcan
                                         @can('delete-penjualan')
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-warning btn-batal-faktur rounded"
+                                                data-action="{{ route('penjualan.batal', $item->no_faktur) }}"
+                                                data-no-faktur="{{ $item->no_faktur }}"
+                                                title="Batalkan Transaksi">
+                                                <i class="fa-solid fa-ban"></i>
+                                            </button>
                                             <form action="{{ route('penjualan.destroy', $item->no_faktur) }}" method="POST"
                                                 class="d-inline">
                                                 @csrf
@@ -233,3 +240,50 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $(document).on('click', '.btn-batal-faktur', function(e) {
+                e.preventDefault();
+                const actionUrl = $(this).data('action');
+                const noFaktur = $(this).data('no-faktur');
+
+                Swal.fire({
+                    title: 'Batalkan Transaksi?',
+                    text: `Apakah Anda yakin ingin membatalkan transaksi ${noFaktur}? Sediaan stok akan dikembalikan.`,
+                    icon: 'warning',
+                    input: 'text',
+                    inputPlaceholder: 'Masukkan alasan pembatalan...',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Batalkan!',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#f59e0b',
+                    cancelButtonColor: '#6c757d',
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return 'Alasan pembatalan harus diisi!';
+                        }
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = $('<form>', {
+                            action: actionUrl,
+                            method: 'POST'
+                        }).append($('<input>', {
+                            type: 'hidden',
+                            name: '_token',
+                            value: '{{ csrf_token() }}'
+                        })).append($('<input>', {
+                            type: 'hidden',
+                            name: 'alasan_batal',
+                            value: result.value
+                        }));
+                        $('body').append(form);
+                        form.submit();
+                    }
+                });
+            });
+        });
+    </script>
+@endpush

@@ -119,6 +119,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/diskon-strata/{id}/toggle-status', [DiskonStrataController::class, 'toggleStatus'])->name('diskon-strata.toggle-status');
 
         Route::post('/penjualan/{no_faktur}/payment', [PenjualanController::class, 'storePayment'])->name('penjualan.payment');
+        Route::post('/penjualan/{no_faktur}/batal', [PenjualanController::class, 'batal'])->name('penjualan.batal');
         Route::get('/penjualan/{no_faktur}/print', [PenjualanController::class, 'print'])->name('penjualan.print');
         Route::get('/retur-penjualan/{no_retur}/print', [ReturPenjualanController::class, 'print'])->name('retur-penjualan.print');
         Route::resource('penjualan', PenjualanController::class);
