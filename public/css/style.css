@@ -24,7 +24,7 @@ body {
    OFFCANVAS SIDEBAR - Dark Premium
    ============================================= */
 .offcanvas-start {
-    width: 260px !important;
+    width: 290px !important;
     border-right: none;
 }
 
@@ -206,7 +206,7 @@ body {
 
 .sidebar-menu .section-title {
     padding: 12px 10px 4px;
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -221,7 +221,7 @@ body {
     color: #8a99ad;
     text-decoration: none;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    font-size: 0.85rem;
+    font-size: 0.92rem;
     font-weight: 500;
     gap: 10px;
     border-radius: 8px;
@@ -267,7 +267,7 @@ body {
     color: #8a99ad;
     text-decoration: none;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    font-size: 0.85rem;
+    font-size: 0.92rem;
     font-weight: 500;
     gap: 10px;
     cursor: pointer;
