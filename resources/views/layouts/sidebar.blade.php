@@ -86,7 +86,7 @@
                 <i class="fa-solid fa-database"></i>
                 <span>Data Master</span>
                 @if ($pendingPelangganCount > 0 && $user->can('view-pelanggan'))
-                    <span class="badge bg-warning text-dark rounded-pill ms-2"
+                    <span class="badge bg-danger text-light rounded-pill ms-2"
                         style="font-size: 0.65rem; padding: 0.25em 0.55em;">{{ $pendingPelangganCount }}</span>
                 @endif
                 <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
@@ -118,7 +118,7 @@
                             class="{{ request()->routeIs('pelanggan.*') ? 'active' : '' }} d-flex justify-content-between align-items-center">
                             <span>Data Pelanggan</span>
                             @if ($pendingPelangganCount > 0)
-                                <span class="badge bg-warning text-dark rounded-pill"
+                                <span class="badge bg-danger text-light rounded-pill"
                                     style="font-size: 0.7rem; padding: 0.25em 0.6em;">{{ $pendingPelangganCount }}</span>
                             @endif
                         </a>

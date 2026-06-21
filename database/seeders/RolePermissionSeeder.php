@@ -95,6 +95,7 @@ class RolePermissionSeeder extends Seeder
         $admin = Role::firstOrCreate(['name' => 'Admin']);
         $kasir = Role::firstOrCreate(['name' => 'Kasir']);
         $salesman = Role::firstOrCreate(['name' => 'Salesman']);
+        $spvSales = Role::firstOrCreate(['name' => 'SPV Sales']);
 
         // Berikan beberapa akses default ke Admin (kecuali hapus users/roles)
         $adminPermissions = Permission::whereNotIn('name', [
@@ -127,6 +128,21 @@ class RolePermissionSeeder extends Seeder
             'create-pengajuan_limit_kredit'
         ])->get();
         $salesman->syncPermissions($salesmanPermissions);
+
+        // Berikan akses default ke SPV Sales
+        $spvSalesPermissions = Permission::whereIn('name', [
+            'view-barang',
+            'view-kategori',
+            'view-merk',
+            'view-pelanggan',
+            'edit-pelanggan',
+            'view-ajuan_limit_kredit',
+            'approve-ajuan_limit_kredit',
+            'view-penjualan',
+            'view-laporan_penjualan',
+            'view-laporan_piutang',
+        ])->get();
+        $spvSales->syncPermissions($spvSalesPermissions);
 
         // 5. Assign Super Admin role to the first user
         $user = \App\Models\User::first();
