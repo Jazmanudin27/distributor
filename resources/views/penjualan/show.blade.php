@@ -379,230 +379,235 @@
         </div>
 
         {{-- RIWAYAT PEMBAYARAN --}}
-        <div class="col-lg-12 col-md-12">
-            <div class="card shadow-sm border-0 rounded-4 mb-4">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h6 class="mb-0 fw-bold text-dark">
-                        <i class="fa-solid fa-history me-2 text-success"></i> Riwayat Pembayaran
-                    </h6>
-                </div>
-                <div class="card-body p-4">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover align-middle mb-0">
-                            <thead class="table-light text-secondary text-uppercase fs-8">
-                                <tr>
-                                    <th>No Bukti / Tgl</th>
-                                    <th>Metode</th>
-                                    <th>Keterangan</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-end">Jumlah</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($allPembayarans as $bayar)
+        <div class="row">
+            <div class="col-lg-6 col-md-12">
+                <div class="card shadow-sm border-0 rounded-4 mb-4">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h6 class="mb-0 fw-bold text-dark">
+                            <i class="fa-solid fa-history me-2 text-success"></i> Riwayat Pembayaran
+                        </h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light text-secondary text-uppercase fs-8">
                                     <tr>
-                                        <td>
-                                            <span
-                                                class="fw-bold text-dark d-block font-monospace small">{{ $bayar->no_bukti }}</span>
-                                            <small
-                                                class="text-muted font-monospace">{{ \Carbon\Carbon::parse($bayar->tanggal)->format('d-m-Y') }}</small>
-                                        </td>
-                                        <td>
-                                            <span
-                                                class="badge bg-secondary-subtle text-secondary-emphasis px-2 py-1 fs-8">{{ $bayar->jenis_bayar }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="text-secondary small">{{ $bayar->keterangan ?? '-' }}</span>
-                                        </td>
-                                        <td class="text-center">
-                                            @if ($bayar->status === 'pending')
+                                        <th>No Bukti / Tgl</th>
+                                        <th>Metode</th>
+                                        <th>Keterangan</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-end">Jumlah</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($allPembayarans as $bayar)
+                                        <tr>
+                                            <td>
                                                 <span
-                                                    class="badge bg-warning text-dark px-2 py-1 fs-8 mb-1 d-inline-block">Pending</span>
-                                                @if (auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin'))
-                                                    <div class="d-flex justify-content-center gap-1">
-                                                        <form
-                                                            action="{{ route('pembayaran.approve', [$bayar->id, 'source' => $bayar->source_table]) }}"
-                                                            method="POST" class="d-inline">
-                                                            @csrf
-                                                            <button type="submit"
-                                                                class="btn btn-success btn-xs px-2 py-0 fw-semibold"
-                                                                style="font-size: 0.65rem;" title="Setujui">
-                                                                <i class="fa-solid fa-check"></i>
-                                                            </button>
-                                                        </form>
-                                                        <form
-                                                            action="{{ route('pembayaran.reject', [$bayar->id, 'source' => $bayar->source_table]) }}"
-                                                            method="POST" class="d-inline">
-                                                            @csrf
-                                                            <button type="submit"
-                                                                class="btn btn-danger btn-xs px-2 py-0 fw-semibold"
-                                                                style="font-size: 0.65rem;" title="Tolak">
-                                                                <i class="fa-solid fa-xmark"></i>
-                                                            </button>
-                                                        </form>
-                                                    </div>
+                                                    class="fw-bold text-dark d-block font-monospace small">{{ $bayar->no_bukti }}</span>
+                                                <small
+                                                    class="text-muted font-monospace">{{ \Carbon\Carbon::parse($bayar->tanggal)->format('d-m-Y') }}</small>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    class="badge bg-secondary-subtle text-secondary-emphasis px-2 py-1 fs-8">{{ $bayar->jenis_bayar }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-secondary small">{{ $bayar->keterangan ?? '-' }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                @if ($bayar->status === 'pending')
+                                                    <span
+                                                        class="badge bg-warning text-dark px-2 py-1 fs-8 mb-1 d-inline-block">Pending</span>
+                                                    @if (auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin'))
+                                                        <div class="d-flex justify-content-center gap-1">
+                                                            <form
+                                                                action="{{ route('pembayaran.approve', [$bayar->id, 'source' => $bayar->source_table]) }}"
+                                                                method="POST" class="d-inline">
+                                                                @csrf
+                                                                <button type="submit"
+                                                                    class="btn btn-success btn-xs px-2 py-0 fw-semibold"
+                                                                    style="font-size: 0.65rem;" title="Setujui">
+                                                                    <i class="fa-solid fa-check"></i>
+                                                                </button>
+                                                            </form>
+                                                            <form
+                                                                action="{{ route('pembayaran.reject', [$bayar->id, 'source' => $bayar->source_table]) }}"
+                                                                method="POST" class="d-inline">
+                                                                @csrf
+                                                                <button type="submit"
+                                                                    class="btn btn-danger btn-xs px-2 py-0 fw-semibold"
+                                                                    style="font-size: 0.65rem;" title="Tolak">
+                                                                    <i class="fa-solid fa-xmark"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    @endif
+                                                @elseif($bayar->status === 'disetujui')
+                                                    <span class="badge bg-success px-2 py-1 fs-8">Disetujui</span>
+                                                    @if (auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin'))
+                                                        <div class="d-flex justify-content-center mt-1">
+                                                            <form
+                                                                action="{{ route('pembayaran.cancel-approval', [$bayar->id, 'source' => $bayar->source_table]) }}"
+                                                                method="POST" class="d-inline"
+                                                                onsubmit="return confirm('Apakah Anda yakin ingin membatalkan persetujuan pembayaran ini?')">
+                                                                @csrf
+                                                                <button type="submit"
+                                                                    class="btn btn-warning btn-xs px-2 py-0 fw-semibold text-white d-flex align-items-center gap-1"
+                                                                    style="font-size: 0.65rem;"
+                                                                    title="Batalkan Persetujuan">
+                                                                    <i class="fa-solid fa-arrow-rotate-left"></i> Batal
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <span class="badge bg-danger px-2 py-1 fs-8">Ditolak</span>
+                                                    @if (auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin'))
+                                                        <div class="d-flex justify-content-center mt-1">
+                                                            <form
+                                                                action="{{ route('pembayaran.cancel-approval', [$bayar->id, 'source' => $bayar->source_table]) }}"
+                                                                method="POST" class="d-inline"
+                                                                onsubmit="return confirm('Apakah Anda yakin ingin membatalkan penolakan pembayaran ini?')">
+                                                                @csrf
+                                                                <button type="submit"
+                                                                    class="btn btn-warning btn-xs px-2 py-0 fw-semibold text-white d-flex align-items-center gap-1"
+                                                                    style="font-size: 0.65rem;"
+                                                                    title="Batalkan Penolakan">
+                                                                    <i class="fa-solid fa-arrow-rotate-left"></i> Batal
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    @endif
                                                 @endif
-                                            @elseif($bayar->status === 'disetujui')
-                                                <span class="badge bg-success px-2 py-1 fs-8">Disetujui</span>
-                                                @if (auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin'))
-                                                    <div class="d-flex justify-content-center mt-1">
-                                                        <form
-                                                            action="{{ route('pembayaran.cancel-approval', [$bayar->id, 'source' => $bayar->source_table]) }}"
-                                                            method="POST" class="d-inline"
-                                                            onsubmit="return confirm('Apakah Anda yakin ingin membatalkan persetujuan pembayaran ini?')">
-                                                            @csrf
-                                                            <button type="submit"
-                                                                class="btn btn-warning btn-xs px-2 py-0 fw-semibold text-white d-flex align-items-center gap-1"
-                                                                style="font-size: 0.65rem;" title="Batalkan Persetujuan">
-                                                                <i class="fa-solid fa-arrow-rotate-left"></i> Batal
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                @endif
-                                            @else
-                                                <span class="badge bg-danger px-2 py-1 fs-8">Ditolak</span>
-                                                @if (auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin'))
-                                                    <div class="d-flex justify-content-center mt-1">
-                                                        <form
-                                                            action="{{ route('pembayaran.cancel-approval', [$bayar->id, 'source' => $bayar->source_table]) }}"
-                                                            method="POST" class="d-inline"
-                                                            onsubmit="return confirm('Apakah Anda yakin ingin membatalkan penolakan pembayaran ini?')">
-                                                            @csrf
-                                                            <button type="submit"
-                                                                class="btn btn-warning btn-xs px-2 py-0 fw-semibold text-white d-flex align-items-center gap-1"
-                                                                style="font-size: 0.65rem;" title="Batalkan Penolakan">
-                                                                <i class="fa-solid fa-arrow-rotate-left"></i> Batal
-                                                            </button>
-                                                        </form>
-                                                    </div>
-                                                @endif
-                                            @endif
-                                        </td>
-                                        <td class="text-end fw-bold text-success">
-                                            Rp {{ number_format((float) $bayar->jumlah, 0, ',', '.') }}
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center py-5 text-muted">
-                                            <i class="fa-solid fa-receipt d-block fs-3 mb-2 opacity-50 text-secondary"></i>
-                                            Belum ada riwayat pembayaran untuk faktur ini.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                            </td>
+                                            <td class="text-end fw-bold text-success">
+                                                Rp {{ number_format((float) $bayar->jumlah, 0, ',', '.') }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center py-5 text-muted">
+                                                <i
+                                                    class="fa-solid fa-receipt d-block fs-3 mb-2 opacity-50 text-secondary"></i>
+                                                Belum ada riwayat pembayaran untuk faktur ini.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- HISTORI RETUR POTONG FAKTUR (PF) --}}
-            <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h6 class="mb-0 fw-bold text-dark">
-                        <i class="fa-solid fa-arrow-rotate-left me-2 text-warning"></i> Histori Retur Potong Faktur (PF)
-                    </h6>
-                </div>
-                <div class="card-body p-4">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover align-middle mb-0">
-                            <thead class="table-light text-secondary text-uppercase fs-8">
-                                <tr>
-                                    <th>No Retur / Tgl</th>
-                                    <th>Jenis Retur</th>
-                                    <th>Keterangan</th>
-                                    <th class="text-end">Jumlah</th>
-                                    <th class="text-center" width="70">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($returs as $retur)
+                {{-- HISTORI RETUR POTONG FAKTUR (PF) --}}
+                <div class="card shadow-sm border-0 rounded-4">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <h6 class="mb-0 fw-bold text-dark">
+                            <i class="fa-solid fa-arrow-rotate-left me-2 text-warning"></i> Histori Retur Potong Faktur
+                            (PF)
+                        </h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light text-secondary text-uppercase fs-8">
                                     <tr>
-                                        <td>
-                                            <a href="{{ route('retur-penjualan.show', $retur->no_retur) }}"
-                                                class="fw-bold text-primary d-block font-monospace small text-decoration-none">
-                                                {{ $retur->no_retur }}
-                                            </a>
-                                            <small
-                                                class="text-muted font-monospace">{{ \Carbon\Carbon::parse($retur->tanggal)->format('d-m-Y') }}</small>
-                                        </td>
-                                        <td>
-                                            <span
-                                                class="badge bg-warning-subtle text-warning-emphasis px-2 py-1 fs-8">{{ $retur->jenis_retur }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="text-secondary small">{{ $retur->keterangan ?? '-' }}</span>
-                                        </td>
-                                        <td class="text-end fw-bold text-danger">
-                                            Rp {{ number_format((float) $retur->total, 0, ',', '.') }}
-                                        </td>
-                                        <td class="text-center">
-                                            <a href="{{ route('retur-penjualan.show', $retur->no_retur) }}"
-                                                class="btn btn-sm btn-outline-secondary rounded-circle"
-                                                style="width: 28px; height: 28px; padding: 2px;"
-                                                title="Lihat Detail Retur">
-                                                <i class="fa-solid fa-eye" style="font-size: 0.75rem;"></i>
-                                            </a>
-                                        </td>
+                                        <th>No Retur / Tgl</th>
+                                        <th>Jenis Retur</th>
+                                        <th>Keterangan</th>
+                                        <th class="text-end">Jumlah</th>
+                                        <th class="text-center" width="70">Aksi</th>
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center py-5 text-muted">
-                                            <i
-                                                class="fa-solid fa-arrow-rotate-left d-block fs-3 mb-2 opacity-50 text-secondary"></i>
-                                            Belum ada retur potong faktur untuk faktur ini.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @forelse($returs as $retur)
+                                        <tr>
+                                            <td>
+                                                <a href="{{ route('retur-penjualan.show', $retur->no_retur) }}"
+                                                    class="fw-bold text-primary d-block font-monospace small text-decoration-none">
+                                                    {{ $retur->no_retur }}
+                                                </a>
+                                                <small
+                                                    class="text-muted font-monospace">{{ \Carbon\Carbon::parse($retur->tanggal)->format('d-m-Y') }}</small>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    class="badge bg-warning-subtle text-warning-emphasis px-2 py-1 fs-8">{{ $retur->jenis_retur }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-secondary small">{{ $retur->keterangan ?? '-' }}</span>
+                                            </td>
+                                            <td class="text-end fw-bold text-danger">
+                                                Rp {{ number_format((float) $retur->total, 0, ',', '.') }}
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="{{ route('retur-penjualan.show', $retur->no_retur) }}"
+                                                    class="btn btn-sm btn-outline-secondary rounded-circle"
+                                                    style="width: 28px; height: 28px; padding: 2px;"
+                                                    title="Lihat Detail Retur">
+                                                    <i class="fa-solid fa-eye" style="font-size: 0.75rem;"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center py-5 text-muted">
+                                                <i
+                                                    class="fa-solid fa-arrow-rotate-left d-block fs-3 mb-2 opacity-50 text-secondary"></i>
+                                                Belum ada retur potong faktur untuk faktur ini.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-@endsection
+    @endsection
 
-@push('scripts')
-    <script>
-        $(document).ready(function() {
-            const sisaBayar = {{ (float) $sisaBayar }};
+    @push('scripts')
+        <script>
+            $(document).ready(function() {
+                const sisaBayar = {{ (float) $sisaBayar }};
 
-            function formatNumber(num) {
-                return num.toString().replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-            }
-
-            function cleanNumber(str) {
-                return str.toString().replace(/\./g, "").replace(/\D/g, "") || "0";
-            }
-
-            $(document).on('input', '.input-number-format', function() {
-                const start = this.selectionStart;
-                const prev = this.value.length;
-                const raw = cleanNumber($(this).val());
-                $(this).val(formatNumber(raw));
-                const diff = this.value.length - prev;
-                this.setSelectionRange(start + diff, start + diff);
-            });
-
-            if ($('#payment_jumlah').val()) {
-                $('#payment_jumlah').val(formatNumber(cleanNumber($('#payment_jumlah').val())));
-            }
-
-            $('#payment_jumlah').on('input', function() {
-                const val = parseFloat(cleanNumber($(this).val())) || 0;
-                if (val > sisaBayar) {
-                    $('#payment_limit_warning').removeClass('d-none');
-                    $('#btnSubmitPembayaran').attr('disabled', true);
-                } else {
-                    $('#payment_limit_warning').addClass('d-none');
-                    $('#btnSubmitPembayaran').attr('disabled', false);
+                function formatNumber(num) {
+                    return num.toString().replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
                 }
-            });
 
-            $('#formPembayaran').on('submit', function() {
-                $('#payment_jumlah').val(cleanNumber($('#payment_jumlah').val()));
+                function cleanNumber(str) {
+                    return str.toString().replace(/\./g, "").replace(/\D/g, "") || "0";
+                }
+
+                $(document).on('input', '.input-number-format', function() {
+                    const start = this.selectionStart;
+                    const prev = this.value.length;
+                    const raw = cleanNumber($(this).val());
+                    $(this).val(formatNumber(raw));
+                    const diff = this.value.length - prev;
+                    this.setSelectionRange(start + diff, start + diff);
+                });
+
+                if ($('#payment_jumlah').val()) {
+                    $('#payment_jumlah').val(formatNumber(cleanNumber($('#payment_jumlah').val())));
+                }
+
+                $('#payment_jumlah').on('input', function() {
+                    const val = parseFloat(cleanNumber($(this).val())) || 0;
+                    if (val > sisaBayar) {
+                        $('#payment_limit_warning').removeClass('d-none');
+                        $('#btnSubmitPembayaran').attr('disabled', true);
+                    } else {
+                        $('#payment_limit_warning').addClass('d-none');
+                        $('#btnSubmitPembayaran').attr('disabled', false);
+                    }
+                });
+
+                $('#formPembayaran').on('submit', function() {
+                    $('#payment_jumlah').val(cleanNumber($('#payment_jumlah').val()));
+                });
             });
-        });
-    </script>
-@endpush
+        </script>
+    @endpush
