@@ -11,7 +11,7 @@
             </div>
             @can('create-penjualan')
                 <a href="{{ route('penjualan.create') }}" class="btn btn-primary btn-sm fw-bold hover-scale">
-                    <i class="fa-solid fa-circle-plus me-1 text-primary"></i> Transaksi Baru
+                    <i class="fa-solid fa-circle-plus me-1 text-white"></i> Transaksi Baru
                 </a>
             @endcan
         </div>
