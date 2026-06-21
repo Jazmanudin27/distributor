@@ -312,11 +312,16 @@ class PenjualanController extends Controller
         $allPembayarans = $item->getAllPembayarans();
         $totalBayar = $allPembayarans->where('status', 'disetujui')->sum('jumlah');
         $totalPending = $allPembayarans->where('status', 'pending')->sum('jumlah');
-        $sisaBayar = $item->grand_total - $totalBayar;
+
+        // Fetch linked returns (Retur Potong Faktur / PF)
+        $returs = \App\Models\ReturPenjualan::where('no_faktur', $no_faktur)->get();
+        $totalRetur = $returs->sum('total');
+
+        $sisaBayar = $item->grand_total - $totalBayar - $totalRetur;
 
         $salesmen = User::where('role', 'sales')->orWhere('role', 'Salesman')->orderBy('name')->get();
 
-        return view('penjualan.show', compact('item', 'totalBayar', 'totalPending', 'sisaBayar', 'salesmen', 'allPembayarans'));
+        return view('penjualan.show', compact('item', 'totalBayar', 'totalPending', 'sisaBayar', 'salesmen', 'allPembayarans', 'returs', 'totalRetur'));
     }
 
     public function print(Request $request, $no_faktur)

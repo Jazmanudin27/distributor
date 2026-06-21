@@ -62,7 +62,7 @@ class Penjualan extends Model
 
     public function getAllPembayarans()
     {
-        $cash = $this->pembayarans->map(function ($item) {
+        $cash = $this->pembayarans->where('jenis_bayar', '!=', 'Retur')->map(function ($item) {
             $item->jenis_pembayaran_label = 'Cash';
             $item->source_table = 'cash';
             return $item;

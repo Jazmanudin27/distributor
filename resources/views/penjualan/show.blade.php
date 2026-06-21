@@ -278,22 +278,29 @@
                 <div class="card-body p-4">
                     @php
                         $percentPaid =
-                            $item->grand_total > 0 ? min(100, round(($totalBayar / $item->grand_total) * 100)) : 0;
+                            $item->grand_total > 0
+                                ? min(100, round((($totalBayar + $totalRetur) / $item->grand_total) * 100))
+                                : 0;
                     @endphp
                     <div class="row g-2 text-start">
-                        <div class="col-4">
+                        <div class="col-3">
                             <small class="text-secondary d-block">Grand Total</small>
-                            <span class="fw-bold text-dark fs-6">Rp
+                            <span class="fw-bold text-dark fs-6" style="font-size: 0.85rem !important;">Rp
                                 {{ number_format((float) $item->grand_total, 0, ',', '.') }}</span>
                         </div>
-                        <div class="col-4 border-start ps-3">
+                        <div class="col-3 border-start ps-2">
                             <small class="text-secondary d-block">Terbayar</small>
-                            <span class="fw-bold text-success fs-6">Rp
+                            <span class="fw-bold text-success fs-6" style="font-size: 0.85rem !important;">Rp
                                 {{ number_format((float) $totalBayar, 0, ',', '.') }}</span>
                         </div>
-                        <div class="col-4 border-start ps-3">
+                        <div class="col-3 border-start ps-2">
+                            <small class="text-secondary d-block">Retur (PF)</small>
+                            <span class="fw-bold text-warning fs-6" style="font-size: 0.85rem !important;">Rp
+                                {{ number_format((float) $totalRetur, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="col-3 border-start ps-2">
                             <small class="text-secondary d-block">Sisa Piutang</small>
-                            <span class="fw-bold text-danger fs-6">Rp
+                            <span class="fw-bold text-danger fs-6" style="font-size: 0.85rem !important;">Rp
                                 {{ number_format((float) max(0, $sisaBayar), 0, ',', '.') }}</span>
                         </div>
                     </div>
@@ -383,7 +390,7 @@
 
         {{-- RIWAYAT PEMBAYARAN --}}
         <div class="col-lg-6 col-md-12">
-            <div class="card shadow-sm border-0 rounded-4 h-100">
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
                 <div class="card-header bg-white py-3 border-bottom">
                     <h6 class="mb-0 fw-bold text-dark">
                         <i class="fa-solid fa-history me-2 text-success"></i> Riwayat Pembayaran
@@ -423,7 +430,8 @@
                                                     class="badge bg-warning text-dark px-2 py-1 fs-8 mb-1 d-inline-block">Pending</span>
                                                 @if (auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin'))
                                                     <div class="d-flex justify-content-center gap-1">
-                                                        <form action="{{ route('pembayaran.approve', [$bayar->id, 'source' => $bayar->source_table]) }}"
+                                                        <form
+                                                            action="{{ route('pembayaran.approve', [$bayar->id, 'source' => $bayar->source_table]) }}"
                                                             method="POST" class="d-inline">
                                                             @csrf
                                                             <button type="submit"
@@ -432,7 +440,8 @@
                                                                 <i class="fa-solid fa-check"></i>
                                                             </button>
                                                         </form>
-                                                        <form action="{{ route('pembayaran.reject', [$bayar->id, 'source' => $bayar->source_table]) }}"
+                                                        <form
+                                                            action="{{ route('pembayaran.reject', [$bayar->id, 'source' => $bayar->source_table]) }}"
                                                             method="POST" class="d-inline">
                                                             @csrf
                                                             <button type="submit"
@@ -488,6 +497,70 @@
                                         <td colspan="5" class="text-center py-5 text-muted">
                                             <i class="fa-solid fa-receipt d-block fs-3 mb-2 opacity-50 text-secondary"></i>
                                             Belum ada riwayat pembayaran untuk faktur ini.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {{-- HISTORI RETUR POTONG FAKTUR (PF) --}}
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="mb-0 fw-bold text-dark">
+                        <i class="fa-solid fa-arrow-rotate-left me-2 text-warning"></i> Histori Retur Potong Faktur (PF)
+                    </h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="table-light text-secondary text-uppercase fs-8">
+                                <tr>
+                                    <th>No Retur / Tgl</th>
+                                    <th>Jenis Retur</th>
+                                    <th>Keterangan</th>
+                                    <th class="text-end">Jumlah</th>
+                                    <th class="text-center" width="70">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($returs as $retur)
+                                    <tr>
+                                        <td>
+                                            <a href="{{ route('retur-penjualan.show', $retur->no_retur) }}"
+                                                class="fw-bold text-primary d-block font-monospace small text-decoration-none">
+                                                {{ $retur->no_retur }}
+                                            </a>
+                                            <small
+                                                class="text-muted font-monospace">{{ \Carbon\Carbon::parse($retur->tanggal)->format('d-m-Y') }}</small>
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="badge bg-warning-subtle text-warning-emphasis px-2 py-1 fs-8">{{ $retur->jenis_retur }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-secondary small">{{ $retur->keterangan ?? '-' }}</span>
+                                        </td>
+                                        <td class="text-end fw-bold text-danger">
+                                            Rp {{ number_format((float) $retur->total, 0, ',', '.') }}
+                                        </td>
+                                        <td class="text-center">
+                                            <a href="{{ route('retur-penjualan.show', $retur->no_retur) }}"
+                                                class="btn btn-sm btn-outline-secondary rounded-circle"
+                                                style="width: 28px; height: 28px; padding: 2px;"
+                                                title="Lihat Detail Retur">
+                                                <i class="fa-solid fa-eye" style="font-size: 0.75rem;"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <i
+                                                class="fa-solid fa-arrow-rotate-left d-block fs-3 mb-2 opacity-50 text-secondary"></i>
+                                            Belum ada retur potong faktur untuk faktur ini.
                                         </td>
                                     </tr>
                                 @endforelse
