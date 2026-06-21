@@ -48,14 +48,15 @@ class RolePermissionController extends Controller
     public function storePermission(Request $request)
     {
         $request->validate([
-            'action' => 'required|string|max:50',
-            'menu' => 'required|string|max:100',
+            'name' => 'required|string|max:150',
+        ], [
+            'name.required' => 'Nama permission wajib diisi!',
         ]);
 
-        $permissionName = strtolower($request->action . '-' . $request->menu);
+        $permissionName = strtolower(trim($request->name));
 
         if (Permission::where('name', $permissionName)->exists()) {
-            return redirect()->back()->with('error', 'Permission ' . $permissionName . ' sudah ada.');
+            return redirect()->back()->withInput()->with('error', 'Permission ' . $permissionName . ' sudah terdaftar.');
         }
 
         Permission::create(['name' => $permissionName]);

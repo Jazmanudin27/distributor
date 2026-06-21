@@ -369,38 +369,16 @@ $actionColors = [
                         @csrf
                         <div class="modal-body p-4">
                             <div class="row g-3">
-                                <div class="col-md-5">
-                                    <label for="perm_action" class="form-label fw-semibold">Aksi</label>
-                                    <select name="action" id="perm_action"
-                                        class="form-select @error('action') is-invalid @enderror" required>
-                                        <option value="">-- Pilih Aksi --</option>
-                                        <option value="view" {{ old('action') == 'view' ? 'selected' : '' }}>👁️ view
-                                        </option>
-                                        <option value="create" {{ old('action') == 'create' ? 'selected' : '' }}>➕ create
-                                        </option>
-                                        <option value="edit" {{ old('action') == 'edit' ? 'selected' : '' }}>✏️ edit
-                                        </option>
-                                        <option value="delete" {{ old('action') == 'delete' ? 'selected' : '' }}>🗑️ delete
-                                        </option>
-                                        <option value="print" {{ old('action') == 'print' ? 'selected' : '' }}>🖨️ print
-                                        </option>
-                                        <option value="export" {{ old('action') == 'export' ? 'selected' : '' }}>📤 export
-                                        </option>
-                                    </select>
-                                    @error('action')
-                                        <div class="text-danger small mt-1">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="col-md-7">
-                                    <label for="perm_menu" class="form-label fw-semibold">Menu / Modul</label>
+                                <div class="col-md-12">
+                                    <label for="perm_name" class="form-label fw-semibold">Nama Permission</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i
-                                                class="fa-solid fa-layer-group text-primary"></i></span>
-                                        <input type="text" name="menu" id="perm_menu"
-                                            class="form-control @error('menu') is-invalid @enderror"
-                                            placeholder="Contoh: barang, penjualan..." value="{{ old('menu') }}" required>
+                                                class="fa-solid fa-key text-primary"></i></span>
+                                        <input type="text" name="name" id="perm_name"
+                                            class="form-control @error('name') is-invalid @enderror"
+                                            placeholder="Contoh: batal-penjualan, view-barang..." value="{{ old('name') }}" required>
                                     </div>
-                                    @error('menu')
+                                    @error('name')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -408,8 +386,8 @@ $actionColors = [
                             <div class="alert alert-info d-flex gap-2 align-items-start mt-3 mb-0 py-2 small">
                                 <i class="fa-solid fa-circle-info mt-1 flex-shrink-0"></i>
                                 <span>Permission yang dibuat akan otomatis ditambahkan ke role <strong>Super Admin</strong>.
-                                    Format: <code>aksi-menu</code>, contoh: <strong>view-barang</strong>,
-                                    <strong>create-penjualan</strong></span>
+                                    Gunakan huruf kecil dan tanda hubung, contoh: <strong>batal-penjualan</strong>,
+                                    <strong>view-barang</strong></span>
                             </div>
                         </div>
                         <div class="modal-footer border-0 pt-0">
