@@ -514,7 +514,7 @@ class LaporanController extends Controller
 
                     $returSalesAfter = ReturPenjualanDetail::where('kode_barang', $kode_barang)
                         ->whereHas('returPenjualan', function($q) use ($tanggal_mulai) {
-                            $q->where('tanggal', '>=', $tanggal_mulai)->where('batal', 0);
+                            $q->where('tanggal', '>=', $tanggal_mulai);
                         })->with('barangSatuan')->get()->sum(function($d) {
                             return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
                         });
@@ -549,7 +549,7 @@ class LaporanController extends Controller
                     $returSalesInRange = ReturPenjualanDetail::with(['returPenjualan.pelanggan.wilayah', 'returPenjualan.sales', 'barangSatuan'])
                         ->where('kode_barang', $kode_barang)
                         ->whereHas('returPenjualan', function($q) use ($tanggal_mulai, $tanggal_akhir) {
-                            $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])->where('batal', 0);
+                            $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
                         })->get();
 
                     // Map movements
@@ -799,8 +799,7 @@ class LaporanController extends Controller
 
         if ($isPrintOrExcel) {
             if ($jenis_laporan === 'rekap') {
-                $query = \App\Models\ReturPenjualan::with(['pelanggan', 'sales'])
-                    ->where('batal', 0);
+                $query = \App\Models\ReturPenjualan::with(['pelanggan', 'sales']);
                 
                 if ($tanggal_mulai) $query->where('tanggal', '>=', $tanggal_mulai);
                 if ($tanggal_akhir) $query->where('tanggal', '<=', $tanggal_akhir);
@@ -811,7 +810,6 @@ class LaporanController extends Controller
                 // detail
                 $query = \App\Models\ReturPenjualanDetail::with(['returPenjualan.pelanggan', 'barang', 'barangSatuan'])
                     ->whereHas('returPenjualan', function ($q) use ($tanggal_mulai, $tanggal_akhir, $kode_pelanggan) {
-                        $q->where('batal', 0);
                         if ($tanggal_mulai) $q->where('tanggal', '>=', $tanggal_mulai);
                         if ($tanggal_akhir) $q->where('tanggal', '<=', $tanggal_akhir);
                         if ($kode_pelanggan) $q->where('kode_pelanggan', $kode_pelanggan);
