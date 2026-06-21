@@ -1428,6 +1428,7 @@ class LaporanController extends Controller
         $hppGross = 0;
         $hppReturn = 0;
         $hppNet = 0;
+        $purchaseReturn = 0;
         $profit = 0;
         $marginPercent = 0;
         $data = [];
@@ -1469,40 +1470,49 @@ class LaporanController extends Controller
                         ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
                         ->where('barang.kode_supplier', $kode_supplier)
                         ->sum(DB::raw('retur_penjualan_detail.qty * barang_satuan.harga_pokok'));
-                } else {
-                    // Global rekap (existing logic)
-                    $salesGross = (float) Penjualan::where('batal', 0)
-                        ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
-                        ->sum('grand_total');
 
-                    $salesReturn = (float) DB::table('retur_penjualan')
+                    $purchaseReturn = (float) DB::table('retur_pembelian')
                         ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
+                        ->where('kode_supplier', $kode_supplier)
                         ->sum('total');
+                } else {
+                    // Global rekap using detail tables for perfect consistency with per_supplier reports
+                    $salesGross = (float) DB::table('penjualan_detail')
+                        ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
+                        ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                        ->where('penjualan.batal', 0)
+                        ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
+                        ->sum('penjualan_detail.total');
+
+                    $salesReturn = (float) DB::table('retur_penjualan_detail')
+                        ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
+                        ->join('barang', 'retur_penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                        ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
+                        ->sum(DB::raw('retur_penjualan_detail.subtotal_retur - COALESCE(retur_penjualan_detail.total_diskon_rupiah, 0)'));
 
                     $hppGross = (float) DB::table('penjualan_detail')
                         ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
+                        ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
                         ->where('penjualan.batal', 0)
                         ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-                        ->select(DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp'))
-                        ->first()->total_hpp ?? 0;
+                        ->sum(DB::raw('penjualan_detail.qty * penjualan_detail.harga_pokok'));
 
                     $hppReturn = (float) DB::table('retur_penjualan_detail')
                         ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
+                        ->join('barang', 'retur_penjualan_detail.kode_barang', '=', 'barang.kode_barang')
                         ->join('barang_satuan', 'retur_penjualan_detail.id_satuan', '=', 'barang_satuan.id')
                         ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-                        ->select(DB::raw('SUM(retur_penjualan_detail.qty * barang_satuan.harga_pokok) as total_hpp'))
-                        ->first()->total_hpp ?? 0;
+                        ->sum(DB::raw('retur_penjualan_detail.qty * barang_satuan.harga_pokok'));
 
-                    if ($hppReturn == 0 && $salesReturn > 0 && $salesGross > 0) {
-                        $hppReturn = $salesReturn * ($hppGross / $salesGross);
-                    }
+                    $purchaseReturn = (float) DB::table('retur_pembelian')
+                        ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
+                        ->sum('total');
                 }
 
                 $salesNet = $salesGross - $salesReturn;
                 $hppNet = $hppGross - $hppReturn;
-                $profit = $salesNet - $hppNet;
+                $profit = $salesNet - $hppNet + $purchaseReturn;
                 $marginPercent = $salesNet > 0 ? ($profit / $salesNet) * 100 : 0;
-
             } elseif ($jenis_laporan === 'per_supplier') {
                 $sales = DB::table('penjualan_detail')
                     ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
@@ -1827,7 +1837,7 @@ class LaporanController extends Controller
             return response(view($view, compact(
                 'tanggal_mulai', 'tanggal_akhir', 'jenis_laporan', 'kode_supplier',
                 'salesGross', 'salesReturn', 'salesNet', 'hppGross', 'hppReturn', 'hppNet', 
-                'profit', 'marginPercent', 'data', 'suppliersList', 'isExcel'
+                'purchaseReturn', 'profit', 'marginPercent', 'data', 'suppliersList', 'isExcel'
             )))
             ->header('Content-Type', 'application/vnd-ms-excel')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
@@ -1838,7 +1848,7 @@ class LaporanController extends Controller
         return view($view, compact(
             'tanggal_mulai', 'tanggal_akhir', 'jenis_laporan', 'kode_supplier',
             'salesGross', 'salesReturn', 'salesNet', 'hppGross', 'hppReturn', 'hppNet', 
-            'profit', 'marginPercent', 'data', 'suppliersList'
+            'purchaseReturn', 'profit', 'marginPercent', 'data', 'suppliersList'
         ));
     }
 

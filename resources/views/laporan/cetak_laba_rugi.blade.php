@@ -137,11 +137,24 @@
                     </tr>
 
                     <!-- Spacer -->
+                    <tr><td colspan="3" style="border: none !important; height: 15px;"></td></tr>
+
+                    <!-- 3. RETUR PEMBELIAN -->
+                    <tr class="section-header">
+                        <td colspan="2">III. RETUR PEMBELIAN</td>
+                        <td class="text-end"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="indent-1">Retur Pembelian (Purchase Returns)</td>
+                        <td class="text-end text-success">{{ number_format($purchaseReturn, 0, ',', '.') }}</td>
+                    </tr>
+
+                    <!-- Spacer -->
                     <tr><td colspan="3" style="border: none !important; height: 20px;"></td></tr>
 
-                    <!-- 3. LABA KOTOR -->
+                    <!-- 4. LABA KOTOR -->
                     <tr class="fw-bold table-light" style="font-size: 12px;">
-                        <td colspan="2" style="font-size: 12px;">III. LABA KOTOR (GROSS PROFIT)</td>
+                        <td colspan="2" style="font-size: 12px;">IV. LABA KOTOR (GROSS PROFIT)</td>
                         <td class="text-end {{ $profit >= 0 ? 'text-primary' : 'text-danger' }}" style="font-size: 12px;">
                             {{ $profit < 0 ? '-' : '' }}Rp {{ number_format(abs($profit), 0, ',', '.') }}
                         </td>
