@@ -250,7 +250,7 @@
                         </div>
                         @if ($totalRetur > 0)
                             <div class="col-3 border-start ps-3 text-warning">
-                                <small class="text-secondary d-block">Retur (Potong)</small>
+                                <small class="text-secondary d-block">Retur (PF)</small>
                                 <span class="fw-bold fs-6" style="font-size: 0.92rem;">Rp
                                     {{ number_format((float) $totalRetur, 0, ',', '.') }}</span>
                             </div>
@@ -399,7 +399,7 @@
                 <div class="card shadow-sm border-0 rounded-4 mb-4">
                     <div class="card-header bg-white py-3 border-bottom">
                         <h6 class="mb-0 fw-bold text-dark">
-                            <i class="fa-solid fa-arrow-rotate-left me-2 text-warning"></i> Histori Retur Potong Tagihan
+                            <i class="fa-solid fa-arrow-rotate-left me-2 text-warning"></i> Histori Retur Potong Faktur (PF)
                         </h6>
                     </div>
                     <div class="card-body p-4">

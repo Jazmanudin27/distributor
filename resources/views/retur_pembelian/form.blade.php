@@ -65,7 +65,7 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold text-secondary mb-1">Jenis Retur <span class="text-danger">*</span></label>
                                 <select name="jenis_retur" id="jenis_retur" class="form-select form-select-sm" required>
-                                    <option value="Potong Tagihan" {{ old('jenis_retur', $item->jenis_retur) == 'Potong Tagihan' ? 'selected' : '' }}>Potong Tagihan</option>
+                                    <option value="PF" {{ old('jenis_retur', $item->jenis_retur) == 'PF' ? 'selected' : '' }}>PF (Potong Faktur)</option>
                                     <option value="Tukar Barang" {{ old('jenis_retur', $item->jenis_retur) == 'Tukar Barang' ? 'selected' : '' }}>Tukar Barang</option>
                                     <option value="Cash" {{ old('jenis_retur', $item->jenis_retur) == 'Cash' ? 'selected' : '' }}>Cash / Refund</option>
                                 </select>

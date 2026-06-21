@@ -40,9 +40,9 @@ class PembelianController extends Controller
             // Filter by Paid or Unpaid (Lunas / Belum Lunas)
             $query->where(function ($q) use ($status) {
                 if ($status === 'lunas') {
-                    $q->whereRaw('(SELECT COALESCE(SUM(jumlah), 0) FROM pembelian_pembayaran WHERE pembelian_pembayaran.no_faktur = pembelian.no_faktur) + (SELECT COALESCE(SUM(total), 0) FROM retur_pembelian WHERE retur_pembelian.no_faktur = pembelian.no_faktur AND jenis_retur = \'Potong Tagihan\') >= grand_total');
+                    $q->whereRaw('(SELECT COALESCE(SUM(jumlah), 0) FROM pembelian_pembayaran WHERE pembelian_pembayaran.no_faktur = pembelian.no_faktur) + (SELECT COALESCE(SUM(total), 0) FROM retur_pembelian WHERE retur_pembelian.no_faktur = pembelian.no_faktur AND jenis_retur = \'PF\') >= grand_total');
                 } else {
-                    $q->whereRaw('(SELECT COALESCE(SUM(jumlah), 0) FROM pembelian_pembayaran WHERE pembelian_pembayaran.no_faktur = pembelian.no_faktur) + (SELECT COALESCE(SUM(total), 0) FROM retur_pembelian WHERE retur_pembelian.no_faktur = pembelian.no_faktur AND jenis_retur = \'Potong Tagihan\') < grand_total');
+                    $q->whereRaw('(SELECT COALESCE(SUM(jumlah), 0) FROM pembelian_pembayaran WHERE pembelian_pembayaran.no_faktur = pembelian.no_faktur) + (SELECT COALESCE(SUM(total), 0) FROM retur_pembelian WHERE retur_pembelian.no_faktur = pembelian.no_faktur AND jenis_retur = \'PF\') < grand_total');
                 }
             });
         }
@@ -162,7 +162,7 @@ class PembelianController extends Controller
         $totalBayar = $item->pembayarans->sum('jumlah');
         
         $returs = \App\Models\ReturPembelian::where('no_faktur', $no_faktur)
-            ->where('jenis_retur', 'Potong Tagihan')
+            ->where('jenis_retur', 'PF')
             ->get();
         $totalRetur = $returs->sum('total');
 
@@ -304,7 +304,7 @@ class PembelianController extends Controller
         // Validate that payment does not exceed sisaBayar
         $totalBayar = $item->pembayarans->sum('jumlah');
         $totalRetur = \App\Models\ReturPembelian::where('no_faktur', $no_faktur)
-            ->where('jenis_retur', 'Potong Tagihan')
+            ->where('jenis_retur', 'PF')
             ->sum('total');
         $sisaBayar = $item->grand_total - $totalBayar - $totalRetur;
 
