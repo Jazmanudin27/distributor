@@ -10,7 +10,57 @@
                 </div>
                 <div class="card-body p-4">
                     <form action="{{ route('laporan.piutang.cetak') }}" method="GET" target="_blank">
-                        <div class="mb-4">
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-semibold text-secondary mb-1">Tanggal Mulai</label>
+                                <input type="date" name="tanggal_mulai" class="form-control form-control-sm"
+                                    value="{{ $tanggal_mulai }}" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-semibold text-secondary mb-1">Tanggal Akhir</label>
+                                <input type="date" name="tanggal_akhir" class="form-control form-control-sm"
+                                    value="{{ $tanggal_akhir }}" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary mb-1">Salesman</label>
+                            <select name="kode_sales" class="form-select form-select-sm select2-init">
+                                <option value="">-- Semua Salesman --</option>
+                                @foreach ($salesmen as $s)
+                                    <option value="{{ $s->nik }}" {{ ($kode_sales ?? '') == $s->nik ? 'selected' : '' }}>
+                                        {{ $s->name }} ({{ $s->nik }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-semibold text-secondary mb-1">Wilayah</label>
+                                <select name="wilayah_id" class="form-select form-select-sm select2-init">
+                                    <option value="">-- Semua Wilayah --</option>
+                                    @foreach ($wilayahs as $w)
+                                        <option value="{{ $w->kode_wilayah }}" {{ ($wilayah_id ?? '') == $w->kode_wilayah ? 'selected' : '' }}>
+                                            {{ $w->nama_wilayah }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-semibold text-secondary mb-1">Sub Wilayah</label>
+                                <select name="sub_wilayah_id" class="form-select form-select-sm select2-init">
+                                    <option value="">-- Semua Sub Wilayah --</option>
+                                    @foreach ($subWilayahs as $sw)
+                                        <option value="{{ $sw->kode_wilayah }}" {{ ($sub_wilayah_id ?? '') == $sw->kode_wilayah ? 'selected' : '' }}>
+                                            {{ $sw->nama_wilayah }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label fw-semibold text-secondary mb-1">Pelanggan (Toko)</label>
                             <select name="kode_pelanggan" id="kode_pelanggan" class="form-select form-select-sm select2-pelanggan-ajax">
                                 <option value="">-- Semua Pelanggan dengan Piutang --</option>
@@ -25,9 +75,10 @@
                         <div class="mb-4">
                             <label class="form-label fw-semibold text-secondary mb-1">Jenis Laporan</label>
                             <select name="jenis_laporan" class="form-select form-select-sm">
-                                <option value="rekap">Rekap (Per Pelanggan)</option>
-                                <option value="detail">Detail (Per Invoice/Faktur Belum Lunas)</option>
-                                <option value="aging">Analisis Umur Piutang (Aging Schedule)</option>
+                                <option value="rekap_sisa_piutang" {{ ($jenis_laporan ?? 'rekap_sisa_piutang') === 'rekap_sisa_piutang' ? 'selected' : '' }}>Rekap Sisa Piutang (Faktur)</option>
+                                <option value="rekap" {{ ($jenis_laporan ?? '') === 'rekap' ? 'selected' : '' }}>Rekap (Per Pelanggan)</option>
+                                <option value="detail" {{ ($jenis_laporan ?? '') === 'detail' ? 'selected' : '' }}>Detail (Per Invoice/Faktur Belum Lunas)</option>
+                                <option value="aging" {{ ($jenis_laporan ?? '') === 'aging' ? 'selected' : '' }}>Analisis Umur Piutang (Aging Schedule)</option>
                             </select>
                         </div>
 
@@ -57,6 +108,11 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+            $('.select2-init').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
+
             $('.select2-pelanggan-ajax').select2({
                 theme: 'bootstrap-5',
                 width: '100%',

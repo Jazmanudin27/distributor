@@ -39,8 +39,8 @@
                         <label class="form-label fs-7 fw-semibold text-secondary mb-1">Jenis Retur</label>
                         <select name="jenis_retur" class="form-select form-select-sm">
                             <option value="">Semua</option>
-                            <option value="PF"
-                                {{ request('jenis_retur') === 'PF' ? 'selected' : '' }}>PF (Potong Faktur)</option>
+                            <option value="PF" {{ request('jenis_retur') === 'PF' ? 'selected' : '' }}>PF (Potong
+                                Faktur)</option>
                             <option value="Tukar Barang" {{ request('jenis_retur') === 'Tukar Barang' ? 'selected' : '' }}>
                                 Tukar Barang</option>
                             <option value="Cash" {{ request('jenis_retur') === 'Cash' ? 'selected' : '' }}>Cash / Refund

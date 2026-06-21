@@ -848,7 +848,17 @@ class LaporanController extends Controller
         $this->authorizeReport('piutang');
 
         $kode_pelanggan = $request->input('kode_pelanggan');
-        $jenis_laporan = $request->input('jenis_laporan', 'rekap');
+        $jenis_laporan = $request->input('jenis_laporan', 'rekap_sisa_piutang');
+        $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
+        $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
+        $wilayah_id = $request->input('wilayah_id');
+        $sub_wilayah_id = $request->input('sub_wilayah_id');
+        $kode_sales = $request->input('kode_sales');
+
+        // Fetch master data for dropdown filters
+        $wilayahs = \App\Models\Wilayah::orderBy('nama_wilayah')->get();
+        $subWilayahs = \App\Models\SubWilayah::orderBy('nama_wilayah')->get();
+        $salesmen = \App\Models\User::where('role', 'sales')->orWhere('role', 'Salesman')->orderBy('name')->get();
 
         $pelanggans = collect();
         if ($kode_pelanggan) {
@@ -861,25 +871,55 @@ class LaporanController extends Controller
         $isPrintOrExcel = $isCetak || $isExcel;
 
         if ($isPrintOrExcel) {
-            if ($jenis_laporan === 'rekap') {
-                $query = \App\Models\Pelanggan::with('wilayah');
+            if ($jenis_laporan === 'rekap_sisa_piutang') {
+                $query = \App\Models\Penjualan::with(['pelanggan.wilayah', 'pelanggan.subWilayah', 'sales'])
+                    ->whereIn('jenis_transaksi', ['K', 'Kredit'])
+                    ->where('batal', 0);
+                
+                if ($tanggal_mulai) {
+                    $query->where('tanggal', '>=', $tanggal_mulai);
+                }
+                if ($tanggal_akhir) {
+                    $query->where('tanggal', '<=', $tanggal_akhir);
+                }
+                if ($kode_sales) {
+                    $query->where('kode_sales', $kode_sales);
+                }
                 if ($kode_pelanggan) {
                     $query->where('kode_pelanggan', $kode_pelanggan);
                 }
-                $customers = $query->orderBy('nama_pelanggan')->get();
-                $customerIds = $customers->pluck('kode_pelanggan')->toArray();
+                if ($wilayah_id) {
+                    $query->whereHas('pelanggan', function($q) use ($wilayah_id) {
+                        $q->where('kode_wilayah', $wilayah_id);
+                    });
+                }
+                if ($sub_wilayah_id) {
+                    $query->whereHas('pelanggan', function($q) use ($sub_wilayah_id) {
+                        $q->where('sub_wilayah', $sub_wilayah_id);
+                    });
+                }
 
-                // Pre-aggregate all unpaid/outstanding invoices and payments
-                $invoices = DB::table('penjualan')
-                    ->select('no_faktur', 'tanggal', 'kode_pelanggan', 'grand_total', 'jenis_transaksi')
-                    ->where('batal', 0)
-                    ->whereIn('kode_pelanggan', $customerIds)
+                $invoices = $query->orderBy('tanggal', 'asc')
+                    ->orderBy('no_faktur', 'asc')
                     ->get();
 
+                $invoiceIds = $invoices->pluck('no_faktur')->toArray();
+
+                // Pre-aggregate payments for these specific invoices
                 $cashPayments = DB::table('penjualan_pembayaran')
                     ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
                     ->where('status', 'disetujui')
-                    ->whereIn('kode_pelanggan', $customerIds)
+                    ->where('jenis_bayar', '!=', 'Retur')
+                    ->whereIn('no_faktur', $invoiceIds)
+                    ->groupBy('no_faktur')
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                $returPayments = DB::table('penjualan_pembayaran')
+                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
+                    ->where('status', 'disetujui')
+                    ->where('jenis_bayar', 'Retur')
+                    ->whereIn('no_faktur', $invoiceIds)
                     ->groupBy('no_faktur')
                     ->pluck('total', 'no_faktur')
                     ->toArray();
@@ -887,7 +927,7 @@ class LaporanController extends Controller
                 $transferPayments = DB::table('penjualan_pembayaran_transfer')
                     ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
                     ->where('status', 'disetujui')
-                    ->whereIn('kode_pelanggan', $customerIds)
+                    ->whereIn('no_faktur', $invoiceIds)
                     ->groupBy('no_faktur')
                     ->pluck('total', 'no_faktur')
                     ->toArray();
@@ -895,7 +935,96 @@ class LaporanController extends Controller
                 $giroPayments = DB::table('penjualan_pembayaran_giro')
                     ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
                     ->where('status', 'disetujui')
-                    ->whereIn('kode_pelanggan', $customerIds)
+                    ->whereIn('no_faktur', $invoiceIds)
+                    ->groupBy('no_faktur')
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                foreach ($invoices as $inv) {
+                    $cashPaid = $cashPayments[$inv->no_faktur] ?? 0;
+                    $transferPaid = $transferPayments[$inv->no_faktur] ?? 0;
+                    $giroPaid = $giroPayments[$inv->no_faktur] ?? 0;
+                    $returPaid = $returPayments[$inv->no_faktur] ?? 0;
+
+                    $paid = $cashPaid + $transferPaid + $giroPaid;
+                    $sisa_piutang = (float)($inv->grand_total - $paid - $returPaid);
+
+                    if ($sisa_piutang > 0.01) {
+                        $items->push([
+                            'no_faktur' => $inv->no_faktur,
+                            'tanggal' => $inv->tanggal,
+                            'pelanggan' => $inv->pelanggan,
+                            'sales' => $inv->sales,
+                            'grand_total' => $inv->grand_total,
+                            'total_bayar' => $paid,
+                            'total_retur' => $returPaid,
+                            'sisa_piutang' => $sisa_piutang,
+                        ]);
+                    }
+                }
+            } elseif ($jenis_laporan === 'rekap') {
+                $query = \App\Models\Pelanggan::with('wilayah');
+                if ($kode_pelanggan) {
+                    $query->where('kode_pelanggan', $kode_pelanggan);
+                }
+                if ($wilayah_id) {
+                    $query->where('kode_wilayah', $wilayah_id);
+                }
+                if ($sub_wilayah_id) {
+                    $query->where('sub_wilayah', $sub_wilayah_id);
+                }
+                $customers = $query->orderBy('nama_pelanggan')->get();
+                $customerIds = $customers->pluck('kode_pelanggan')->toArray();
+
+                // Pre-aggregate all unpaid/outstanding invoices and payments
+                $invoicesQuery = DB::table('penjualan')
+                    ->select('no_faktur', 'tanggal', 'kode_pelanggan', 'grand_total', 'jenis_transaksi')
+                    ->where('batal', 0)
+                    ->whereIn('kode_pelanggan', $customerIds);
+                
+                if ($tanggal_mulai) {
+                    $invoicesQuery->where('tanggal', '>=', $tanggal_mulai);
+                }
+                if ($tanggal_akhir) {
+                    $invoicesQuery->where('tanggal', '<=', $tanggal_akhir);
+                }
+                if ($kode_sales) {
+                    $invoicesQuery->where('kode_sales', $kode_sales);
+                }
+
+                $invoices = $invoicesQuery->get();
+                $invoiceIds = $invoices->pluck('no_faktur')->toArray();
+
+                $cashPayments = DB::table('penjualan_pembayaran')
+                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
+                    ->where('status', 'disetujui')
+                    ->where('jenis_bayar', '!=', 'Retur')
+                    ->whereIn('no_faktur', $invoiceIds)
+                    ->groupBy('no_faktur')
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                $returPayments = DB::table('penjualan_pembayaran')
+                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
+                    ->where('status', 'disetujui')
+                    ->where('jenis_bayar', 'Retur')
+                    ->whereIn('no_faktur', $invoiceIds)
+                    ->groupBy('no_faktur')
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                $transferPayments = DB::table('penjualan_pembayaran_transfer')
+                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
+                    ->where('status', 'disetujui')
+                    ->whereIn('no_faktur', $invoiceIds)
+                    ->groupBy('no_faktur')
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                $giroPayments = DB::table('penjualan_pembayaran_giro')
+                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
+                    ->where('status', 'disetujui')
+                    ->whereIn('no_faktur', $invoiceIds)
                     ->groupBy('no_faktur')
                     ->pluck('total', 'no_faktur')
                     ->toArray();
@@ -903,7 +1032,8 @@ class LaporanController extends Controller
                 $invoicesByCustomer = [];
                 foreach ($invoices as $inv) {
                     $paid = ($cashPayments[$inv->no_faktur] ?? 0) + ($transferPayments[$inv->no_faktur] ?? 0) + ($giroPayments[$inv->no_faktur] ?? 0);
-                    $remaining = (float)$inv->grand_total - $paid;
+                    $returPaid = $returPayments[$inv->no_faktur] ?? 0;
+                    $remaining = (float)$inv->grand_total - $paid - $returPaid;
 
                     if ($remaining > 0.01) {
                         $invoicesByCustomer[$inv->kode_pelanggan][] = [
@@ -952,20 +1082,48 @@ class LaporanController extends Controller
                 if ($kode_pelanggan) {
                     $query->where('kode_pelanggan', $kode_pelanggan);
                 }
+                if ($wilayah_id) {
+                    $query->where('kode_wilayah', $wilayah_id);
+                }
+                if ($sub_wilayah_id) {
+                    $query->where('sub_wilayah', $sub_wilayah_id);
+                }
                 $customers = $query->orderBy('nama_pelanggan')->get();
                 $customerIds = $customers->pluck('kode_pelanggan')->toArray();
 
                 // Pre-aggregate all unpaid/outstanding invoices and payments
-                $invoices = DB::table('penjualan')
+                $invoicesQuery = DB::table('penjualan')
                     ->select('no_faktur', 'tanggal', 'kode_pelanggan', 'grand_total', 'jenis_transaksi')
                     ->where('batal', 0)
-                    ->whereIn('kode_pelanggan', $customerIds)
-                    ->get();
+                    ->whereIn('kode_pelanggan', $customerIds);
+                
+                if ($tanggal_mulai) {
+                    $invoicesQuery->where('tanggal', '>=', $tanggal_mulai);
+                }
+                if ($tanggal_akhir) {
+                    $invoicesQuery->where('tanggal', '<=', $tanggal_akhir);
+                }
+                if ($kode_sales) {
+                    $invoicesQuery->where('kode_sales', $kode_sales);
+                }
+
+                $invoices = $invoicesQuery->get();
+                $invoiceIds = $invoices->pluck('no_faktur')->toArray();
 
                 $cashPayments = DB::table('penjualan_pembayaran')
                     ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
                     ->where('status', 'disetujui')
-                    ->whereIn('kode_pelanggan', $customerIds)
+                    ->where('jenis_bayar', '!=', 'Retur')
+                    ->whereIn('no_faktur', $invoiceIds)
+                    ->groupBy('no_faktur')
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                $returPayments = DB::table('penjualan_pembayaran')
+                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
+                    ->where('status', 'disetujui')
+                    ->where('jenis_bayar', 'Retur')
+                    ->whereIn('no_faktur', $invoiceIds)
                     ->groupBy('no_faktur')
                     ->pluck('total', 'no_faktur')
                     ->toArray();
@@ -973,7 +1131,7 @@ class LaporanController extends Controller
                 $transferPayments = DB::table('penjualan_pembayaran_transfer')
                     ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
                     ->where('status', 'disetujui')
-                    ->whereIn('kode_pelanggan', $customerIds)
+                    ->whereIn('no_faktur', $invoiceIds)
                     ->groupBy('no_faktur')
                     ->pluck('total', 'no_faktur')
                     ->toArray();
@@ -981,7 +1139,7 @@ class LaporanController extends Controller
                 $giroPayments = DB::table('penjualan_pembayaran_giro')
                     ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
                     ->where('status', 'disetujui')
-                    ->whereIn('kode_pelanggan', $customerIds)
+                    ->whereIn('no_faktur', $invoiceIds)
                     ->groupBy('no_faktur')
                     ->pluck('total', 'no_faktur')
                     ->toArray();
@@ -989,7 +1147,8 @@ class LaporanController extends Controller
                 $invoicesByCustomer = [];
                 foreach ($invoices as $inv) {
                     $paid = ($cashPayments[$inv->no_faktur] ?? 0) + ($transferPayments[$inv->no_faktur] ?? 0) + ($giroPayments[$inv->no_faktur] ?? 0);
-                    $remaining = (float)$inv->grand_total - $paid;
+                    $returPaid = $returPayments[$inv->no_faktur] ?? 0;
+                    $remaining = (float)$inv->grand_total - $paid - $returPaid;
 
                     if ($remaining > 0.01) {
                         $invoicesByCustomer[$inv->kode_pelanggan][] = [
@@ -999,8 +1158,8 @@ class LaporanController extends Controller
                     }
                 }
 
-                $today = Carbon::today(); // midnight local time
-                $todayTs = $today->timestamp; // cache timestamp agar tidak termutasi
+                $today = Carbon::today();
+                $todayTs = $today->timestamp;
                 foreach ($customers as $c) {
                     $custInvoices = $invoicesByCustomer[$c->kode_pelanggan] ?? [];
                     $total_piutang = 0;
@@ -1019,8 +1178,6 @@ class LaporanController extends Controller
                         if (in_array(strtolower($inv->jenis_transaksi), ['k', 'kredit'])) {
                             $jatuh_tempo = Carbon::parse($inv->tanggal)->addDays($ljt)->startOfDay();
                             if ($today->greaterThan($jatuh_tempo)) {
-                                // Hitung selisih hari: berapa hari sejak jatuh tempo terlewati
-                                // Gunakan timestamp agar tidak ada mutasi Carbon object
                                 $diff = (int) floor(($todayTs - $jatuh_tempo->timestamp) / 86400);
                                 if ($diff <= 30) {
                                     $overdue_1_30 += $rem;
@@ -1060,6 +1217,25 @@ class LaporanController extends Controller
                 if ($kode_pelanggan) {
                     $query->where('kode_pelanggan', $kode_pelanggan);
                 }
+                if ($tanggal_mulai) {
+                    $query->where('tanggal', '>=', $tanggal_mulai);
+                }
+                if ($tanggal_akhir) {
+                    $query->where('tanggal', '<=', $tanggal_akhir);
+                }
+                if ($kode_sales) {
+                    $query->where('kode_sales', $kode_sales);
+                }
+                if ($wilayah_id) {
+                    $query->whereHas('pelanggan', function($q) use ($wilayah_id) {
+                        $q->where('kode_wilayah', $wilayah_id);
+                    });
+                }
+                if ($sub_wilayah_id) {
+                    $query->whereHas('pelanggan', function($q) use ($sub_wilayah_id) {
+                        $q->where('sub_wilayah', $sub_wilayah_id);
+                    });
+                }
 
                 $invoices = $query->orderBy('tanggal', 'asc')
                     ->orderBy('no_faktur', 'asc')
@@ -1067,7 +1243,6 @@ class LaporanController extends Controller
 
                 $invoiceIds = $invoices->pluck('no_faktur')->toArray();
 
-                // Pre-aggregate payments for these specific invoices
                 $cashPayments = DB::table('penjualan_pembayaran')
                     ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
                     ->where('status', 'disetujui')
@@ -1136,16 +1311,23 @@ class LaporanController extends Controller
 
         $view = $isPrintOrExcel ? 'laporan.cetak_piutang' : 'laporan.piutang';
 
+        $compactData = compact(
+            'pelanggans', 'items', 'kode_pelanggan', 'jenis_laporan',
+            'tanggal_mulai', 'tanggal_akhir', 'wilayah_id', 'sub_wilayah_id', 'kode_sales',
+            'wilayahs', 'subWilayahs', 'salesmen'
+        );
+
         if ($isExcel) {
             $filename = 'laporan_piutang_' . date('Ymd_His') . '.xls';
-            return response(view($view, compact('pelanggans', 'items', 'kode_pelanggan', 'jenis_laporan', 'isExcel')))
+            $compactData['isExcel'] = true;
+            return response(view($view, $compactData))
             ->header('Content-Type', 'application/vnd-ms-excel')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
         }
 
-        return view($view, compact('pelanggans', 'items', 'kode_pelanggan', 'jenis_laporan'));
+        return view($view, $compactData);
     }
 
     public function laporanSetoran(Request $request)
