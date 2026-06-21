@@ -39,7 +39,10 @@
                 </div>
 
                 <div class="card-body p-4 position-relative">
-                    @php $isPaid = $sisaBayar <= 0; @endphp
+                    @php
+                        $isPaid = $sisaBayar <= 0;
+                        $percentPaid = $item->grand_total > 0 ? min(100, round((($totalBayar + $totalRetur) / $item->grand_total) * 100)) : 0;
+                    @endphp
 
                     {{-- STATUS STAMP --}}
                     <div class="position-absolute"
@@ -254,23 +257,38 @@
                                             {{ number_format((float) $diskonGlobal, 0, ',', '.') }}</span>
                                     </div>
                                 @endif
-                                <div class="d-flex justify-content-between border-top pt-2">
-                                    <span class="fw-bold text-success">Grand Total</span>
-                                    <span class="fw-bold text-success fs-5">Rp
+                                <div class="d-flex justify-content-between border-top pt-2 mb-2">
+                                    <span class="fw-bold text-dark">Grand Total</span>
+                                    <span class="fw-bold text-dark">Rp
                                         {{ number_format((float) $item->grand_total, 0, ',', '.') }}</span>
                                 </div>
-                                @if (isset($totalRetur) && $totalRetur > 0)
-                                    <div class="d-flex justify-content-between mb-2 mt-2 border-top pt-2">
-                                        <span class="text-secondary small">Total Retur (PF)</span>
-                                        <span class="fw-semibold text-danger">-Rp
-                                            {{ number_format((float) $totalRetur, 0, ',', '.') }}</span>
+                                
+                                <div class="d-flex justify-content-between mb-2 text-success">
+                                    <span class="small">Total Terbayar</span>
+                                    <span class="fw-semibold">Rp
+                                        {{ number_format((float) $totalBayar, 0, ',', '.') }}</span>
+                                </div>
+
+                                <div class="d-flex justify-content-between mb-2 text-warning">
+                                    <span class="small">Total Retur (PF)</span>
+                                    <span class="fw-semibold">-Rp
+                                        {{ number_format((float) $totalRetur, 0, ',', '.') }}</span>
+                                </div>
+
+                                <div class="d-flex justify-content-between border-top pt-2 mb-3 text-danger">
+                                    <span class="fw-bold fs-6">Sisa Piutang</span>
+                                    <span class="fw-bold fs-5">Rp
+                                        {{ number_format((float) max(0, $sisaBayar), 0, ',', '.') }}</span>
+                                </div>
+
+                                <div class="progress mb-1" style="height: 8px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ $percentPaid }}%">
                                     </div>
-                                    <div class="d-flex justify-content-between border-top pt-2">
-                                        <span class="fw-bold text-success">Grand Total Netto</span>
-                                        <span class="fw-bold text-success fs-5">Rp
-                                            {{ number_format((float) ($item->grand_total - $totalRetur), 0, ',', '.') }}</span>
-                                    </div>
-                                @endif
+                                </div>
+                                <div class="d-flex justify-content-between text-muted" style="font-size: 0.72rem;">
+                                    <span>Pelunasan</span>
+                                    <strong>{{ $percentPaid }}%</strong>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -280,50 +298,6 @@
 
         {{-- BOTTOM PANELS: STATUS TAGIHAN + BAYAR --}}
         <div class="col-lg-6 col-md-12">
-            {{-- STATUS TAGIHAN --}}
-            <div class="card shadow-sm border-0 rounded-4 mb-4">
-                <div class="card-header bg-white py-3 border-bottom">
-                    <h6 class="mb-0 fw-bold text-dark">
-                        <i class="fa-solid fa-wallet me-2 text-success"></i> Status Tagihan & Sisa
-                    </h6>
-                </div>
-                <div class="card-body p-4">
-                    @php
-                        $percentPaid =
-                            $item->grand_total > 0
-                                ? min(100, round((($totalBayar + $totalRetur) / $item->grand_total) * 100))
-                                : 0;
-                    @endphp
-                    <div class="row g-2 text-start">
-                        <div class="col-3">
-                            <small class="text-secondary d-block">Grand Total</small>
-                            <span class="fw-bold text-dark fs-6" style="font-size: 0.85rem !important;">Rp
-                                {{ number_format((float) $item->grand_total, 0, ',', '.') }}</span>
-                        </div>
-                        <div class="col-3 border-start ps-2">
-                            <small class="text-secondary d-block">Terbayar</small>
-                            <span class="fw-bold text-success fs-6" style="font-size: 0.85rem !important;">Rp
-                                {{ number_format((float) $totalBayar, 0, ',', '.') }}</span>
-                        </div>
-                        <div class="col-3 border-start ps-2">
-                            <small class="text-secondary d-block">Retur (PF)</small>
-                            <span class="fw-bold text-warning fs-6" style="font-size: 0.85rem !important;">Rp
-                                {{ number_format((float) $totalRetur, 0, ',', '.') }}</span>
-                        </div>
-                        <div class="col-3 border-start ps-2">
-                            <small class="text-secondary d-block">Sisa Piutang</small>
-                            <span class="fw-bold text-danger fs-6" style="font-size: 0.85rem !important;">Rp
-                                {{ number_format((float) max(0, $sisaBayar), 0, ',', '.') }}</span>
-                        </div>
-                    </div>
-                    <div class="progress mt-4 mb-2" style="height: 12px;">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ $percentPaid }}%">
-                        </div>
-                    </div>
-                    <small class="text-muted">Persentase Pelunasan: <strong>{{ $percentPaid }}%</strong></small>
-                </div>
-            </div>
-
             {{-- FORM TAMBAH PEMBAYARAN --}}
             @if (!$isPaid)
                 <div class="card shadow-sm border-0 rounded-4 mb-4">
