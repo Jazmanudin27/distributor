@@ -164,17 +164,17 @@
                                     }
                                 }
                                 
-                                if (zoom !== 1 && this.$dropdown) {
-                                    const cssTop = this.$dropdown.css('top');
-                                    const cssLeft = this.$dropdown.css('left');
+                                if (zoom !== 1 && this.$dropdown && this.$dropdown[0]) {
+                                    const styleTop = this.$dropdown[0].style.top || this.$dropdown.css('top');
+                                    const styleLeft = this.$dropdown[0].style.left || this.$dropdown.css('left');
                                     
-                                    if (cssTop && cssTop.indexOf('px') !== -1) {
-                                        const topVal = parseFloat(cssTop);
-                                        this.$dropdown.css('top', (topVal / zoom) + 'px');
+                                    if (styleTop && styleTop.indexOf('px') !== -1) {
+                                        const topVal = parseFloat(styleTop);
+                                        this.$dropdown[0].style.top = (topVal / zoom) + 'px';
                                     }
-                                    if (cssLeft && cssLeft.indexOf('px') !== -1) {
-                                        const leftVal = parseFloat(cssLeft);
-                                        this.$dropdown.css('left', (leftVal / zoom) + 'px');
+                                    if (styleLeft && styleLeft.indexOf('px') !== -1) {
+                                        const leftVal = parseFloat(styleLeft);
+                                        this.$dropdown[0].style.left = (leftVal / zoom) + 'px';
                                     }
                                 }
                             };
