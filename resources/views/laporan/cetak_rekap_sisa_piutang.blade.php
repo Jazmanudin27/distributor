@@ -40,6 +40,10 @@
             text-align: left;
         }
 
+        .text-right {
+            text-align: right;
+        }
+
         .fw-bold {
             font-weight: bold;
         }
@@ -151,7 +155,7 @@
             $overdueCount = 0;
             $reportDate = \Carbon\Carbon::parse($tanggal);
             foreach ($items as $item) {
-                $ljt = $item['pelanggan'] ? ($item['pelanggan']->ljt ?? 14) : 14;
+                $ljt = $item['pelanggan'] ? $item['pelanggan']->ljt ?? 14 : 14;
                 $jatuh_tempo = \Carbon\Carbon::parse($item['tanggal'])->addDays($ljt);
                 if ($reportDate->greaterThan($jatuh_tempo)) {
                     $overdueCount++;
@@ -161,15 +165,15 @@
 
         <table class="kotak-rekap" style="margin-top: 10px;">
             <tr>
-                <td style="width: 15%;">SALES</td>
+                <td style="width: 10%;">SALES</td>
                 <td style="width: 2%; text-align:center;">:</td>
                 <td style="width: 25%;">{{ $selectedSales }}</td>
-                <td style="width: 15%;">FAKTUR KELUAR</td>
+                <td style="width: 10%;">FAKTUR KELUAR</td>
                 <td style="width: 2%; text-align:center;">:</td>
-                <td style="width: 15%;">{{ count($items) }}</td>
-                <td style="width: 18%;">TOTAL HITUNG ADM (Rp)</td>
+                <td style="width: 20%;">{{ count($items) }}</td>
+                <td style="width: 15%;">TOTAL HITUNG ADM (Rp)</td>
                 <td style="width: 2%; text-align:center;">:</td>
-                <td style="width: 10%;"></td>
+                <td style="width: 15%;"></td>
             </tr>
             <tr>
                 <td>WILAYAH</td>
@@ -195,13 +199,13 @@
             <thead>
                 <tr>
                     <th style="width: 3%">No</th>
-                    <th style="width: 12%">TGL FAKTUR</th>
-                    <th style="width: 15%">KODE TRANSAKSI</th>
-                    <th style="width: 30%">NAMA PELANGGAN</th>
-                    <th style="width: 10%">SALES</th>
-                    <th style="width: 12%">JUMLAH</th>
-                    <th style="width: 9%">TITIP</th>
-                    <th style="width: 9%">RETUR/POT.</th>
+                    <th style="width: 8%">TGL FAKTUR</th>
+                    <th style="width: 8%">KODE TRANSAKSI</th>
+                    <th style="width: 20%">NAMA PELANGGAN</th>
+                    <th style="width: 7%">SALES</th>
+                    <th style="width: 7%">JUMLAH</th>
+                    <th style="width: 14%">TITIP</th>
+                    <th style="width: 12%">RETUR/POT.</th>
                 </tr>
             </thead>
             <tbody>
@@ -226,7 +230,7 @@
                 @endforeach
                 <tr class="highlight">
                     <td colspan="5" class="text-center fw-bold">TOTAL</td>
-                    <td class="text-right fw-bold" style="text-align: right">
+                    <td class="text-right fw-bold">
                         {{ number_format($totalJumlah, 0, ',', '.') }}
                     </td>
                     <td></td>
