@@ -80,18 +80,17 @@
         <!-- MASTER -->
         @if (
             $user->can('view-kategori') ||
-            $user->can('view-merk') ||
-            $user->can('view-supplier') ||
-            $user->can('view-barang') ||
-            $user->can('view-satuan') ||
-            $user->can('view-pelanggan') ||
-            $user->can('view-diskon_strata')
-        )
+                $user->can('view-merk') ||
+                $user->can('view-supplier') ||
+                $user->can('view-barang') ||
+                $user->can('view-satuan') ||
+                $user->can('view-pelanggan') ||
+                $user->can('view-diskon_strata'))
             <div class="section-title">Master</div>
             <div>
                 <div class="dropdown-trigger {{ $isMasterActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
-                    data-bs-target="#collapseMaster" role="button" aria-expanded="{{ $isMasterActive ? 'true' : 'false' }}"
-                    aria-controls="collapseMaster">
+                    data-bs-target="#collapseMaster" role="button"
+                    aria-expanded="{{ $isMasterActive ? 'true' : 'false' }}" aria-controls="collapseMaster">
                     <i class="fa-solid fa-database"></i>
                     <span>Data Master</span>
                     @if ($pendingPelangganCount > 0 && $user->can('view-pelanggan'))
@@ -144,16 +143,15 @@
         <!-- TRANSAKSI -->
         @if (
             $user->can('view-penjualan') ||
-            $user->can('view-retur_penjualan') ||
-            $user->can('view-penjualan_kiriman') ||
-            $user->can('view-pembelian') ||
-            $user->can('view-retur_pembelian') ||
-            $user->can('view-stok_opname') ||
-            $user->can('view-ajuan_limit_kredit') ||
-            $user->hasRole('Super Admin') ||
-            $user->hasRole('Admin') ||
-            $user->can('view-kas_bank')
-        )
+                $user->can('view-retur_penjualan') ||
+                $user->can('view-penjualan_kiriman') ||
+                $user->can('view-pembelian') ||
+                $user->can('view-retur_pembelian') ||
+                $user->can('view-stok_opname') ||
+                $user->can('view-ajuan_limit_kredit') ||
+                $user->hasRole('Super Admin') ||
+                $user->hasRole('Admin') ||
+                $user->can('view-kas_bank'))
             <div class="section-title">Transaksi</div>
             <div>
                 <div class="dropdown-trigger {{ $isTransaksiActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
@@ -179,7 +177,8 @@
                         @endcan
                         @can('view-penjualan_kiriman')
                             <a href="{{ route('penjualan-kiriman.index') }}"
-                                class="{{ request()->routeIs('penjualan-kiriman.*') ? 'active' : '' }}">Kiriman Penjualan</a>
+                                class="{{ request()->routeIs('penjualan-kiriman.*') ? 'active' : '' }}">Kiriman
+                                Penjualan</a>
                         @endcan
                         @can('view-pembelian')
                             <a href="{{ route('pembelian.index') }}"
@@ -289,6 +288,10 @@
                         @can('view-laporan_piutang')
                             <a href="{{ route('laporan.piutang') }}"
                                 class="{{ request()->routeIs('laporan.piutang') ? 'active' : '' }}">Piutang Pelanggan</a>
+                        @endcan
+                        @can('view-laporan_piutang')
+                            <a href="{{ route('laporan.rekap-sisa-piutang') }}"
+                                class="{{ request()->routeIs('laporan.rekap-sisa-piutang') ? 'active' : '' }}">Rekap Sisa Piutang</a>
                         @endcan
                         @can('view-laporan_laba_rugi')
                             <a href="{{ route('laporan.laba-rugi') }}"

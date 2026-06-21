@@ -172,6 +172,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/laporan/piutang', [LaporanController::class, 'laporanPiutang'])->name('laporan.piutang');
         Route::get('/laporan/piutang/cetak', [LaporanController::class, 'laporanPiutang'])->name('laporan.piutang.cetak');
         Route::get('/laporan/piutang/excel', [LaporanController::class, 'laporanPiutang'])->name('laporan.piutang.excel');
+        Route::get('/laporan/rekap-sisa-piutang', [LaporanController::class, 'laporanRekapSisaPiutang'])->name('laporan.rekap-sisa-piutang');
+        Route::get('/laporan/rekap-sisa-piutang/cetak', [LaporanController::class, 'laporanRekapSisaPiutang'])->name('laporan.rekap-sisa-piutang.cetak');
+        Route::get('/laporan/rekap-sisa-piutang/excel', [LaporanController::class, 'laporanRekapSisaPiutang'])->name('laporan.rekap-sisa-piutang.excel');
         Route::get('/laporan/setoran', [LaporanController::class, 'laporanSetoran'])->name('laporan.setoran');
         Route::get('/laporan/setoran/cetak', [LaporanController::class, 'laporanSetoran'])->name('laporan.setoran.cetak');
         Route::get('/laporan/setoran/excel', [LaporanController::class, 'laporanSetoran'])->name('laporan.setoran.excel');
