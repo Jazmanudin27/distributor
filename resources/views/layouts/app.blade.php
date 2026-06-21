@@ -27,7 +27,7 @@
     @stack('styles')
 </head>
 
-<body>
+<body style="zoom:90%">
 
     <div class="wrapper">
         <!-- Sidebar Offcanvas -->
