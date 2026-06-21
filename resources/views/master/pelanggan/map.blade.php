@@ -193,8 +193,8 @@
     <script>
         $(document).ready(function() {
             // Default center of map (Surabaya/Indonesia or center of marker group)
-            let defaultLat = -7.2575;
-            let defaultLng = 112.7521;
+            let defaultLat = -7.292657833841125;
+            let defaultLng = 108.21097612373491;
             let markers = {};
 
             // Initialize Map
