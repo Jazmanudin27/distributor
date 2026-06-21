@@ -5,6 +5,7 @@
 /* ROOT FONT SIZE — turunkan ke 14px agar semua elemen (rem) ikut mengecil */
 html {
     font-size: 14px;
+    zoom: 90%;
 }
 
 body {
