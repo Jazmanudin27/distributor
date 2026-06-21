@@ -227,7 +227,9 @@
                 $user->can('view-laporan_stok') ||
                 $user->can('view-laporan_penjualan') ||
                 $user->can('view-laporan_retur_penjualan') ||
-                $user->can('view-laporan_piutang'))
+                $user->can('view-laporan_piutang') ||
+                $user->can('view-laporan_laba_rugi') ||
+                $user->can('view-laporan_setoran'))
             <div class="section-title">Laporan</div>
             <div>
                 <div class="dropdown-trigger {{ $isLaporanActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
@@ -268,6 +270,10 @@
                         @can('view-laporan_laba_rugi')
                             <a href="{{ route('laporan.laba-rugi') }}"
                                 class="{{ request()->routeIs('laporan.laba-rugi') ? 'active' : '' }}">Laba Rugi</a>
+                        @endcan
+                        @can('view-laporan_setoran')
+                            <a href="{{ route('laporan.setoran') }}"
+                                class="{{ request()->routeIs('laporan.setoran') ? 'active' : '' }}">Setoran Sales</a>
                         @endcan
                     </div>
                 </div>
