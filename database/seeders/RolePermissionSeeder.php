@@ -96,6 +96,10 @@ class RolePermissionSeeder extends Seeder
         $kasir = Role::firstOrCreate(['name' => 'Kasir']);
         $salesman = Role::firstOrCreate(['name' => 'Salesman']);
         $spvSales = Role::firstOrCreate(['name' => 'SPV Sales']);
+        $owner = Role::firstOrCreate(['name' => 'Owner']);
+
+        // Owner gets all permissions (business owner)
+        $owner->syncPermissions(Permission::all());
 
         // Berikan beberapa akses default ke Admin (kecuali hapus users/roles)
         $adminPermissions = Permission::whereNotIn('name', [

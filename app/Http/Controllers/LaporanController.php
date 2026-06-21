@@ -1410,7 +1410,7 @@ class LaporanController extends Controller
 
     public function laporanLabaRugi(Request $request)
     {
-        $this->authorizeReport('laporan_laba_rugi');
+        $this->authorizeReport('laba_rugi');
 
         $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
         $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
