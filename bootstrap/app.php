@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'sales' => \App\Http\Middleware\SalesMiddleware::class,
             'owner.mobile' => \App\Http\Middleware\OwnerMobileMiddleware::class,
         ]);
+
+        // Auto-sync role lama (kolom users.role) ke Spatie Permission
+        $middleware->appendToGroup('web', \App\Http\Middleware\SyncLegacyRole::class);
         
         $middleware->redirectGuestsTo(function ($request) {
             $uri = $request->getRequestUri();
