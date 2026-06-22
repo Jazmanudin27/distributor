@@ -20,6 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
+    // Check if the user is on a mobile device (phone or tablet)
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                          (window.innerWidth <= 1024) || 
+                          (navigator.maxTouchPoints > 0 && window.innerWidth <= 1366);
+
     // Register Service Worker
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js')
@@ -28,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Determine banner visibility
-    if (!isStandalone && !isDismissed) {
+    if (!isStandalone && !isDismissed && isMobileDevice) {
         if (isIOS) {
             // iOS installation workflow (Safari manual Add to Home Screen)
             if (iosInstructions && installActionArea) {
@@ -47,8 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Store event
         deferredPrompt = e;
 
-        // Only show banner if not already standalone and not dismissed
-        if (!isStandalone && !isDismissed) {
+        // Only show banner if not already standalone, not dismissed, and on a mobile device
+        if (!isStandalone && !isDismissed && isMobileDevice) {
             if (iosInstructions && installActionArea) {
                 iosInstructions.style.display = 'none';
                 installActionArea.style.display = 'block';
