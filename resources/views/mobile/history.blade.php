@@ -5,9 +5,45 @@
 @section('content')
     <h5 class="fw-bold mb-3" style="font-size: 1.1rem; letter-spacing: 0.5px;">Histori Penjualan</h5>
 
+    <!-- Summary Section -->
+    <div class="row g-2 mb-3">
+        <div class="col-6">
+            <div class="mobile-card m-0 p-3 text-center" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);">
+                <div class="text-secondary mb-1" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 600;">Hari Ini</div>
+                <h6 class="fw-bold text-success mb-0" style="font-size: 0.95rem;">Rp {{ number_format($todaySales, 0, ',', '.') }}</h6>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="mobile-card m-0 p-3 text-center" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2);">
+                <div class="text-secondary mb-1" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 600;">Bulan Ini</div>
+                <h6 class="fw-bold text-indigo mb-0" style="font-size: 0.95rem; color: #818cf8;">Rp {{ number_format($monthSales, 0, ',', '.') }}</h6>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="d-flex gap-2 mb-3 pb-1" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+        <a href="{{ route('mobile.order.index', ['filter' => 'all', 'q' => $q]) }}" 
+           class="btn btn-sm px-3 py-1.5 rounded-pill text-decoration-none fw-semibold {{ $filter === 'all' ? 'btn-mobile-primary' : 'bg-dark border-secondary text-secondary' }}" 
+           style="font-size: 0.75rem;">
+            Semua
+        </a>
+        <a href="{{ route('mobile.order.index', ['filter' => 'today', 'q' => $q]) }}" 
+           class="btn btn-sm px-3 py-1.5 rounded-pill text-decoration-none fw-semibold {{ $filter === 'today' ? 'btn-mobile-primary' : 'bg-dark border-secondary text-secondary' }}" 
+           style="font-size: 0.75rem;">
+            Hari Ini
+        </a>
+        <a href="{{ route('mobile.order.index', ['filter' => 'month', 'q' => $q]) }}" 
+           class="btn btn-sm px-3 py-1.5 rounded-pill text-decoration-none fw-semibold {{ $filter === 'month' ? 'btn-mobile-primary' : 'bg-dark border-secondary text-secondary' }}" 
+           style="font-size: 0.75rem;">
+            Bulan Ini
+        </a>
+    </div>
+
     <!-- Search Box -->
     <div class="mobile-card mb-3">
         <form action="{{ route('mobile.order.index') }}" method="GET">
+            <input type="hidden" name="filter" value="{{ $filter }}">
             <div class="input-group input-group-sm">
                 <span class="input-group-text bg-dark border-secondary text-secondary">
                     <i class="fa-solid fa-magnifying-glass"></i>
@@ -16,7 +52,7 @@
                     class="form-control form-control-sm bg-dark text-white border-secondary"
                     placeholder="Cari nomor faktur atau pelanggan...">
                 @if ($q)
-                    <a href="{{ route('mobile.order.index') }}"
+                    <a href="{{ route('mobile.order.index', ['filter' => $filter]) }}"
                         class="btn btn-outline-secondary border-secondary text-secondary d-flex align-items-center">
                         <i class="fa-solid fa-xmark"></i>
                     </a>

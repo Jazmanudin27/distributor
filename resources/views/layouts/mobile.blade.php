@@ -198,7 +198,8 @@
             align-items: center;
             font-size: 0.72rem;
             font-weight: 500;
-            width: 25%;
+            flex: 1;
+            max-width: 25%;
             transition: color 0.3s ease;
             position: relative;
         }
@@ -484,9 +485,14 @@
                     <span>Dashboard</span>
                 </a>
                 <a href="{{ route('mobile.kunjungan.index') }}"
-                    class="nav-item-mobile {{ Request::routeIs('mobile.kunjungan.*') || Request::routeIs('mobile.order.*') ? 'active' : '' }}">
+                    class="nav-item-mobile {{ Request::routeIs('mobile.kunjungan.*') || Request::routeIs('mobile.order.create') || Request::routeIs('mobile.order.store') || Request::routeIs('mobile.pelanggan.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-store"></i>
                     <span>Pelanggan</span>
+                </a>
+                <a href="{{ route('mobile.order.index') }}"
+                    class="nav-item-mobile {{ Request::routeIs('mobile.order.index') ? 'active' : '' }}">
+                    <i class="fa-solid fa-receipt"></i>
+                    <span>Sales</span>
                 </a>
                 <a href="{{ route('mobile.limit-kredit.index') }}"
                     class="nav-item-mobile {{ Request::routeIs('mobile.limit-kredit.*') ? 'active' : '' }}">

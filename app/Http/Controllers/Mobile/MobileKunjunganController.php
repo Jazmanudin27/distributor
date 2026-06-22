@@ -47,6 +47,26 @@ class MobileKunjunganController extends Controller
             ->orderBy('checkout', 'desc')
             ->get();
 
+        // Get orders created today by this sales representative
+        $todayOrders = \App\Models\Penjualan::with(['details.barang', 'details.barangSatuan', 'pembayarans', 'pelanggan'])
+            ->where('kode_sales', $nik)
+            ->whereDate('created_at', now()->toDateString())
+            ->where('batal', 0)
+            ->get();
+
+        // Associate orders with each visit
+        foreach ($todayVisits as $visit) {
+            $visit->orders = $todayOrders->filter(function ($order) use ($visit) {
+                if ($order->kode_pelanggan !== $visit->kode_pelanggan) {
+                    return false;
+                }
+                if ($visit->checkin && $visit->checkout) {
+                    return $order->created_at->between($visit->checkin, $visit->checkout);
+                }
+                return false;
+            });
+        }
+
         $wilayahs = \App\Models\Wilayah::orderBy('nama_wilayah')->get();
         return view('mobile.kunjungan', compact('activeCheckin', 'todayVisits', 'lastOrders', 'unpaidInvoices', 'wilayahs'));
     }

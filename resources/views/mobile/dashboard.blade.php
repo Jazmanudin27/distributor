@@ -93,12 +93,20 @@
             </div>
         </div>
         <div class="row g-3 mb-4">
-            <div class="col-12">
+            <div class="col-6">
+                <a href="{{ route('mobile.order.index') }}"
+                    class="btn btn-mobile w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100"
+                    style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">
+                    <i class="fa-solid fa-clock-rotate-left mb-2 text-info" style="font-size: 1.6rem;"></i>
+                    <span style="font-size: 0.85rem;">Histori Penjualan</span>
+                </a>
+            </div>
+            <div class="col-6">
                 <a href="{{ route('mobile.pelanggan.create') }}"
-                    class="btn btn-mobile w-100 py-2.5 d-flex align-items-center justify-content-center"
-                    style="background-color: rgba(0, 191, 255, 0.05); border: 1px solid rgba(0, 191, 255, 0.2); color: var(--text-primary);">
-                    <i class="fa-solid fa-user-plus me-2 text-info" style="font-size: 1.2rem;"></i>
-                    <span style="font-size: 0.85rem;">Pendaftaran Pelanggan Baru</span>
+                    class="btn btn-mobile w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100"
+                    style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">
+                    <i class="fa-solid fa-user-plus mb-2 text-warning" style="font-size: 1.6rem;"></i>
+                    <span style="font-size: 0.85rem;">Pelanggan Baru</span>
                 </a>
             </div>
         </div>
@@ -112,7 +120,7 @@
             </div>
         </div>
     @else
-        <div class="row g-3 mb-4">
+        <div class="row g-3 mb-3">
             <div class="col-6">
                 <a href="{{ route('mobile.kunjungan.index') }}"
                     class="btn btn-mobile btn-mobile-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100">
@@ -121,11 +129,21 @@
                 </a>
             </div>
             <div class="col-6">
-                <a href="{{ route('mobile.pelanggan.create') }}"
+                <a href="{{ route('mobile.order.index') }}"
                     class="btn btn-mobile w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100"
                     style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">
-                    <i class="fa-solid fa-user-plus mb-2 text-info" style="font-size: 1.6rem;"></i>
-                    <span style="font-size: 0.85rem;">Pelanggan Baru</span>
+                    <i class="fa-solid fa-clock-rotate-left mb-2 text-info" style="font-size: 1.6rem;"></i>
+                    <span style="font-size: 0.85rem;">Histori Penjualan</span>
+                </a>
+            </div>
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <a href="{{ route('mobile.pelanggan.create') }}"
+                    class="btn btn-mobile w-100 py-2.5 d-flex align-items-center justify-content-center"
+                    style="background-color: rgba(0, 191, 255, 0.05); border: 1px solid rgba(0, 191, 255, 0.2); color: var(--text-primary);">
+                    <i class="fa-solid fa-user-plus me-2 text-warning" style="font-size: 1.2rem;"></i>
+                    <span style="font-size: 0.85rem;">Pendaftaran Pelanggan Baru</span>
                 </a>
             </div>
         </div>

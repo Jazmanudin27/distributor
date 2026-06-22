@@ -21,6 +21,7 @@ class MobileOrderController extends Controller
     {
         $nik = Auth::user()->nik;
         $q = $request->input('q');
+        $filter = $request->input('filter', 'all');
 
         $query = Penjualan::with(['pelanggan', 'details.barang', 'details.barangSatuan', 'pembayarans'])
             ->where('kode_sales', $nik);
@@ -35,12 +36,34 @@ class MobileOrderController extends Controller
             });
         }
 
+        // Apply filters
+        $todayStr = now()->toDateString();
+        $startOfMonth = now()->startOfMonth()->toDateString();
+        $endOfMonth = now()->endOfMonth()->toDateString();
+
+        if ($filter === 'today') {
+            $query->whereDate('tanggal', $todayStr);
+        } elseif ($filter === 'month') {
+            $query->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
+        }
+
+        // Calculate summary for today & month
+        $todaySales = Penjualan::where('kode_sales', $nik)
+            ->where('batal', 0)
+            ->whereDate('tanggal', $todayStr)
+            ->sum('grand_total');
+
+        $monthSales = Penjualan::where('kode_sales', $nik)
+            ->where('batal', 0)
+            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+            ->sum('grand_total');
+
         $orders = $query->orderBy('tanggal', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
-        return view('mobile.history', compact('orders', 'q'));
+        return view('mobile.history', compact('orders', 'q', 'filter', 'todaySales', 'monthSales'));
     }
 
     public function create(Request $request)
