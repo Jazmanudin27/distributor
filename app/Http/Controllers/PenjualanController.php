@@ -229,7 +229,7 @@ class PenjualanController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($request) {
+            DB::transaction(function () use ($request, $isKredit) {
                 $subtotalSum = 0;
                 $totalDiskon = 0;
                 $details = [];
@@ -536,7 +536,7 @@ class PenjualanController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($request, $penjualan) {
+            DB::transaction(function () use ($request, $penjualan, $isKredit) {
                 // Revert old stock
                 foreach ($penjualan->details as $oldDetail) {
                     $oldSatuan = BarangSatuan::find($oldDetail->satuan_id);
