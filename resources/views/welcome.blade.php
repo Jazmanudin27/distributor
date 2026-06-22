@@ -106,7 +106,7 @@
         <!-- Stat Cards Row -->
         <div class="row g-4 mb-4">
             <!-- Card 1: Penjualan Hari Ini -->
-            <div class="col-xl col-md-6 col-12">
+            <div class="col-xl-4 col-md-6 col-12">
                 <div class="card stat-card shadow-sm h-100 p-3 bg-gradient"
                     style="background: linear-gradient(135deg, rgba(26, 29, 39, 0.9) 0%, rgba(16, 185, 129, 0.05) 100%);">
                     <div class="d-flex justify-content-between align-items-center h-100">
@@ -124,7 +124,7 @@
             </div>
 
             <!-- Card 2: Penjualan Bulan Ini -->
-            <div class="col-xl col-md-6 col-12">
+            <div class="col-xl-4 col-md-6 col-12">
                 <div class="card stat-card shadow-sm h-100 p-3"
                     style="background: linear-gradient(135deg, rgba(26, 29, 39, 0.9) 0%, rgba(99, 102, 241, 0.05) 100%);">
                     <div class="d-flex justify-content-between align-items-center h-100">
@@ -141,8 +141,44 @@
                 </div>
             </div>
 
-            <!-- Card 3: Target Penjualan Bulan Ini -->
-            <div class="col-xl col-md-12 col-12">
+
+            <!-- Card 4: Pembelian Hari Ini -->
+            <div class="col-xl-4 col-md-6 col-12">
+                <div class="card stat-card shadow-sm h-100 p-3"
+                    style="background: linear-gradient(135deg, rgba(26, 29, 39, 0.9) 0%, rgba(245, 158, 11, 0.05) 100%);">
+                    <div class="d-flex justify-content-between align-items-center h-100">
+                        <div>
+                            <span class="text-secondary small fw-semibold tracking-wider text-uppercase"
+                                style="font-size: 0.7rem;">Pembelian Hari Ini</span>
+                            <h3 class="fw-bold text-white mt-2 mb-0">Rp
+                                {{ number_format($totalPembelianHariIni, 0, ',', '.') }}</h3>
+                        </div>
+                        <div class="stat-icon-box" style="background-color: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 5: Piutang Outstanding -->
+            <div class="col-xl-4 col-md-6 col-12">
+                <div class="card stat-card shadow-sm h-100 p-3"
+                    style="background: linear-gradient(135deg, rgba(26, 29, 39, 0.9) 0%, rgba(239, 68, 68, 0.05) 100%);">
+                    <div class="d-flex justify-content-between align-items-center h-100">
+                        <div>
+                            <span class="text-secondary small fw-semibold tracking-wider text-uppercase"
+                                style="font-size: 0.7rem;">Total Outstanding Piutang</span>
+                            <h3 class="fw-bold text-white mt-2 mb-0">Rp {{ number_format($totalPiutang, 0, ',', '.') }}</h3>
+                        </div>
+                        <div class="stat-icon-box" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444;">
+                            <i class="fa-solid fa-hand-holding-dollar"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row g-4 mb-4">
+            <div class="col-xl-12 col-md-12 col-12">
                 <div class="card stat-card shadow-sm h-100 p-3"
                     style="background: linear-gradient(135deg, rgba(26, 29, 39, 0.9) 0%, rgba(236, 72, 153, 0.05) 100%);">
                     <div class="d-flex justify-content-between align-items-start">
@@ -176,43 +212,7 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Card 4: Pembelian Hari Ini -->
-            <div class="col-xl col-md-6 col-12">
-                <div class="card stat-card shadow-sm h-100 p-3"
-                    style="background: linear-gradient(135deg, rgba(26, 29, 39, 0.9) 0%, rgba(245, 158, 11, 0.05) 100%);">
-                    <div class="d-flex justify-content-between align-items-center h-100">
-                        <div>
-                            <span class="text-secondary small fw-semibold tracking-wider text-uppercase"
-                                style="font-size: 0.7rem;">Pembelian Hari Ini</span>
-                            <h3 class="fw-bold text-white mt-2 mb-0">Rp
-                                {{ number_format($totalPembelianHariIni, 0, ',', '.') }}</h3>
-                        </div>
-                        <div class="stat-icon-box" style="background-color: rgba(245, 158, 11, 0.15); color: #f59e0b;">
-                            <i class="fa-solid fa-receipt"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card 5: Piutang Outstanding -->
-            <div class="col-xl col-md-6 col-12">
-                <div class="card stat-card shadow-sm h-100 p-3"
-                    style="background: linear-gradient(135deg, rgba(26, 29, 39, 0.9) 0%, rgba(239, 68, 68, 0.05) 100%);">
-                    <div class="d-flex justify-content-between align-items-center h-100">
-                        <div>
-                            <span class="text-secondary small fw-semibold tracking-wider text-uppercase"
-                                style="font-size: 0.7rem;">Total Outstanding Piutang</span>
-                            <h3 class="fw-bold text-white mt-2 mb-0">Rp {{ number_format($totalPiutang, 0, ',', '.') }}</h3>
-                        </div>
-                        <div class="stat-icon-box" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444;">
-                            <i class="fa-solid fa-hand-holding-dollar"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
-
         <!-- Charts Row -->
         <div class="row g-4 mb-4">
             <!-- Monthly Sales Chart -->
