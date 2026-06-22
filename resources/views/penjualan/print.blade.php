@@ -196,7 +196,9 @@
                     <tr>
                         <td>Jenis Transaksi</td>
                         <td>
-                            <b style="zoom: 180%">{{ strtoupper($item->jenis_transaksi ?? 'KREDIT') }}</b>
+                            <b style="zoom: 180%">
+                                {{ ($item->jenis_transaksi ?? 'K') == 'T' ? 'TUNAI' : 'KREDIT' }}
+                            </b>
                         </td>
                     </tr>
                 </table>
