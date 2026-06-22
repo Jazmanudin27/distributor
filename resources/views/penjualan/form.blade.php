@@ -68,7 +68,7 @@
                                     value="{{ old('tanggal', $item->tanggal ? \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d') : date('Y-m-d')) }}"
                                     required>
                             </div>
-                            <div class="mb-2">
+                            <div class="mb-2" hidden>
                                 <label for="tanggal_kirim" class="form-label fs-7 fw-bold text-secondary mb-1">Tanggal
                                     Kirim</label>
                                 <input type="date" name="tanggal_kirim" id="tanggal_kirim"
