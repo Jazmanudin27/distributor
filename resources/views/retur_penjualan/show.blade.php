@@ -145,6 +145,7 @@
                                         <th width="130" class="py-2">Kode</th>
                                         <th class="py-2">Nama Barang</th>
                                         <th width="110" class="text-center py-2">Satuan</th>
+                                        <th width="100" class="text-center py-2">Kondisi</th>
                                         <th width="90" class="text-end py-2">Qty</th>
                                         <th width="140" class="text-end py-2">Harga Retur</th>
                                         <th width="120" class="text-center py-2">Diskon %</th>

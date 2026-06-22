@@ -22,6 +22,7 @@ class ReturPenjualanDetail extends Model
         'diskon3_persen',
         'id_satuan',
         'total_diskon_rupiah',
+        'kondisi',
     ];
 
     protected $casts = [

@@ -91,6 +91,7 @@ class ReturPenjualanController extends Controller
             'items.*.diskon1_persen' => 'nullable|numeric|min:0|max:100',
             'items.*.diskon2_persen' => 'nullable|numeric|min:0|max:100',
             'items.*.diskon3_persen' => 'nullable|numeric|min:0|max:100',
+            'items.*.kondisi'        => 'nullable|string|max:50',
         ]);
 
         // Validate quantities against original invoice if provided
@@ -149,6 +150,7 @@ class ReturPenjualanController extends Controller
                     'diskon2_persen'      => $d2_pct,
                     'diskon3_persen'      => $d3_pct,
                     'total_diskon_rupiah' => $rowDiskon,
+                    'kondisi'             => $row['kondisi'] ?? null,
                 ]);
             }
 
@@ -234,6 +236,7 @@ class ReturPenjualanController extends Controller
             'items.*.diskon1_persen' => 'nullable|numeric|min:0|max:100',
             'items.*.diskon2_persen' => 'nullable|numeric|min:0|max:100',
             'items.*.diskon3_persen' => 'nullable|numeric|min:0|max:100',
+            'items.*.kondisi'        => 'nullable|string|max:50',
         ]);
 
         // Validate quantities against original invoice if provided
@@ -300,6 +303,7 @@ class ReturPenjualanController extends Controller
                     'diskon2_persen'      => $d2_pct,
                     'diskon3_persen'      => $d3_pct,
                     'total_diskon_rupiah' => $rowDiskon,
+                    'kondisi'             => $row['kondisi'] ?? null,
                 ]);
             }
 
