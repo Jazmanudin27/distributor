@@ -276,9 +276,9 @@
                                     <th width="60" class="text-center">Promo</th>
                                     <th width="70" class="text-end">Qty</th>
                                     <th width="120" class="text-end">Harga Jual</th>
-                                    <th width="65" class="text-end">D1 %</th>
-                                    <th width="65" class="text-end">D2 %</th>
-                                    <th width="65" class="text-end">D3 %</th>
+                                    <th width="70" class="text-end">D1 %</th>
+                                    <th width="70" class="text-end">D2 %</th>
+                                    <th width="70" class="text-end">D3 %</th>
                                     <th width="110" class="text-end">Potongan</th>
                                     <th width="130" class="text-end">Subtotal</th>
                                     <th width="40" class="text-center">Aksi</th>

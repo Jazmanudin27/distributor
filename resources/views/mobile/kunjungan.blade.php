@@ -256,7 +256,7 @@
                     $allPembayarans = $order->getAllPembayarans();
                     $totalBayar = $allPembayarans->sum('jumlah');
                     $sisaBayar = $order->grand_total - $totalBayar;
-                    $dueDate = \Carbon\Carbon::parse($order->tanggal)->addDays($order->pelanggan->ljt ?? 14);
+                    $dueDate = \Carbon\Carbon::parse($order->tanggal)->addDays($order->pelanggan->ljt ?? 30);
                     $isOverdue =
                         $sisaBayar > 0 &&
                         in_array($order->jenis_transaksi, ['K', 'Kredit']) &&
@@ -454,11 +454,14 @@
                                 <div class="mt-3 pt-2 border-top border-secondary border-opacity-10">
                                     <div class="p-2 rounded-3 d-flex align-items-center gap-2"
                                         style="background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.2);">
-                                        <i class="fa-solid fa-clock-rotate-left text-warning" style="font-size: 0.75rem;"></i>
+                                        <i class="fa-solid fa-clock-rotate-left text-warning"
+                                            style="font-size: 0.75rem;"></i>
                                         <div>
-                                            <span class="text-warning fw-semibold d-block" style="font-size: 0.7rem;">Belum Lunas</span>
+                                            <span class="text-warning fw-semibold d-block"
+                                                style="font-size: 0.7rem;">Belum Lunas</span>
                                             <span class="text-secondary" style="font-size: 0.65rem;">
-                                                Sisa tagihan: <strong class="text-white font-monospace">Rp {{ number_format($sisaBayar, 0, ',', '.') }}</strong>
+                                                Sisa tagihan: <strong class="text-white font-monospace">Rp
+                                                    {{ number_format($sisaBayar, 0, ',', '.') }}</strong>
                                                 &bull; Pembayaran dilakukan oleh admin/kasir.
                                             </span>
                                         </div>
@@ -535,7 +538,7 @@
                                         @php
                                             $sisa = $inv->grand_total - $inv->pembayarans->sum('jumlah');
                                             $dueDate = \Carbon\Carbon::parse($inv->tanggal)->addDays(
-                                                $inv->pelanggan->ljt ?? 14,
+                                                $inv->pelanggan->ljt ?? 30,
                                             );
                                             $isOverdue = $dueDate->lt(\Carbon\Carbon::today());
                                         @endphp
@@ -768,7 +771,7 @@
                         const wilayahVal = searchWilayah ? searchWilayah.value : '';
                         fetch(
                                 `{{ route('pelanggan.search') }}?q=${encodeURIComponent(query)}&kode_wilayah=${encodeURIComponent(wilayahVal)}`
-                                )
+                            )
                             .then(response => response.json())
                             .then(data => {
                                 resultsList.innerHTML = '';

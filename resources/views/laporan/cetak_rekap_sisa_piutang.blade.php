@@ -155,7 +155,7 @@
             $overdueCount = 0;
             $reportDate = \Carbon\Carbon::parse($tanggal);
             foreach ($items as $item) {
-                $ljt = $item['pelanggan'] ? $item['pelanggan']->ljt ?? 14 : 14;
+                $ljt = $item['pelanggan'] ? $item['pelanggan']->ljt ?? 30 : 30;
                 $jatuh_tempo = \Carbon\Carbon::parse($item['tanggal'])->addDays($ljt);
                 if ($reportDate->greaterThan($jatuh_tempo)) {
                     $overdueCount++;

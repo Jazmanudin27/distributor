@@ -20,7 +20,7 @@ echo "Faktur kredit > 900 hari lalu: " . $invs->count() . "\n\n";
 foreach ($invs as $inv) {
     $ljt = DB::table('pelanggan')
         ->where('kode_pelanggan', $inv->kode_pelanggan)
-        ->value('ljt') ?? 14;
+        ->value('ljt') ?? 30;
 
     $jatuh_tempo = Carbon::parse($inv->tanggal)->addDays($ljt)->startOfDay();
     $diff = (int) floor(($todayTs - $jatuh_tempo->timestamp) / 86400);

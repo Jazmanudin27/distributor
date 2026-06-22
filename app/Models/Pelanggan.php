@@ -57,7 +57,7 @@ class Pelanggan extends Model
         $query = \App\Models\Penjualan::where('kode_pelanggan', $this->kode_pelanggan)
             ->whereIn('jenis_transaksi', ['K', 'Kredit'])
             ->where('batal', 0)
-            ->whereRaw('DATE_ADD(tanggal, INTERVAL COALESCE(?, 14) DAY) < ?', [$this->ljt ?: 14, now()->toDateString()])
+            ->whereRaw('DATE_ADD(tanggal, INTERVAL COALESCE(?, 30) DAY) < ?', [$this->ljt ?: 30, now()->toDateString()])
             ->whereRaw("(COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran WHERE penjualan_pembayaran.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0) + COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_transfer WHERE penjualan_pembayaran_transfer.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0) + COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_giro WHERE penjualan_pembayaran_giro.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0)) < grand_total");
             
         if ($excludeNoFaktur) {
@@ -77,7 +77,7 @@ class Pelanggan extends Model
         $query = \App\Models\Penjualan::where('kode_pelanggan', $this->kode_pelanggan)
             ->whereIn('jenis_transaksi', ['K', 'Kredit'])
             ->where('batal', 0)
-            ->whereRaw('DATE_ADD(tanggal, INTERVAL COALESCE(?, 14) DAY) < ?', [$this->ljt ?: 14, now()->toDateString()])
+            ->whereRaw('DATE_ADD(tanggal, INTERVAL COALESCE(?, 30) DAY) < ?', [$this->ljt ?: 30, now()->toDateString()])
             ->whereRaw("(COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran WHERE penjualan_pembayaran.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0) + COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_transfer WHERE penjualan_pembayaran_transfer.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0) + COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_giro WHERE penjualan_pembayaran_giro.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0)) < grand_total");
             
         if ($excludeNoFaktur) {

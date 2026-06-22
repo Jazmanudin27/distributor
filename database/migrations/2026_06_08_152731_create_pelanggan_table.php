@@ -29,7 +29,7 @@ return new class extends Migration
             $table->string('foto', 255)->nullable();
             $table->integer('kode_wilayah')->nullable();
             $table->string('email', 100)->nullable();
-            $table->integer('ljt')->nullable()->default(14);
+            $table->integer('ljt')->nullable()->default(30);
             $table->integer('max_faktur')->nullable()->default(1);
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->timestamp('created_at')->useCurrent();

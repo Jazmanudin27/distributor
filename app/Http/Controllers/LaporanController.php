@@ -1035,7 +1035,7 @@ class LaporanController extends Controller
                     $outstanding = 0;
                     $total_overdue = 0;
                     $overdue_count = 0;
-                    $ljt = $c->ljt ?? 14;
+                    $ljt = $c->ljt ?? 30;
 
                     foreach ($custInvoices as $item) {
                         $outstanding += $item['remaining'];
@@ -1125,7 +1125,7 @@ class LaporanController extends Controller
                     $overdue_31_60 = 0;
                     $overdue_61_90 = 0;
                     $overdue_90 = 0;
-                    $ljt = $c->ljt ?? 14;
+                    $ljt = $c->ljt ?? 30;
 
                     foreach ($custInvoices as $item) {
                         $rem = $item['remaining'];
@@ -1228,7 +1228,7 @@ class LaporanController extends Controller
                     $sisa_piutang = (float)($inv->grand_total - $paid - $returPaid);
 
                     if ($sisa_piutang > 0.01) {
-                        $ljt = $inv->pelanggan->ljt ?? 14;
+                        $ljt = $inv->pelanggan->ljt ?? 30;
                         $jatuh_tempo = Carbon::parse($inv->tanggal)->addDays($ljt);
                         $umur_piutang = (int) round(Carbon::parse($inv->tanggal)->diffInDays(Carbon::now()));
                         $status = Carbon::now()->greaterThan($jatuh_tempo) ? 'OVERDUE' : 'LANCAR';

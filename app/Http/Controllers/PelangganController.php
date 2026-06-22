@@ -143,7 +143,7 @@ class PelangganController extends Controller
             ->whereColumn('penjualan.kode_pelanggan', 'pelanggan.kode_pelanggan')
             ->whereIn('penjualan.jenis_transaksi', ['K', 'Kredit'])
             ->where('penjualan.batal', 0)
-            ->whereRaw('DATE_ADD(penjualan.tanggal, INTERVAL COALESCE(pelanggan.ljt, 14) DAY) < ?', [$today])
+            ->whereRaw('DATE_ADD(penjualan.tanggal, INTERVAL COALESCE(pelanggan.ljt, 30) DAY) < ?', [$today])
             ->whereRaw('(SELECT COALESCE(SUM(jumlah), 0) FROM penjualan_pembayaran WHERE penjualan_pembayaran.no_faktur = penjualan.no_faktur) < penjualan.grand_total');
 
         if ($excludeNoFaktur) {

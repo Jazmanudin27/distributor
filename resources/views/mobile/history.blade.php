@@ -76,7 +76,7 @@
                     $allPembayarans = $order->getAllPembayarans();
                     $totalBayar = $allPembayarans->sum('jumlah');
                     $sisaBayar = $order->grand_total - $totalBayar;
-                    $dueDate = \Carbon\Carbon::parse($order->tanggal)->addDays($order->pelanggan->ljt ?? 14);
+                    $dueDate = \Carbon\Carbon::parse($order->tanggal)->addDays($order->pelanggan->ljt ?? 30);
                     $isOverdue =
                         $sisaBayar > 0 &&
                         in_array($order->jenis_transaksi, ['K', 'Kredit']) &&

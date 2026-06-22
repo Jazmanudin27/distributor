@@ -89,7 +89,7 @@ class MobilePelangganController extends Controller
             'no_hp_pelanggan'  => $request->no_hp_pelanggan,
             'metode_bayar'     => $request->metode_bayar,
             'limit_pelanggan'  => 0, // Default to 0 limit
-            'ljt'              => 14, // Default to 14 days LJT
+            'ljt'              => 30, // Default to 30 days LJT
             'latitude'         => $request->latitude,
             'longitude'        => $request->longitude,
             'foto'             => $fotoPath,
