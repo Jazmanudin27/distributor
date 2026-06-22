@@ -187,10 +187,12 @@
                                 style="font-size: 0.7rem;">Target Penjualan Bulan Ini</span>
                             <h3 class="fw-bold text-white mt-1 mb-0">
                                 Rp {{ number_format($targetPenjualan, 0, ',', '.') }}
-                                <a href="#" class="ms-1" data-bs-toggle="modal" data-bs-target="#editTargetModal"
-                                    title="Ubah Target" style="color: #ec4899;">
-                                    <i class="fa-solid fa-pen-to-square" style="font-size: 0.85rem;"></i>
-                                </a>
+                                @can('ubah-target-penjualan')
+                                    <a href="#" class="ms-1" data-bs-toggle="modal" data-bs-target="#editTargetModal"
+                                        title="Ubah Target" style="color: #ec4899;">
+                                        <i class="fa-solid fa-pen-to-square" style="font-size: 0.85rem;"></i>
+                                    </a>
+                                @endcan
                             </h3>
                         </div>
                         <div class="stat-icon-box" style="background-color: rgba(236, 72, 153, 0.15); color: #ec4899;">
