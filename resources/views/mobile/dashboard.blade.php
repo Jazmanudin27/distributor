@@ -32,12 +32,19 @@
         </div>
     @endif
 
+    @php
+        $role = strtolower(Auth::user()->role ?? '');
+        $isSpv = ($role === 'spv sales');
+    @endphp
+
     <!-- Pencapaian Bulan Ini Card -->
     <div class="mobile-card">
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h6 class="text-secondary mb-1"
-                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Total Penjualan Bulan Ini</h6>
+                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
+                    {{ $isSpv ? 'Total Penjualan Sales Bulan Ini' : 'Total Penjualan Bulan Ini' }}
+                </h6>
                 <h3 class="fw-bold mb-0" style="font-size: 1.4rem; color: #818cf8;">Rp
                     {{ number_format($achievedSales, 0, ',', '.') }}</h3>
             </div>
@@ -61,7 +68,8 @@
                     <div>
                         <h6 class="text-secondary mb-1"
                             style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">
-                            Kunjungan Hari Ini</h6>
+                            {{ $isSpv ? 'Total Kunjungan Sales Hari Ini' : 'Kunjungan Hari Ini' }}
+                        </h6>
                         <h3 class="fw-bold mb-0 text-white" style="font-size: 1.4rem;">
                             {{ $todayVisitsCount }} <span
                                 style="font-size: 0.85rem; font-weight: 500; color: var(--text-secondary);">Outlet</span>
@@ -72,8 +80,40 @@
         </div>
     </div>
 
+    @if ($isSpv)
+        <!-- Monitoring Panel (SPV Only) -->
+        <h5 class="fw-bold mb-3" style="font-size: 0.95rem; letter-spacing: 0.5px;">Menu Monitoring SPV</h5>
+        <div class="row g-3 mb-4">
+            <div class="col-6">
+                <a href="{{ route('mobile.spv.sales-visits') }}"
+                    class="btn btn-mobile btn-mobile-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100">
+                    <i class="fa-solid fa-map-location-dot mb-2" style="font-size: 1.6rem;"></i>
+                    <span style="font-size: 0.85rem;">Kunjungan Sales</span>
+                </a>
+            </div>
+            <div class="col-6">
+                <a href="{{ route('mobile.spv.sales-achievement') }}"
+                    class="btn btn-mobile w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100"
+                    style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">
+                    <i class="fa-solid fa-ranking-star mb-2 text-warning" style="font-size: 1.6rem;"></i>
+                    <span style="font-size: 0.85rem;">Pencapaian Sales</span>
+                </a>
+            </div>
+            @if ($pendingCustomersCount > 0)
+                <div class="col-12 mt-2">
+                    <a href="{{ route('mobile.spv.pelanggan.pending') }}"
+                        class="btn btn-mobile w-100 py-2.5 d-flex align-items-center justify-content-center"
+                        style="background-color: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); color: #fbbf24;">
+                        <i class="fa-solid fa-user-check me-2" style="font-size: 1.2rem;"></i>
+                        <span style="font-size: 0.85rem;">Persetujuan Pelanggan Baru ({{ $pendingCustomersCount }})</span>
+                    </a>
+                </div>
+            @endif
+        </div>
+    @endif
+
     <!-- Quick Action Panel -->
-    <h5 class="fw-bold mb-3" style="font-size: 0.95rem; letter-spacing: 0.5px;">Menu Utama</h5>
+    <h5 class="fw-bold mb-3" style="font-size: 0.95rem; letter-spacing: 0.5px;">{{ $isSpv ? 'Menu Operasional Saya' : 'Menu Utama' }}</h5>
     @if ($activeCheckin)
         <div class="row g-3 mb-3">
             <div class="col-6">
@@ -158,7 +198,7 @@
 
     <!-- Recent Orders Section -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold mb-0" style="font-size: 0.95rem; letter-spacing: 0.5px;">Pesanan Terbaru Anda</h5>
+        <h5 class="fw-bold mb-0" style="font-size: 0.95rem; letter-spacing: 0.5px;">{{ $isSpv ? 'Pesanan Terbaru Sales' : 'Pesanan Terbaru Anda' }}</h5>
     </div>
 
     @if ($recentOrders->isEmpty())

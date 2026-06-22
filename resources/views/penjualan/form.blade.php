@@ -2,10 +2,12 @@
 @section('title', $item->exists ? 'Edit Penjualan' : 'Transaksi Penjualan Baru')
 @push('styles')
     <style>
-        .promo-row, .promo-row td {
+        .promo-row,
+        .promo-row td {
             background-color: rgba(253, 126, 20, 0.12) !important;
             color: #d97706 !important;
         }
+
         .promo-row input {
             color: #d97706 !important;
         }
@@ -63,14 +65,15 @@
                                     <span class="text-danger">*</span></label>
                                 <input type="date" name="tanggal" id="tanggal"
                                     class="form-control form-control-sm @error('tanggal') is-invalid @enderror"
-                                    value="{{ old('tanggal', $item->tanggal ?? date('Y-m-d')) }}" required>
+                                    value="{{ old('tanggal', $item->tanggal ? \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d') : date('Y-m-d')) }}"
+                                    required>
                             </div>
                             <div class="mb-2">
                                 <label for="tanggal_kirim" class="form-label fs-7 fw-bold text-secondary mb-1">Tanggal
                                     Kirim</label>
                                 <input type="date" name="tanggal_kirim" id="tanggal_kirim"
                                     class="form-control form-control-sm"
-                                    value="{{ old('tanggal_kirim', $item->tanggal_kirim) }}">
+                                    value="{{ old('tanggal_kirim', $item->tanggal_kirim ? \Carbon\Carbon::parse($item->tanggal_kirim)->format('Y-m-d') : '') }}">
                             </div>
                             <div class="mb-2">
                                 <label class="form-label fs-7 fw-bold text-secondary mb-1">Jenis Transaksi
@@ -245,7 +248,8 @@
                         <div class="col-lg-1 col-md-2 col-6 pb-2">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="quick_is_promo" value="1">
-                                <label class="form-check-label fs-8 fw-bold text-secondary mb-0" for="quick_is_promo">Promo</label>
+                                <label class="form-check-label fs-8 fw-bold text-secondary mb-0"
+                                    for="quick_is_promo">Promo</label>
                             </div>
                         </div>
                         <div class="col-lg-1 col-md-2">
@@ -635,7 +639,8 @@
                 const satuanName = $('#quick_satuan').find(':selected').data('name');
                 const isPromo = $('#quick_is_promo').is(':checked');
 
-                appendRow(barangCode, barang.nama_barang, satuanId, satuanName, qty, harga, d1, d2, d3, isPromo);
+                appendRow(barangCode, barang.nama_barang, satuanId, satuanName, qty, harga, d1, d2, d3,
+                    isPromo);
 
                 // Reset
                 $('#quick_barang').val('').trigger('change');
@@ -674,12 +679,12 @@
             $(document).on('change', '.input-promo', function() {
                 const row = $(this).closest('tr');
                 const isChecked = $(this).is(':checked');
-                
+
                 const inputHarga = row.find('.input-harga');
                 const inputDis1 = row.find('.input-diskon1');
                 const inputDis2 = row.find('.input-diskon2');
                 const inputDis3 = row.find('.input-diskon3');
-                
+
                 if (isChecked) {
                     row.addClass('promo-row');
                     const currentPrice = inputHarga.val();
@@ -699,7 +704,8 @@
                 calculateTotals();
             });
 
-            function appendRow(barangCode, barangName, satuanId, satuanName, qty, harga, d1 = 0, d2 = 0, d3 = 0, isPromo = false) {
+            function appendRow(barangCode, barangName, satuanId, satuanName, qty, harga, d1 = 0, d2 = 0, d3 = 0,
+                isPromo = false) {
                 const trId = `row_${rowIndex}`;
                 const fmtHarga = formatNumber(cleanNumber(harga));
 
@@ -709,7 +715,7 @@
                     const sat = barang.satuans.find(s => s.id == satuanId);
                     if (sat) {
                         isi = parseFloat(sat.isi) || 1;
-                      }
+                    }
                 }
 
                 const html = `

@@ -16,35 +16,54 @@ class MobileDashboardController extends Controller
     {
         $user = Auth::user();
         $nik = $user->nik;
+        $role = strtolower($user->role ?? '');
+        $isSpv = ($role === 'spv sales');
 
         // Start and end of the current month
         $startOfMonth = Carbon::now()->startOfMonth()->toDateString();
         $endOfMonth = Carbon::now()->endOfMonth()->toDateString();
         $today = Carbon::now()->toDateString();
 
-        // 1. Achieved sales this month
-        $achievedSales = Penjualan::where('kode_sales', $nik)
-            ->where('batal', 0)
-            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
-            ->sum('grand_total');
+        if ($isSpv) {
+            // Achieved sales of all sales this month
+            $achievedSales = Penjualan::where('batal', 0)
+                ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+                ->sum('grand_total');
+
+            // Today's visits count of all sales
+            $todayVisitsCount = PenjualanCheckin::whereDate('checkin', $today)
+                ->count();
+
+            // Recent orders of all sales
+            $recentOrders = Penjualan::with(['pelanggan.wilayah', 'pelanggan.subWilayah', 'sales', 'user'])
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get();
+        } else {
+            // 1. Achieved sales this month
+            $achievedSales = Penjualan::where('kode_sales', $nik)
+                ->where('batal', 0)
+                ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+                ->sum('grand_total');
+
+            // 3. Today's visits count
+            $todayVisitsCount = PenjualanCheckin::where('kode_sales', $nik)
+                ->whereDate('checkin', $today)
+                ->count();
+
+            // 5. Recent orders
+            $recentOrders = Penjualan::with(['pelanggan.wilayah', 'pelanggan.subWilayah', 'sales', 'user'])
+                ->where('kode_sales', $nik)
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get();
+        }
 
         // 2. Target sales this month (Disabled)
         $targetAmount = 0;
 
-        // 3. Today's visits count
-        $todayVisitsCount = PenjualanCheckin::where('kode_sales', $nik)
-            ->whereDate('checkin', $today)
-            ->count();
-
         // 4. Total registered customers
         $totalCustomers = Pelanggan::where('status', '1')->count();
-
-        // 5. Recent orders
-        $recentOrders = Penjualan::with(['pelanggan.wilayah', 'pelanggan.subWilayah', 'sales', 'user'])
-            ->where('kode_sales', $nik)
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get();
 
         // 6. Active check-in
         $activeCheckin = PenjualanCheckin::with('pelanggan')
@@ -54,7 +73,7 @@ class MobileDashboardController extends Controller
 
         // 7. Pending Customer Approvals (for SPV Sales)
         $pendingCustomersCount = 0;
-        if (strtolower($user->role) === 'spv sales') {
+        if ($isSpv) {
             $pendingCustomersCount = Pelanggan::where(function($q) {
                 $q->whereNull('approve')->orWhere('approve', 0);
             })->count();
@@ -108,5 +127,87 @@ class MobileDashboardController extends Controller
         $progressPercentage = 0;
 
         return view('mobile.profile', compact('user', 'achievedSales', 'targetAmount', 'progressPercentage', 'totalOrdersCount', 'totalVisitsCount'));
+    }
+
+    /**
+     * Laporan Pencapaian Sales Mobile (untuk SPV Sales)
+     */
+    public function salesAchievement(Request $request)
+    {
+        $role = strtolower(Auth::user()->role ?? '');
+        if ($role !== 'spv sales') {
+            abort(403, 'Akses khusus SPV Sales.');
+        }
+
+        $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
+        $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
+
+        // Query sales users
+        $salesList = \App\Models\User::whereIn('role', ['sales', 'spv sales'])
+            ->where('status', '1')
+            ->get();
+
+        $achievements = [];
+        foreach ($salesList as $sales) {
+            $totalSales = (float) Penjualan::where('kode_sales', $sales->nik)
+                ->where('batal', 0)
+                ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
+                ->sum('grand_total');
+
+            $invoiceCount = Penjualan::where('kode_sales', $sales->nik)
+                ->where('batal', 0)
+                ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
+                ->count();
+
+            $visitCount = \App\Models\PenjualanCheckin::where('kode_sales', $sales->nik)
+                ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
+                ->count();
+
+            $achievements[] = [
+                'name' => $sales->name,
+                'nik' => $sales->nik,
+                'total_sales' => $totalSales,
+                'invoice_count' => $invoiceCount,
+                'visit_count' => $visitCount,
+            ];
+        }
+
+        // Sort by total_sales descending
+        usort($achievements, function ($a, $b) {
+            return $b['total_sales'] <=> $a['total_sales'];
+        });
+
+        return view('mobile.spv.sales_achievement', compact('achievements', 'tanggal_mulai', 'tanggal_akhir'));
+    }
+
+    /**
+     * Laporan Kunjungan Sales Mobile (untuk SPV Sales)
+     */
+    public function salesVisits(Request $request)
+    {
+        $role = strtolower(Auth::user()->role ?? '');
+        if ($role !== 'spv sales') {
+            abort(403, 'Akses khusus SPV Sales.');
+        }
+
+        $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-d'));
+        $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
+        $selected_sales = $request->input('kode_sales', '');
+
+        $query = \App\Models\PenjualanCheckin::with(['sales', 'pelanggan.wilayah'])
+            ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
+
+        if ($selected_sales !== '') {
+            $query->where('kode_sales', $selected_sales);
+        }
+
+        $visits = $query->orderBy('checkin', 'desc')->paginate(20)->appends($request->query());
+
+        $salesmen = \App\Models\User::whereIn('role', ['sales', 'spv sales'])
+            ->where('status', '1')
+            ->orderBy('name')
+            ->get();
+
+        return view('mobile.spv.sales_visits', compact('visits', 'salesmen', 'tanggal_mulai', 'tanggal_akhir', 'selected_sales'));
     }
 }

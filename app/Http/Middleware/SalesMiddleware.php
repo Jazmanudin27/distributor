@@ -19,9 +19,9 @@ class SalesMiddleware
         if (Auth::check()) {
             $role = strtolower(Auth::user()->role ?? '');
             
-            // Jika user bukan sales, arahkan ke halaman utama desktop
-            if (!in_array($role, ['sales'])) {
-                return redirect('/')->with('error', 'Hanya sales yang memiliki akses ke halaman mobile.');
+            // Jika user bukan sales / spv sales, arahkan ke halaman utama desktop
+            if (!in_array($role, ['sales', 'spv sales'])) {
+                return redirect('/')->with('error', 'Hanya sales/spv sales yang memiliki akses ke halaman mobile.');
             }
         }
 

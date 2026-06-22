@@ -81,6 +81,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/spv/pelanggan-pending', [MobilePelangganController::class, 'pendingListSpv'])->name('spv.pelanggan.pending');
         Route::post('/spv/approve-pelanggan/{kode_pelanggan}', [MobilePelangganController::class, 'approveSpv'])->name('spv.pelanggan.approve');
         Route::post('/spv/reject-pelanggan/{kode_pelanggan}', [MobilePelangganController::class, 'rejectSpv'])->name('spv.pelanggan.reject');
+
+        // SPV Sales Monitoring
+        Route::get('/spv/sales-achievement', [MobileDashboardController::class, 'salesAchievement'])->name('spv.sales-achievement');
+        Route::get('/spv/sales-visits', [MobileDashboardController::class, 'salesVisits'])->name('spv.sales-visits');
     });
 
     // Authenticated Mobile Routes for Owner

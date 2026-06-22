@@ -42,7 +42,7 @@ class MobileAuthController extends Controller
 
             // Cek role diizinkan masuk ke mobile
             $role = strtolower($user->role ?? '');
-            $allowedRoles = ['sales', 'owner', 'admin', 'super admin', 'superadmin'];
+            $allowedRoles = ['sales', 'spv sales', 'owner', 'admin', 'super admin', 'superadmin'];
             if (!in_array($role, $allowedRoles)) {
                 Auth::logout();
                 return back()->withErrors([
