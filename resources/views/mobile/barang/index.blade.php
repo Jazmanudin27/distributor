@@ -24,7 +24,7 @@
                     </button>
                 </div>
             </div>
-            <div class="col-12">
+            <div class="col-6">
                 <select name="merk" class="form-select form-control-mobile" onchange="this.form.submit()"
                     style="border-radius: 12px !important; padding: 12px 14px !important; font-size: 0.9rem !important;">
                     <option value="">-- Semua Merk --</option>
@@ -32,6 +32,14 @@
                         <option value="{{ $m->nama_merk }}" {{ request('merk') == $m->nama_merk ? 'selected' : '' }}>
                             {{ $m->nama_merk }}</option>
                     @endforeach
+                </select>
+            </div>
+            <div class="col-6">
+                <select name="stok" class="form-select form-control-mobile" onchange="this.form.submit()"
+                    style="border-radius: 12px !important; padding: 12px 14px !important; font-size: 0.9rem !important;">
+                    <option value="">-- Semua Stok --</option>
+                    <option value="ada" {{ request('stok') == 'ada' ? 'selected' : '' }}>Ada Stok</option>
+                    <option value="kosong" {{ request('stok') == 'kosong' ? 'selected' : '' }}>Stok Kosong</option>
                 </select>
             </div>
         </div>

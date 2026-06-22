@@ -15,6 +15,7 @@ class MobileBarangController extends Controller
     {
         $search = $request->input('search');
         $filterMerk = $request->input('merk');
+        $filterStok = $request->input('stok');
 
         $query = Barang::with(['satuans'])->where('status', 1);
 
@@ -40,6 +41,12 @@ class MobileBarangController extends Controller
             $query->where('merk', $filterMerk);
         }
 
+        if ($filterStok === 'ada') {
+            $query->where('stok', '>', 0);
+        } elseif ($filterStok === 'kosong') {
+            $query->where('stok', '<=', 0);
+        }
+
         $barangs = $query->orderBy('nama_barang', 'asc')->limit(20)->get();
 
         $merksQuery = \App\Models\Merk::query();
@@ -49,6 +56,6 @@ class MobileBarangController extends Controller
         }
         $merks = $merksQuery->orderBy('nama_merk', 'asc')->get();
 
-        return view('mobile.barang.index', compact('barangs', 'search', 'merks', 'filterMerk'));
+        return view('mobile.barang.index', compact('barangs', 'search', 'merks', 'filterMerk', 'filterStok'));
     }
 }

@@ -755,7 +755,7 @@ class PenjualanController extends Controller
         }
 
         // All payment types (Cash, Transfer, Giro, etc.) start with pending status
-        $status = 'pending';
+        $status = 'disetujui';
 
         PenjualanPembayaran::create([
             'no_bukti' => $no_bukti,
