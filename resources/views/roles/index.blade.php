@@ -140,7 +140,7 @@
                         data-bs-target="#modalTambahPermission">
                         <i class="fa-solid fa-key me-1 text-white"></i> Tambah Permission
                     </button>
-                    <button class="btn btn-success btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalTambahRole">
+                    <button class="btn btn-info btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalTambahRole">
                         <i class="fa-solid fa-plus me-1 text-white"></i> Tambah Role
                     </button>
                 </div>
