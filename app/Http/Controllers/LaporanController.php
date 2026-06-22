@@ -1397,6 +1397,9 @@ class LaporanController extends Controller
                 }
             }
         }
+        $items = $items->sortBy(function ($item) {
+            return $item['pelanggan']->nama_pelanggan ?? '';
+        })->values();
 
         $view = $isPrintOrExcel ? 'laporan.cetak_rekap_sisa_piutang' : 'laporan.rekap_sisa_piutang';
 
