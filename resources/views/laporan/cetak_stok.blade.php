@@ -144,7 +144,7 @@
                                 <th rowspan="2" class="text-center align-middle text-white">Kode Sales</th>
                                 <th rowspan="2" class="text-center align-middle text-white">Nama Sales</th>
                                 <th rowspan="2" class="text-center align-middle text-white">Keterangan</th>
-                                <th colspan="3" class="text-center text-white"
+                                <th colspan="4" class="text-center text-white"
                                     style="background-color: #28a745; color: white; padding: 4px;">PENERIMAAN</th>
                                 <th colspan="3" class="text-center text-white"
                                     style="background-color: #dc3545; color: white; padding: 4px;">PENGELUARAN</th>
@@ -157,6 +157,9 @@
                                 <th class="text-center"
                                     style="background-color: #1e7e34; color: white; font-size: 9px; padding: 2px;">
                                     Retur Jual</th>
+                                <th class="text-center"
+                                    style="background-color: #1e7e34; color: white; font-size: 9px; padding: 2px;">
+                                    Batal Jual</th>
                                 <th class="text-center"
                                     style="background-color: #1e7e34; color: white; font-size: 9px; padding: 2px;">
                                     Penyesuaian (+)</th>
@@ -198,6 +201,9 @@
                                         {{ $m['retur_jual'] > 0 ? $barang->formatStok($m['retur_jual']) : '-' }}
                                     </td>
                                     <td class="text-start font-monospace text-success">
+                                        {{ isset($m['batal_jual']) && $m['batal_jual'] > 0 ? $barang->formatStok($m['batal_jual']) : '-' }}
+                                    </td>
+                                    <td class="text-start font-monospace text-success">
                                         {{ $m['opname_masuk'] > 0 ? $barang->formatStok($m['opname_masuk']) : '-' }}
                                     </td>
 
@@ -219,7 +225,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="15" class="text-center py-3 text-muted">
+                                    <td colspan="16" class="text-center py-3 text-muted">
                                         Tidak ada riwayat mutasi stok dalam rentang tanggal ini.
                                     </td>
                                 </tr>

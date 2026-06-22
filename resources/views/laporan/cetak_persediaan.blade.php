@@ -100,7 +100,7 @@
                             style="background-color: #0d6efd !important; color: white !important;">Merk</th>
                         <th rowspan="2" width="100"
                             style="background-color: #0d6efd !important; color: white !important;">Stok Awal</th>
-                        <th colspan="3" class="text-center"
+                        <th colspan="4" class="text-center"
                             style="background-color: #28a745 !important; color: white !important;">PENERIMAAN</th>
                         <th colspan="3" class="text-center"
                             style="background-color: #dc3545 !important; color: white !important;">PENGELUARAN</th>
@@ -115,6 +115,8 @@
                             Pembelian</th>
                         <th class="text-center" style="background-color: #1e7e34 !important; color: white !important;">
                             Retur Jual</th>
+                        <th class="text-center" style="background-color: #1e7e34 !important; color: white !important;">
+                            Batal Jual</th>
                         <th class="text-center" style="background-color: #1e7e34 !important; color: white !important;">
                             Penyesuaian (+)</th>
                         <th class="text-center" style="background-color: #c82333 !important; color: white !important;">
@@ -146,6 +148,9 @@
                                 {{ $item['retur_jual'] > 0 ? $b->formatStok($item['retur_jual']) : '-' }}
                             </td>
                             <td class="text-end font-monospace text-success">
+                                {{ $item['batal_jual'] > 0 ? $b->formatStok($item['batal_jual']) : '-' }}
+                            </td>
+                            <td class="text-end font-monospace text-success">
                                 {{ $item['penyesuaian_masuk'] > 0 ? $b->formatStok($item['penyesuaian_masuk']) : '-' }}
                             </td>
 
@@ -167,7 +172,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="15" class="text-center py-4 text-muted">
+                            <td colspan="16" class="text-center py-4 text-muted">
                                 Tidak ada data persediaan stok barang.
                             </td>
                         </tr>
@@ -176,7 +181,7 @@
                 @if ($items->isNotEmpty())
                     <tfoot>
                         <tr>
-                            <td colspan="15" class="text-center fw-bold text-muted">
+                            <td colspan="16" class="text-center fw-bold text-muted">
                                 &mdash; Akhir Laporan &mdash;
                             </td>
                         </tr>

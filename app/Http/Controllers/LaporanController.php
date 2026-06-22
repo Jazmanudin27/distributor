@@ -329,23 +329,37 @@ class LaporanController extends Controller
                 // After period (untuk mundur hitung stok awal)
                 $salesAfterGroup = PenjualanDetail::whereIn('kode_barang', $barangIds)
                     ->whereHas('penjualan', function($q) use ($tanggal_akhir) {
-                        $q->where('tanggal', '>', $tanggal_akhir)->where('batal', 0);
+                        $q->where('tanggal', '>', $tanggal_akhir);
+                    })->with('barangSatuan')->get()->groupBy('kode_barang');
+
+                $batalSalesAfterGroup = PenjualanDetail::whereIn('kode_barang', $barangIds)
+                    ->whereHas('penjualan', function($q) use ($tanggal_akhir) {
+                        $q->where('tanggal', '>', $tanggal_akhir)->where('batal', 1);
                     })->with('barangSatuan')->get()->groupBy('kode_barang');
 
                 $returSalesAfterGroup = ReturPenjualanDetail::whereIn('kode_barang', $barangIds)
                     ->whereHas('returPenjualan', function($q) use ($tanggal_akhir) {
                         $q->where('tanggal', '>', $tanggal_akhir);
+                    })->where(function($q) {
+                        $q->where('kondisi', 'Bagus')->orWhereNull('kondisi');
                     })->with('barangSatuan')->get()->groupBy('kode_barang');
 
                 // Within period
                 $salesPeriodGroup = PenjualanDetail::whereIn('kode_barang', $barangIds)
                     ->whereHas('penjualan', function($q) use ($tanggal_mulai, $tanggal_akhir) {
-                        $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])->where('batal', 0);
+                        $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
+                    })->with('barangSatuan')->get()->groupBy('kode_barang');
+
+                $batalSalesPeriodGroup = PenjualanDetail::whereIn('kode_barang', $barangIds)
+                    ->whereHas('penjualan', function($q) use ($tanggal_mulai, $tanggal_akhir) {
+                        $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])->where('batal', 1);
                     })->with('barangSatuan')->get()->groupBy('kode_barang');
 
                 $returSalesPeriodGroup = ReturPenjualanDetail::whereIn('kode_barang', $barangIds)
                     ->whereHas('returPenjualan', function($q) use ($tanggal_mulai, $tanggal_akhir) {
                         $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
+                    })->where(function($q) {
+                        $q->where('kondisi', 'Bagus')->orWhereNull('kondisi');
                     })->with('barangSatuan')->get()->groupBy('kode_barang');
 
                 foreach ($barangs as $b) {
@@ -378,6 +392,11 @@ class LaporanController extends Controller
                         return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
                     });
 
+                    $bSalesAfterList = $batalSalesAfterGroup->get($kb) ?? collect();
+                    $batalSalesAfter = $bSalesAfterList->sum(function($d) {
+                        return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
+                    });
+
                     $rsAfterList = $returSalesAfterGroup->get($kb) ?? collect();
                     $returSalesAfter = $rsAfterList->sum(function($d) {
                         return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
@@ -390,7 +409,8 @@ class LaporanController extends Controller
                         + $returnsAfter     // retur pembelian setelah periode mengurangi stok sekarang → tambahkan
                         - $opnameAfter      // opname neto setelah periode
                         + $salesAfter       // penjualan setelah periode mengurangi stok sekarang → tambahkan balik
-                        - $returSalesAfter; // retur penjualan setelah periode menambah stok sekarang → kurangkan
+                        - $returSalesAfter  // retur penjualan setelah periode menambah stok sekarang → kurangkan
+                        - $batalSalesAfter; // batal penjualan setelah periode menambah stok sekarang → kurangkan
 
                     // Transactions WITHIN the period
                     $pPeriodList = $purchasesPeriodGroup->get($kb) ?? collect();
@@ -412,12 +432,17 @@ class LaporanController extends Controller
                         return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
                     });
 
+                    $bPeriodList = $batalSalesPeriodGroup->get($kb) ?? collect();
+                    $batalSalesPeriod = $bPeriodList->sum(function($d) {
+                        return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
+                    });
+
                     $rsPeriodList = $returSalesPeriodGroup->get($kb) ?? collect();
                     $returJualPeriod = $rsPeriodList->sum(function($d) {
                         return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
                     });
 
-                    $penerimaanTotal = $pembelianPeriod + $returJualPeriod + $opnameMasukPeriod;
+                    $penerimaanTotal = $pembelianPeriod + $returJualPeriod + $batalSalesPeriod + $opnameMasukPeriod;
                     $pengeluaranTotal = $penjualanPeriod + $returBeliPeriod + $opnameKeluarPeriod;
 
                     // Stok Awal of the period
@@ -437,6 +462,7 @@ class LaporanController extends Controller
                         // PENERIMAAN
                         'pembelian'           => $pembelianPeriod,
                         'retur_jual'          => $returJualPeriod,
+                        'batal_jual'          => $batalSalesPeriod,
                         'penyesuaian_masuk'   => $opnameMasukPeriod,
                         // PENGELUARAN
                         'penjualan'           => $penjualanPeriod,
@@ -510,7 +536,14 @@ class LaporanController extends Controller
 
                     $salesAfter = PenjualanDetail::where('kode_barang', $kode_barang)
                         ->whereHas('penjualan', function($q) use ($tanggal_mulai) {
-                            $q->where('tanggal', '>=', $tanggal_mulai)->where('batal', 0);
+                            $q->where('tanggal', '>=', $tanggal_mulai);
+                        })->with('barangSatuan')->get()->sum(function($d) {
+                            return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
+                        });
+
+                    $batalSalesAfter = PenjualanDetail::where('kode_barang', $kode_barang)
+                        ->whereHas('penjualan', function($q) use ($tanggal_mulai) {
+                            $q->where('tanggal', '>=', $tanggal_mulai)->where('batal', 1);
                         })->with('barangSatuan')->get()->sum(function($d) {
                             return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
                         });
@@ -518,11 +551,13 @@ class LaporanController extends Controller
                     $returSalesAfter = ReturPenjualanDetail::where('kode_barang', $kode_barang)
                         ->whereHas('returPenjualan', function($q) use ($tanggal_mulai) {
                             $q->where('tanggal', '>=', $tanggal_mulai);
+                        })->where(function($q) {
+                            $q->where('kondisi', 'Bagus')->orWhereNull('kondisi');
                         })->with('barangSatuan')->get()->sum(function($d) {
                             return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
                         });
 
-                    $stokAwal = $currentStock - $purchasesAfter + $returnsAfter - $opnameAfter + $salesAfter - $returSalesAfter;
+                    $stokAwal = $currentStock - $purchasesAfter + $returnsAfter - $opnameAfter + $salesAfter - $returSalesAfter - $batalSalesAfter;
 
                     // Retrieve movements within range
                     $purchasesInRange = PembelianDetail::with(['pembelian.supplier', 'barangSatuan'])
@@ -546,13 +581,21 @@ class LaporanController extends Controller
                     $salesInRange = PenjualanDetail::with(['penjualan.pelanggan.wilayah', 'penjualan.sales', 'barangSatuan'])
                         ->where('kode_barang', $kode_barang)
                         ->whereHas('penjualan', function($q) use ($tanggal_mulai, $tanggal_akhir) {
-                            $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])->where('batal', 0);
+                            $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
+                        })->get();
+
+                    $batalSalesInRange = PenjualanDetail::with(['penjualan.pelanggan.wilayah', 'penjualan.sales', 'barangSatuan'])
+                        ->where('kode_barang', $kode_barang)
+                        ->whereHas('penjualan', function($q) use ($tanggal_mulai, $tanggal_akhir) {
+                            $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])->where('batal', 1);
                         })->get();
 
                     $returSalesInRange = ReturPenjualanDetail::with(['returPenjualan.pelanggan.wilayah', 'returPenjualan.sales', 'barangSatuan'])
                         ->where('kode_barang', $kode_barang)
                         ->whereHas('returPenjualan', function($q) use ($tanggal_mulai, $tanggal_akhir) {
                             $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
+                        })->where(function($q) {
+                            $q->where('kondisi', 'Bagus')->orWhereNull('kondisi');
                         })->get();
 
                     // Map movements
@@ -569,6 +612,7 @@ class LaporanController extends Controller
                             'nama_sales' => '-',
                             'pembelian_masuk' => $qty_pcs,
                             'retur_jual' => 0,
+                            'batal_jual' => 0,
                             'opname_masuk' => 0,
                             'penjualan_keluar' => 0,
                             'retur_beli' => 0,
@@ -592,6 +636,7 @@ class LaporanController extends Controller
                             'nama_sales' => '-',
                             'pembelian_masuk' => 0,
                             'retur_jual' => 0,
+                            'batal_jual' => 0,
                             'opname_masuk' => 0,
                             'penjualan_keluar' => 0,
                             'retur_beli' => $qty_pcs,
@@ -615,6 +660,7 @@ class LaporanController extends Controller
                             'nama_sales' => '-',
                             'pembelian_masuk' => 0,
                             'retur_jual' => 0,
+                            'batal_jual' => 0,
                             'opname_masuk' => $selisih > 0 ? $selisih : 0,
                             'penjualan_keluar' => 0,
                             'retur_beli' => 0,
@@ -631,13 +677,14 @@ class LaporanController extends Controller
                             'tanggal' => $s->penjualan->tanggal,
                             'no_referensi' => $s->no_faktur,
                             'jenis' => 'Penjualan',
-                            'keterangan' => 'Penjualan',
+                            'keterangan' => $s->penjualan->batal == 1 ? 'Penjualan (Batal)' : 'Penjualan',
                             'pelanggan' => $s->penjualan->pelanggan->nama_pelanggan ?? '-',
                             'wilayah' => $s->penjualan->pelanggan->wilayah->nama_wilayah ?? '-',
                             'kode_sales' => $s->penjualan->kode_sales ?? '-',
                             'nama_sales' => $s->penjualan->sales->name ?? '-',
                             'pembelian_masuk' => 0,
                             'retur_jual' => 0,
+                            'batal_jual' => 0,
                             'opname_masuk' => 0,
                             'penjualan_keluar' => $qty_pcs,
                             'retur_beli' => 0,
@@ -645,6 +692,30 @@ class LaporanController extends Controller
                             'masuk' => 0,
                             'keluar' => $qty_pcs,
                             'satuan_qty' => $s->qty . ' ' . ($s->barangSatuan->satuan ?? 'PCS')
+                        ]);
+                    }
+
+                    foreach ($batalSalesInRange as $bs) {
+                        $qty_pcs = (float)$bs->qty * (float)($bs->barangSatuan->isi ?? 1);
+                        $movements->push([
+                            'tanggal' => $bs->penjualan->tanggal,
+                            'no_referensi' => $bs->no_faktur,
+                            'jenis' => 'Batal Jual',
+                            'keterangan' => 'Pembatalan Penjualan (' . ($bs->penjualan->alasan_batal ?? '-') . ')',
+                            'pelanggan' => $bs->penjualan->pelanggan->nama_pelanggan ?? '-',
+                            'wilayah' => $bs->penjualan->pelanggan->wilayah->nama_wilayah ?? '-',
+                            'kode_sales' => $bs->penjualan->kode_sales ?? '-',
+                            'nama_sales' => $bs->penjualan->sales->name ?? '-',
+                            'pembelian_masuk' => 0,
+                            'retur_jual' => 0,
+                            'batal_jual' => $qty_pcs,
+                            'opname_masuk' => 0,
+                            'penjualan_keluar' => 0,
+                            'retur_beli' => 0,
+                            'opname_keluar' => 0,
+                            'masuk' => $qty_pcs,
+                            'keluar' => 0,
+                            'satuan_qty' => $bs->qty . ' ' . ($bs->barangSatuan->satuan ?? 'PCS')
                         ]);
                     }
 
@@ -661,6 +732,7 @@ class LaporanController extends Controller
                             'nama_sales' => $rs->returPenjualan->sales->name ?? '-',
                             'pembelian_masuk' => 0,
                             'retur_jual' => $qty_pcs,
+                            'batal_jual' => 0,
                             'opname_masuk' => 0,
                             'penjualan_keluar' => 0,
                             'retur_beli' => 0,

@@ -255,7 +255,7 @@
                                     class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d1_type"
                                     style="user-select: none;">%</span></label>
                             <input type="text" id="quick_diskon1_input"
-                                class="form-control form-control-sm text-end input-number-format" value="0">
+                                class="form-control form-control-sm text-end" value="0">
                             <input type="hidden" id="quick_diskon1_percent" value="0">
                         </div>
                         <div class="col-lg-1 col-md-3 col-4">
@@ -263,7 +263,7 @@
                                     class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d2_type"
                                     style="user-select: none;">%</span></label>
                             <input type="text" id="quick_diskon2_input"
-                                class="form-control form-control-sm text-end input-number-format" value="0">
+                                class="form-control form-control-sm text-end" value="0">
                             <input type="hidden" id="quick_diskon2_percent" value="0">
                         </div>
                         <div class="col-lg-1 col-md-3 col-4">
@@ -271,7 +271,7 @@
                                     class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d3_type"
                                     style="user-select: none;">%</span></label>
                             <input type="text" id="quick_diskon3_input"
-                                class="form-control form-control-sm text-end input-number-format" value="0">
+                                class="form-control form-control-sm text-end" value="0">
                             <input type="hidden" id="quick_diskon3_percent" value="0">
                         </div>
                         <div class="col-lg-1 col-md-5">
@@ -496,6 +496,64 @@
                 return 'Rp ' + Math.max(0, Math.round(value)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
             }
 
+            function formatPercentJS(val) {
+                const num = parseFloat(val) || 0;
+                if (num % 1 === 0) {
+                    return num.toString();
+                }
+                return num.toFixed(2).replace('.', ',');
+            }
+
+            // Custom input handler for discount inputs
+            $(document).on('input', '#quick_diskon1_input, #quick_diskon2_input, #quick_diskon3_input, .input-diskon1-val, .input-diskon2-val, .input-diskon3-val', function() {
+                let isQuick = $(this).attr('id') && $(this).attr('id').startsWith('quick_');
+                let type = '%';
+                if (isQuick) {
+                    const id = $(this).attr('id');
+                    const num = id.replace('quick_diskon', '').replace('_input', '');
+                    type = $(`#quick_d${num}_type`).text().trim();
+                } else {
+                    const td = $(this).closest('td');
+                    type = td.find('.toggle-row-type').text().trim();
+                }
+
+                if (type === 'Rp') {
+                    const start = this.selectionStart;
+                    const prev = this.value.length;
+                    const raw = cleanNumber($(this).val());
+                    $(this).val(raw === "0" && $(this).val() === "" ? "" : formatNumber(raw));
+                    const diff = this.value.length - prev;
+                    this.setSelectionRange(start + diff, start + diff);
+                } else {
+                    let val = $(this).val();
+                    let normalizedVal = val.replace(/,/g, '.');
+                    normalizedVal = normalizedVal.replace(/[^0-9.]/g, '');
+                    const parts = normalizedVal.split('.');
+                    if (parts.length > 2) {
+                        normalizedVal = parts[0] + '.' + parts.slice(1).join('');
+                    }
+                    
+                    let floatVal = parseFloat(normalizedVal) || 0;
+                    if (floatVal > 100) {
+                        normalizedVal = '100';
+                    }
+                    
+                    let displayVal = val.replace(/[^0-9.,]/g, '');
+                    const commaParts = displayVal.split(/[.,]/);
+                    if (commaParts.length > 2) {
+                        displayVal = commaParts[0] + ',' + commaParts.slice(1).join('');
+                    }
+                    
+                    if (parseFloat(displayVal.replace(/,/g, '.')) > 100) {
+                        displayVal = '100';
+                    }
+                    
+                    if ($(this).val() !== displayVal) {
+                        $(this).val(displayVal);
+                    }
+                }
+            });
+
             // Bind formatter
             $(document).on('input', '.input-number-format', function() {
                 const start = this.selectionStart;
@@ -602,8 +660,9 @@
                 const base = price * qty;
 
                 // D1
-                let d1_val = parseFloat(cleanNumber($('#quick_diskon1_input').val())) || 0;
                 let d1_type = $('#quick_d1_type').text().trim();
+                let d1_val_str = $('#quick_diskon1_input').val() || "0";
+                let d1_val = d1_type === '%' ? parseFloat(d1_val_str.replace(/,/g, '.')) || 0 : parseFloat(cleanNumber(d1_val_str)) || 0;
                 let d1_pct = 0,
                     d1_rp = 0;
                 if (d1_type === '%') {
@@ -611,13 +670,18 @@
                     d1_rp = base * (d1_pct / 100);
                 } else {
                     d1_rp = d1_val;
+                    if (d1_rp > base) {
+                        d1_rp = base;
+                        $('#quick_diskon1_input').val(formatNumber(Math.round(d1_rp)));
+                    }
                     d1_pct = base > 0 ? (d1_rp / base) * 100 : 0;
                 }
                 $('#quick_diskon1_percent').val(d1_pct);
 
                 // D2
-                let d2_val = parseFloat(cleanNumber($('#quick_diskon2_input').val())) || 0;
                 let d2_type = $('#quick_d2_type').text().trim();
+                let d2_val_str = $('#quick_diskon2_input').val() || "0";
+                let d2_val = d2_type === '%' ? parseFloat(d2_val_str.replace(/,/g, '.')) || 0 : parseFloat(cleanNumber(d2_val_str)) || 0;
                 let d2_pct = 0,
                     d2_rp = 0;
                 let base2 = base - d1_rp;
@@ -626,13 +690,18 @@
                     d2_rp = base2 * (d2_pct / 100);
                 } else {
                     d2_rp = d2_val;
+                    if (d2_rp > base2) {
+                        d2_rp = base2;
+                        $('#quick_diskon2_input').val(formatNumber(Math.round(d2_rp)));
+                    }
                     d2_pct = base2 > 0 ? (d2_rp / base2) * 100 : 0;
                 }
                 $('#quick_diskon2_percent').val(d2_pct);
 
                 // D3
-                let d3_val = parseFloat(cleanNumber($('#quick_diskon3_input').val())) || 0;
                 let d3_type = $('#quick_d3_type').text().trim();
+                let d3_val_str = $('#quick_diskon3_input').val() || "0";
+                let d3_val = d3_type === '%' ? parseFloat(d3_val_str.replace(/,/g, '.')) || 0 : parseFloat(cleanNumber(d3_val_str)) || 0;
                 let d3_pct = 0,
                     d3_rp = 0;
                 let base3 = base2 - d2_rp;
@@ -641,6 +710,10 @@
                     d3_rp = base3 * (d3_pct / 100);
                 } else {
                     d3_rp = d3_val;
+                    if (d3_rp > base3) {
+                        d3_rp = base3;
+                        $('#quick_diskon3_input').val(formatNumber(Math.round(d3_rp)));
+                    }
                     d3_pct = base3 > 0 ? (d3_rp / base3) * 100 : 0;
                 }
                 $('#quick_diskon3_percent').val(d3_pct);
@@ -660,12 +733,44 @@
 
             $(document).on('click', '.toggle-quick-type', function() {
                 const current = $(this).text().trim();
-                $(this).text(current === '%' ? 'Rp' : '%');
-                if (current === '%') {
+                const nextType = current === '%' ? 'Rp' : '%';
+                $(this).text(nextType);
+                if (nextType === 'Rp') {
                     $(this).removeClass('bg-secondary').addClass('bg-success');
                 } else {
                     $(this).removeClass('bg-success').addClass('bg-secondary');
                 }
+
+                // Auto convert value
+                const id = $(this).attr('id');
+                const inputNum = id.replace('quick_d', '').replace('_type', '');
+                const inputEl = $(`#quick_diskon${inputNum}_input`);
+                
+                const price = parseFloat(cleanNumber($('#quick_harga').val())) || 0;
+                const qty = parseFloat($('#quick_qty').val()) || 0;
+                const base = price * qty;
+
+                let subVal = base;
+                if (inputNum === '2') {
+                    const d1_pct = parseFloat($('#quick_diskon1_percent').val()) || 0;
+                    subVal = base - (base * d1_pct / 100);
+                } else if (inputNum === '3') {
+                    const d1_pct = parseFloat($('#quick_diskon1_percent').val()) || 0;
+                    const d2_pct = parseFloat($('#quick_diskon2_percent').val()) || 0;
+                    const base2 = base - (base * d1_pct / 100);
+                    subVal = base2 - (base2 * d2_pct / 100);
+                }
+
+                if (nextType === 'Rp') {
+                    const pct = parseFloat(inputEl.val().replace(/,/g, '.')) || 0;
+                    const rp = Math.round(subVal * (pct / 100));
+                    inputEl.val(formatNumber(rp));
+                } else {
+                    const rp = parseFloat(cleanNumber(inputEl.val())) || 0;
+                    const pct = subVal > 0 ? (rp / subVal) * 100 : 0;
+                    inputEl.val(formatPercentJS(pct));
+                }
+
                 recalcDiskon();
             });
 
@@ -843,21 +948,21 @@
                         <td>
                             <div class="input-group input-group-sm" style="min-width: 90px; max-width: 100px; margin-left: auto;">
                                 <span class="input-group-text cursor-pointer toggle-row-type text-primary fw-bold" style="padding: 0.1rem 0.3rem; font-size: 0.65rem; user-select: none;">%</span>
-                                <input type="text" class="form-control form-control-sm text-end input-diskon1-val input-number-format" value="${d1}" ${isPromo ? 'readonly' : ''}>
+                                <input type="text" class="form-control form-control-sm text-end input-diskon1-val" value="${formatPercentJS(d1)}" ${isPromo ? 'readonly' : ''}>
                                 <input type="hidden" name="items[${rowIndex}][diskon1_persen]" class="input-diskon1" value="${d1}">
                             </div>
                         </td>
                         <td>
                             <div class="input-group input-group-sm" style="min-width: 90px; max-width: 100px; margin-left: auto;">
                                 <span class="input-group-text cursor-pointer toggle-row-type text-primary fw-bold" style="padding: 0.1rem 0.3rem; font-size: 0.65rem; user-select: none;">%</span>
-                                <input type="text" class="form-control form-control-sm text-end input-diskon2-val input-number-format" value="${d2}" ${isPromo ? 'readonly' : ''}>
+                                <input type="text" class="form-control form-control-sm text-end input-diskon2-val" value="${formatPercentJS(d2)}" ${isPromo ? 'readonly' : ''}>
                                 <input type="hidden" name="items[${rowIndex}][diskon2_persen]" class="input-diskon2" value="${d2}">
                             </div>
                         </td>
                         <td>
                             <div class="input-group input-group-sm" style="min-width: 90px; max-width: 100px; margin-left: auto;">
                                 <span class="input-group-text cursor-pointer toggle-row-type text-primary fw-bold" style="padding: 0.1rem 0.3rem; font-size: 0.65rem; user-select: none;">%</span>
-                                <input type="text" class="form-control form-control-sm text-end input-diskon3-val input-number-format" value="${d3}" ${isPromo ? 'readonly' : ''}>
+                                <input type="text" class="form-control form-control-sm text-end input-diskon3-val" value="${formatPercentJS(d3)}" ${isPromo ? 'readonly' : ''}>
                                 <input type="hidden" name="items[${rowIndex}][diskon3_persen]" class="input-diskon3" value="${d3}">
                             </div>
                         </td>
@@ -885,16 +990,46 @@
             });
 
             $(document).on('click', '.toggle-row-type', function() {
-                if ($(this).closest('tr').find('.input-promo').is(':checked') || $(this).closest('td').find(
+                const row = $(this).closest('tr');
+                if (row.find('.input-promo').is(':checked') || $(this).closest('td').find(
                         'input[type="text"]').attr('readonly')) return;
 
                 const current = $(this).text().trim();
-                $(this).text(current === '%' ? 'Rp' : '%');
-                if (current === '%') {
+                const nextType = current === '%' ? 'Rp' : '%';
+                $(this).text(nextType);
+                if (nextType === 'Rp') {
                     $(this).removeClass('text-primary').addClass('text-success');
                 } else {
                     $(this).removeClass('text-success').addClass('text-primary');
                 }
+
+                const index = row.find('.toggle-row-type').index($(this));
+                const inputEl = row.find('.input-diskon' + (index + 1) + '-val');
+                
+                const qty = parseFloat(row.find('.input-qty').val()) || 0;
+                const harga = parseFloat(cleanNumber(row.find('.input-harga').val())) || 0;
+                const base = qty * harga;
+
+                let subVal = base;
+                if (index >= 1) {
+                    const d1_pct = parseFloat(row.find('.input-diskon1').val()) || 0;
+                    subVal = base - (base * d1_pct / 100);
+                }
+                if (index >= 2) {
+                    const d2_pct = parseFloat(row.find('.input-diskon2').val()) || 0;
+                    subVal = subVal - (subVal * d2_pct / 100);
+                }
+
+                if (nextType === 'Rp') {
+                    const pct = parseFloat(inputEl.val().replace(/,/g, '.')) || 0;
+                    const rp = Math.round(subVal * (pct / 100));
+                    inputEl.val(formatNumber(rp));
+                } else {
+                    const rp = parseFloat(cleanNumber(inputEl.val())) || 0;
+                    const pct = subVal > 0 ? (rp / subVal) * 100 : 0;
+                    inputEl.val(formatPercentJS(pct));
+                }
+
                 calculateTotals();
             });
 
@@ -1119,12 +1254,12 @@
                         }
 
                         inputDis1.val(d1_pct);
-                        inputDis1Val.val(formatNumber(d1_pct.toFixed(2))).attr('readonly', true);
+                        inputDis1Val.val(formatPercentJS(d1_pct)).attr('readonly', true);
                         inputDis1Type.text('%').removeClass('text-success').addClass('text-primary');
 
                         if (jenisTransaksi === 'T') {
                             inputDis2.val(d2_pct);
-                            inputDis2Val.val(formatNumber(d2_pct.toFixed(2))).attr('readonly', true);
+                            inputDis2Val.val(formatPercentJS(d2_pct)).attr('readonly', true);
                             inputDis2Type.text('%').removeClass('text-success').addClass('text-primary');
                         } else {
                             inputDis2.val('0');
@@ -1172,7 +1307,8 @@
                     const sub = qty * harga;
 
                     const d1_type = row.find('.toggle-row-type').eq(0).text().trim();
-                    const d1_val = parseFloat(cleanNumber(row.find('.input-diskon1-val').val())) || 0;
+                    const d1_val_str = row.find('.input-diskon1-val').val() || "0";
+                    const d1_val = d1_type === '%' ? parseFloat(d1_val_str.toString().replace(/,/g, '.')) || 0 : parseFloat(cleanNumber(d1_val_str)) || 0;
                     let d1_pct = 0,
                         d1_rp = 0;
                     if (d1_type === '%') {
@@ -1180,12 +1316,17 @@
                         d1_rp = sub * (d1_pct / 100);
                     } else {
                         d1_rp = d1_val;
+                        if (d1_rp > sub) {
+                            d1_rp = sub;
+                            row.find('.input-diskon1-val').val(formatNumber(Math.round(d1_rp)));
+                        }
                         d1_pct = sub > 0 ? (d1_rp / sub) * 100 : 0;
                     }
                     row.find('.input-diskon1').val(d1_pct);
 
                     const d2_type = row.find('.toggle-row-type').eq(1).text().trim();
-                    const d2_val = parseFloat(cleanNumber(row.find('.input-diskon2-val').val())) || 0;
+                    const d2_val_str = row.find('.input-diskon2-val').val() || "0";
+                    const d2_val = d2_type === '%' ? parseFloat(d2_val_str.toString().replace(/,/g, '.')) || 0 : parseFloat(cleanNumber(d2_val_str)) || 0;
                     let d2_pct = 0,
                         d2_rp = 0;
                     let sub2 = sub - d1_rp;
@@ -1194,12 +1335,17 @@
                         d2_rp = sub2 * (d2_pct / 100);
                     } else {
                         d2_rp = d2_val;
+                        if (d2_rp > sub2) {
+                            d2_rp = sub2;
+                            row.find('.input-diskon2-val').val(formatNumber(Math.round(d2_rp)));
+                        }
                         d2_pct = sub2 > 0 ? (d2_rp / sub2) * 100 : 0;
                     }
                     row.find('.input-diskon2').val(d2_pct);
 
                     const d3_type = row.find('.toggle-row-type').eq(2).text().trim();
-                    const d3_val = parseFloat(cleanNumber(row.find('.input-diskon3-val').val())) || 0;
+                    const d3_val_str = row.find('.input-diskon3-val').val() || "0";
+                    const d3_val = d3_type === '%' ? parseFloat(d3_val_str.toString().replace(/,/g, '.')) || 0 : parseFloat(cleanNumber(d3_val_str)) || 0;
                     let d3_pct = 0,
                         d3_rp = 0;
                     let sub3 = sub2 - d2_rp;
@@ -1208,6 +1354,10 @@
                         d3_rp = sub3 * (d3_pct / 100);
                     } else {
                         d3_rp = d3_val;
+                        if (d3_rp > sub3) {
+                            d3_rp = sub3;
+                            row.find('.input-diskon3-val').val(formatNumber(Math.round(d3_rp)));
+                        }
                         d3_pct = sub3 > 0 ? (d3_rp / sub3) * 100 : 0;
                     }
                     row.find('.input-diskon3').val(d3_pct);
