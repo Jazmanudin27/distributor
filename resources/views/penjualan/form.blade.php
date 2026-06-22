@@ -36,14 +36,14 @@
                         <i class="fa-solid fa-print me-1"></i> Cetak Faktur
                     </a>
                 @endif
-                <a href="{{ route('penjualan.index') }}" class="btn btn-light btn-sm fw-bold hover-scale">
+                <a href="{{ route('penjualan.index', request()->query()) }}" class="btn btn-light btn-sm fw-bold hover-scale">
                     <i class="fa-solid fa-arrow-left me-1 text-primary"></i> Kembali
                 </a>
             </div>
         </div>
 
         <div class="card-body p-4 bg-light">
-            <form action="{{ $item->exists ? route('penjualan.update', $item->no_faktur) : route('penjualan.store') }}"
+            <form action="{{ $item->exists ? route('penjualan.update', array_merge(['penjualan' => $item->no_faktur], request()->query())) : route('penjualan.store', request()->query()) }}"
                 method="POST" id="penjualanForm">
                 @csrf
                 @if ($item->exists)
@@ -330,7 +330,7 @@
 
                 {{-- Action Buttons --}}
                 <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                    <a href="{{ route('penjualan.index') }}"
+                    <a href="{{ route('penjualan.index', request()->query()) }}"
                         class="btn btn-light btn-sm px-4 fw-semibold border hover-scale">
                         <i class="fa-solid fa-arrow-left me-1"></i> Batal
                     </a>

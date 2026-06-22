@@ -34,7 +34,7 @@
                                 </button>
                             @endif
                             @can('edit-penjualan')
-                                <a href="{{ route('penjualan.edit', $item->no_faktur) }}"
+                                <a href="{{ route('penjualan.edit', array_merge(['penjualan' => $item->no_faktur], request()->query())) }}"
                                     class="btn btn-white btn-sm fw-bold hover-scale text-success bg-white border">
                                     <i class="fa-solid fa-pen-to-square me-1"></i> Edit Faktur
                                 </a>
@@ -48,7 +48,7 @@
                                 </button>
                             @endcan
                         @endif
-                        <a href="{{ route('penjualan.index') }}"
+                        <a href="{{ route('penjualan.index', request()->query()) }}"
                             class="btn btn-secondary btn-sm fw-bold hover-scale border border-white border-opacity-10">
                             <i class="fa-solid fa-arrow-left me-1"></i> Kembali
                         </a>

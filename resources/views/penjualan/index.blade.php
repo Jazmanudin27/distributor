@@ -197,12 +197,12 @@
                                                 </span>
                                             @endif
                                         </a>
-                                        <a href="{{ route('penjualan.show', $item->no_faktur) }}"
+                                        <a href="{{ route('penjualan.show', array_merge(['penjualan' => $item->no_faktur], request()->query())) }}"
                                             class="btn btn-sm btn-outline-secondary rounded" title="Lihat & Bayar">
                                             <i class="fa-solid fa-eye"></i>
                                         </a>
                                         @can('edit-penjualan')
-                                            <a href="{{ route('penjualan.edit', $item->no_faktur) }}"
+                                            <a href="{{ route('penjualan.edit', array_merge(['penjualan' => $item->no_faktur], request()->query())) }}"
                                                 class="btn btn-sm btn-outline-primary rounded" title="Edit">
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </a>
