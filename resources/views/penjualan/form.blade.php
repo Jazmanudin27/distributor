@@ -68,62 +68,68 @@
                                 <input type="text" name="no_faktur" id="no_faktur"
                                     class="form-control form-control-sm font-monospace fw-bold bg-light @error('no_faktur') is-invalid @enderror"
                                     value="{{ old('no_faktur', $item->no_faktur) }}" readonly>
-                                <div class="text-muted" style="font-size:10px; margin-top:2px;"><i
-                                        class="fa-solid fa-circle-info"></i> Nomor faktur digenerate otomatis saat disimpan
-                                </div>
                                 @error('no_faktur')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="mb-2">
-                                <label for="tanggal" class="form-label fs-7 fw-bold text-secondary mb-1">Tanggal
-                                    <span class="text-danger">*</span></label>
-                                <input type="date" name="tanggal" id="tanggal"
-                                    class="form-control form-control-sm @error('tanggal') is-invalid @enderror"
-                                    value="{{ old('tanggal', $item->tanggal ? \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d') : date('Y-m-d')) }}"
-                                    required>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="mb-2">
+                                        <label for="tanggal" class="form-label fs-7 fw-bold text-secondary mb-1">Tanggal
+                                            <span class="text-danger">*</span></label>
+                                        <input type="date" name="tanggal" id="tanggal"
+                                            class="form-control form-control-sm @error('tanggal') is-invalid @enderror"
+                                            value="{{ old('tanggal', $item->tanggal ? \Carbon\Carbon::parse($item->tanggal)->format('Y-m-d') : date('Y-m-d')) }}"
+                                            required>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-2">
+                                        <label class="form-label fs-7 fw-bold text-secondary mb-1">Jenis Transaksi
+                                            <span class="text-danger">*</span></label>
+                                        <select name="jenis_transaksi" id="jenis_transaksi" class="form-select form-select-sm"
+                                            required>
+                                            <option value="K"
+                                                {{ old('jenis_transaksi', $item->jenis_transaksi) === 'K' ? 'selected' : '' }}>
+                                                Kredit / Tempo</option>
+                                            <option value="T"
+                                                {{ old('jenis_transaksi', $item->jenis_transaksi) === 'T' ? 'selected' : '' }}>
+                                                Tunai / Cash</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-2">
+                                        <label for="kode_sales" class="form-label fs-7 fw-bold text-secondary mb-1">Salesman
+                                            <span class="text-danger">*</span></label>
+                                        <select name="kode_sales" id="kode_sales"
+                                            class="form-select form-select-sm @error('kode_sales') is-invalid @enderror" required>
+                                            <option value="">-- Pilih Salesman --</option>
+                                            @foreach ($salesmen as $s)
+                                                <option value="{{ $s->nik }}"
+                                                    {{ old('kode_sales', $item->kode_sales) === $s->nik ? 'selected' : '' }}>
+                                                    {{ $s->name }} ({{ $s->nik }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('kode_sales')
+                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-2">
+                                        <label class="form-label fs-7 fw-bold text-secondary mb-1">Operator</label>
+                                        <input type="text" class="form-control form-control-sm bg-light text-muted"
+                                            value="{{ auth()->user()->name ?? '-' }}" readonly>
+                                    </div>
+                                </div>
                             </div>
                             <div class="mb-2" hidden>
-                                <label for="tanggal_kirim" class="form-label fs-7 fw-bold text-secondary mb-1">Tanggal
-                                    Kirim</label>
+                                <label for="tanggal_kirim" class="form-label fs-7 fw-bold text-secondary mb-1">Tanggal Kirim</label>
                                 <input type="date" name="tanggal_kirim" id="tanggal_kirim"
                                     class="form-control form-control-sm"
                                     value="{{ old('tanggal_kirim', $item->tanggal_kirim ? \Carbon\Carbon::parse($item->tanggal_kirim)->format('Y-m-d') : '') }}">
-                            </div>
-                            <div class="mb-2">
-                                <label class="form-label fs-7 fw-bold text-secondary mb-1">Jenis Transaksi
-                                    <span class="text-danger">*</span></label>
-                                <select name="jenis_transaksi" id="jenis_transaksi" class="form-select form-select-sm"
-                                    required>
-                                    <option value="K"
-                                        {{ old('jenis_transaksi', $item->jenis_transaksi) === 'K' ? 'selected' : '' }}>
-                                        Kredit / Tempo</option>
-                                    <option value="T"
-                                        {{ old('jenis_transaksi', $item->jenis_transaksi) === 'T' ? 'selected' : '' }}>
-                                        Tunai / Cash</option>
-                                </select>
-                            </div>
-                            <div class="mb-2">
-                                <label for="kode_sales" class="form-label fs-7 fw-bold text-secondary mb-1">Salesman
-                                    <span class="text-danger">*</span></label>
-                                <select name="kode_sales" id="kode_sales"
-                                    class="form-select form-select-sm @error('kode_sales') is-invalid @enderror" required>
-                                    <option value="">-- Pilih Salesman --</option>
-                                    @foreach ($salesmen as $s)
-                                        <option value="{{ $s->nik }}"
-                                            {{ old('kode_sales', $item->kode_sales) === $s->nik ? 'selected' : '' }}>
-                                            {{ $s->name }} ({{ $s->nik }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('kode_sales')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="mb-0">
-                                <label class="form-label fs-7 fw-bold text-secondary mb-1">Operator</label>
-                                <input type="text" class="form-control form-control-sm bg-light text-muted"
-                                    value="{{ auth()->user()->name ?? '-' }}" readonly>
                             </div>
                         </div>
                     </div>
@@ -254,24 +260,24 @@
                             <label class="form-label fs-8 fw-bold text-secondary mb-1">D1 <span
                                     class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d1_type"
                                     style="user-select: none;">%</span></label>
-                            <input type="text" id="quick_diskon1_input"
-                                class="form-control form-control-sm text-end" value="0">
+                            <input type="text" id="quick_diskon1_input" class="form-control form-control-sm text-end"
+                                value="0">
                             <input type="hidden" id="quick_diskon1_percent" value="0">
                         </div>
                         <div class="col-lg-1 col-md-3 col-4">
                             <label class="form-label fs-8 fw-bold text-secondary mb-1">D2 <span
                                     class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d2_type"
                                     style="user-select: none;">%</span></label>
-                            <input type="text" id="quick_diskon2_input"
-                                class="form-control form-control-sm text-end" value="0">
+                            <input type="text" id="quick_diskon2_input" class="form-control form-control-sm text-end"
+                                value="0">
                             <input type="hidden" id="quick_diskon2_percent" value="0">
                         </div>
                         <div class="col-lg-1 col-md-3 col-4">
                             <label class="form-label fs-8 fw-bold text-secondary mb-1">D3 <span
                                     class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d3_type"
                                     style="user-select: none;">%</span></label>
-                            <input type="text" id="quick_diskon3_input"
-                                class="form-control form-control-sm text-end" value="0">
+                            <input type="text" id="quick_diskon3_input" class="form-control form-control-sm text-end"
+                                value="0">
                             <input type="hidden" id="quick_diskon3_percent" value="0">
                         </div>
                         <div class="col-lg-1 col-md-5">
@@ -505,54 +511,56 @@
             }
 
             // Custom input handler for discount inputs
-            $(document).on('input', '#quick_diskon1_input, #quick_diskon2_input, #quick_diskon3_input, .input-diskon1-val, .input-diskon2-val, .input-diskon3-val', function() {
-                let isQuick = $(this).attr('id') && $(this).attr('id').startsWith('quick_');
-                let type = '%';
-                if (isQuick) {
-                    const id = $(this).attr('id');
-                    const num = id.replace('quick_diskon', '').replace('_input', '');
-                    type = $(`#quick_d${num}_type`).text().trim();
-                } else {
-                    const td = $(this).closest('td');
-                    type = td.find('.toggle-row-type').text().trim();
-                }
+            $(document).on('input',
+                '#quick_diskon1_input, #quick_diskon2_input, #quick_diskon3_input, .input-diskon1-val, .input-diskon2-val, .input-diskon3-val',
+                function() {
+                    let isQuick = $(this).attr('id') && $(this).attr('id').startsWith('quick_');
+                    let type = '%';
+                    if (isQuick) {
+                        const id = $(this).attr('id');
+                        const num = id.replace('quick_diskon', '').replace('_input', '');
+                        type = $(`#quick_d${num}_type`).text().trim();
+                    } else {
+                        const td = $(this).closest('td');
+                        type = td.find('.toggle-row-type').text().trim();
+                    }
 
-                if (type === 'Rp') {
-                    const start = this.selectionStart;
-                    const prev = this.value.length;
-                    const raw = cleanNumber($(this).val());
-                    $(this).val(raw === "0" && $(this).val() === "" ? "" : formatNumber(raw));
-                    const diff = this.value.length - prev;
-                    this.setSelectionRange(start + diff, start + diff);
-                } else {
-                    let val = $(this).val();
-                    let normalizedVal = val.replace(/,/g, '.');
-                    normalizedVal = normalizedVal.replace(/[^0-9.]/g, '');
-                    const parts = normalizedVal.split('.');
-                    if (parts.length > 2) {
-                        normalizedVal = parts[0] + '.' + parts.slice(1).join('');
+                    if (type === 'Rp') {
+                        const start = this.selectionStart;
+                        const prev = this.value.length;
+                        const raw = cleanNumber($(this).val());
+                        $(this).val(raw === "0" && $(this).val() === "" ? "" : formatNumber(raw));
+                        const diff = this.value.length - prev;
+                        this.setSelectionRange(start + diff, start + diff);
+                    } else {
+                        let val = $(this).val();
+                        let normalizedVal = val.replace(/,/g, '.');
+                        normalizedVal = normalizedVal.replace(/[^0-9.]/g, '');
+                        const parts = normalizedVal.split('.');
+                        if (parts.length > 2) {
+                            normalizedVal = parts[0] + '.' + parts.slice(1).join('');
+                        }
+
+                        let floatVal = parseFloat(normalizedVal) || 0;
+                        if (floatVal > 100) {
+                            normalizedVal = '100';
+                        }
+
+                        let displayVal = val.replace(/[^0-9.,]/g, '');
+                        const commaParts = displayVal.split(/[.,]/);
+                        if (commaParts.length > 2) {
+                            displayVal = commaParts[0] + ',' + commaParts.slice(1).join('');
+                        }
+
+                        if (parseFloat(displayVal.replace(/,/g, '.')) > 100) {
+                            displayVal = '100';
+                        }
+
+                        if ($(this).val() !== displayVal) {
+                            $(this).val(displayVal);
+                        }
                     }
-                    
-                    let floatVal = parseFloat(normalizedVal) || 0;
-                    if (floatVal > 100) {
-                        normalizedVal = '100';
-                    }
-                    
-                    let displayVal = val.replace(/[^0-9.,]/g, '');
-                    const commaParts = displayVal.split(/[.,]/);
-                    if (commaParts.length > 2) {
-                        displayVal = commaParts[0] + ',' + commaParts.slice(1).join('');
-                    }
-                    
-                    if (parseFloat(displayVal.replace(/,/g, '.')) > 100) {
-                        displayVal = '100';
-                    }
-                    
-                    if ($(this).val() !== displayVal) {
-                        $(this).val(displayVal);
-                    }
-                }
-            });
+                });
 
             // Bind formatter
             $(document).on('input', '.input-number-format', function() {
@@ -662,7 +670,8 @@
                 // D1
                 let d1_type = $('#quick_d1_type').text().trim();
                 let d1_val_str = $('#quick_diskon1_input').val() || "0";
-                let d1_val = d1_type === '%' ? parseFloat(d1_val_str.replace(/,/g, '.')) || 0 : parseFloat(cleanNumber(d1_val_str)) || 0;
+                let d1_val = d1_type === '%' ? parseFloat(d1_val_str.replace(/,/g, '.')) || 0 : parseFloat(
+                    cleanNumber(d1_val_str)) || 0;
                 let d1_pct = 0,
                     d1_rp = 0;
                 if (d1_type === '%') {
@@ -681,7 +690,8 @@
                 // D2
                 let d2_type = $('#quick_d2_type').text().trim();
                 let d2_val_str = $('#quick_diskon2_input').val() || "0";
-                let d2_val = d2_type === '%' ? parseFloat(d2_val_str.replace(/,/g, '.')) || 0 : parseFloat(cleanNumber(d2_val_str)) || 0;
+                let d2_val = d2_type === '%' ? parseFloat(d2_val_str.replace(/,/g, '.')) || 0 : parseFloat(
+                    cleanNumber(d2_val_str)) || 0;
                 let d2_pct = 0,
                     d2_rp = 0;
                 let base2 = base - d1_rp;
@@ -701,7 +711,8 @@
                 // D3
                 let d3_type = $('#quick_d3_type').text().trim();
                 let d3_val_str = $('#quick_diskon3_input').val() || "0";
-                let d3_val = d3_type === '%' ? parseFloat(d3_val_str.replace(/,/g, '.')) || 0 : parseFloat(cleanNumber(d3_val_str)) || 0;
+                let d3_val = d3_type === '%' ? parseFloat(d3_val_str.replace(/,/g, '.')) || 0 : parseFloat(
+                    cleanNumber(d3_val_str)) || 0;
                 let d3_pct = 0,
                     d3_rp = 0;
                 let base3 = base2 - d2_rp;
@@ -745,7 +756,7 @@
                 const id = $(this).attr('id');
                 const inputNum = id.replace('quick_d', '').replace('_type', '');
                 const inputEl = $(`#quick_diskon${inputNum}_input`);
-                
+
                 const price = parseFloat(cleanNumber($('#quick_harga').val())) || 0;
                 const qty = parseFloat($('#quick_qty').val()) || 0;
                 const base = price * qty;
@@ -1005,7 +1016,7 @@
 
                 const index = row.find('.toggle-row-type').index($(this));
                 const inputEl = row.find('.input-diskon' + (index + 1) + '-val');
-                
+
                 const qty = parseFloat(row.find('.input-qty').val()) || 0;
                 const harga = parseFloat(cleanNumber(row.find('.input-harga').val())) || 0;
                 const base = qty * harga;
@@ -1308,7 +1319,8 @@
 
                     const d1_type = row.find('.toggle-row-type').eq(0).text().trim();
                     const d1_val_str = row.find('.input-diskon1-val').val() || "0";
-                    const d1_val = d1_type === '%' ? parseFloat(d1_val_str.toString().replace(/,/g, '.')) || 0 : parseFloat(cleanNumber(d1_val_str)) || 0;
+                    const d1_val = d1_type === '%' ? parseFloat(d1_val_str.toString().replace(/,/g, '.')) ||
+                        0 : parseFloat(cleanNumber(d1_val_str)) || 0;
                     let d1_pct = 0,
                         d1_rp = 0;
                     if (d1_type === '%') {
@@ -1326,7 +1338,8 @@
 
                     const d2_type = row.find('.toggle-row-type').eq(1).text().trim();
                     const d2_val_str = row.find('.input-diskon2-val').val() || "0";
-                    const d2_val = d2_type === '%' ? parseFloat(d2_val_str.toString().replace(/,/g, '.')) || 0 : parseFloat(cleanNumber(d2_val_str)) || 0;
+                    const d2_val = d2_type === '%' ? parseFloat(d2_val_str.toString().replace(/,/g, '.')) ||
+                        0 : parseFloat(cleanNumber(d2_val_str)) || 0;
                     let d2_pct = 0,
                         d2_rp = 0;
                     let sub2 = sub - d1_rp;
@@ -1345,7 +1358,8 @@
 
                     const d3_type = row.find('.toggle-row-type').eq(2).text().trim();
                     const d3_val_str = row.find('.input-diskon3-val').val() || "0";
-                    const d3_val = d3_type === '%' ? parseFloat(d3_val_str.toString().replace(/,/g, '.')) || 0 : parseFloat(cleanNumber(d3_val_str)) || 0;
+                    const d3_val = d3_type === '%' ? parseFloat(d3_val_str.toString().replace(/,/g, '.')) ||
+                        0 : parseFloat(cleanNumber(d3_val_str)) || 0;
                     let d3_pct = 0,
                         d3_rp = 0;
                     let sub3 = sub2 - d2_rp;
