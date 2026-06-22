@@ -38,11 +38,15 @@
                     <div class="col-md-3">
                         <label class="form-label fs-7 fw-semibold text-secondary mb-1">Status Pembayaran</label>
                         <select name="status_pembayaran" class="form-select form-select-sm">
-                            <option value="">Semua</option>
+                            <option value="">Semua (Valid)</option>
                             <option value="lunas" {{ request('status_pembayaran') === 'lunas' ? 'selected' : '' }}>Lunas
                             </option>
                             <option value="belum_lunas"
                                 {{ request('status_pembayaran') === 'belum_lunas' ? 'selected' : '' }}>Belum Lunas</option>
+                            <option value="batal" {{ request('status_pembayaran') === 'batal' ? 'selected' : '' }}>Batal
+                            </option>
+                            <option value="all" {{ request('status_pembayaran') === 'all' ? 'selected' : '' }}>Semua
+                                (Termasuk Batal)</option>
                         </select>
                     </div>
 
@@ -166,10 +170,17 @@
                                 </td>
 
                                 <td class="text-center">
-                                    <span
-                                        class="badge bg-{{ $isLunas ? 'success' : 'danger' }}-subtle text-{{ $isLunas ? 'success' : 'danger' }} border border-{{ $isLunas ? 'success' : 'danger' }}-subtle px-2 py-1 fw-bold fs-8">
-                                        {{ $isLunas ? 'L' : 'BL' }}
-                                    </span>
+                                    @if ($item->batal == 1)
+                                        <span
+                                            class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 fw-bold fs-8">
+                                            Batal
+                                        </span>
+                                    @else
+                                        <span
+                                            class="badge bg-{{ $isLunas ? 'success' : 'danger' }}-subtle text-{{ $isLunas ? 'success' : 'danger' }} border border-{{ $isLunas ? 'success' : 'danger' }}-subtle px-2 py-1 fw-bold fs-8">
+                                            {{ $isLunas ? 'L' : 'BL' }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group gap-1">

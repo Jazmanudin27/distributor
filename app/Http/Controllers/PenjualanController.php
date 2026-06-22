@@ -19,8 +19,7 @@ class PenjualanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Penjualan::with(['pelanggan.wilayah', 'pembayarans', 'sales'])
-            ->where('batal', 0);
+        $query = Penjualan::with(['pelanggan.wilayah', 'pembayarans', 'sales']);
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -41,21 +40,30 @@ class PenjualanController extends Controller
 
         if ($request->filled('status_pembayaran')) {
             $status = $request->status_pembayaran;
-            $query->where(function ($q) use ($status) {
-                $paymentSql = "
-                    (
-                        COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran WHERE penjualan_pembayaran.no_faktur = penjualan.no_faktur AND status = 'disetujui' AND jenis_bayar != 'Retur'), 0) +
-                        COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_transfer WHERE penjualan_pembayaran_transfer.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0) +
-                        COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_giro WHERE penjualan_pembayaran_giro.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0) +
-                        COALESCE((SELECT SUM(total) FROM retur_penjualan WHERE retur_penjualan.no_faktur = penjualan.no_faktur), 0)
-                    )
-                ";
-                if ($status === 'lunas') {
-                    $q->whereRaw("grand_total - {$paymentSql} < 1");
-                } else {
-                    $q->whereRaw("grand_total - {$paymentSql} >= 1");
-                }
-            });
+            if ($status === 'batal') {
+                $query->where('batal', 1);
+            } elseif ($status === 'all') {
+                // Do not filter by batal
+            } else {
+                $query->where('batal', 0);
+                $query->where(function ($q) use ($status) {
+                    $paymentSql = "
+                        (
+                            COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran WHERE penjualan_pembayaran.no_faktur = penjualan.no_faktur AND status = 'disetujui' AND jenis_bayar != 'Retur'), 0) +
+                            COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_transfer WHERE penjualan_pembayaran_transfer.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0) +
+                            COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_giro WHERE penjualan_pembayaran_giro.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0) +
+                            COALESCE((SELECT SUM(total) FROM retur_penjualan WHERE retur_penjualan.no_faktur = penjualan.no_faktur), 0)
+                        )
+                    ";
+                    if ($status === 'lunas') {
+                        $q->whereRaw("grand_total - {$paymentSql} < 1");
+                    } else {
+                        $q->whereRaw("grand_total - {$paymentSql} >= 1");
+                    }
+                });
+            }
+        } else {
+            $query->where('batal', 0);
         }
 
         if ($request->filled('kode_sales')) {
