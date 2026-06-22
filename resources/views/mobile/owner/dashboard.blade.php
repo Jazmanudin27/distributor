@@ -110,7 +110,8 @@
             <a href="{{ route('mobile.owner.pending-approval') }}" class="text-decoration-none">
                 <div class="metric-card m-0 p-2 text-center border-opacity-30 {{ $pendingApprovalsCount > 0 ? 'pulse-badge-yellow border-warning' : '' }}"
                     style="background: rgba(245, 158, 11, 0.05); min-height: 95px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                    <div class="text-warning mb-1" style="font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <div class="text-warning mb-1"
+                        style="font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                         Limit Kredit</div>
                     <h3 class="fw-bold text-white mb-0" style="font-size: 1.15rem;">{{ $pendingApprovalsCount }}</h3>
                     <span class="text-secondary" style="font-size: 0.6rem;">Persetujuan</span>
@@ -121,7 +122,8 @@
             <a href="{{ route('mobile.owner.pending-pelanggan') }}" class="text-decoration-none">
                 <div class="metric-card m-0 p-2 text-center border-opacity-30 {{ $pendingPelangganCount > 0 ? 'pulse-badge-yellow border-info' : '' }}"
                     style="background: rgba(0, 191, 255, 0.05); min-height: 95px; display: flex; flex-direction: column; justify-content: center; align-items: center; border-color: rgba(0, 191, 255, 0.3) !important;">
-                    <div class="text-info mb-1" style="font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <div class="text-info mb-1"
+                        style="font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                         Pelanggan Baru</div>
                     <h3 class="fw-bold text-white mb-0" style="font-size: 1.15rem;">{{ $pendingPelangganCount }}</h3>
                     <span class="text-secondary" style="font-size: 0.6rem;">Persetujuan</span>
@@ -132,7 +134,8 @@
             <a href="{{ route('mobile.owner.low-stock') }}" class="text-decoration-none">
                 <div class="metric-card m-0 p-2 text-center border-opacity-30 {{ $lowStockCount > 0 ? 'pulse-badge border-danger' : '' }}"
                     style="background: rgba(239, 68, 68, 0.05); min-height: 95px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                    <div class="text-danger mb-1" style="font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <div class="text-danger mb-1"
+                        style="font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                         Stok Menipis</div>
                     <h3 class="fw-bold text-white mb-0" style="font-size: 1.15rem;">{{ $lowStockCount }}</h3>
                     <span class="text-secondary" style="font-size: 0.6rem;">Item Produk</span>

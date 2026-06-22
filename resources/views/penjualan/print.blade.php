@@ -204,6 +204,23 @@
         </tr>
     </table>
 
+    @php
+        $showD1 = false;
+        $showD2 = false;
+        $showD3 = false;
+        foreach ($item->details as $d) {
+            if (floatval($d->diskon1_persen) > 0) {
+                $showD1 = true;
+            }
+            if (floatval($d->diskon2_persen) > 0) {
+                $showD2 = true;
+            }
+            if (floatval($d->diskon3_persen) > 0) {
+                $showD3 = true;
+            }
+        }
+        $colspanRight = 3 + ($showD1 ? 1 : 0) + ($showD2 ? 1 : 0) + ($showD3 ? 1 : 0);
+    @endphp
     <table>
         <thead>
             <tr class="text-center">
@@ -213,6 +230,15 @@
                 <td class="col-jml">Jml</td>
                 <td class="col-satuan">Satuan</td>
                 <td class="col-harga">Harga</td>
+                @if ($showD1)
+                    <td class="col-diskon">D1</td>
+                @endif
+                @if ($showD2)
+                    <td class="col-diskon">D2</td>
+                @endif
+                @if ($showD3)
+                    <td class="col-diskon">D3</td>
+                @endif
                 <td class="col-total">Total</td>
             </tr>
         </thead>
@@ -225,6 +251,21 @@
                     <td class="text-center">{{ floatval($detail->qty) }}</td>
                     <td class="text-center">{{ $detail->barangSatuan->satuan ?? '-' }}</td>
                     <td class="text-end">Rp {{ number_format((float) $detail->harga, 0, ',', '.') }}</td>
+                    @if ($showD1)
+                        <td class="text-center">
+                            {{ floatval($detail->diskon1_persen) > 0 ? floatval($detail->diskon1_persen) . '%' : '-' }}
+                        </td>
+                    @endif
+                    @if ($showD2)
+                        <td class="text-center">
+                            {{ floatval($detail->diskon2_persen) > 0 ? floatval($detail->diskon2_persen) . '%' : '-' }}
+                        </td>
+                    @endif
+                    @if ($showD3)
+                        <td class="text-center">
+                            {{ floatval($detail->diskon3_persen) > 0 ? floatval($detail->diskon3_persen) . '%' : '-' }}
+                        </td>
+                    @endif
                     <td class="text-end">Rp
                         {{ number_format((float) ($detail->qty * $detail->harga - $detail->total_diskon), 0, ',', '.') }}
                     </td>
@@ -242,15 +283,15 @@
                         </ul>
                     </small>
                 </td>
-                <td class="text-end" colspan="3">Subtotal</td>
+                <td class="text-end" colspan="{{ $colspanRight }}">Subtotal</td>
                 <td class="text-end">Rp {{ number_format((float) $item->total, 0, ',', '.') }}</td>
             </tr>
             <tr class="text-end">
-                <td colspan="3">Potongan</td>
+                <td colspan="{{ $colspanRight }}">Potongan</td>
                 <td>Rp {{ number_format((float) $item->diskon, 0, ',', '.') }}</td>
             </tr>
             <tr class="text-end">
-                <td colspan="3">Total Keseluruhan</td>
+                <td colspan="{{ $colspanRight }}">Total Keseluruhan</td>
                 <td class="fw-bold">Rp {{ number_format((float) $item->grand_total, 0, ',', '.') }}</td>
             </tr>
         </tbody>

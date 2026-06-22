@@ -225,11 +225,98 @@ class MobileOwnerController extends Controller
         // 8. Margin Laba
         $marginPercent = $salesNet > 0 ? ($profit / $salesNet) * 100 : 0;
 
+        // Breakdown Per Tanggal & Per Sales
+        $dailyBreakdown = [];
+        $salesBreakdown = [];
+
+        $penjualanList = DB::table('penjualan')
+            ->where('batal', 0)
+            ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->select('no_faktur', 'tanggal', 'kode_sales', 'grand_total')
+            ->get();
+
+        $penjualanHppList = DB::table('penjualan_detail')
+            ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
+            ->where('penjualan.batal', 0)
+            ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->select('penjualan.no_faktur', DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp'))
+            ->groupBy('penjualan.no_faktur')
+            ->get()->keyBy('no_faktur');
+
+        $returList = DB::table('retur_penjualan')
+            ->leftJoin('penjualan', 'retur_penjualan.no_faktur', '=', 'penjualan.no_faktur')
+            ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->select('retur_penjualan.no_retur', 'retur_penjualan.tanggal', 'retur_penjualan.total as grand_total', 'penjualan.kode_sales')
+            ->get();
+
+        $returHppList = DB::table('retur_penjualan_detail')
+            ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
+            ->join('barang_satuan', 'retur_penjualan_detail.id_satuan', '=', 'barang_satuan.id')
+            ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->select('retur_penjualan.no_retur', DB::raw('SUM(retur_penjualan_detail.qty * barang_satuan.harga_pokok) as total_hpp'))
+            ->groupBy('retur_penjualan.no_retur')
+            ->get()->keyBy('no_retur');
+
+        $users = \App\Models\User::pluck('name', 'nik');
+
+        foreach ($penjualanList as $p) {
+            $date = $p->tanggal;
+            $salesNik = $p->kode_sales ?: 'UMUM';
+            $salesName = $users[$salesNik] ?? ($salesNik == 'UMUM' ? 'Tanpa Sales' : $salesNik);
+            $hpp = $penjualanHppList[$p->no_faktur]->total_hpp ?? 0;
+            
+            if (!isset($dailyBreakdown[$date])) $dailyBreakdown[$date] = ['salesGross' => 0, 'salesReturn' => 0, 'hppGross' => 0, 'hppReturn' => 0];
+            $dailyBreakdown[$date]['salesGross'] += $p->grand_total;
+            $dailyBreakdown[$date]['hppGross'] += $hpp;
+
+            if (!isset($salesBreakdown[$salesName])) $salesBreakdown[$salesName] = ['salesGross' => 0, 'salesReturn' => 0, 'hppGross' => 0, 'hppReturn' => 0];
+            $salesBreakdown[$salesName]['salesGross'] += $p->grand_total;
+            $salesBreakdown[$salesName]['hppGross'] += $hpp;
+        }
+
+        foreach ($returList as $r) {
+            $date = $r->tanggal;
+            $salesNik = $r->kode_sales ?: 'UMUM';
+            $salesName = $users[$salesNik] ?? ($salesNik == 'UMUM' ? 'Tanpa Sales' : $salesNik);
+            $hpp = $returHppList[$r->no_retur]->total_hpp ?? 0;
+            
+            if ($hpp == 0 && $r->grand_total > 0 && $salesGross > 0) {
+                 $hpp = $r->grand_total * ($hppGross / $salesGross);
+            }
+
+            if (!isset($dailyBreakdown[$date])) $dailyBreakdown[$date] = ['salesGross' => 0, 'salesReturn' => 0, 'hppGross' => 0, 'hppReturn' => 0];
+            $dailyBreakdown[$date]['salesReturn'] += $r->grand_total;
+            $dailyBreakdown[$date]['hppReturn'] += $hpp;
+
+            if (!isset($salesBreakdown[$salesName])) $salesBreakdown[$salesName] = ['salesGross' => 0, 'salesReturn' => 0, 'hppGross' => 0, 'hppReturn' => 0];
+            $salesBreakdown[$salesName]['salesReturn'] += $r->grand_total;
+            $salesBreakdown[$salesName]['hppReturn'] += $hpp;
+        }
+
+        $processBreakdown = function(&$array) {
+            foreach ($array as $k => $v) {
+                $netSales = $v['salesGross'] - $v['salesReturn'];
+                $netHpp = $v['hppGross'] - $v['hppReturn'];
+                $prof = $netSales - $netHpp;
+                $array[$k]['netSales'] = $netSales;
+                $array[$k]['netHpp'] = $netHpp;
+                $array[$k]['profit'] = $prof;
+                $array[$k]['margin'] = $netSales > 0 ? ($prof / $netSales) * 100 : 0;
+            }
+        };
+
+        $processBreakdown($dailyBreakdown);
+        $processBreakdown($salesBreakdown);
+
+        krsort($dailyBreakdown);
+        uasort($salesBreakdown, function($a, $b) { return $b['profit'] <=> $a['profit']; });
+
         return view('mobile.owner.laba_rugi', compact(
             'tanggal_mulai', 'tanggal_akhir',
             'salesGross', 'salesReturn', 'salesNet',
             'hppGross', 'hppReturn', 'hppNet',
-            'profit', 'marginPercent'
+            'profit', 'marginPercent',
+            'dailyBreakdown', 'salesBreakdown'
         ));
     }
 

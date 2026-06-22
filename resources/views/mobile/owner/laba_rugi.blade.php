@@ -82,4 +82,82 @@
             </div>
         </div>
     </div>
+
+    <!-- Breakdown Per Tanggal -->
+    <h6 class="fw-bold mb-3 ms-1 text-white" style="font-size: 0.9rem;">
+        <i class="fa-regular fa-calendar-days text-info me-2"></i>Rincian Per Tanggal
+    </h6>
+    <div class="accordion mb-4" id="accordionTanggal">
+        @forelse ($dailyBreakdown as $date => $data)
+            <div class="accordion-item bg-dark border-secondary border-opacity-25 mb-2 rounded overflow-hidden">
+                <h2 class="accordion-header" id="headingDate-{{ $loop->index }}">
+                    <button class="accordion-button collapsed bg-dark text-white shadow-none py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDate-{{ $loop->index }}" aria-expanded="false" aria-controls="collapseDate-{{ $loop->index }}">
+                        <div class="d-flex justify-content-between w-100 align-items-center me-2">
+                            <span class="fw-semibold" style="font-size: 0.85rem;">{{ \Carbon\Carbon::parse($date)->format('d M Y') }}</span>
+                            <span class="fw-bold {{ $data['profit'] >= 0 ? 'text-success' : 'text-danger' }}" style="font-size: 0.85rem;">
+                                Rp {{ number_format($data['profit'], 0, ',', '.') }}
+                            </span>
+                        </div>
+                    </button>
+                </h2>
+                <div id="collapseDate-{{ $loop->index }}" class="accordion-collapse collapse" aria-labelledby="headingDate-{{ $loop->index }}" data-bs-parent="#accordionTanggal">
+                    <div class="accordion-body pt-0 pb-3 px-3" style="font-size: 0.8rem;">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-white-50">Penjualan Bersih</span>
+                            <span class="text-white font-monospace">Rp {{ number_format($data['netSales'], 0, ',', '.') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-white-50">HPP Bersih</span>
+                            <span class="text-white font-monospace">Rp {{ number_format($data['netHpp'], 0, ',', '.') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2 pt-2 border-top border-secondary border-opacity-25">
+                            <span class="text-white-50">Margin</span>
+                            <span class="text-info font-monospace">{{ number_format($data['margin'], 2, ',', '.') }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="text-center text-white-50 py-3" style="font-size: 0.8rem;">Tidak ada data per tanggal</div>
+        @endforelse
+    </div>
+
+    <!-- Breakdown Per Sales -->
+    <h6 class="fw-bold mb-3 ms-1 text-white" style="font-size: 0.9rem;">
+        <i class="fa-solid fa-users text-warning me-2"></i>Rincian Per Sales
+    </h6>
+    <div class="accordion mb-4" id="accordionSales">
+        @forelse ($salesBreakdown as $sales => $data)
+            <div class="accordion-item bg-dark border-secondary border-opacity-25 mb-2 rounded overflow-hidden">
+                <h2 class="accordion-header" id="headingSales-{{ $loop->index }}">
+                    <button class="accordion-button collapsed bg-dark text-white shadow-none py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSales-{{ $loop->index }}" aria-expanded="false" aria-controls="collapseSales-{{ $loop->index }}">
+                        <div class="d-flex justify-content-between w-100 align-items-center me-2">
+                            <span class="fw-semibold" style="font-size: 0.85rem;">{{ $sales }}</span>
+                            <span class="fw-bold {{ $data['profit'] >= 0 ? 'text-success' : 'text-danger' }}" style="font-size: 0.85rem;">
+                                Rp {{ number_format($data['profit'], 0, ',', '.') }}
+                            </span>
+                        </div>
+                    </button>
+                </h2>
+                <div id="collapseSales-{{ $loop->index }}" class="accordion-collapse collapse" aria-labelledby="headingSales-{{ $loop->index }}" data-bs-parent="#accordionSales">
+                    <div class="accordion-body pt-0 pb-3 px-3" style="font-size: 0.8rem;">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-white-50">Penjualan Bersih</span>
+                            <span class="text-white font-monospace">Rp {{ number_format($data['netSales'], 0, ',', '.') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-white-50">HPP Bersih</span>
+                            <span class="text-white font-monospace">Rp {{ number_format($data['netHpp'], 0, ',', '.') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2 pt-2 border-top border-secondary border-opacity-25">
+                            <span class="text-white-50">Margin</span>
+                            <span class="text-info font-monospace">{{ number_format($data['margin'], 2, ',', '.') }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="text-center text-white-50 py-3" style="font-size: 0.8rem;">Tidak ada data per sales</div>
+        @endforelse
+    </div>
 @endsection
