@@ -150,6 +150,12 @@
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td class="text-secondary fw-semibold py-1">Salesman</td>
+                                    <td class="py-1">: <span
+                                            class="text-dark ms-2 fw-semibold">{{ $item->sales->name ?? '-' }} ({{ $item->kode_sales ?? '-' }})</span>
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td class="text-secondary fw-semibold py-1">Keterangan</td>
                                     <td class="py-1">: <span
                                             class="text-dark ms-2 small">{{ $item->keterangan ?? '-' }}</span></td>

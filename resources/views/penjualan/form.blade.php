@@ -103,6 +103,23 @@
                                         Tunai / Cash</option>
                                 </select>
                             </div>
+                            <div class="mb-2">
+                                <label for="kode_sales" class="form-label fs-7 fw-bold text-secondary mb-1">Salesman
+                                    <span class="text-danger">*</span></label>
+                                <select name="kode_sales" id="kode_sales"
+                                    class="form-select form-select-sm @error('kode_sales') is-invalid @enderror" required>
+                                    <option value="">-- Pilih Salesman --</option>
+                                    @foreach ($salesmen as $s)
+                                        <option value="{{ $s->nik }}"
+                                            {{ old('kode_sales', $item->kode_sales) === $s->nik ? 'selected' : '' }}>
+                                            {{ $s->name }} ({{ $s->nik }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('kode_sales')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
                             <div class="mb-0">
                                 <label class="form-label fs-7 fw-bold text-secondary mb-1">Operator</label>
                                 <input type="text" class="form-control form-control-sm bg-light text-muted"
@@ -433,6 +450,10 @@
                     cache: true
                 },
                 minimumInputLength: 0
+            });
+            $('#kode_sales').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
             });
             $('#quick_barang').select2({
                 theme: 'bootstrap-5',

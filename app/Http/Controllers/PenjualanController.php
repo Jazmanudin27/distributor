@@ -163,7 +163,9 @@ class PenjualanController extends Controller
             ->with(['details', 'barangs', 'kategori', 'merk'])
             ->get();
 
-        return view('penjualan.form', compact('item', 'pelanggans', 'diskonStrata'));
+        $salesmen = User::where('role', 'sales')->where('status', 1)->orderBy('name')->get();
+
+        return view('penjualan.form', compact('item', 'pelanggans', 'diskonStrata', 'salesmen'));
     }
 
     public function store(Request $request)
@@ -177,6 +179,7 @@ class PenjualanController extends Controller
             'tanggal' => 'required|date',
             'tanggal_kirim' => 'nullable|date',
             'kode_pelanggan' => 'required|string|exists:pelanggan,kode_pelanggan',
+            'kode_sales' => 'required|string|exists:users,nik',
             'jenis_transaksi' => 'required|in:Tunai,Kredit',
             'diskon_global' => 'nullable|numeric|min:0',
             'keterangan' => 'nullable|string',
@@ -301,6 +304,7 @@ class PenjualanController extends Controller
                     'tanggal' => $request->tanggal,
                     'tanggal_kirim' => $request->tanggal_kirim,
                     'kode_pelanggan' => $request->kode_pelanggan,
+                    'kode_sales' => $request->kode_sales,
                     'jenis_transaksi' => $isKredit ? 'K' : 'T',
                     'jenis_bayar' => $isKredit ? 'Kredit' : 'Tunai',
                     'total' => $subtotalSum,
@@ -483,7 +487,9 @@ class PenjualanController extends Controller
             ->with(['details', 'barangs', 'kategori', 'merk'])
             ->get();
 
-        return view('penjualan.form', compact('item', 'pelanggans', 'diskonStrata'));
+        $salesmen = User::where('role', 'sales')->where('status', 1)->orderBy('name')->get();
+
+        return view('penjualan.form', compact('item', 'pelanggans', 'diskonStrata', 'salesmen'));
     }
 
     public function update(Request $request, $no_faktur)
@@ -499,6 +505,7 @@ class PenjualanController extends Controller
             'tanggal' => 'required|date',
             'tanggal_kirim' => 'nullable|date',
             'kode_pelanggan' => 'required|string|exists:pelanggan,kode_pelanggan',
+            'kode_sales' => 'required|string|exists:users,nik',
             'jenis_transaksi' => 'required|in:Tunai,Kredit',
             'diskon_global' => 'nullable|numeric|min:0',
             'keterangan' => 'nullable|string',
@@ -615,6 +622,7 @@ class PenjualanController extends Controller
                     'tanggal' => $request->tanggal,
                     'tanggal_kirim' => $request->tanggal_kirim,
                     'kode_pelanggan' => $request->kode_pelanggan,
+                    'kode_sales' => $request->kode_sales,
                     'jenis_transaksi' => $isKredit ? 'K' : 'T',
                     'jenis_bayar' => $isKredit ? 'Kredit' : 'Tunai',
                     'total' => $subtotalSum,
