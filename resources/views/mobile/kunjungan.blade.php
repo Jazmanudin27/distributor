@@ -142,13 +142,13 @@
                     class="btn btn-sm btn-mobile btn-mobile-primary py-2">
                     <i class="fa-solid fa-cart-plus me-2"></i> Input Penjualan Untuk Toko Ini
                 </a>
-                @if ($unpaidInvoices->isNotEmpty())
+                {{-- @if ($unpaidInvoices->isNotEmpty())
                     <button type="button" class="btn btn-sm btn-mobile btn-success py-2 text-white border-0"
                         style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);"
                         data-bs-toggle="modal" data-bs-target="#modal-pembayaran-piutang">
                         <i class="fa-solid fa-hand-holding-dollar me-2 text-white"></i> Catat Pembayaran Piutang
                     </button>
-                @endif
+                @endif --}}
                 <button type="button"
                     class="btn btn-sm btn-mobile btn-outline-light py-2 text-white border-secondary border-opacity-50"
                     style="font-size: 0.85rem;" data-bs-toggle="modal" data-bs-target="#modal-ajuan-limit"
