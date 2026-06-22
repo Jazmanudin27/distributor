@@ -156,7 +156,7 @@
                     </tr>
                     <tr>
                         <td>Sales</td>
-                        <td>: {{ $item->sales->name ?? '-' }}</td>
+                        <td>: <b>{{ $item->sales->name ?? '-' }}</b></td>
                     </tr>
                     <tr>
                         <td style="vertical-align: top;">Alamat Toko</td>
