@@ -20,10 +20,12 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2">
-                        @if(!$item->tanggal_approve && auth()->user()->can('approve-pembelian'))
-                            <form action="{{ route('pembelian.approve', $item->no_faktur) }}" method="POST" class="d-inline approve-form">
+                        @if (!$item->tanggal_approve && auth()->user()->can('approve-pembelian'))
+                            <form action="{{ route('pembelian.approve', $item->no_faktur) }}" method="POST"
+                                class="d-inline approve-form">
                                 @csrf
-                                <button type="button" class="btn btn-success btn-sm fw-bold hover-scale text-white approve-btn">
+                                <button type="button"
+                                    class="btn btn-success btn-sm fw-bold hover-scale text-white approve-btn">
                                     <i class="fa-solid fa-check me-1"></i> Setujui Faktur
                                 </button>
                             </form>
@@ -234,18 +236,23 @@
                                             {{ number_format((float) $totalRetur, 0, ',', '.') }}</span>
                                     </div>
                                 @endif
-                                <div class="d-flex justify-content-between align-items-center border-top pt-2 mb-3 text-danger">
+                                <div
+                                    class="d-flex justify-content-between align-items-center border-top pt-2 mb-3 text-danger">
                                     <span class="fw-bold fs-6">Sisa Tagihan</span>
                                     <span class="fw-bold fs-5">Rp
                                         {{ number_format((float) max(0, $sisaBayar), 0, ',', '.') }}</span>
                                 </div>
 
                                 @php
-                                    $percentPaid = $item->grand_total > 0 ? min(100, round(($totalBayar / $item->grand_total) * 100)) : 0;
+                                    $percentPaid =
+                                        $item->grand_total > 0
+                                            ? min(100, round(($totalBayar / $item->grand_total) * 100))
+                                            : 0;
                                 @endphp
                                 <div class="progress mb-1" style="height: 8px;">
-                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ $percentPaid }}%"
-                                        aria-valuenow="{{ $percentPaid }}" aria-valuemin="0" aria-valuemax="100">
+                                    <div class="progress-bar bg-success" role="progressbar"
+                                        style="width: {{ $percentPaid }}%" aria-valuenow="{{ $percentPaid }}"
+                                        aria-valuemin="0" aria-valuemax="100">
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-between text-muted" style="font-size: 0.72rem;">
@@ -394,11 +401,12 @@
                 </div>
             </div>
 
-            @if($totalRetur > 0)
+            @if ($totalRetur > 0)
                 <div class="card shadow-sm border-0 rounded-4 mb-4">
                     <div class="card-header bg-white py-3 border-bottom">
                         <h6 class="mb-0 fw-bold text-dark">
-                            <i class="fa-solid fa-arrow-rotate-left me-2 text-warning"></i> Histori Retur Potong Faktur (PF)
+                            <i class="fa-solid fa-arrow-rotate-left me-2 text-warning"></i> Histori Retur Potong Faktur
+                            (PF)
                         </h6>
                     </div>
                     <div class="card-body p-4">
@@ -413,7 +421,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($returs as $retur)
+                                    @foreach ($returs as $retur)
                                         <tr>
                                             <td>
                                                 <a href="{{ route('retur-pembelian.show', $retur->no_retur) }}"

@@ -31,7 +31,7 @@
                 <label class="form-label text-secondary small fw-semibold mb-1">Filter Sales</label>
                 <select name="kode_sales" class="form-control form-control-mobile py-2">
                     <option value="">-- Semua Sales --</option>
-                    @foreach($salesmen as $sales)
+                    @foreach ($salesmen as $sales)
                         <option value="{{ $sales->nik }}" {{ $selected_sales == $sales->nik ? 'selected' : '' }}>
                             {{ $sales->name }} ({{ $sales->nik }})
                         </option>
@@ -45,7 +45,7 @@
     </div>
 
     <!-- Visits List -->
-    @if($visits->isEmpty())
+    @if ($visits->isEmpty())
         <div class="text-center py-5">
             <div class="avatar-glow rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
                 style="width: 65px; height: 65px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);">
@@ -56,9 +56,10 @@
         </div>
     @else
         <div class="d-flex flex-column gap-3">
-            @foreach($visits as $visit)
+            @foreach ($visits as $visit)
                 <div class="mobile-card p-3 mb-0">
-                    <div class="d-flex justify-content-between align-items-start mb-2 pb-2 border-bottom border-secondary border-opacity-10">
+                    <div
+                        class="d-flex justify-content-between align-items-start mb-2 pb-2 border-bottom border-secondary border-opacity-10">
                         <div>
                             <h6 class="fw-bold text-white mb-0" style="font-size: 0.95rem;">
                                 {{ $visit->pelanggan->nama_pelanggan ?? 'Pelanggan Terhapus' }}
@@ -68,7 +69,9 @@
                                 {{ $visit->pelanggan->wilayah->nama_wilayah ?? '-' }}
                             </span>
                         </div>
-                        <span class="badge rounded-pill bg-dark border border-secondary border-opacity-25 px-2.5 py-1 text-white-50" style="font-size: 0.68rem;">
+                        <span
+                            class="badge rounded-pill bg-dark border border-secondary border-opacity-25 px-2.5 py-1 text-white-50"
+                            style="font-size: 0.68rem;">
                             {{ $visit->tanggal->format('d M Y') }}
                         </span>
                     </div>
@@ -78,31 +81,38 @@
                             Sales: <strong class="text-white">{{ $visit->sales->name ?? 'Sales Terhapus' }}</strong>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span>Check-in: <strong class="text-info font-monospace">{{ $visit->checkin->format('H:i') }}</strong></span>
+                            <span>Check-in: <strong
+                                    class="text-info font-monospace">{{ $visit->checkin->format('H:i') }}</strong></span>
                             <span>
-                                Check-out: 
-                                @if($visit->checkout)
-                                    <strong class="text-success font-monospace">{{ $visit->checkout->format('H:i') }}</strong>
+                                Check-out:
+                                @if ($visit->checkout)
+                                    <strong
+                                        class="text-success font-monospace">{{ $visit->checkout->format('H:i') }}</strong>
                                 @else
-                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-1.5 py-0.5" style="font-size: 0.65rem;">
+                                    <span
+                                        class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-1.5 py-0.5"
+                                        style="font-size: 0.65rem;">
                                         Aktif
                                     </span>
                                 @endif
                             </span>
                         </div>
-                        @if($visit->checkout)
+                        @if ($visit->checkout)
                             @php
                                 $diffMin = $visit->checkin->diffInMinutes($visit->checkout);
                             @endphp
                             <div class="text-white-50">
-                                Durasi Kunjungan: <strong class="text-white font-monospace">{{ $diffMin }} menit</strong>
+                                Durasi Kunjungan: <strong class="text-white font-monospace">{{ $diffMin }}
+                                    menit</strong>
                             </div>
                         @endif
                     </div>
 
-                    @if($visit->catatan)
-                        <div class="p-2 rounded mt-2 border border-secondary border-opacity-10" style="background: rgba(255, 255, 255, 0.02); font-size: 0.75rem;">
-                            <span class="text-secondary d-block fw-semibold" style="font-size: 0.65rem; text-transform: uppercase; margin-bottom: 2px;">Catatan:</span>
+                    @if ($visit->catatan)
+                        <div class="p-2 rounded mt-2 border border-secondary border-opacity-10"
+                            style="background: rgba(255, 255, 255, 0.02); font-size: 0.75rem;">
+                            <span class="text-secondary d-block fw-semibold"
+                                style="font-size: 0.65rem; text-transform: uppercase; margin-bottom: 2px;">Catatan:</span>
                             <span class="text-white-50">{{ $visit->catatan }}</span>
                         </div>
                     @endif

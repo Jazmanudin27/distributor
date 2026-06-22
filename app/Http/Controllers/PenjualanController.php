@@ -160,6 +160,11 @@ class PenjualanController extends Controller
 
     public function store(Request $request)
     {
+        $isKredit = in_array($request->jenis_transaksi, ['K', 'Kredit']);
+        $request->merge([
+            'jenis_transaksi' => $isKredit ? 'Kredit' : 'Tunai'
+        ]);
+
         $request->validate([
             'no_faktur' => 'required|string|unique:penjualan,no_faktur',
             'tanggal' => 'required|date',
@@ -177,6 +182,7 @@ class PenjualanController extends Controller
             'items.*.diskon' => 'required|numeric|min:0',
             'items.*.diskon1_persen' => 'nullable|numeric|min:0|max:100',
             'items.*.diskon2_persen' => 'nullable|numeric|min:0|max:100',
+            'items.*.diskon3_persen' => 'nullable|numeric|min:0|max:100',
         ]);
 
         // Calculate grand total and validate credit limit
@@ -278,8 +284,8 @@ class PenjualanController extends Controller
                     'tanggal' => $request->tanggal,
                     'tanggal_kirim' => $request->tanggal_kirim,
                     'kode_pelanggan' => $request->kode_pelanggan,
-                    'jenis_transaksi' => $request->jenis_transaksi,
-                    'jenis_bayar' => $request->jenis_transaksi === 'Tunai' ? 'Tunai' : 'Kredit',
+                    'jenis_transaksi' => $isKredit ? 'K' : 'T',
+                    'jenis_bayar' => $isKredit ? 'Kredit' : 'Tunai',
                     'total' => $subtotalSum,
                     'diskon' => $totalDiskon + $diskonGlobal,
                     'grand_total' => $grandTotal,
@@ -291,7 +297,7 @@ class PenjualanController extends Controller
                 $penjualan->details()->saveMany($details);
 
                 // Jika Tunai, langsung catat pembayaran lunas
-                if ($request->jenis_transaksi === 'Tunai') {
+                if (!$isKredit) {
                     $prefix = date('my');
                     $last = PenjualanPembayaran::where('no_bukti', 'like', $prefix . '%')->orderBy('no_bukti', 'desc')->first();
                     $nextNo = 1;
@@ -465,6 +471,11 @@ class PenjualanController extends Controller
     {
         $penjualan = Penjualan::with('details')->findOrFail($no_faktur);
 
+        $isKredit = in_array($request->jenis_transaksi, ['K', 'Kredit']);
+        $request->merge([
+            'jenis_transaksi' => $isKredit ? 'Kredit' : 'Tunai'
+        ]);
+
         $request->validate([
             'tanggal' => 'required|date',
             'tanggal_kirim' => 'nullable|date',
@@ -480,6 +491,8 @@ class PenjualanController extends Controller
             'items.*.harga' => 'required|numeric|min:0',
             'items.*.diskon' => 'required|numeric|min:0',
             'items.*.diskon1_persen' => 'nullable|numeric|min:0|max:100',
+            'items.*.diskon2_persen' => 'nullable|numeric|min:0|max:100',
+            'items.*.diskon3_persen' => 'nullable|numeric|min:0|max:100',
         ]);
 
         // Calculate grand total and validate credit limit
@@ -515,7 +528,7 @@ class PenjualanController extends Controller
             }
         }
 
-        if ($request->jenis_transaksi === 'Kredit') {
+        if ($isKredit) {
             $sisaLimit = $pelanggan->getSisaLimitKredit($no_faktur);
             if ($tempGrandTotal > $sisaLimit) {
                 return redirect()->back()->withInput()->with('error', "Gagal memperbarui transaksi. Batas limit kredit pelanggan terlampaui! Sisa limit kredit saat ini: Rp " . number_format($sisaLimit, 0, ',', '.'));
@@ -583,8 +596,8 @@ class PenjualanController extends Controller
                     'tanggal' => $request->tanggal,
                     'tanggal_kirim' => $request->tanggal_kirim,
                     'kode_pelanggan' => $request->kode_pelanggan,
-                    'jenis_transaksi' => $request->jenis_transaksi,
-                    'jenis_bayar' => $request->jenis_transaksi === 'Tunai' ? 'Tunai' : 'Kredit',
+                    'jenis_transaksi' => $isKredit ? 'K' : 'T',
+                    'jenis_bayar' => $isKredit ? 'Kredit' : 'Tunai',
                     'total' => $subtotalSum,
                     'diskon' => $totalDiskon + $diskonGlobal,
                     'grand_total' => $grandTotal,

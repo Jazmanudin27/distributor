@@ -16,49 +16,60 @@
         </div>
     </div>
 
-    @if(strtolower(Auth::user()->role) === 'spv sales' && isset($pendingCustomersCount) && $pendingCustomersCount > 0)
+    @if (strtolower(Auth::user()->role) === 'spv sales' && isset($pendingCustomersCount) && $pendingCustomersCount > 0)
         <div class="alert alert-warning rounded-4 mb-3 d-flex align-items-center justify-content-between"
             style="background-color: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24;">
             <div class="d-flex align-items-center">
                 <i class="fa-solid fa-user-check me-3" style="font-size: 1.25rem;"></i>
                 <div>
                     <span style="font-size: 0.8rem; font-weight: 600;">Persetujuan Pelanggan Baru</span>
-                    <small class="d-block text-secondary" style="font-size: 0.7rem; color: #fbbf24 !important; opacity: 0.85;">Ada {{ $pendingCustomersCount }} pelanggan baru menunggu persetujuan</small>
+                    <small class="d-block text-secondary"
+                        style="font-size: 0.7rem; color: #fbbf24 !important; opacity: 0.85;">Ada
+                        {{ $pendingCustomersCount }} pelanggan baru menunggu persetujuan</small>
                 </div>
             </div>
-            <a href="{{ route('mobile.spv.pelanggan.pending') }}" class="btn btn-sm btn-warning text-dark fw-bold px-3 py-1" style="font-size: 0.75rem; border-radius: 8px; text-decoration: none;">
+            <a href="{{ route('mobile.spv.pelanggan.pending') }}" class="btn btn-sm btn-warning text-dark fw-bold px-3 py-1"
+                style="font-size: 0.75rem; border-radius: 8px; text-decoration: none;">
                 Tinjau <i class="fa-solid fa-arrow-right ms-0.5"></i>
             </a>
         </div>
     @endif
 
-    @if(strtolower(Auth::user()->role) === 'spv sales' && isset($pendingLimitCount) && $pendingLimitCount > 0)
+    @if (strtolower(Auth::user()->role) === 'spv sales' && isset($pendingLimitCount) && $pendingLimitCount > 0)
         <div class="alert alert-info rounded-4 mb-3 d-flex align-items-center justify-content-between"
             style="background-color: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #a5b4fc;">
             <div class="d-flex align-items-center">
                 <i class="fa-solid fa-file-invoice-dollar me-3" style="font-size: 1.25rem;"></i>
                 <div>
                     <span style="font-size: 0.8rem; font-weight: 600;">Persetujuan Limit Kredit</span>
-                    <small class="d-block text-secondary" style="font-size: 0.7rem; color: #a5b4fc !important; opacity: 0.85;">Ada {{ $pendingLimitCount }} pengajuan limit menunggu persetujuan</small>
+                    <small class="d-block text-secondary"
+                        style="font-size: 0.7rem; color: #a5b4fc !important; opacity: 0.85;">Ada {{ $pendingLimitCount }}
+                        pengajuan limit menunggu persetujuan</small>
                 </div>
             </div>
-            <a href="{{ route('mobile.limit-kredit.index') }}#pending-approvals" class="btn btn-sm btn-mobile-primary text-white fw-bold px-3 py-1-5 fs-8" style="border-radius: 8px; text-decoration: none;">
+            <a href="{{ route('mobile.limit-kredit.index') }}#pending-approvals"
+                class="btn btn-sm btn-mobile-primary text-white fw-bold px-3 py-1-5 fs-8"
+                style="border-radius: 8px; text-decoration: none;">
                 Tinjau <i class="fa-solid fa-arrow-right ms-0.5"></i>
             </a>
         </div>
     @endif
 
-    @if(strtolower(Auth::user()->role) === 'spv sales' && isset($pendingPembelianCount) && $pendingPembelianCount > 0)
+    @if (strtolower(Auth::user()->role) === 'spv sales' && isset($pendingPembelianCount) && $pendingPembelianCount > 0)
         <div class="alert alert-success rounded-4 mb-3 d-flex align-items-center justify-content-between"
             style="background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399;">
             <div class="d-flex align-items-center">
                 <i class="fa-solid fa-cart-flatbed-suitcases me-3" style="font-size: 1.25rem;"></i>
                 <div>
                     <span style="font-size: 0.8rem; font-weight: 600;">Persetujuan Pembelian</span>
-                    <small class="d-block text-secondary" style="font-size: 0.7rem; color: #34d399 !important; opacity: 0.85;">Ada {{ $pendingPembelianCount }} pengajuan pembelian menunggu persetujuan</small>
+                    <small class="d-block text-secondary"
+                        style="font-size: 0.7rem; color: #34d399 !important; opacity: 0.85;">Ada
+                        {{ $pendingPembelianCount }} pengajuan pembelian menunggu persetujuan</small>
                 </div>
             </div>
-            <a href="{{ route('mobile.spv.pembelian.pending') }}" class="btn btn-sm btn-success text-white fw-bold px-3 py-1-5 fs-8 border-0" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; text-decoration: none;">
+            <a href="{{ route('mobile.spv.pembelian.pending') }}"
+                class="btn btn-sm btn-success text-white fw-bold px-3 py-1-5 fs-8 border-0"
+                style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; text-decoration: none;">
                 Tinjau <i class="fa-solid fa-arrow-right ms-0.5"></i>
             </a>
         </div>
@@ -66,7 +77,7 @@
 
     @php
         $role = strtolower(Auth::user()->role ?? '');
-        $isSpv = ($role === 'spv sales');
+        $isSpv = $role === 'spv sales';
     @endphp
 
     <!-- Pencapaian Bulan Ini Card -->
@@ -146,7 +157,10 @@
                     class="btn btn-mobile w-100 py-2.5 d-flex align-items-center justify-content-center"
                     style="background-color: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); color: #a5b4fc;">
                     <i class="fa-solid fa-file-invoice-dollar me-2" style="font-size: 1.2rem;"></i>
-                    <span style="font-size: 0.85rem;">Persetujuan Limit Kredit @if($pendingLimitCount > 0) ({{ $pendingLimitCount }}) @endif</span>
+                    <span style="font-size: 0.85rem;">Persetujuan Limit Kredit @if ($pendingLimitCount > 0)
+                            ({{ $pendingLimitCount }})
+                        @endif
+                    </span>
                 </a>
             </div>
             <div class="col-12 mt-2">
@@ -154,14 +168,18 @@
                     class="btn btn-mobile w-100 py-2.5 d-flex align-items-center justify-content-center"
                     style="background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #34d399;">
                     <i class="fa-solid fa-cart-flatbed-suitcases me-2" style="font-size: 1.2rem;"></i>
-                    <span style="font-size: 0.85rem;">Persetujuan Pembelian @if($pendingPembelianCount > 0) ({{ $pendingPembelianCount }}) @endif</span>
+                    <span style="font-size: 0.85rem;">Persetujuan Pembelian @if ($pendingPembelianCount > 0)
+                            ({{ $pendingPembelianCount }})
+                        @endif
+                    </span>
                 </a>
             </div>
         </div>
     @endif
 
     <!-- Quick Action Panel -->
-    <h5 class="fw-bold mb-3" style="font-size: 0.95rem; letter-spacing: 0.5px;">{{ $isSpv ? 'Menu Operasional Saya' : 'Menu Utama' }}</h5>
+    <h5 class="fw-bold mb-3" style="font-size: 0.95rem; letter-spacing: 0.5px;">
+        {{ $isSpv ? 'Menu Operasional Saya' : 'Menu Utama' }}</h5>
     @if ($activeCheckin)
         <div class="row g-3 mb-3">
             <div class="col-6">
@@ -239,14 +257,16 @@
         <div class="alert alert-warning rounded-4 mb-4 d-flex align-items-center"
             style="background-color: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; margin-top: -8px;">
             <i class="fa-solid fa-triangle-exclamation me-3" style="font-size: 1.25rem;"></i>
-            <span style="font-size: 0.80rem; font-weight: 500;">Anda belum check-in. Silakan pilih pelanggan terlebih dahulu
+            <span style="font-size: 0.80rem; font-weight: 500;">Anda belum check-in. Silakan pilih pelanggan terlebih
+                dahulu
                 untuk melakukan penjualan.</span>
         </div>
     @endif
 
     <!-- Recent Orders Section -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold mb-0" style="font-size: 0.95rem; letter-spacing: 0.5px;">{{ $isSpv ? 'Pesanan Terbaru Sales' : 'Pesanan Terbaru Anda' }}</h5>
+        <h5 class="fw-bold mb-0" style="font-size: 0.95rem; letter-spacing: 0.5px;">
+            {{ $isSpv ? 'Pesanan Terbaru Sales' : 'Pesanan Terbaru Anda' }}</h5>
     </div>
 
     @if ($recentOrders->isEmpty())
