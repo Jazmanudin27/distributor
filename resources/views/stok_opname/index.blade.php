@@ -10,8 +10,8 @@
                 <small class="text-white-50">Sesuaikan data stok sistem dengan jumlah fisik di gudang</small>
             </div>
             @can('create-stok_opname')
-                <a href="{{ route('stok-opname.create') }}" class="btn btn-light btn-sm fw-bold hover-scale">
-                    <i class="fa-solid fa-circle-plus me-1 text-primary"></i> Opname Baru
+                <a href="{{ route('stok-opname.create') }}" class="btn btn-primary btn-sm fw-bold hover-scale">
+                    <i class="fa-solid fa-circle-plus me-1 text-white"></i> Opname Baru
                 </a>
             @endcan
         </div>

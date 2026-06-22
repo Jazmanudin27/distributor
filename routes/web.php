@@ -23,6 +23,7 @@ use App\Http\Controllers\SalesTrackingController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\KeuanganMutasiController;
+use App\Http\Controllers\ProfileController;
 
 // Mobile Controllers
 use App\Http\Controllers\Mobile\MobileAuthController;
@@ -54,6 +55,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('m')->name('mobile.')->middleware('sales')->group(function () {
         Route::get('/', [MobileDashboardController::class, 'index'])->name('dashboard');
         Route::get('/profile', [MobileDashboardController::class, 'profile'])->name('profile');
+        Route::post('/profile/update', [ProfileController::class, 'updateMobile'])->name('profile.update-credentials');
 
         // Kunjungan (Visits)
         Route::get('/kunjungan', [MobileKunjunganController::class, 'index'])->name('kunjungan.index');
@@ -101,6 +103,10 @@ Route::middleware('auth')->group(function () {
     // Shared Search / API Routes (Accessible by both Admin & Sales)
     Route::get('/barang-search', [BarangController::class, 'search'])->name('barang.search');
     Route::get('/pelanggan-search', [PelangganController::class, 'search'])->name('pelanggan.search');
+
+    // Profile Settings (Accessible by any desktop authenticated user)
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     Route::middleware('admin')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');

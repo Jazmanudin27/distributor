@@ -10,8 +10,8 @@
                 <small class="text-white-50">Kelola pengembalian barang ke supplier</small>
             </div>
             @can('create-retur_pembelian')
-                <a href="{{ route('retur-pembelian.create') }}" class="btn btn-light btn-sm fw-bold hover-scale">
-                    <i class="fa-solid fa-circle-plus me-1 text-primary"></i> Retur Baru
+                <a href="{{ route('retur-pembelian.create') }}" class="btn btn-primary btn-sm fw-bold hover-scale">
+                    <i class="fa-solid fa-circle-plus me-1 text-white"></i> Retur Baru
                 </a>
             @endcan
         </div>

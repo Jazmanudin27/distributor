@@ -10,8 +10,8 @@
                 <small class="text-white-50">Kelola faktur pembelian dari supplier dan pembayaran tempo</small>
             </div>
             @can('create-pembelian')
-                <a href="{{ route('pembelian.create') }}" class="btn btn-light btn-sm fw-bold hover-scale">
-                    <i class="fa-solid fa-circle-plus me-1 text-primary"></i> Transaksi Baru
+                <a href="{{ route('pembelian.create') }}" class="btn btn-primary btn-sm fw-bold hover-scale">
+                    <i class="fa-solid fa-circle-plus me-1 text-white"></i> Transaksi Baru
                 </a>
             @endcan
         </div>

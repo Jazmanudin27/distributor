@@ -53,17 +53,19 @@
 @if ($user)
     <!-- Tenant Badge (Avatar and Info) -->
     <div class="tenant-badge-custom">
-        <div class="tenant-card">
-            <div class="tenant-avatar">
-                {{ strtoupper(substr($user->name, 0, 1)) }}
-            </div>
-            <div class="tenant-info">
-                <div class="tenant-name" title="{{ $user->name }}">{{ $user->name }}</div>
-                <div class="tenant-role">
-                    {{ $user->roles->first() ? ucfirst($user->roles->first()->name) : 'Staff' }}
+        <a href="{{ route('profile.edit') }}" style="text-decoration: none; display: block;">
+            <div class="tenant-card">
+                <div class="tenant-avatar">
+                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                </div>
+                <div class="tenant-info">
+                    <div class="tenant-name" title="{{ $user->name }}">{{ $user->name }}</div>
+                    <div class="tenant-role">
+                        {{ $user->roles->first() ? ucfirst($user->roles->first()->name) : 'Staff' }}
+                    </div>
                 </div>
             </div>
-        </div>
+        </a>
     </div>
 
     <!-- Navigation Menu -->
@@ -75,6 +77,11 @@
         <a href="{{ url('/') }}" class="{{ request()->is('/') || request()->is('dashboard') ? 'active' : '' }}">
             <i class="fa-solid fa-table-cells-large"></i>
             <span>Dashboard</span>
+        </a>
+
+        <a href="{{ route('profile.edit') }}" class="{{ request()->routeIs('profile.edit') ? 'active' : '' }}">
+            <i class="fa-solid fa-user-gear"></i>
+            <span>Profil Saya</span>
         </a>
 
         <!-- MASTER -->

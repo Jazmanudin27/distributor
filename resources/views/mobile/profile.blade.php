@@ -17,7 +17,7 @@
         </span>
         <div class="text-secondary small" style="font-size: 0.8rem;">
             <div class="mb-1"><i class="fa-solid fa-envelope me-2"></i>{{ $user->email }}</div>
-            <div><i class="fa-solid fa-user-shield me-2"></i>Username: {{ $user->username }}</div>
+            <div><i class="fa-solid fa-user-shield me-2"></i>Username: {{ $user->name }}</div>
         </div>
     </div>
 
@@ -121,4 +121,47 @@
             </a>
         </div>
     @endif
+
+    <!-- Edit Credentials Card -->
+    <div class="mobile-card mt-3">
+        <h5 class="fw-bold mb-3 text-white" style="font-size: 1rem;"><i class="fa-solid fa-user-gear me-2 text-primary"></i>Ubah Username / Password</h5>
+        
+        @if ($errors->any())
+            <div class="alert alert-danger rounded-4 py-2 px-3 mb-3 small" style="background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;">
+                <ul class="mb-0 ps-3">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form action="{{ route('mobile.profile.update-credentials') }}" method="POST">
+            @csrf
+            
+            <div class="mb-3">
+                <label class="form-label small text-secondary">Username Baru</label>
+                <input type="text" name="name" class="form-control form-control-mobile" value="{{ old('name', $user->name) }}" placeholder="Masukkan username baru" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label small text-secondary">Password Baru (Opsional)</label>
+                <input type="password" name="password" class="form-control form-control-mobile" placeholder="Kosongkan jika tidak diubah">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label small text-secondary">Konfirmasi Password Baru</label>
+                <input type="password" name="password_confirmation" class="form-control form-control-mobile" placeholder="Masukkan ulang password baru">
+            </div>
+
+            <div class="mb-3 border-top border-secondary border-opacity-10 pt-3">
+                <label class="form-label small text-warning"><i class="fa-solid fa-lock me-1"></i>Password Saat Ini (Verifikasi)</label>
+                <input type="password" name="current_password" class="form-control form-control-mobile" placeholder="Password lama untuk konfirmasi" required>
+            </div>
+
+            <button type="submit" class="btn btn-mobile btn-mobile-primary w-100 mt-2">
+                Simpan Perubahan
+            </button>
+        </form>
+    </div>
 @endsection

@@ -10,8 +10,8 @@
                 <small class="text-white-50">Kelola dan cetak rekapitulasi pengiriman sales per wilayah</small>
             </div>
             @can('create-penjualan_kiriman')
-                <a href="{{ route('penjualan-kiriman.create') }}" class="btn btn-light btn-sm fw-bold hover-scale">
-                    <i class="fa-solid fa-circle-plus me-1 text-primary"></i> Tambah Kiriman
+                <a href="{{ route('penjualan-kiriman.create') }}" class="btn btn-primary btn-sm fw-bold hover-scale">
+                    <i class="fa-solid fa-circle-plus me-1 text-white"></i> Tambah Kiriman
                 </a>
             @endcan
         </div>
@@ -77,8 +77,9 @@
                                 <td class="text-center text-secondary small fw-bold">{{ $items->firstItem() + $index }}</td>
                                 <td class="small">{{ \Carbon\Carbon::parse($item->tanggal)->format('d-M-Y') }}</td>
                                 <td class="fw-bold text-dark">
-                                    {{ $item->nama_wilayah }} 
-                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1 fw-semibold fs-8 px-2">
+                                    {{ $item->nama_wilayah }}
+                                    <span
+                                        class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1 fw-semibold fs-8 px-2">
                                         Kirim Ke-{{ $item->kirimanke }}
                                     </span>
                                 </td>
@@ -94,7 +95,7 @@
                                     <i class="fa-solid fa-user-tag text-secondary me-1"></i>{{ $item->driver_name ?? '-' }}
                                 </td>
                                 <td class="text-center">
-                                    @if($item->status == 'proses')
+                                    @if ($item->status == 'proses')
                                         <span class="badge bg-warning text-dark px-2 py-1">Proses</span>
                                     @elseif($item->status == 'kirim')
                                         <span class="badge bg-info text-white px-2 py-1">Kirim</span>
@@ -103,7 +104,8 @@
                                     @elseif($item->status == 'batal')
                                         <span class="badge bg-danger text-white px-2 py-1">Batal</span>
                                     @else
-                                        <span class="badge bg-secondary text-white px-2 py-1">{{ ucfirst($item->status) }}</span>
+                                        <span
+                                            class="badge bg-secondary text-white px-2 py-1">{{ ucfirst($item->status) }}</span>
                                     @endif
                                 </td>
                                 <td class="text-muted small">
@@ -112,11 +114,13 @@
                                 <td class="text-center">
                                     <div class="btn-group gap-1">
                                         <a href="{{ route('penjualan-kiriman.cetak-rekap', ['tanggal' => $item->tanggal, 'kode_wilayah' => $item->kode_wilayah, 'kirimanke' => $item->kirimanke]) }}"
-                                            target="_blank" class="btn btn-sm btn-outline-info rounded" title="Cetak Rekap Kiriman">
+                                            target="_blank" class="btn btn-sm btn-outline-info rounded"
+                                            title="Cetak Rekap Kiriman">
                                             <i class="fa-solid fa-print"></i> Rekap
                                         </a>
                                         <a href="{{ route('penjualan-kiriman.cetak-barang', ['tanggal' => $item->tanggal, 'kode_wilayah' => $item->kode_wilayah, 'kirimanke' => $item->kirimanke]) }}"
-                                            target="_blank" class="btn btn-sm btn-outline-warning rounded" title="Cetak Rekap Barang">
+                                            target="_blank" class="btn btn-sm btn-outline-warning rounded"
+                                            title="Cetak Rekap Barang">
                                             <i class="fa-solid fa-boxes-stacked"></i> Barang
                                         </a>
                                         @can('edit-penjualan_kiriman')
@@ -170,7 +174,7 @@
             $('.delete-btn').on('click', function(e) {
                 e.preventDefault();
                 var form = $(this).closest('form');
-                
+
                 Swal.fire({
                     title: 'Apakah Anda yakin?',
                     text: "Seluruh data rekap pengiriman untuk tanggal dan wilayah ini akan dihapus secara permanen!",

@@ -168,14 +168,18 @@
                     </button>
 
                     <div class="d-flex align-items-center ms-auto">
-                        <span class="me-3 text-secondary">Halo, {{ Auth::user()->name ?? 'Guest' }}</span>
                         @if (Auth::check())
+                            <a href="{{ route('profile.edit') }}" class="me-3 text-decoration-none text-secondary link-light" title="Ubah Profil">
+                                <i class="fa-solid fa-circle-user me-1 text-primary"></i>Halo, {{ Auth::user()->name }}
+                            </a>
                             <form action="{{ route('logout') }}" method="POST" class="m-0">
                                 @csrf
                                 <button type="submit" class="btn btn-outline-danger btn-sm">
                                     <i class="fas fa-sign-out-alt"></i> Logout
                                 </button>
                             </form>
+                        @else
+                            <span class="me-3 text-secondary">Halo, Guest</span>
                         @endif
                     </div>
                 </div>
