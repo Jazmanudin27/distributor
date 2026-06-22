@@ -32,6 +32,22 @@
         </div>
     @endif
 
+    @if(strtolower(Auth::user()->role) === 'spv sales' && isset($pendingLimitCount) && $pendingLimitCount > 0)
+        <div class="alert alert-info rounded-4 mb-3 d-flex align-items-center justify-content-between"
+            style="background-color: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #a5b4fc;">
+            <div class="d-flex align-items-center">
+                <i class="fa-solid fa-file-invoice-dollar me-3" style="font-size: 1.25rem;"></i>
+                <div>
+                    <span style="font-size: 0.8rem; font-weight: 600;">Persetujuan Limit Kredit</span>
+                    <small class="d-block text-secondary" style="font-size: 0.7rem; color: #a5b4fc !important; opacity: 0.85;">Ada {{ $pendingLimitCount }} pengajuan limit menunggu persetujuan</small>
+                </div>
+            </div>
+            <a href="{{ route('mobile.limit-kredit.index') }}#pending-approvals" class="btn btn-sm btn-mobile-primary text-white fw-bold px-3 py-1-5 fs-8" style="border-radius: 8px; text-decoration: none;">
+                Tinjau <i class="fa-solid fa-arrow-right ms-0.5"></i>
+            </a>
+        </div>
+    @endif
+
     @php
         $role = strtolower(Auth::user()->role ?? '');
         $isSpv = ($role === 'spv sales');
@@ -109,6 +125,14 @@
                     </a>
                 </div>
             @endif
+            <div class="col-12 mt-2">
+                <a href="{{ route('mobile.limit-kredit.index') }}#pending-approvals"
+                    class="btn btn-mobile w-100 py-2.5 d-flex align-items-center justify-content-center"
+                    style="background-color: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); color: #a5b4fc;">
+                    <i class="fa-solid fa-file-invoice-dollar me-2" style="font-size: 1.2rem;"></i>
+                    <span style="font-size: 0.85rem;">Persetujuan Limit Kredit @if($pendingLimitCount > 0) ({{ $pendingLimitCount }}) @endif</span>
+                </a>
+            </div>
         </div>
     @endif
 

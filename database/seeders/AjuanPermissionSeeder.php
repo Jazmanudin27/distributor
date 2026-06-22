@@ -24,8 +24,8 @@ class AjuanPermissionSeeder extends Seeder
             $this->command->info("Permission ensured: {$permission}");
         }
 
-        // Assign semua permission ke role Admin dan Super Admin
-        $roleNames = ['Admin', 'Super Admin'];
+        // Assign semua permission ke role Admin, Super Admin dan SPV Sales
+        $roleNames = ['Admin', 'Super Admin', 'SPV Sales'];
         foreach ($roleNames as $roleName) {
             $role = Role::where('name', $roleName)->first();
             if ($role) {

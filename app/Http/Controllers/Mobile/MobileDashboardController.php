@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Penjualan;
 use App\Models\PenjualanCheckin;
 use App\Models\Pelanggan;
+use App\Models\AjuanLimitKredit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -73,10 +74,12 @@ class MobileDashboardController extends Controller
 
         // 7. Pending Customer Approvals (for SPV Sales)
         $pendingCustomersCount = 0;
+        $pendingLimitCount = 0;
         if ($isSpv) {
             $pendingCustomersCount = Pelanggan::where(function($q) {
                 $q->whereNull('approve')->orWhere('approve', 0);
             })->count();
+            $pendingLimitCount = AjuanLimitKredit::where('status', 'pending')->count();
         }
 
         // Target progress percentage
@@ -90,7 +93,8 @@ class MobileDashboardController extends Controller
             'recentOrders',
             'progressPercentage',
             'activeCheckin',
-            'pendingCustomersCount'
+            'pendingCustomersCount',
+            'pendingLimitCount'
         ));
     }
 

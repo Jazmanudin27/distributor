@@ -222,6 +222,17 @@
 
         @push('scripts')
             <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    // Check URL hash to switch to Persetujuan Limit tab automatically
+                    if (window.location.hash === '#pending-approvals') {
+                        const pendingTabTrigger = document.getElementById('pending-approvals-tab');
+                        if (pendingTabTrigger) {
+                            const tab = new bootstrap.Tab(pendingTabTrigger);
+                            tab.show();
+                        }
+                    }
+                });
+
                 function confirmApprove(e) {
                     e.preventDefault();
                     Swal.fire({
