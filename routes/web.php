@@ -72,6 +72,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/limit-kredit', [MobileAjuanLimitController::class, 'index'])->name('limit-kredit.index');
         Route::get('/limit-kredit/create', [MobileAjuanLimitController::class, 'create'])->name('limit-kredit.create');
         Route::post('/limit-kredit/store', [MobileAjuanLimitController::class, 'store'])->name('limit-kredit.store');
+        Route::post('/spv/limit-kredit/{id}/approve', [MobileAjuanLimitController::class, 'approveSpv'])->name('spv.limit-kredit.approve');
+        Route::post('/spv/limit-kredit/{id}/reject', [MobileAjuanLimitController::class, 'rejectSpv'])->name('spv.limit-kredit.reject');
 
         // Pelanggan (Customers)
         Route::get('/pelanggan/create', [MobilePelangganController::class, 'create'])->name('pelanggan.create');

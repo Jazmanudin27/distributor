@@ -143,7 +143,8 @@ class Penjualan extends Model
     {
         $totalBayar = $this->getApprovedPembayaranTotal();
         $totalRetur = $this->getTotalRetur();
-        return (float) ($this->grand_total - $totalBayar - $totalRetur);
+        $sisa = $this->grand_total - $totalBayar - $totalRetur;
+        return $sisa < 1 ? 0.0 : (float) $sisa;
     }
 
     public function user()

@@ -868,7 +868,8 @@ class LaporanController extends Controller
 
                     $invoice->total_bayar = $paid;
                     $invoice->total_retur = $returPaid;
-                    $invoice->sisa_bayar = (float)($invoice->grand_total - $paid - $returPaid);
+                    $sisa = (float)($invoice->grand_total - $paid - $returPaid);
+                    $invoice->sisa_bayar = $sisa < 1 ? 0.0 : $sisa;
                     $invoice->status_pembayaran = $invoice->sisa_bayar <= 0 ? 'Lunas' : 'Belum Lunas';
                 }
             }
@@ -1019,9 +1020,10 @@ class LaporanController extends Controller
                 $invoicesByCustomer = [];
                 foreach ($invoices as $inv) {
                     $paid = ($cashPayments[$inv->no_faktur] ?? 0) + ($transferPayments[$inv->no_faktur] ?? 0) + ($giroPayments[$inv->no_faktur] ?? 0);
-                    $remaining = (float)$inv->grand_total - $paid;
+                    $rem = (float)$inv->grand_total - $paid;
+                    $remaining = $rem < 1 ? 0.0 : $rem;
 
-                    if ($remaining > 0.01) {
+                    if ($remaining >= 1) {
                         $invoicesByCustomer[$inv->kode_pelanggan][] = [
                             'invoice' => $inv,
                             'remaining' => $remaining
@@ -1105,9 +1107,10 @@ class LaporanController extends Controller
                 $invoicesByCustomer = [];
                 foreach ($invoices as $inv) {
                     $paid = ($cashPayments[$inv->no_faktur] ?? 0) + ($transferPayments[$inv->no_faktur] ?? 0) + ($giroPayments[$inv->no_faktur] ?? 0);
-                    $remaining = (float)$inv->grand_total - $paid;
+                    $rem = (float)$inv->grand_total - $paid;
+                    $remaining = $rem < 1 ? 0.0 : $rem;
 
-                    if ($remaining > 0.01) {
+                    if ($remaining >= 1) {
                         $invoicesByCustomer[$inv->kode_pelanggan][] = [
                             'invoice' => $inv,
                             'remaining' => $remaining
@@ -1225,9 +1228,10 @@ class LaporanController extends Controller
                     $returPaid = $returPayments[$inv->no_faktur] ?? 0;
 
                     $paid = $cashPaid + $transferPaid + $giroPaid;
-                    $sisa_piutang = (float)($inv->grand_total - $paid - $returPaid);
+                    $sisa = (float)($inv->grand_total - $paid - $returPaid);
+                    $sisa_piutang = $sisa < 1 ? 0.0 : $sisa;
 
-                    if ($sisa_piutang > 0.01) {
+                    if ($sisa_piutang >= 1) {
                         $ljt = $inv->pelanggan->ljt ?? 30;
                         $jatuh_tempo = Carbon::parse($inv->tanggal)->addDays($ljt);
                         $umur_piutang = (int) round(Carbon::parse($inv->tanggal)->diffInDays(Carbon::now()));
@@ -1376,9 +1380,10 @@ class LaporanController extends Controller
                 $pfRetur = $potongFakturReturs[$inv->no_faktur] ?? 0;
 
                 $paid = $cashPaid + $transferPaid + $giroPaid;
-                $sisa_piutang = (float)($inv->grand_total - $paid - $returPaid - $pfRetur);
+                $sisa = (float)($inv->grand_total - $paid - $returPaid - $pfRetur);
+                $sisa_piutang = $sisa < 1 ? 0.0 : $sisa;
 
-                if ($sisa_piutang > 0.01) {
+                if ($sisa_piutang >= 1) {
                     $items->push([
                         'no_faktur' => $inv->no_faktur,
                         'tanggal' => $inv->tanggal,

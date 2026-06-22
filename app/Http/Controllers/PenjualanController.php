@@ -349,7 +349,7 @@ class PenjualanController extends Controller
         $returs = \App\Models\ReturPenjualan::where('no_faktur', $no_faktur)->get();
         $totalRetur = $returs->sum('total');
 
-        $sisaBayar = $item->grand_total - $totalBayar - $totalRetur;
+        $sisaBayar = $item->getSisaPiutang();
 
         $salesmen = User::where(function ($q) {
             $q->where('role', 'sales')->orWhere('role', 'Salesman');
@@ -496,9 +496,6 @@ class PenjualanController extends Controller
         $tempGrandTotal = $tempSubtotalSum - $tempTotalDiskon - ($request->diskon_global ?? 0);
 
         $pelanggan = Pelanggan::findOrFail($request->kode_pelanggan);
-        if ($pelanggan->hasOverdueInvoices($no_faktur)) {
-            return redirect()->back()->withInput()->with('error', "Gagal memperbarui transaksi. Pelanggan ini memiliki faktur yang sudah jatuh tempo!");
-        }
 
         // Verify product restrictions for the salesman
         $user = auth()->user();
@@ -710,7 +707,11 @@ class PenjualanController extends Controller
 
         $totalBayarApproved = $item->pembayarans->where('status', 'disetujui')->sum('jumlah');
         $totalBayarPending = $item->pembayarans->where('status', 'pending')->sum('jumlah');
-        $sisaBayarValidation = $item->grand_total - ($totalBayarApproved + $totalBayarPending);
+        $totalRetur = $item->getTotalRetur();
+        $sisaBayarValidation = $item->grand_total - ($totalBayarApproved + $totalBayarPending) - $totalRetur;
+        if ($sisaBayarValidation < 1) {
+            $sisaBayarValidation = 0.0;
+        }
 
         if ($request->jumlah > $sisaBayarValidation) {
             return redirect()->back()->with('error', 'Jumlah pembayaran melebihi sisa piutang! Sisa saat ini (termasuk pending): Rp ' . number_format($sisaBayarValidation, 0, ',', '.'));

@@ -337,6 +337,7 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+            const isEditMode = {{ $item->exists ? 'true' : 'false' }};
             const existingDetails = {!! json_encode($item->details ?? []) !!};
             const diskonStrata = {!! json_encode($diskonStrata ?? []) !!};
             const barangsCache = {};
@@ -504,7 +505,7 @@
 
                 // Check overdue status
                 const hasOverdue = parseInt(opt.attr('data-has-overdue') || opt.data('has-overdue')) === 1;
-                if (hasOverdue) {
+                if (hasOverdue && !isEditMode) {
                     $('#pelanggan_overdue_warning').removeClass('d-none');
                 } else {
                     $('#pelanggan_overdue_warning').addClass('d-none');
@@ -1091,16 +1092,18 @@
                 }
 
                 // Overdue Check
-                const opt = $('#kode_pelanggan').find(':selected');
-                if (opt.val()) {
-                    const hasOverdue = parseInt(opt.data('has-overdue')) === 1;
-                    if (hasOverdue) {
-                        e.preventDefault();
-                        return Swal.fire({
-                            title: 'Transaksi Ditolak',
-                            text: 'Pelanggan ini memiliki faktur yang sudah jatuh tempo! Harap selesaikan pembayaran terlebih dahulu.',
-                            icon: 'error'
-                        });
+                if (!isEditMode) {
+                    const opt = $('#kode_pelanggan').find(':selected');
+                    if (opt.val()) {
+                        const hasOverdue = parseInt(opt.data('has-overdue')) === 1;
+                        if (hasOverdue) {
+                            e.preventDefault();
+                            return Swal.fire({
+                                title: 'Transaksi Ditolak',
+                                text: 'Pelanggan ini memiliki faktur yang sudah jatuh tempo! Harap selesaikan pembayaran terlebih dahulu.',
+                                icon: 'error'
+                            });
+                        }
                     }
                 }
 
