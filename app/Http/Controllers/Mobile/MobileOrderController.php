@@ -168,7 +168,6 @@ class MobileOrderController extends Controller
         }
 
         $request->validate([
-            'no_faktur'         => 'required|string|unique:penjualan,no_faktur',
             'tanggal'           => 'required|date',
             'tanggal_kirim'     => 'nullable|date',
             'kode_pelanggan'    => 'required|string|exists:pelanggan,kode_pelanggan',
@@ -410,7 +409,16 @@ class MobileOrderController extends Controller
 
         // 3. Process Transaction
         try {
-            DB::transaction(function () use ($request, $tempGrandTotal, $pelanggan, $calculateStrata) {
+            $savedNoFaktur = DB::transaction(function () use ($request, $tempGrandTotal, $pelanggan, $calculateStrata) {
+                // === Generate no_faktur secara atomik (mencegah race condition) ===
+                $todayDate = date('my');
+                $lastFaktur = Penjualan::where('no_faktur', 'like', '%-PJ-MJ-' . $todayDate)
+                    ->lockForUpdate()
+                    ->orderBy('no_faktur', 'desc')
+                    ->first();
+                $nextNum = $lastFaktur ? (intval(substr($lastFaktur->no_faktur, 0, 4)) + 1) : 1;
+                $noFaktur = str_pad($nextNum, 4, '0', STR_PAD_LEFT) . '-PJ-MJ-' . $todayDate;
+
                 $subtotalSum  = 0;
                 $totalDiskon  = 0;
                 $details      = [];
@@ -465,7 +473,7 @@ class MobileOrderController extends Controller
 
                 // Save Penjualan (Order)
                 $penjualan = Penjualan::create([
-                    'no_faktur'       => $request->no_faktur,
+                    'no_faktur'       => $noFaktur,
                     'tanggal'         => $request->tanggal,
                     'tanggal_kirim'   => $request->tanggal_kirim,
                     'kode_pelanggan'  => $request->kode_pelanggan,
@@ -486,8 +494,6 @@ class MobileOrderController extends Controller
                 // Semua transaksi (Tunai maupun Kredit) akan berstatus BELUM LUNAS.
                 // Pembayaran hanya bisa diinput oleh admin/kasir melalui desktop.
 
-                // Create visit checkout automatically if checkout parameter is true
-                // but the visit log checkin is optional, so we log normal order activity
                 \App\Models\ActivityLog::create([
                     'user_id' => Auth::id() ?? 1,
                     'action' => 'Tambah Penjualan (Mobile)',
@@ -495,12 +501,14 @@ class MobileOrderController extends Controller
                     'ip_address' => $request->ip(),
                     'no_faktur' => $penjualan->no_faktur,
                 ]);
+
+                return $penjualan->no_faktur;
             });
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
 
-        return redirect()->route('mobile.kunjungan.index')->with('success', 'Pesanan penjualan ' . $request->no_faktur . ' berhasil disimpan.');
+        return redirect()->route('mobile.kunjungan.index')->with('success', 'Pesanan penjualan ' . $savedNoFaktur . ' berhasil disimpan.');
     }
 
     public function storePayment(Request $request, $no_faktur)

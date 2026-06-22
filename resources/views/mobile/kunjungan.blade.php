@@ -451,7 +451,7 @@
                             @endif
 
                             <!-- Info Sisa Tagihan (Sales tidak bisa input pembayaran) -->
-                             @if ($order->batal !== 1 && $sisaBayar >= 1)
+                            @if ($order->batal !== 1 && $sisaBayar >= 1)
                                 <div class="mt-3 pt-2 border-top border-secondary border-opacity-10">
                                     <div class="p-2 rounded-3 d-flex align-items-center gap-2"
                                         style="background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.2);">

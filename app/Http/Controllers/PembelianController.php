@@ -70,14 +70,14 @@ class PembelianController extends Controller
             $nextNumber = 1;
         }
         $item->no_faktur = 'PEMB-' . $today . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        $existingDetails = [];
         
-        return view('pembelian.form', compact('item', 'suppliers', 'barangs'));
+        return view('pembelian.form', compact('item', 'suppliers', 'barangs', 'existingDetails'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'no_faktur' => 'required|string|unique:pembelian,no_faktur',
             'no_po' => 'nullable|string',
             'tanggal' => 'required|date',
             'jatuh_tempo' => 'nullable|date',
@@ -97,7 +97,16 @@ class PembelianController extends Controller
             'items.*.diskon' => 'required|numeric|min:0',
         ]);
 
-        DB::transaction(function () use ($request) {
+        $savedNoFaktur = DB::transaction(function () use ($request) {
+            // === Generate no_faktur secara atomik (mencegah race condition) ===
+            $today = date('Ymd');
+            $lastFaktur = Pembelian::where('no_faktur', 'like', 'PEMB-' . $today . '%')
+                ->lockForUpdate()
+                ->orderBy('no_faktur', 'desc')
+                ->first();
+            $nextNum = $lastFaktur ? (intval(substr($lastFaktur->no_faktur, -4)) + 1) : 1;
+            $noFaktur = 'PEMB-' . $today . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+
             $subtotalSum = 0;
             $details = [];
 
@@ -127,7 +136,7 @@ class PembelianController extends Controller
             $grandTotal = $subtotalSum - $request->potongan - $request->potongan_claim + $request->pajak + $request->biaya_lain;
 
             $pembelian = Pembelian::create([
-                'no_faktur' => $request->no_faktur,
+                'no_faktur' => $noFaktur,
                 'no_po' => $request->no_po,
                 'tanggal' => $request->tanggal,
                 'jatuh_tempo' => $request->jatuh_tempo,
@@ -151,9 +160,11 @@ class PembelianController extends Controller
                 'ip_address' => $request->ip(),
                 'no_faktur' => $pembelian->no_faktur,
             ]);
+
+            return $pembelian->no_faktur;
         });
 
-        return redirect()->route('pembelian.index')->with('success', 'Transaksi pembelian berhasil disimpan');
+        return redirect()->route('pembelian.index')->with('success', 'Transaksi pembelian ' . $savedNoFaktur . ' berhasil disimpan');
     }
 
     public function show($no_faktur)
@@ -175,7 +186,21 @@ class PembelianController extends Controller
         $item = Pembelian::with(['details.barang'])->findOrFail($no_faktur);
         $suppliers = Supplier::where('status', 1)->get();
         $barangs = Barang::where('status', 1)->with('satuans')->get();
-        return view('pembelian.form', compact('item', 'suppliers', 'barangs'));
+
+        // Build clean simplified array for JS (avoids Eloquent collection serialization issues)
+        $existingDetails = $item->details->map(function ($d) {
+            return [
+                'kode_barang' => $d->kode_barang,
+                'nama_barang' => $d->barang ? $d->barang->nama_barang : 'Barang',
+                'satuan_id'   => $d->satuan_id,
+                'satuan'      => $d->satuan,
+                'qty'         => $d->qty,
+                'harga'       => (int) $d->harga,
+                'diskon'      => (int) $d->diskon,
+            ];
+        })->values()->toArray();
+
+        return view('pembelian.form', compact('item', 'suppliers', 'barangs', 'existingDetails'));
     }
 
     public function update(Request $request, $no_faktur)

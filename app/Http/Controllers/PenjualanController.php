@@ -166,7 +166,6 @@ class PenjualanController extends Controller
         ]);
 
         $request->validate([
-            'no_faktur' => 'required|string|unique:penjualan,no_faktur',
             'tanggal' => 'required|date',
             'tanggal_kirim' => 'nullable|date',
             'kode_pelanggan' => 'required|string|exists:pelanggan,kode_pelanggan',
@@ -179,7 +178,7 @@ class PenjualanController extends Controller
             'items.*.satuan' => 'required|string',
             'items.*.qty' => 'required|numeric|min:0.01',
             'items.*.harga' => 'required|numeric|min:0',
-            'items.*.diskon' => 'required|numeric|min:0',
+            'items.*.diskon' => 'nullable|numeric|min:0',
             'items.*.diskon1_persen' => 'nullable|numeric|min:0|max:100',
             'items.*.diskon2_persen' => 'nullable|numeric|min:0|max:100',
             'items.*.diskon3_persen' => 'nullable|numeric|min:0|max:100',
@@ -229,7 +228,16 @@ class PenjualanController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($request, $isKredit) {
+            $savedNoFaktur = DB::transaction(function () use ($request, $isKredit) {
+                // === Generate no_faktur secara atomik (mencegah race condition) ===
+                $todayDate = date('my');
+                $lastFaktur = Penjualan::where('no_faktur', 'like', '%-PJ-MJ-' . $todayDate)
+                    ->lockForUpdate()
+                    ->orderBy('no_faktur', 'desc')
+                    ->first();
+                $nextNum = $lastFaktur ? (intval(substr($lastFaktur->no_faktur, 0, 4)) + 1) : 1;
+                $noFaktur = str_pad($nextNum, 4, '0', STR_PAD_LEFT) . '-PJ-MJ-' . $todayDate;
+
                 $subtotalSum = 0;
                 $totalDiskon = 0;
                 $details = [];
@@ -280,7 +288,7 @@ class PenjualanController extends Controller
                 $grandTotal = $subtotalSum - $totalDiskon - $diskonGlobal;
 
                 $penjualan = Penjualan::create([
-                    'no_faktur' => $request->no_faktur,
+                    'no_faktur' => $noFaktur,
                     'tanggal' => $request->tanggal,
                     'tanggal_kirim' => $request->tanggal_kirim,
                     'kode_pelanggan' => $request->kode_pelanggan,
@@ -299,12 +307,12 @@ class PenjualanController extends Controller
                 // Jika Tunai, langsung catat pembayaran lunas
                 if (!$isKredit) {
                     $prefix = date('my');
-                    $last = PenjualanPembayaran::where('no_bukti', 'like', $prefix . '%')->orderBy('no_bukti', 'desc')->first();
-                    $nextNo = 1;
-                    if ($last) {
-                        $lastNum = intval(substr($last->no_bukti, 4));
-                        $nextNo = $lastNum + 1;
-                    }
+                    // Generate no_bukti atomik
+                    $lastBukti = PenjualanPembayaran::where('no_bukti', 'like', $prefix . '%')
+                        ->lockForUpdate()
+                        ->orderBy('no_bukti', 'desc')
+                        ->first();
+                    $nextNo = $lastBukti ? (intval(substr($lastBukti->no_bukti, 4)) + 1) : 1;
                     $noBukti = $prefix . str_pad($nextNo, 4, '0', STR_PAD_LEFT);
 
                     PenjualanPembayaran::create([
@@ -335,12 +343,14 @@ class PenjualanController extends Controller
                     'ip_address' => $request->ip(),
                     'no_faktur' => $penjualan->no_faktur,
                 ]);
+
+                return $penjualan->no_faktur;
             });
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
 
-        return redirect()->route('penjualan.index')->with('success', 'Transaksi penjualan berhasil disimpan.');
+        return redirect()->route('penjualan.index')->with('success', 'Transaksi penjualan ' . $savedNoFaktur . ' berhasil disimpan.');
     }
 
     public function show($no_faktur)

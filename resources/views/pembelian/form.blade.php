@@ -38,11 +38,13 @@
                             </h6>
                             <div class="mb-2">
                                 <label for="no_faktur" class="form-label fs-7 fw-bold text-secondary mb-1">No Faktur
-                                    Supplier <span class="text-danger">*</span></label>
+                                    Supplier
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle ms-1" style="font-size:10px; font-weight:500;">Auto</span></label>
                                 <input type="text" name="no_faktur" id="no_faktur"
-                                    class="form-control form-control-sm @error('no_faktur') is-invalid @enderror {{ $item->exists ? 'bg-light font-monospace fw-bold' : '' }}"
-                                    placeholder="Contoh: INV/2026/001" value="{{ old('no_faktur', $item->no_faktur) }}"
-                                    {{ $item->exists ? 'readonly' : 'required' }}>
+                                    class="form-control form-control-sm bg-light font-monospace fw-bold @error('no_faktur') is-invalid @enderror"
+                                    placeholder="Auto-generated" value="{{ old('no_faktur', $item->no_faktur) }}"
+                                    readonly>
+                                <div class="text-muted" style="font-size:10px; margin-top:2px;"><i class="fa-solid fa-circle-info"></i> Nomor faktur digenerate otomatis saat disimpan</div>
                                 @error('no_faktur')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
@@ -340,7 +342,7 @@
             // Load base data
             const barangs = {!! json_encode($barangs) !!};
             const suppliers = {!! json_encode($suppliers) !!};
-            const existingDetails = {!! json_encode($item->details ?? []) !!};
+            const existingDetails = {!! json_encode($existingDetails ?? []) !!};
             let rowIndex = 0;
 
             // Initialize Search Selects
@@ -645,8 +647,8 @@
             // Load existing details if edit mode
             if (existingDetails.length > 0) {
                 existingDetails.forEach(d => {
-                    appendRow(d.kode_barang, d.barang ? d.barang.nama_barang : 'Barang', d.satuan_id, d
-                        .satuan, d.qty, parseInt(d.harga), parseInt(d.diskon));
+                    appendRow(d.kode_barang, d.nama_barang || 'Barang', d.satuan_id, d.satuan, d.qty, d
+                        .harga, d.diskon);
                 });
                 calculateTotals();
             }
