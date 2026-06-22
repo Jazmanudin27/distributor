@@ -76,41 +76,54 @@
                             <th>Jatuh Tempo</th>
                             <th>Supplier</th>
                             <th>PO</th>
+                            <th class="text-end">Bruto</th>
                             <th class="text-end">Potongan</th>
                             <th class="text-end">Pajak</th>
                             <th class="text-end">Biaya Lain</th>
                             <th class="text-end">Claim</th>
                             <th class="text-end">Grand Total</th>
+                            <th class="text-end">Bayar</th>
+                            <th class="text-end">Sisa</th>
+                            <th class="text-center">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         @php
                             $num = 1;
+                            $totBruto = 0;
                             $totPotongan = 0;
                             $totPajak = 0;
                             $totBiaya = 0;
                             $totClaim = 0;
                             $totGrand = 0;
+                            $totBayar = 0;
+                            $totSisa = 0;
                         @endphp
 
                         @if ($group_by_supplier === '1')
                             @foreach ($items as $supplierCode => $group)
                                 @php
                                     $supplierName = $group->first()->supplier->nama_supplier ?? $supplierCode;
+                                    $subBruto = $group->sum('bruto');
                                     $subPotongan = $group->sum('potongan');
                                     $subPajak = $group->sum('pajak');
                                     $subBiaya = $group->sum('biaya_lain');
                                     $subClaim = $group->sum('potongan_claim');
                                     $subGrand = $group->sum('grand_total');
+                                    $subBayar = $group->sum('total_bayar');
+                                    $subSisa = $group->sum('sisa_bayar');
 
+                                    $totBruto += $subBruto;
                                     $totPotongan += $subPotongan;
                                     $totPajak += $subPajak;
                                     $totBiaya += $subBiaya;
                                     $totClaim += $subClaim;
                                     $totGrand += $subGrand;
+                                    $totBayar += $subBayar;
+                                    $totSisa += $subSisa;
                                 @endphp
                                 <tr class="fw-bold bg-light">
-                                    <td colspan="11">SUPPLIER: {{ $supplierName }} ({{ $supplierCode }})</td>
+                                    <td colspan="15">SUPPLIER: {{ $supplierName }} ({{ $supplierCode }})</td>
                                 </tr>
                                 @foreach ($group as $invoice)
                                     <tr>
@@ -120,30 +133,45 @@
                                         <td>{{ $invoice->jatuh_tempo ? \Carbon\Carbon::parse($invoice->jatuh_tempo)->format('d-m-Y') : '-' }}</td>
                                         <td>{{ $invoice->supplier->nama_supplier ?? '-' }}</td>
                                         <td>{{ $invoice->no_po ?? '-' }}</td>
+                                        <td class="text-end">{{ number_format($invoice->bruto, 0, ',', '.') }}</td>
                                         <td class="text-end">{{ number_format($invoice->potongan, 0, ',', '.') }}</td>
                                         <td class="text-end">{{ number_format($invoice->pajak, 0, ',', '.') }}</td>
                                         <td class="text-end">{{ number_format($invoice->biaya_lain, 0, ',', '.') }}</td>
                                         <td class="text-end">{{ number_format($invoice->potongan_claim, 0, ',', '.') }}</td>
                                         <td class="text-end fw-bold">{{ number_format($invoice->grand_total, 0, ',', '.') }}</td>
+                                        <td class="text-end text-success">{{ number_format($invoice->total_bayar, 0, ',', '.') }}</td>
+                                        <td class="text-end text-danger">{{ number_format($invoice->sisa_bayar, 0, ',', '.') }}</td>
+                                        <td class="text-center fw-bold">
+                                            <span class="{{ $invoice->status_pembayaran === 'Lunas' ? 'text-success' : 'text-danger' }}">
+                                                {{ $invoice->status_pembayaran }}
+                                            </span>
+                                        </td>
                                     </tr>
                                 @endforeach
                                 <tr class="fw-bold bg-light-subtle">
                                     <td colspan="6" class="text-end">Subtotal {{ $supplierName }}:</td>
+                                    <td class="text-end">{{ number_format($subBruto, 0, ',', '.') }}</td>
                                     <td class="text-end">{{ number_format($subPotongan, 0, ',', '.') }}</td>
                                     <td class="text-end">{{ number_format($subPajak, 0, ',', '.') }}</td>
                                     <td class="text-end">{{ number_format($subBiaya, 0, ',', '.') }}</td>
                                     <td class="text-end">{{ number_format($subClaim, 0, ',', '.') }}</td>
                                     <td class="text-end">{{ number_format($subGrand, 0, ',', '.') }}</td>
+                                    <td class="text-end text-success">{{ number_format($subBayar, 0, ',', '.') }}</td>
+                                    <td class="text-end text-danger">{{ number_format($subSisa, 0, ',', '.') }}</td>
+                                    <td></td>
                                 </tr>
                             @endforeach
                         @else
                             @foreach ($items as $invoice)
                                 @php
+                                    $totBruto += $invoice->bruto;
                                     $totPotongan += $invoice->potongan;
                                     $totPajak += $invoice->pajak;
                                     $totBiaya += $invoice->biaya_lain;
                                     $totClaim += $invoice->potongan_claim;
                                     $totGrand += $invoice->grand_total;
+                                    $totBayar += $invoice->total_bayar;
+                                    $totSisa += $invoice->sisa_bayar;
                                 @endphp
                                 <tr>
                                     <td class="text-center">{{ $num++ }}</td>
@@ -152,23 +180,35 @@
                                     <td>{{ $invoice->jatuh_tempo ? \Carbon\Carbon::parse($invoice->jatuh_tempo)->format('d-m-Y') : '-' }}</td>
                                     <td>{{ $invoice->supplier->nama_supplier ?? '-' }}</td>
                                     <td>{{ $invoice->no_po ?? '-' }}</td>
+                                    <td class="text-end">{{ number_format($invoice->bruto, 0, ',', '.') }}</td>
                                     <td class="text-end">{{ number_format($invoice->potongan, 0, ',', '.') }}</td>
                                     <td class="text-end">{{ number_format($invoice->pajak, 0, ',', '.') }}</td>
                                     <td class="text-end">{{ number_format($invoice->biaya_lain, 0, ',', '.') }}</td>
                                     <td class="text-end">{{ number_format($invoice->potongan_claim, 0, ',', '.') }}</td>
                                     <td class="text-end fw-bold">{{ number_format($invoice->grand_total, 0, ',', '.') }}</td>
+                                    <td class="text-end text-success">{{ number_format($invoice->total_bayar, 0, ',', '.') }}</td>
+                                    <td class="text-end text-danger">{{ number_format($invoice->sisa_bayar, 0, ',', '.') }}</td>
+                                    <td class="text-center fw-bold">
+                                        <span class="{{ $invoice->status_pembayaran === 'Lunas' ? 'text-success' : 'text-danger' }}">
+                                            {{ $invoice->status_pembayaran }}
+                                        </span>
+                                    </td>
                                 </tr>
                             @endforeach
                         @endif
                     </tbody>
                     <tfoot class="fw-bold">
-                        <tr class="table-light">
-                            <td colspan="6" class="text-end">TOTAL KESELURUHAN:</td>
-                            <td class="text-end">{{ number_format($totPotongan, 0, ',', '.') }}</td>
-                            <td class="text-end">{{ number_format($totPajak, 0, ',', '.') }}</td>
-                            <td class="text-end">{{ number_format($totBiaya, 0, ',', '.') }}</td>
-                            <td class="text-end">{{ number_format($totClaim, 0, ',', '.') }}</td>
-                            <td class="text-end">{{ number_format($totGrand, 0, ',', '.') }}</td>
+                        <tr class="table-light text-end">
+                            <td colspan="6" class="text-center">TOTAL KESELURUHAN:</td>
+                            <td>{{ number_format($totBruto, 0, ',', '.') }}</td>
+                            <td>{{ number_format($totPotongan, 0, ',', '.') }}</td>
+                            <td>{{ number_format($totPajak, 0, ',', '.') }}</td>
+                            <td>{{ number_format($totBiaya, 0, ',', '.') }}</td>
+                            <td>{{ number_format($totClaim, 0, ',', '.') }}</td>
+                            <td>{{ number_format($totGrand, 0, ',', '.') }}</td>
+                            <td class="text-success">{{ number_format($totBayar, 0, ',', '.') }}</td>
+                            <td class="text-danger">{{ number_format($totSisa, 0, ',', '.') }}</td>
+                            <td></td>
                         </tr>
                     </tfoot>
                 </table>

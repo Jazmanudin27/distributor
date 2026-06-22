@@ -44,7 +44,7 @@ class LaporanController extends Controller
 
         if ($isPrintOrExcel) {
             if ($jenis_laporan === 'rekap') {
-                $query = Pembelian::with(['supplier', 'details.barangSatuan']);
+                $query = Pembelian::with(['supplier', 'details', 'pembayarans']);
                 
                 if ($tanggal_mulai) {
                     $query->where('tanggal', '>=', $tanggal_mulai);
@@ -56,12 +56,36 @@ class LaporanController extends Controller
                     $query->where('kode_supplier', $kode_supplier);
                 }
 
-                $query->orderBy('tanggal', 'asc')->orderBy('no_faktur', 'asc');
+                $rawItems = $query->orderBy('tanggal', 'asc')->orderBy('no_faktur', 'asc')->get();
+
+                // Compute payments & returs
+                $invoiceIds = $rawItems->pluck('no_faktur')->toArray();
+
+                $returs = DB::table('retur_pembelian')
+                    ->select('no_faktur', DB::raw('SUM(total) as total'))
+                    ->whereIn('no_faktur', $invoiceIds)
+                    ->where('jenis_retur', 'PF')
+                    ->groupBy('no_faktur')
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                foreach ($rawItems as $invoice) {
+                    $bruto = (float)$invoice->details->sum('total');
+                    $paid = (float)$invoice->pembayarans->sum('jumlah');
+                    $returPaid = (float)($returs[$invoice->no_faktur] ?? 0);
+
+                    $invoice->bruto = $bruto;
+                    $invoice->total_bayar = $paid;
+                    $invoice->total_retur = $returPaid;
+                    $sisa = (float)($invoice->grand_total - $paid - $returPaid);
+                    $invoice->sisa_bayar = $sisa < 1 ? 0.0 : $sisa;
+                    $invoice->status_pembayaran = $invoice->sisa_bayar <= 0 ? 'Lunas' : 'Belum Lunas';
+                }
 
                 if ($group_by_supplier === '1') {
-                    $items = $query->get()->groupBy('kode_supplier');
+                    $items = $rawItems->groupBy('kode_supplier');
                 } else {
-                    $items = $query->get();
+                    $items = $rawItems;
                 }
             } else {
                 // detail

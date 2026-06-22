@@ -140,6 +140,7 @@
                         </tr>
                     </tfoot>
                 </table>
+            @else
                 {{-- DETAIL ROWSPAN TABLES (Format 3) --}}
                 <table class="table table-sm align-middle w-100 table-rowspan">
                     <thead>
@@ -195,41 +196,60 @@
                             @foreach ($invoice->details as $detail)
                                 <tr>
                                     <td class="text-center">{{ $num++ }}</td>
-                                    <td class="text-center">{{ \Carbon\Carbon::parse($invoice->tanggal)->format('d-M-Y') }}</td>
+                                    <td class="text-center">
+                                        {{ \Carbon\Carbon::parse($invoice->tanggal)->format('d-M-Y') }}</td>
                                     <td class="text-center">{{ $invoice->no_faktur }}</td>
                                     <td class="text-center">{{ $invoice->kode_pelanggan }}</td>
                                     <td>{{ $invoice->pelanggan->nama_pelanggan ?? '-' }}</td>
                                     <td>{{ $invoice->pelanggan->alamat ?? '-' }}</td>
                                     <td>{{ $invoice->sales->name ?? '-' }}</td>
                                     <td>{{ $invoice->pelanggan->wilayah->nama_wilayah ?? '-' }}</td>
-                                    
+
                                     <td>{{ $detail->kode_barang }}</td>
                                     <td>{{ $detail->barang->nama_barang ?? '-' }}</td>
                                     <td>{{ $detail->barang->kategori ?? '-' }}</td>
                                     <td>{{ $detail->barang->merk ?? '-' }}</td>
-                                    <td class="text-center" style="mso-number-format:'#,##0.00';">{{ number_format($detail->qty, 2, ',', '.') }}</td>
+                                    <td class="text-center" style="mso-number-format:'#,##0.00';">
+                                        {{ number_format($detail->qty, 2, ',', '.') }}</td>
                                     <td>{{ $detail->barangSatuan->satuan ?? 'PCS' }}</td>
-                                    <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($detail->harga, 0, ',', '.') }}</td>
-                                    <td class="text-center" style="mso-number-format:'#,##0.00';">{{ $detail->diskon1_persen > 0 ? number_format($detail->diskon1_persen, 2, ',', '.') : '' }}</td>
-                                    <td class="text-center" style="mso-number-format:'#,##0.00';">{{ $detail->diskon2_persen > 0 ? number_format($detail->diskon2_persen, 2, ',', '.') : '' }}</td>
-                                    <td class="text-center" style="mso-number-format:'#,##0.00';">{{ $detail->diskon3_persen > 0 ? number_format($detail->diskon3_persen, 2, ',', '.') : '' }}</td>
-                                    <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($detail->total, 0, ',', '.') }}</td>
+                                    <td class="text-end" style="mso-number-format:'#,##0';">
+                                        {{ number_format($detail->harga, 0, ',', '.') }}</td>
+                                    <td class="text-center" style="mso-number-format:'#,##0.00';">
+                                        {{ $detail->diskon1_persen > 0 ? number_format($detail->diskon1_persen, 2, ',', '.') : '' }}
+                                    </td>
+                                    <td class="text-center" style="mso-number-format:'#,##0.00';">
+                                        {{ $detail->diskon2_persen > 0 ? number_format($detail->diskon2_persen, 2, ',', '.') : '' }}
+                                    </td>
+                                    <td class="text-center" style="mso-number-format:'#,##0.00';">
+                                        {{ $detail->diskon3_persen > 0 ? number_format($detail->diskon3_persen, 2, ',', '.') : '' }}
+                                    </td>
+                                    <td class="text-end" style="mso-number-format:'#,##0';">
+                                        {{ number_format($detail->total, 0, ',', '.') }}</td>
 
-                                    <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($invoice->total, 0, ',', '.') }}</td>
-                                    <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($invoice->diskon, 0, ',', '.') }}</td>
-                                    <td class="text-end fw-bold" style="mso-number-format:'#,##0';">{{ number_format($invoice->grand_total, 0, ',', '.') }}</td>
-                                    <td class="text-end text-success" style="mso-number-format:'#,##0';">{{ number_format($invoice->total_bayar, 0, ',', '.') }}</td>
-                                    <td class="text-end text-danger" style="mso-number-format:'#,##0';">{{ number_format($invoice->sisa_bayar, 0, ',', '.') }}</td>
+                                    <td class="text-end" style="mso-number-format:'#,##0';">
+                                        {{ number_format($invoice->total, 0, ',', '.') }}</td>
+                                    <td class="text-end" style="mso-number-format:'#,##0';">
+                                        {{ number_format($invoice->diskon, 0, ',', '.') }}</td>
+                                    <td class="text-end fw-bold" style="mso-number-format:'#,##0';">
+                                        {{ number_format($invoice->grand_total, 0, ',', '.') }}</td>
+                                    <td class="text-end text-success" style="mso-number-format:'#,##0';">
+                                        {{ number_format($invoice->total_bayar, 0, ',', '.') }}</td>
+                                    <td class="text-end text-danger" style="mso-number-format:'#,##0';">
+                                        {{ number_format($invoice->sisa_bayar, 0, ',', '.') }}</td>
                                     <td class="text-center fw-bold">
-                                        <span class="{{ $invoice->status_pembayaran === 'Lunas' ? 'text-success' : 'text-danger' }}">
+                                        <span
+                                            class="{{ $invoice->status_pembayaran === 'Lunas' ? 'text-success' : 'text-danger' }}">
                                             {{ $invoice->status_pembayaran }}
                                         </span>
                                     </td>
-                                    <td class="text-center fw-bold" style="color: {{ strtolower(substr($invoice->jenis_transaksi, 0, 1)) === 'k' ? 'orange' : 'green' }};">
+                                    <td class="text-center fw-bold"
+                                        style="color: {{ strtolower(substr($invoice->jenis_transaksi, 0, 1)) === 'k' ? 'orange' : 'green' }};">
                                         {{ strtoupper(substr($invoice->jenis_transaksi, 0, 1)) }}
                                     </td>
-                                    <td class="text-center">{{ \Carbon\Carbon::parse($invoice->created_at)->format('d M Y H:i') }}</td>
-                                    <td class="text-center">{{ \Carbon\Carbon::parse($invoice->updated_at)->format('d M Y H:i') }}</td>
+                                    <td class="text-center">
+                                        {{ \Carbon\Carbon::parse($invoice->created_at)->format('d M Y H:i') }}</td>
+                                    <td class="text-center">
+                                        {{ \Carbon\Carbon::parse($invoice->updated_at)->format('d M Y H:i') }}</td>
                                     <td class="text-start">{{ $invoice->user->name ?? '-' }}</td>
                                 </tr>
                             @endforeach
@@ -238,11 +258,16 @@
                     <tfoot class="fw-bold table-light">
                         <tr>
                             <td colspan="19" class="text-end">TOTAL KESELURUHAN:</td>
-                            <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($totalBrutoSum, 0, ',', '.') }}</td>
-                            <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($totalDiskonSum, 0, ',', '.') }}</td>
-                            <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($totalNetoSum, 0, ',', '.') }}</td>
-                            <td class="text-end text-success" style="mso-number-format:'#,##0';">{{ number_format($totalBayarSum, 0, ',', '.') }}</td>
-                            <td class="text-end text-danger" style="mso-number-format:'#,##0';">{{ number_format($totalSisaSum, 0, ',', '.') }}</td>
+                            <td class="text-end" style="mso-number-format:'#,##0';">
+                                {{ number_format($totalBrutoSum, 0, ',', '.') }}</td>
+                            <td class="text-end" style="mso-number-format:'#,##0';">
+                                {{ number_format($totalDiskonSum, 0, ',', '.') }}</td>
+                            <td class="text-end" style="mso-number-format:'#,##0';">
+                                {{ number_format($totalNetoSum, 0, ',', '.') }}</td>
+                            <td class="text-end text-success" style="mso-number-format:'#,##0';">
+                                {{ number_format($totalBayarSum, 0, ',', '.') }}</td>
+                            <td class="text-end text-danger" style="mso-number-format:'#,##0';">
+                                {{ number_format($totalSisaSum, 0, ',', '.') }}</td>
                             <td colspan="5"></td>
                         </tr>
                     </tfoot>
