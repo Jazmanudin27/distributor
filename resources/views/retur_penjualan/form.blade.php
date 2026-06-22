@@ -174,7 +174,14 @@
                                 <option value="">-- Pilih Satuan --</option>
                             </select>
                         </div>
-                        <div class="col-lg-1 col-md-2">
+                        <div class="col-lg-1 col-md-3">
+                            <label class="form-label fs-8 fw-bold text-secondary mb-1">Kondisi</label>
+                            <select id="quick_kondisi" class="form-select form-select-sm">
+                                <option value="Bagus">Bagus</option>
+                                <option value="Jelek">Jelek</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-1 col-md-3">
                             <label class="form-label fs-8 fw-bold text-secondary mb-1">Qty</label>
                             <input type="number" id="quick_qty" class="form-control form-control-sm text-end"
                                 value="1" min="0.01" step="any">
@@ -235,6 +242,7 @@
                                     <th width="100">Kode</th>
                                     <th>Nama Barang</th>
                                     <th width="90" class="text-center">Satuan</th>
+                                    <th width="90" class="text-center">Kondisi</th>
                                     <th width="70" class="text-end">Qty</th>
                                     <th width="120" class="text-end">Harga Retur</th>
                                     <th width="65" class="text-end">D1 %</th>
@@ -465,6 +473,7 @@
             $('#btn-add-quick').on('click', function() {
                 const barangCode = $('#quick_barang').val();
                 const satuanId = $('#quick_satuan').val();
+                const kondisi = $('#quick_kondisi').val() || 'Bagus';
                 const qty = parseFloat($('#quick_qty').val()) || 0;
                 const harga = parseFloat(cleanNumber($('#quick_harga').val())) || 0;
                 const d1 = parseFloat($('#quick_diskon1_percent').val()) || 0;
@@ -489,7 +498,7 @@
                 const barang = barangs.find(b => b.kode_barang === barangCode);
                 const satuanName = $('#quick_satuan').find(':selected').data('name');
 
-                appendRow(barangCode, barang.nama_barang, satuanId, satuanName, qty, harga, d1, d2, d3);
+                appendRow(barangCode, barang.nama_barang, satuanId, satuanName, kondisi, qty, harga, d1, d2, d3);
 
                 // Reset
                 $('#quick_barang').val('').trigger('change');
@@ -503,7 +512,7 @@
                 calculateTotals();
             });
 
-            function appendRow(barangCode, barangName, satuanId, satuanName, qty, harga, d1 = 0, d2 = 0, d3 = 0) {
+            function appendRow(barangCode, barangName, satuanId, satuanName, kondisi, qty, harga, d1 = 0, d2 = 0, d3 = 0) {
                 const trId = `row_${rowIndex}`;
                 const fmtHarga = formatNumber(cleanNumber(harga));
                 const html = `
@@ -518,6 +527,12 @@
                             <span class="badge bg-info-subtle text-info border border-info-subtle font-monospace px-2 py-1 fs-8">${satuanName}</span>
                             <input type="hidden" name="items[${rowIndex}][satuan_id]" value="${satuanId}">
                             <input type="hidden" name="items[${rowIndex}][satuan]" value="${satuanName}">
+                        </td>
+                        <td class="text-center">
+                            <select name="items[${rowIndex}][kondisi]" class="form-select form-select-sm" style="min-width:80px;" required>
+                                <option value="Bagus" ${kondisi === 'Bagus' ? 'selected' : ''}>Bagus</option>
+                                <option value="Jelek" ${kondisi === 'Jelek' ? 'selected' : ''}>Jelek</option>
+                            </select>
                         </td>
                         <td>
                             <input type="number" name="items[${rowIndex}][qty]" class="form-control form-control-sm text-end input-qty" step="any" min="0.01" value="${qty}" style="max-width: 70px; margin-left: auto;" required>
@@ -607,7 +622,8 @@
                     const barang = barangs.find(b => b.kode_barang === d.kode_barang);
                     const name = barang ? barang.nama_barang : (d.barang ? d.barang.nama_barang : 'Barang');
                     const satuan = d.barang_satuan ? d.barang_satuan.satuan : '';
-                    appendRow(d.kode_barang, name, d.id_satuan, satuan, d.qty, parseInt(d.harga_retur),
+                    const kondisi = d.kondisi || 'Bagus';
+                    appendRow(d.kode_barang, name, d.id_satuan, satuan, kondisi, d.qty, parseInt(d.harga_retur),
                         parseFloat(d.diskon1_persen || 0), parseFloat(d.diskon2_persen || 0),
                         parseFloat(d.diskon3_persen || 0));
                 });

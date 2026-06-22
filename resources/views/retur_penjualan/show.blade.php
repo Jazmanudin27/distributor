@@ -178,6 +178,11 @@
                                                     {{ $detail->barangSatuan->satuan ?? '-' }}
                                                 </span>
                                             </td>
+                                            <td class="text-center">
+                                                <span class="badge {{ ($detail->kondisi ?? 'Bagus') == 'Bagus' ? 'bg-success-subtle text-success border-success-subtle' : 'bg-danger-subtle text-danger border-danger-subtle' }} border px-2 py-1 fs-8">
+                                                    {{ $detail->kondisi ?? 'Bagus' }}
+                                                </span>
+                                            </td>
                                             <td class="text-end fw-semibold text-dark">{{ floatval($detail->qty) }}</td>
                                             <td class="text-end text-dark">Rp {{ number_format((float) $detail->harga_retur, 0, ',', '.') }}</td>
                                             <td class="text-center text-secondary font-monospace small">{{ $diskStr }}</td>
