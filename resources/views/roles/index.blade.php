@@ -136,12 +136,12 @@
                     <small class="text-white-50">Atur role dan permission yang tersedia untuk setiap pengguna</small>
                 </div>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal"
+                    <button class="btn btn-primary btn-sm fw-bold" data-bs-toggle="modal"
                         data-bs-target="#modalTambahPermission">
-                        <i class="fa-solid fa-key me-1 text-warning"></i> Tambah Permission
+                        <i class="fa-solid fa-key me-1 text-white"></i> Tambah Permission
                     </button>
-                    <button class="btn btn-light btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalTambahRole">
-                        <i class="fa-solid fa-plus me-1 text-primary"></i> Tambah Role
+                    <button class="btn btn-success btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalTambahRole">
+                        <i class="fa-solid fa-plus me-1 text-white"></i> Tambah Role
                     </button>
                 </div>
             </div>

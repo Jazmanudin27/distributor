@@ -117,13 +117,7 @@
                     class="btn btn-sm btn-mobile btn-mobile-primary py-2">
                     <i class="fa-solid fa-cart-plus me-2"></i> Input Penjualan Untuk Toko Ini
                 </a>
-                @if ($unpaidInvoices->isNotEmpty())
-                    <button type="button" class="btn btn-sm btn-mobile btn-success py-2 text-white border-0"
-                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);"
-                        data-bs-toggle="modal" data-bs-target="#modal-pembayaran-piutang">
-                        <i class="fa-solid fa-hand-holding-dollar me-2 text-white"></i> Catat Pembayaran Piutang
-                    </button>
-                @endif
+
                 <button type="button"
                     class="btn btn-sm btn-mobile btn-outline-light py-2 text-white border-secondary border-opacity-50"
                     style="font-size: 0.85rem;" data-bs-toggle="modal" data-bs-target="#modal-ajuan-limit"
@@ -506,119 +500,7 @@
         @endforeach
     @endif
 
-    @if ($activeCheckin && $unpaidInvoices->isNotEmpty())
-        <!-- Modal Pembayaran Piutang -->
-        <div class="modal fade" id="modal-pembayaran-piutang" tabindex="-1" aria-labelledby="modalPembayaranLabel"
-            aria-hidden="true" style="backdrop-filter: blur(10px);">
-            <div class="modal-dialog modal-dialog-centered px-3">
-                <div class="modal-content border-0 rounded-4"
-                    style="background-color: #161e31; border: 1px solid rgba(255, 255, 255, 0.08) !important; color: var(--text-primary);">
-                    <div class="modal-header border-bottom border-secondary border-opacity-10 py-3">
-                        <h6 class="modal-title fw-bold text-white" id="modalPembayaranLabel">
-                            <i class="fa-solid fa-hand-holding-dollar text-success me-2"></i>Catat Pembayaran Piutang
-                        </h6>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
 
-                    <form action="" method="POST" id="form-modal-pembayaran">
-                        @csrf
-                        <div class="modal-body py-3">
-                            <!-- Select Invoice -->
-                            <div class="mb-3">
-                                <label for="modal-no-faktur" class="form-label text-secondary small fw-semibold"
-                                    style="letter-spacing: 0.5px; font-size: 0.65rem;">PILIH FAKTUR PIUTANG</label>
-                                <select id="modal-no-faktur" class="form-select form-select-sm text-white" required
-                                    style="font-size: 0.75rem; height: auto; padding: 5px 8px; background-color: rgba(18, 24, 36, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.12) !important; border-radius: 8px;">
-                                    <option value="">-- Pilih Faktur --</option>
-                                    @foreach ($unpaidInvoices as $inv)
-                                        @php
-                                            $sisa = $inv->grand_total - $inv->pembayarans->sum('jumlah');
-                                            $dueDate = \Carbon\Carbon::parse($inv->tanggal)->addDays(
-                                                $inv->pelanggan->ljt ?? 14,
-                                            );
-                                            $isOverdue = $dueDate->lt(\Carbon\Carbon::today());
-                                        @endphp
-                                        <option value="{{ $inv->no_faktur }}" data-sisa="{{ $sisa }}">
-                                            {{ $inv->no_faktur }} (Sisa: Rp {{ number_format($sisa, 0, ',', '.') }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <!-- Selected Invoice Info (initially hidden) -->
-                            <div id="modal-sisa-info-card" class="p-3 rounded-4 mb-3 d-none"
-                                style="background-color: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05);">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="text-secondary small" style="font-size: 0.7rem;">Sisa Piutang
-                                        Faktur:</span>
-                                    <span class="fw-bold text-warning" id="modal-lbl-sisa-piutang"
-                                        style="font-size: 0.8rem;">Rp 0</span>
-                                </div>
-                            </div>
-
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <label for="modal-jenis-bayar" class="form-label text-secondary small fw-semibold"
-                                        style="letter-spacing: 0.5px; font-size: 0.65rem;">METODE BAYAR</label>
-                                    <select name="jenis_bayar" id="modal-jenis-bayar"
-                                        class="form-select form-select-sm text-white" required
-                                        style="font-size: 0.75rem; height: auto; padding: 5px 8px; background-color: rgba(18, 24, 36, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.12) !important; border-radius: 8px;">
-                                        <option value="Tunai">Tunai (Cash)</option>
-                                        <option value="Transfer">Transfer Bank</option>
-                                        <option value="Giro">Giro</option>
-                                    </select>
-                                </div>
-                                <div class="col-6">
-                                    <label for="modal-tanggal" class="form-label text-secondary small fw-semibold"
-                                        style="letter-spacing: 0.5px; font-size: 0.65rem;">TANGGAL</label>
-                                    <input type="date" name="tanggal" id="modal-tanggal"
-                                        class="form-control form-control-sm text-white" value="{{ date('Y-m-d') }}"
-                                        required
-                                        style="font-size: 0.75rem; height: auto; padding: 5px 8px; background-color: rgba(18, 24, 36, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.12) !important; border-radius: 8px;">
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="modal-jumlah" class="form-label text-secondary small fw-semibold"
-                                    style="letter-spacing: 0.5px; font-size: 0.65rem;">JUMLAH BAYAR (RP)</label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text text-success"
-                                        style="font-size: 0.75rem; background-color: rgba(18, 24, 36, 0.9); border: 1px solid rgba(255, 255, 255, 0.12); border-right: none; font-weight: 600; padding: 5px 8px; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">Rp</span>
-                                    <input type="number" name="jumlah" id="modal-jumlah"
-                                        class="form-control form-control-sm text-white rupiah-input" min="0.01"
-                                        step="0.01" placeholder="Masukkan jumlah bayar..." required
-                                        style="font-size: 0.75rem; padding: 5px 8px; border: 1px solid rgba(255, 255, 255, 0.12) !important; border-left: none !important; background-color: rgba(18, 24, 36, 0.8) !important; border-top-right-radius: 8px; border-bottom-right-radius: 8px;"
-                                        disabled>
-                                </div>
-                                <div class="text-info small mt-1" id="modal-jumlah-helper"
-                                    style="font-size: 0.72rem; min-height: 18px;"></div>
-                            </div>
-
-                            <div class="mb-2">
-                                <label for="modal-keterangan" class="form-label text-secondary small fw-semibold"
-                                    style="letter-spacing: 0.5px; font-size: 0.65rem;">KETERANGAN / CATATAN</label>
-                                <input type="text" name="keterangan" id="modal-keterangan"
-                                    class="form-control form-control-sm text-white"
-                                    placeholder="Opsional, misal: titip bayar..."
-                                    style="font-size: 0.75rem; padding: 5px 8px; background-color: rgba(18, 24, 36, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.12) !important; border-radius: 8px;">
-                            </div>
-                        </div>
-
-                        <div class="modal-footer border-top border-secondary border-opacity-10 py-2.5">
-                            <button type="button"
-                                class="btn btn-sm btn-outline-secondary px-3 py-1.5 text-white border-secondary border-opacity-50"
-                                style="font-size: 0.75rem; border-radius: 8px;" data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-sm btn-success px-4 py-1.5 text-white border-0"
-                                id="modal-btn-submit"
-                                style="font-size: 0.75rem; font-weight: 600; background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2); border-radius: 8px;"
-                                disabled>Simpan Pembayaran</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endif
 
     <!-- Modal Ajukan Limit Kredit -->
     <div class="modal fade" id="modal-ajuan-limit" tabindex="-1" aria-labelledby="modalAjuanLimitLabel"
@@ -860,58 +742,7 @@
                 }
             }
 
-            // Modal Pembayaran Piutang Logic
-            const modalSelectInvoice = document.getElementById('modal-no-faktur');
-            const modalForm = document.getElementById('form-modal-pembayaran');
-            const modalSisaCard = document.getElementById('modal-sisa-info-card');
-            const modalLblSisa = document.getElementById('modal-lbl-sisa-piutang');
-            const modalInputJumlah = document.getElementById('modal-jumlah');
-            const modalBtnSubmit = document.getElementById('modal-btn-submit');
-            const modalJumlahHelper = document.getElementById('modal-jumlah-helper');
 
-            if (modalSelectInvoice) {
-                modalSelectInvoice.addEventListener('change', function() {
-                    const selectedOption = this.options[this.selectedIndex];
-                    if (selectedOption && selectedOption.value) {
-                        const sisa = parseFloat(selectedOption.getAttribute('data-sisa')) || 0;
-                        modalLblSisa.innerText = 'Rp ' + sisa.toLocaleString('id-ID');
-                        modalSisaCard.classList.remove('d-none');
-
-                        // Enable inputs and set max
-                        modalInputJumlah.removeAttribute('disabled');
-                        modalInputJumlah.setAttribute('max', sisa);
-                        modalInputJumlah.value = sisa; // Default pay amount to sisa
-                        modalInputJumlah.dispatchEvent(new Event('input')); // Trigger formatting!
-                        modalBtnSubmit.removeAttribute('disabled');
-
-                        // Update Form Action URL dynamically
-                        const actionUrl = '{{ route('mobile.order.payment', ':no_faktur') }}'.replace(
-                            ':no_faktur', selectedOption.value);
-                        modalForm.setAttribute('action', actionUrl);
-
-                        updateModalJumlahHelper();
-                    } else {
-                        modalSisaCard.classList.add('d-none');
-                        modalInputJumlah.setAttribute('disabled', 'true');
-                        modalInputJumlah.value = '';
-                        modalBtnSubmit.setAttribute('disabled', 'true');
-                        modalForm.setAttribute('action', '');
-                        modalJumlahHelper.innerText = '';
-                    }
-                });
-
-                modalInputJumlah.addEventListener('input', updateModalJumlahHelper);
-            }
-
-            function updateModalJumlahHelper() {
-                const rawVal = modalInputJumlah.value.replace(/\./g, '').replace(/,/g, '.').trim();
-                if (rawVal && !isNaN(rawVal)) {
-                    const parsed = parseFloat(rawVal);
-                    modalJumlahHelper.innerText = 'Format Terbaca: Rp ' + parsed.toLocaleString('id-ID');
-                } else {
-                    modalJumlahHelper.innerText = '';
-                }
-            }
 
             // Modal Ajukan Limit Kredit Logic
             const modalAjuanLimit = document.getElementById('modal-ajuan-limit');

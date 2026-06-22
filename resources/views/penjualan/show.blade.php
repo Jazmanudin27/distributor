@@ -27,7 +27,7 @@
                                 <i class="fa-solid fa-print me-1"></i> Cetak Faktur
                             </a>
                             @if ($sisaBayar > 0)
-                                <button type="button" 
+                                <button type="button"
                                     class="btn btn-white btn-sm fw-bold hover-scale text-success bg-white border"
                                     data-bs-toggle="modal" data-bs-target="#paymentModal">
                                     <i class="fa-solid fa-cash-register me-1"></i> Input Bayar
