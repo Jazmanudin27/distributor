@@ -92,10 +92,13 @@
         @else
             <table>
                 <tr>
-                    <td colspan="15" style="font-size: 14px; font-weight: bold; text-align: center;">LAPORAN PEMBAYARAN PIUTANG</td>
+                    <td colspan="15" style="font-size: 14px; font-weight: bold; text-align: center;">LAPORAN
+                        PEMBAYARAN PIUTANG</td>
                 </tr>
                 <tr>
-                    <td colspan="15" style="text-align: center;">Periode Pembayaran: {{ \Carbon\Carbon::parse($tanggal_mulai)->format('d/m/Y') }} s/d {{ \Carbon\Carbon::parse($tanggal_akhir)->format('d/m/Y') }}</td>
+                    <td colspan="15" style="text-align: center;">Periode Pembayaran:
+                        {{ \Carbon\Carbon::parse($tanggal_mulai)->format('d/m/Y') }} s/d
+                        {{ \Carbon\Carbon::parse($tanggal_akhir)->format('d/m/Y') }}</td>
                 </tr>
                 @if ($kode_sales)
                     @php $salesName = $salesmen->firstWhere('nik', $kode_sales)->name ?? $kode_sales; @endphp
@@ -110,7 +113,8 @@
                     </tr>
                 @endif
                 <tr>
-                    <td colspan="15" style="text-align: center; color: #666;">Tanggal Cetak: {{ date('d/m/Y H:i:s') }}</td>
+                    <td colspan="15" style="text-align: center; color: #666;">Tanggal Cetak: {{ date('d/m/Y H:i:s') }}
+                    </td>
                 </tr>
                 <tr></tr>
             </table>
@@ -125,21 +129,51 @@
             <table class="table table-sm align-middle w-100" style="border-collapse: collapse; border: 1px solid #000;">
                 <thead class="table-light">
                     <tr style="background-color: #0d6efd; color: #ffffff;">
-                        <th width="40" style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #0d6efd; color: #ffffff;">No</th>
-                        <th style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">Tgl Bayar</th>
-                        <th style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">Tgl Faktur</th>
-                        <th style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">No. Faktur</th>
-                        <th style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">Kode Pelanggan</th>
-                        <th style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">Nama Pelanggan</th>
-                        <th style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">Sales</th>
-                        <th style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">Wilayah</th>
-                        <th style="border: 1px solid #000; padding: 6px; text-align: right; background-color: #0d6efd; color: #ffffff;">Total</th>
-                        <th style="border: 1px solid #000; padding: 6px; text-align: right; background-color: #0d6efd; color: #ffffff;">Diskon</th>
-                        <th style="border: 1px solid #000; padding: 6px; text-align: right; background-color: #0d6efd; color: #ffffff;">Subtotal</th>
-                        <th style="border: 1px solid #000; padding: 6px; text-align: right; background-color: #0d6efd; color: #ffffff;">Jml Bayar</th>
-                        <th style="border: 1px solid #000; padding: 6px; text-align: right; background-color: #0d6efd; color: #ffffff;">Total Bayar</th>
-                        <th style="border: 1px solid #000; padding: 6px; text-align: right; background-color: #0d6efd; color: #ffffff;">Sisa Bayar</th>
-                        <th style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #0d6efd; color: #ffffff;">Status</th>
+                        <th width="40"
+                            style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #0d6efd; color: #ffffff;">
+                            No</th>
+                        <th
+                            style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">
+                            Tgl Bayar</th>
+                        <th
+                            style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">
+                            Tgl Faktur</th>
+                        <th
+                            style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">
+                            No. Faktur</th>
+                        <th
+                            style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">
+                            Kode Pelanggan</th>
+                        <th
+                            style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">
+                            Nama Pelanggan</th>
+                        <th
+                            style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">
+                            Sales</th>
+                        <th
+                            style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">
+                            Wilayah</th>
+                        <th
+                            style="border: 1px solid #000; padding: 6px; text-align: right; background-color: #0d6efd; color: #ffffff;">
+                            Total</th>
+                        <th
+                            style="border: 1px solid #000; padding: 6px; text-align: right; background-color: #0d6efd; color: #ffffff;">
+                            Diskon</th>
+                        <th
+                            style="border: 1px solid #000; padding: 6px; text-align: right; background-color: #0d6efd; color: #ffffff;">
+                            Subtotal</th>
+                        <th
+                            style="border: 1px solid #000; padding: 6px; text-align: right; background-color: #0d6efd; color: #ffffff;">
+                            Jml Bayar</th>
+                        <th
+                            style="border: 1px solid #000; padding: 6px; text-align: right; background-color: #0d6efd; color: #ffffff;">
+                            Total Bayar</th>
+                        <th
+                            style="border: 1px solid #000; padding: 6px; text-align: right; background-color: #0d6efd; color: #ffffff;">
+                            Sisa Bayar</th>
+                        <th
+                            style="border: 1px solid #000; padding: 6px; text-align: center; background-color: #0d6efd; color: #ffffff;">
+                            Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -161,24 +195,36 @@
                             $totSisaBayar += $item->sisa_bayar;
                         @endphp
                         <tr>
-                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">{{ $loop->iteration }}</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: center;">
+                                {{ $loop->iteration }}</td>
                             <td style="border: 1px solid #000; padding: 4px; text-align: left;">
                                 {{ \Carbon\Carbon::parse($item->tgl_bayar)->translatedFormat('d F Y') }}
                             </td>
                             <td style="border: 1px solid #000; padding: 4px; text-align: left;">
                                 {{ \Carbon\Carbon::parse($item->tgl_faktur)->translatedFormat('d F Y') }}
                             </td>
-                            <td style="border: 1px solid #000; padding: 4px; text-align: left; mso-number-format:'\@';">{{ $item->no_faktur }}</td>
-                            <td style="border: 1px solid #000; padding: 4px; text-align: left; mso-number-format:'\@';">{{ $item->kode_pelanggan }}</td>
-                            <td style="border: 1px solid #000; padding: 4px; text-align: left;">{{ $item->nama_pelanggan }}</td>
-                            <td style="border: 1px solid #000; padding: 4px; text-align: left;">{{ $item->sales_name ?? '-' }}</td>
-                            <td style="border: 1px solid #000; padding: 4px; text-align: left;">{{ $item->nama_wilayah ?? '-' }}</td>
-                            <td class="num-format" style="border: 1px solid #000; padding: 4px; text-align: right;">{{ number_format($item->total_bruto, 0, ',', '.') }}</td>
-                            <td class="num-format" style="border: 1px solid #000; padding: 4px; text-align: right;">{{ number_format($item->total_diskon, 0, ',', '.') }}</td>
-                            <td class="num-format" style="border: 1px solid #000; padding: 4px; text-align: right;">{{ number_format($item->total_subtotal, 0, ',', '.') }}</td>
-                            <td class="num-format" style="border: 1px solid #000; padding: 4px; text-align: right;">{{ number_format($item->jml_bayar, 0, ',', '.') }}</td>
-                            <td class="num-format" style="border: 1px solid #000; padding: 4px; text-align: right;">{{ number_format($item->total_bayar, 0, ',', '.') }}</td>
-                            <td class="num-format" style="border: 1px solid #000; padding: 4px; text-align: right;">{{ number_format($item->sisa_bayar, 0, ',', '.') }}</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: left; mso-number-format:'\@';">
+                                {{ $item->no_faktur }}</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: left; mso-number-format:'\@';">
+                                {{ $item->kode_pelanggan }}</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: left;">
+                                {{ $item->nama_pelanggan }}</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: left;">
+                                {{ $item->sales_name ?? '-' }}</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: left;">
+                                {{ $item->nama_wilayah ?? '-' }}</td>
+                            <td class="num-format" style="border: 1px solid #000; padding: 4px; text-align: right;">
+                                {{ number_format($item->total_bruto, 0, ',', '.') }}</td>
+                            <td class="num-format" style="border: 1px solid #000; padding: 4px; text-align: right;">
+                                {{ number_format($item->total_diskon, 0, ',', '.') }}</td>
+                            <td class="num-format" style="border: 1px solid #000; padding: 4px; text-align: right;">
+                                {{ number_format($item->total_subtotal, 0, ',', '.') }}</td>
+                            <td class="num-format" style="border: 1px solid #000; padding: 4px; text-align: right;">
+                                {{ number_format($item->jml_bayar, 0, ',', '.') }}</td>
+                            <td class="num-format" style="border: 1px solid #000; padding: 4px; text-align: right;">
+                                {{ number_format($item->total_bayar, 0, ',', '.') }}</td>
+                            <td class="num-format" style="border: 1px solid #000; padding: 4px; text-align: right;">
+                                {{ number_format($item->sisa_bayar, 0, ',', '.') }}</td>
                             <td style="border: 1px solid #000; padding: 4px; text-align: center;">
                                 @if ($item->status_lunas === 'Lunas')
                                     <span class="status-lunas">Lunas</span>
@@ -191,13 +237,27 @@
                 </tbody>
                 <tfoot class="fw-bold" style="font-weight: bold; background-color: #f2f2f2;">
                     <tr style="background-color: #f2f2f2; font-weight: bold;">
-                        <td colspan="8" style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">TOTAL:</td>
-                        <td class="num-format" style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">{{ number_format($totTotal, 0, ',', '.') }}</td>
-                        <td class="num-format" style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">{{ number_format($totDiskon, 0, ',', '.') }}</td>
-                        <td class="num-format" style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">{{ number_format($totSubtotal, 0, ',', '.') }}</td>
-                        <td class="num-format" style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">{{ number_format($totJmlBayar, 0, ',', '.') }}</td>
-                        <td class="num-format" style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">{{ number_format($totTotalBayar, 0, ',', '.') }}</td>
-                        <td class="num-format" style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">{{ number_format($totSisaBayar, 0, ',', '.') }}</td>
+                        <td colspan="8"
+                            style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">TOTAL:
+                        </td>
+                        <td class="num-format"
+                            style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">
+                            {{ number_format($totTotal, 0, ',', '.') }}</td>
+                        <td class="num-format"
+                            style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">
+                            {{ number_format($totDiskon, 0, ',', '.') }}</td>
+                        <td class="num-format"
+                            style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">
+                            {{ number_format($totSubtotal, 0, ',', '.') }}</td>
+                        <td class="num-format"
+                            style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">
+                            {{ number_format($totJmlBayar, 0, ',', '.') }}</td>
+                        <td class="num-format"
+                            style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">
+                            {{ number_format($totTotalBayar, 0, ',', '.') }}</td>
+                        <td class="num-format"
+                            style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">
+                            {{ number_format($totSisaBayar, 0, ',', '.') }}</td>
                         <td style="border: 1px solid #000; padding: 6px;"></td>
                     </tr>
                 </tfoot>
@@ -205,13 +265,6 @@
         @endif
     </div>
 
-    @if (!isset($isExcel) || !$isExcel)
-        <script>
-            window.onload = function() {
-                window.print();
-            }
-        </script>
-    @endif
 </body>
 
 </html>
