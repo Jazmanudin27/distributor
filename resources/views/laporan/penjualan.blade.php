@@ -47,11 +47,42 @@
                             </select>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold text-secondary mb-1">Jenis Laporan</label>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary mb-1">Supplier</label>
+                            <select name="kode_supplier" class="form-select form-select-sm select2-init">
+                                <option value="">-- Semua Supplier --</option>
+                                @foreach ($suppliers as $sup)
+                                    <option value="{{ $sup->kode_supplier }}">
+                                        {{ $sup->nama_supplier }} ({{ $sup->kode_supplier }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary mb-1">Pilih Jenis Laporan</label>
                             <select name="jenis_laporan" class="form-select form-select-sm">
-                                <option value="rekap">Rekap (Per Invoice)</option>
-                                <option value="detail">Detail (Per Barang)</option>
+                                <option value="rekap">Format 1: Rekap (Per Invoice)</option>
+                                <option value="detail">Format 2: Detail (Per Barang)</option>
+                                <option value="detail_rowspan">Format 3: Detail Rowspan (Kolom Lengkap)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary mb-1">Jenis Transaksi</label>
+                            <select name="jenis_transaksi" class="form-select form-select-sm select2-init">
+                                <option value="">-- Semua Jenis Transaksi --</option>
+                                <option value="Tunai">Tunai</option>
+                                <option value="Kredit">Kredit</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-secondary mb-1">Status Faktur</label>
+                            <select name="status_faktur" class="form-select form-select-sm select2-init">
+                                <option value="aktif">Faktur Aktif</option>
+                                <option value="batal">Faktur Batal</option>
+                                <option value="semua">Semua Faktur</option>
                             </select>
                         </div>
 

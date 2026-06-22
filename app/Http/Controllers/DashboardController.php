@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Penjualan;
+use App\Models\Setting;
 use App\Models\Pembelian;
 use App\Models\Barang;
 use App\Models\AjuanLimitKredit;
@@ -96,6 +97,9 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        $targetPenjualan = (float)Setting::getVal('target_penjualan_bulan_ini', 5000000000);
+        $progressPenjualan = $targetPenjualan > 0 ? ($totalPenjualanBulanIni / $targetPenjualan) * 100 : 0;
+
         return view('welcome', compact(
             'totalPenjualanHariIni',
             'totalPenjualanBulanIni',
@@ -107,7 +111,20 @@ class DashboardController extends Controller
             'topSalesmen',
             'activeCheckins',
             'lowStockItems',
-            'latestLimitRequests'
+            'latestLimitRequests',
+            'targetPenjualan',
+            'progressPenjualan'
         ));
+    }
+
+    public function setTarget(Request $request)
+    {
+        $request->validate([
+            'target_penjualan' => 'required|numeric|min:0',
+        ]);
+
+        Setting::setVal('target_penjualan_bulan_ini', $request->target_penjualan);
+
+        return redirect()->back()->with('success', 'Target penjualan bulan ini berhasil diperbarui.');
     }
 }

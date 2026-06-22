@@ -8,6 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
 
     <title>@yield('title', 'Sales Mobile')</title>
 
@@ -39,6 +40,105 @@
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --active-color: #818cf8;
+        }
+
+        /* PWA Install Banner Style */
+        .pwa-banner {
+            display: none;
+            background: rgba(22, 30, 49, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin: 10px 16px 16px 16px;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            animation: pwaSlideDown 0.4s ease-out;
+            z-index: 1001;
+        }
+
+        @keyframes pwaSlideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .pwa-logo-container {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-gradient);
+            box-shadow: var(--accent-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+
+        .pwa-text {
+            flex-grow: 1;
+            padding: 0 12px;
+        }
+
+        .pwa-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .pwa-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .pwa-btn-action {
+            background: var(--accent-gradient);
+            border: none;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: var(--accent-glow);
+            transition: all 0.2s;
+        }
+
+        .pwa-btn-action:active {
+            transform: scale(0.95);
+        }
+
+        .pwa-close {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.15rem;
+            cursor: pointer;
+            padding: 0 4px;
+            margin-left: 8px;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+
+        .pwa-close:hover {
+            color: #f87171;
+        }
+
+        .pwa-ios-guide {
+            font-size: 0.75rem;
+            color: #a78bfa;
+            font-weight: 500;
+            margin: 0;
+            line-height: 1.3;
         }
 
         body {
@@ -311,6 +411,26 @@
         </div>
     @endif
 
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner" class="pwa-banner">
+        <div class="pwa-logo-container">
+            <i class="fa-solid fa-layer-group text-white" style="font-size: 1.15rem;"></i>
+        </div>
+        <div class="pwa-text">
+            <h4 class="pwa-title">DIS ERP App</h4>
+            <div id="pwa-install-action-area">
+                <p class="pwa-subtitle">Pasang ke layar utama HP Anda</p>
+            </div>
+            <div id="pwa-ios-instructions" style="display: none;">
+                <p class="pwa-ios-guide"><i class="fa-solid fa-share-from-square me-1"></i> Tap <strong>Share</strong> lalu pilih <strong>Add to Home Screen</strong></p>
+            </div>
+        </div>
+        <div class="d-flex align-items-center">
+            <button id="pwa-btn-install" class="pwa-btn-action">Pasang</button>
+            <button id="pwa-btn-dismiss" class="pwa-close" aria-label="Close">&times;</button>
+        </div>
+    </div>
+
     <!-- Main Content Container -->
     <div class="container-fluid px-3 py-3">
         @if (session('success'))
@@ -570,6 +690,7 @@
             });
         });
     </script>
+    <script src="{{ asset('js/pwa.js') }}"></script>
     @stack('scripts')
 </body>
 

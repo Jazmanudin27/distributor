@@ -198,8 +198,7 @@
                                             <button type="button"
                                                 class="btn btn-sm btn-outline-warning btn-batal-faktur rounded"
                                                 data-action="{{ route('penjualan.batal', $item->no_faktur) }}"
-                                                data-no-faktur="{{ $item->no_faktur }}"
-                                                title="Batalkan Transaksi">
+                                                data-no-faktur="{{ $item->no_faktur }}" title="Batalkan Transaksi">
                                                 <i class="fa-solid fa-ban"></i>
                                             </button>
                                             <form action="{{ route('penjualan.destroy', $item->no_faktur) }}" method="POST"

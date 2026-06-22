@@ -717,11 +717,16 @@ class LaporanController extends Controller
             $q->where('role', 'sales')->orWhere('role', 'Salesman');
         })->where('status', '1')->orderBy('name')->get();
         
+        $suppliers = Supplier::orderBy('nama_supplier', 'asc')->get();
+        
         $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
         $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
         $kode_sales = $request->input('kode_sales');
         $kode_pelanggan = $request->input('kode_pelanggan');
-        $jenis_laporan = $request->input('jenis_laporan', 'rekap');
+        $kode_supplier = $request->input('kode_supplier');
+        $jenis_laporan = $request->input('jenis_laporan', 'rekap'); // rekap, detail, detail_rowspan
+        $jenis_transaksi = $request->input('jenis_transaksi');
+        $status_faktur = $request->input('status_faktur', 'aktif'); // aktif, batal, semua
 
         $pelanggans = collect();
         if ($kode_pelanggan) {
@@ -736,30 +741,136 @@ class LaporanController extends Controller
         if ($isPrintOrExcel) {
             if ($jenis_laporan === 'rekap') {
                 $query = Penjualan::with(['pelanggan.wilayah', 'sales', 'user'])
-                    ->where('batal', 0);
+                    ->where(function($q) use ($status_faktur) {
+                        if ($status_faktur === 'aktif') {
+                            $q->where('batal', 0);
+                        } elseif ($status_faktur === 'batal') {
+                            $q->where('batal', 1);
+                        }
+                    });
                 
                 if ($tanggal_mulai) $query->where('tanggal', '>=', $tanggal_mulai);
                 if ($tanggal_akhir) $query->where('tanggal', '<=', $tanggal_akhir);
                 if ($kode_sales) $query->where('kode_sales', $kode_sales);
                 if ($kode_pelanggan) $query->where('kode_pelanggan', $kode_pelanggan);
+                if ($jenis_transaksi) $query->where('jenis_transaksi', $jenis_transaksi);
+                
+                if ($kode_supplier) {
+                    $query->whereHas('details.barang', function($q) use ($kode_supplier) {
+                        $q->where('kode_supplier', $kode_supplier);
+                    });
+                }
 
                 $items = $query->orderBy('tanggal', 'asc')->orderBy('no_faktur', 'asc')->get();
-            } else {
-                // detail
+            } elseif ($jenis_laporan === 'detail') {
                 $query = PenjualanDetail::with(['penjualan.pelanggan.wilayah', 'penjualan.sales', 'barang', 'barangSatuan'])
-                    ->whereHas('penjualan', function ($q) use ($tanggal_mulai, $tanggal_akhir, $kode_sales, $kode_pelanggan) {
-                        $q->where('batal', 0);
+                    ->whereHas('penjualan', function ($q) use ($tanggal_mulai, $tanggal_akhir, $kode_sales, $kode_pelanggan, $jenis_transaksi, $status_faktur) {
+                        if ($status_faktur === 'aktif') {
+                            $q->where('batal', 0);
+                        } elseif ($status_faktur === 'batal') {
+                            $q->where('batal', 1);
+                        }
                         if ($tanggal_mulai) $q->where('tanggal', '>=', $tanggal_mulai);
                         if ($tanggal_akhir) $q->where('tanggal', '<=', $tanggal_akhir);
                         if ($kode_sales) $q->where('kode_sales', $kode_sales);
                         if ($kode_pelanggan) $q->where('kode_pelanggan', $kode_pelanggan);
+                        if ($jenis_transaksi) $q->where('jenis_transaksi', $jenis_transaksi);
                     });
+
+                if ($kode_supplier) {
+                    $query->whereHas('barang', function($q) use ($kode_supplier) {
+                        $q->where('kode_supplier', $kode_supplier);
+                    });
+                }
 
                 $items = $query->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
                     ->orderBy('penjualan.tanggal', 'asc')
                     ->orderBy('penjualan.no_faktur', 'asc')
                     ->select('penjualan_detail.*')
                     ->get();
+            } else {
+                // detail_rowspan (Format 3)
+                $query = Penjualan::with([
+                    'pelanggan.wilayah', 
+                    'sales', 
+                    'user', 
+                    'details' => function($q) use ($kode_supplier) {
+                        $q->with(['barang', 'barangSatuan']);
+                        if ($kode_supplier) {
+                            $q->whereHas('barang', function($bq) use ($kode_supplier) {
+                                $bq->where('kode_supplier', $kode_supplier);
+                            });
+                        }
+                    }
+                ])
+                ->where(function($q) use ($status_faktur) {
+                    if ($status_faktur === 'aktif') {
+                        $q->where('batal', 0);
+                    } elseif ($status_faktur === 'batal') {
+                        $q->where('batal', 1);
+                    }
+                });
+                
+                if ($tanggal_mulai) $query->where('tanggal', '>=', $tanggal_mulai);
+                if ($tanggal_akhir) $query->where('tanggal', '<=', $tanggal_akhir);
+                if ($kode_sales) $query->where('kode_sales', $kode_sales);
+                if ($kode_pelanggan) $query->where('kode_pelanggan', $kode_pelanggan);
+                if ($jenis_transaksi) $query->where('jenis_transaksi', $jenis_transaksi);
+                
+                if ($kode_supplier) {
+                    $query->whereHas('details.barang', function($q) use ($kode_supplier) {
+                        $q->where('kode_supplier', $kode_supplier);
+                    });
+                }
+
+                $items = $query->orderBy('tanggal', 'asc')->orderBy('no_faktur', 'asc')->get();
+
+                // Pre-aggregate payments and returs for these invoices
+                $invoiceIds = $items->pluck('no_faktur')->toArray();
+
+                $cashPayments = DB::table('penjualan_pembayaran')
+                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
+                    ->where('status', 'disetujui')
+                    ->whereIn('no_faktur', $invoiceIds)
+                    ->groupBy('no_faktur')
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                $transferPayments = DB::table('penjualan_pembayaran_transfer')
+                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
+                    ->where('status', 'disetujui')
+                    ->whereIn('no_faktur', $invoiceIds)
+                    ->groupBy('no_faktur')
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                $giroPayments = DB::table('penjualan_pembayaran_giro')
+                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
+                    ->where('status', 'disetujui')
+                    ->whereIn('no_faktur', $invoiceIds)
+                    ->groupBy('no_faktur')
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                $returs = DB::table('retur_penjualan')
+                    ->select('no_faktur', DB::raw('SUM(total) as total'))
+                    ->whereIn('no_faktur', $invoiceIds)
+                    ->groupBy('no_faktur')
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                foreach ($items as $invoice) {
+                    $cashPaid = $cashPayments[$invoice->no_faktur] ?? 0;
+                    $transferPaid = $transferPayments[$invoice->no_faktur] ?? 0;
+                    $giroPaid = $giroPayments[$invoice->no_faktur] ?? 0;
+                    $paid = $cashPaid + $transferPaid + $giroPaid;
+                    $returPaid = $returs[$invoice->no_faktur] ?? 0;
+
+                    $invoice->total_bayar = $paid;
+                    $invoice->total_retur = $returPaid;
+                    $invoice->sisa_bayar = (float)($invoice->grand_total - $paid - $returPaid);
+                    $invoice->status_pembayaran = $invoice->sisa_bayar <= 0 ? 'Lunas' : 'Belum Lunas';
+                }
             }
         }
 
@@ -768,8 +879,8 @@ class LaporanController extends Controller
         if ($isExcel) {
             $filename = 'laporan_penjualan_' . date('Ymd_His') . '.xls';
             return response(view($view, compact(
-                'salesmen', 'pelanggans', 'items', 'tanggal_mulai', 'tanggal_akhir', 
-                'kode_sales', 'kode_pelanggan', 'jenis_laporan', 'isExcel'
+                'salesmen', 'pelanggans', 'suppliers', 'items', 'tanggal_mulai', 'tanggal_akhir', 
+                'kode_sales', 'kode_pelanggan', 'kode_supplier', 'jenis_laporan', 'jenis_transaksi', 'status_faktur', 'isExcel'
             )))
             ->header('Content-Type', 'application/vnd-ms-excel')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
@@ -778,8 +889,8 @@ class LaporanController extends Controller
         }
 
         return view($view, compact(
-            'salesmen', 'pelanggans', 'items', 'tanggal_mulai', 'tanggal_akhir', 
-            'kode_sales', 'kode_pelanggan', 'jenis_laporan'
+            'salesmen', 'pelanggans', 'suppliers', 'items', 'tanggal_mulai', 'tanggal_akhir', 
+            'kode_sales', 'kode_pelanggan', 'kode_supplier', 'jenis_laporan', 'jenis_transaksi', 'status_faktur'
         ));
     }
 

@@ -104,6 +104,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('admin')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+        Route::post('/dashboard/set-target', [DashboardController::class, 'setTarget'])->name('dashboard.set-target');
 
         Route::resource('kategori', KategoriController::class);
         Route::resource('merk', MerkController::class);

@@ -24,6 +24,112 @@
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <style>
+        /* PWA Install Banner Style for Admin */
+        .pwa-banner {
+            display: none;
+            background: rgba(26, 29, 39, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 12px 18px;
+            margin-bottom: 20px;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+            animation: pwaSlideDown 0.4s ease-out;
+        }
+
+        @keyframes pwaSlideDown {
+            from {
+                transform: translateY(-15px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .pwa-logo-container {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #6C63FF, #8B5CF6);
+            box-shadow: 0 4px 12px rgba(108, 99, 255, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .pwa-text {
+            flex-grow: 1;
+            padding: 0 16px;
+        }
+
+        .pwa-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin: 0;
+            color: #F1F5F9;
+        }
+
+        .pwa-subtitle {
+            font-size: 0.8rem;
+            color: #94A3B8;
+            margin: 0;
+        }
+
+        .pwa-btn-action {
+            background: linear-gradient(135deg, #6C63FF, #8B5CF6);
+            border: none;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(108, 99, 255, 0.2);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .pwa-btn-action:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(108, 99, 255, 0.3);
+        }
+
+        .pwa-btn-action:active {
+            transform: translateY(1px);
+        }
+
+        .pwa-close {
+            background: transparent;
+            border: none;
+            color: #64748B;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0 4px;
+            margin-left: 12px;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+
+        .pwa-close:hover {
+            color: #f87171;
+        }
+
+        .pwa-ios-guide {
+            font-size: 0.8rem;
+            color: #a78bfa;
+            font-weight: 500;
+            margin: 0;
+            line-height: 1.3;
+        }
+    </style>
     @stack('styles')
 </head>
 
@@ -77,6 +183,26 @@
 
             <!-- Main Content -->
             <div class="content-area">
+                <!-- PWA Install Banner -->
+                <div id="pwa-install-banner" class="pwa-banner">
+                    <div class="pwa-logo-container">
+                        <i class="fa-solid fa-layer-group text-white" style="font-size: 1.15rem;"></i>
+                    </div>
+                    <div class="pwa-text">
+                        <h4 class="pwa-title">DIS ERP App</h4>
+                        <div id="pwa-install-action-area">
+                            <p class="pwa-subtitle">Pasang ke layar utama HP Anda</p>
+                        </div>
+                        <div id="pwa-ios-instructions" style="display: none;">
+                            <p class="pwa-ios-guide"><i class="fa-solid fa-share-from-square me-1"></i> Tap <strong>Share</strong> lalu pilih <strong>Add to Home Screen</strong></p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <button id="pwa-btn-install" class="pwa-btn-action">Pasang</button>
+                        <button id="pwa-btn-dismiss" class="pwa-close" aria-label="Close">&times;</button>
+                    </div>
+                </div>
+
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
@@ -359,6 +485,7 @@
             @endif
         });
     </script>
+    <script src="{{ asset('js/pwa.js') }}"></script>
 
     @stack('scripts')
 </body>

@@ -115,16 +115,33 @@
                 </div>
             </div>
 
-            <!-- Card 2: Penjualan Bulan Ini -->
+            <!-- Card 2: Penjualan Bulan Ini & Target -->
             <div class="col-xl-3 col-md-6">
                 <div class="card stat-card shadow-sm h-100 p-3" style="background: linear-gradient(135deg, rgba(26, 29, 39, 0.9) 0%, rgba(99, 102, 241, 0.05) 100%);">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-start">
                         <div>
                             <span class="text-secondary small fw-semibold tracking-wider text-uppercase" style="font-size: 0.7rem;">Penjualan Bulan Ini</span>
-                            <h3 class="fw-bold text-white mt-2 mb-0">Rp {{ number_format($totalPenjualanBulanIni, 0, ',', '.') }}</h3>
+                            <h3 class="fw-bold text-white mt-1 mb-0">Rp {{ number_format($totalPenjualanBulanIni, 0, ',', '.') }}</h3>
                         </div>
                         <div class="stat-icon-box" style="background-color: rgba(99, 102, 241, 0.15); color: #6366f1;">
                             <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2 border-top border-white-10 pt-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-secondary small">
+                                Target: <strong class="text-white">Rp {{ number_format($targetPenjualan, 0, ',', '.') }}</strong>
+                                <a href="#" class="text-primary ms-1" data-bs-toggle="modal" data-bs-target="#editTargetModal" title="Ubah Target">
+                                    <i class="fa-solid fa-pen-to-square" style="font-size: 0.75rem;"></i>
+                                </a>
+                            </span>
+                            <span class="text-white-50 fw-semibold small">{{ number_format($progressPenjualan, 1) }}%</span>
+                        </div>
+                        <div class="progress" style="height: 6px; background-color: rgba(255, 255, 255, 0.1);">
+                            <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" role="progressbar" 
+                                 style="width: {{ min(100, $progressPenjualan) }}%; transition: width 0.8s ease;" 
+                                 aria-valuenow="{{ $progressPenjualan }}" aria-valuemin="0" aria-valuemax="100">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -335,6 +352,41 @@
                         @endif
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Target -->
+    <div class="modal fade" id="editTargetModal" tabindex="-1" aria-labelledby="editTargetModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content text-white rounded-4 shadow-lg" style="background: #1A1D27; border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div class="modal-header py-3" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                    <h5 class="modal-title fw-bold" id="editTargetModalLabel">
+                        <i class="fa-solid fa-bullseye text-primary me-2"></i>Ubah Target Penjualan Bulan Ini
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ route('dashboard.set-target') }}" method="POST">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label text-secondary fw-semibold small">Nominal Target Penjualan (Rupiah)</label>
+                            <div class="input-group">
+                                <span class="input-group-text text-secondary" style="background: #151821; border: 1px solid rgba(255, 255, 255, 0.1);">Rp</span>
+                                <input type="number" name="target_penjualan" class="form-control text-white" 
+                                       style="background: #151821; border: 1px solid rgba(255, 255, 255, 0.1);"
+                                       value="{{ (int) $targetPenjualan }}" min="0" required placeholder="Contoh: 5000000000">
+                            </div>
+                            <div class="form-text text-secondary mt-2" style="font-size: 0.75rem;">
+                                Target saat ini: <strong class="text-white">Rp {{ number_format($targetPenjualan, 0, ',', '.') }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer py-3" style="border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-3 rounded-3" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-3 rounded-3">Simpan Target</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

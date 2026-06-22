@@ -10,8 +10,8 @@
                 <small class="text-white-50">Kelola transaksi penerimaan retur barang dari pelanggan</small>
             </div>
             @can('create-retur_penjualan')
-                <a href="{{ route('retur-penjualan.create') }}" class="btn btn-light btn-sm fw-bold hover-scale">
-                    <i class="fa-solid fa-circle-plus me-1 text-primary"></i> Retur Baru
+                <a href="{{ route('retur-penjualan.create') }}" class="btn btn-primary btn-sm fw-bold hover-scale">
+                    <i class="fa-solid fa-circle-plus me-1 text-white"></i> Retur Baru
                 </a>
             @endcan
         </div>
@@ -39,9 +39,12 @@
                         <label class="form-label fs-7 fw-semibold text-secondary mb-1">Jenis Retur</label>
                         <select name="jenis_retur" class="form-select form-select-sm">
                             <option value="">Semua</option>
-                            <option value="Barang Rusak" {{ request('jenis_retur') === 'Barang Rusak' ? 'selected' : '' }}>Barang Rusak</option>
-                            <option value="Salah Kirim" {{ request('jenis_retur') === 'Salah Kirim' ? 'selected' : '' }}>Salah Kirim</option>
-                            <option value="Lainnya" {{ request('jenis_retur') === 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+                            <option value="Barang Rusak" {{ request('jenis_retur') === 'Barang Rusak' ? 'selected' : '' }}>
+                                Barang Rusak</option>
+                            <option value="Salah Kirim" {{ request('jenis_retur') === 'Salah Kirim' ? 'selected' : '' }}>
+                                Salah Kirim</option>
+                            <option value="Lainnya" {{ request('jenis_retur') === 'Lainnya' ? 'selected' : '' }}>Lainnya
+                            </option>
                         </select>
                     </div>
                     <div class="col-md-1">
@@ -50,7 +53,8 @@
                         </button>
                     </div>
                     <div class="col-md-1">
-                        <a href="{{ route('retur-penjualan.index') }}" class="btn btn-outline-secondary btn-sm w-100" title="Reset">
+                        <a href="{{ route('retur-penjualan.index') }}" class="btn btn-outline-secondary btn-sm w-100"
+                            title="Reset">
                             <i class="fa-solid fa-rotate-right"></i>
                         </a>
                     </div>
@@ -90,7 +94,7 @@
                                     </div>
                                 </td>
                                 <td class="fw-bold text-dark">
-                                    @if($item->sales)
+                                    @if ($item->sales)
                                         <div>{{ $item->sales->name }}</div>
                                         <div class="text-muted small fw-normal" style="font-size: 0.78rem;">
                                             <span class="font-monospace text-secondary">{{ $item->kode_sales }}</span>
@@ -100,7 +104,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @if($item->no_faktur)
+                                    @if ($item->no_faktur)
                                         <span class="badge bg-light text-secondary border font-monospace px-2 py-1">
                                             {{ $item->no_faktur }}
                                         </span>
@@ -109,7 +113,8 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 fs-8 fw-semibold">
+                                    <span
+                                        class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 fs-8 fw-semibold">
                                         {{ $item->jenis_retur }}
                                     </span>
                                 </td>
@@ -134,8 +139,8 @@
                                             </a>
                                         @endcan
                                         @can('delete-retur_penjualan')
-                                            <form action="{{ route('retur-penjualan.destroy', $item->no_retur) }}" method="POST"
-                                                class="d-inline">
+                                            <form action="{{ route('retur-penjualan.destroy', $item->no_retur) }}"
+                                                method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="btn btn-sm btn-outline-danger delete rounded"
@@ -144,7 +149,8 @@
                                                 </button>
                                             </form>
                                         @endcan
-                                        <button type="button" class="btn btn-sm btn-outline-secondary btn-show-logs rounded"
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-secondary btn-show-logs rounded"
                                             data-no-faktur="{{ $item->no_retur }}" title="Riwayat Aktivitas">
                                             <i class="fa-solid fa-clock-rotate-left"></i>
                                         </button>

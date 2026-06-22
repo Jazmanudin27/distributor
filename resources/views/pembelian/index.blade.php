@@ -129,7 +129,8 @@
                                                 </button>
                                             </form>
                                         @endcan
-                                        <button type="button" class="btn btn-sm btn-outline-secondary btn-show-logs rounded"
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-secondary btn-show-logs rounded"
                                             data-no-faktur="{{ $item->no_faktur }}" title="Riwayat Aktivitas">
                                             <i class="fa-solid fa-clock-rotate-left"></i>
                                         </button>
