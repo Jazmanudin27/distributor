@@ -130,7 +130,12 @@ class PelangganController extends Controller
         $today = now()->toDateString();
 
         $outstandingSubquery = \Illuminate\Support\Facades\DB::table('penjualan')
-            ->selectRaw('COALESCE(SUM(grand_total - COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran WHERE penjualan_pembayaran.no_faktur = penjualan.no_faktur), 0)), 0)')
+            ->selectRaw("COALESCE(SUM(grand_total - (
+                COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran WHERE penjualan_pembayaran.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0) +
+                COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_transfer WHERE penjualan_pembayaran_transfer.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0) +
+                COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_giro WHERE penjualan_pembayaran_giro.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0) +
+                COALESCE((SELECT SUM(total) FROM retur_penjualan WHERE retur_penjualan.no_faktur = penjualan.no_faktur), 0)
+            )), 0)")
             ->whereColumn('penjualan.kode_pelanggan', 'pelanggan.kode_pelanggan')
             ->where('penjualan.batal', 0);
 
@@ -144,7 +149,12 @@ class PelangganController extends Controller
             ->whereIn('penjualan.jenis_transaksi', ['K', 'Kredit'])
             ->where('penjualan.batal', 0)
             ->whereRaw('DATE_ADD(penjualan.tanggal, INTERVAL COALESCE(pelanggan.ljt, 30) DAY) < ?', [$today])
-            ->whereRaw('(SELECT COALESCE(SUM(jumlah), 0) FROM penjualan_pembayaran WHERE penjualan_pembayaran.no_faktur = penjualan.no_faktur) < penjualan.grand_total');
+            ->whereRaw("(
+                COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran WHERE penjualan_pembayaran.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0) +
+                COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_transfer WHERE penjualan_pembayaran_transfer.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0) +
+                COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_giro WHERE penjualan_pembayaran_giro.no_faktur = penjualan.no_faktur AND status = 'disetujui'), 0) +
+                COALESCE((SELECT SUM(total) FROM retur_penjualan WHERE retur_penjualan.no_faktur = penjualan.no_faktur), 0)
+            ) < penjualan.grand_total");
 
         if ($excludeNoFaktur) {
             $overdueSubquery->where('penjualan.no_faktur', '!=', $excludeNoFaktur);

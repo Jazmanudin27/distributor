@@ -34,7 +34,12 @@ class MobileKunjunganController extends Controller
             $unpaidInvoices = \App\Models\Penjualan::with(['pembayarans', 'pelanggan'])
                 ->where('kode_pelanggan', $activeCheckin->kode_pelanggan)
                 ->where('batal', 0)
-                ->whereRaw('(COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran WHERE penjualan_pembayaran.no_faktur = penjualan.no_faktur), 0) + COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_transfer WHERE penjualan_pembayaran_transfer.no_faktur = penjualan.no_faktur), 0) + COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_giro WHERE penjualan_pembayaran_giro.no_faktur = penjualan.no_faktur), 0)) < grand_total')
+                ->whereRaw('(
+                    COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran WHERE penjualan_pembayaran.no_faktur = penjualan.no_faktur AND status = \'disetujui\'), 0) +
+                    COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_transfer WHERE penjualan_pembayaran_transfer.no_faktur = penjualan.no_faktur AND status = \'disetujui\'), 0) +
+                    COALESCE((SELECT SUM(jumlah) FROM penjualan_pembayaran_giro WHERE penjualan_pembayaran_giro.no_faktur = penjualan.no_faktur AND status = \'disetujui\'), 0) +
+                    COALESCE((SELECT SUM(total) FROM retur_penjualan WHERE retur_penjualan.no_faktur = penjualan.no_faktur), 0)
+                ) < grand_total')
                 ->orderBy('tanggal', 'asc')
                 ->get();
         }

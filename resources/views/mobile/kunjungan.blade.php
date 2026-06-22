@@ -253,9 +253,9 @@
         @else
             @foreach ($lastOrders as $order)
                 @php
-                    $allPembayarans = $order->getAllPembayarans();
-                    $totalBayar = $allPembayarans->sum('jumlah');
-                    $sisaBayar = $order->grand_total - $totalBayar;
+                    $totalBayar = $order->getApprovedPembayaranTotal();
+                    $totalRetur = $order->getTotalRetur();
+                    $sisaBayar = $order->grand_total - $totalBayar - $totalRetur;
                     $dueDate = \Carbon\Carbon::parse($order->tanggal)->addDays($order->pelanggan->ljt ?? 30);
                     $isOverdue =
                         $sisaBayar > 0 &&
@@ -536,7 +536,7 @@
                                     <option value="">-- Pilih Faktur --</option>
                                     @foreach ($unpaidInvoices as $inv)
                                         @php
-                                            $sisa = $inv->grand_total - $inv->pembayarans->sum('jumlah');
+                                            $sisa = $inv->getSisaPiutang();
                                             $dueDate = \Carbon\Carbon::parse($inv->tanggal)->addDays(
                                                 $inv->pelanggan->ljt ?? 30,
                                             );

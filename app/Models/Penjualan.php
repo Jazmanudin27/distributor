@@ -115,6 +115,37 @@ class Penjualan extends Model
         return $cash->concat($transfers)->concat($giros)->sortByDesc('tanggal');
     }
 
+    public function getApprovedPembayaranTotal()
+    {
+        $cashTotal = $this->pembayarans->where('status', 'disetujui')->sum('jumlah');
+
+        $transferTotal = \Illuminate\Support\Facades\DB::table('penjualan_pembayaran_transfer')
+            ->where('no_faktur', $this->no_faktur)
+            ->where('status', 'disetujui')
+            ->sum('jumlah');
+
+        $giroTotal = \Illuminate\Support\Facades\DB::table('penjualan_pembayaran_giro')
+            ->where('no_faktur', $this->no_faktur)
+            ->where('status', 'disetujui')
+            ->sum('jumlah');
+
+        return (float) ($cashTotal + $transferTotal + $giroTotal);
+    }
+
+    public function getTotalRetur()
+    {
+        return (float) \Illuminate\Support\Facades\DB::table('retur_penjualan')
+            ->where('no_faktur', $this->no_faktur)
+            ->sum('total');
+    }
+
+    public function getSisaPiutang()
+    {
+        $totalBayar = $this->getApprovedPembayaranTotal();
+        $totalRetur = $this->getTotalRetur();
+        return (float) ($this->grand_total - $totalBayar - $totalRetur);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user', 'id');

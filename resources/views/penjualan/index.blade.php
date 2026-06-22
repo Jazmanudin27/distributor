@@ -106,8 +106,10 @@
                     <tbody>
                         @forelse($items as $index => $item)
                             @php
-                                $totalBayar = $item->pembayarans->sum('jumlah');
-                                $sisaPiutang = $item->grand_total - $totalBayar;
+                                $totalBayarApproved = $item->getApprovedPembayaranTotal();
+                                $totalRetur = $item->getTotalRetur();
+                                $totalTerbayar = $totalBayarApproved + $totalRetur;
+                                $sisaPiutang = $item->getSisaPiutang();
                                 $isLunas = $sisaPiutang <= 0;
                             @endphp
                             <tr>
@@ -157,7 +159,7 @@
                                     Rp {{ number_format((float) $item->grand_total, 0, ',', '.') }}
                                 </td>
                                 <td class="text-end text-success fw-semibold">
-                                    Rp {{ number_format((float) $totalBayar, 0, ',', '.') }}
+                                    Rp {{ number_format((float) $totalTerbayar, 0, ',', '.') }}
                                 </td>
                                 <td class="text-end text-danger fw-semibold">
                                     Rp {{ number_format((float) max(0, $sisaPiutang), 0, ',', '.') }}
