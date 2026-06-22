@@ -241,27 +241,27 @@ class ReturPenjualanController extends Controller
         ]);
 
         // Validate quantities against original invoice if provided
-        if ($request->filled('no_faktur')) {
-            $penjualan = Penjualan::with('details')->findOrFail($request->no_faktur);
-            foreach ($request->items as $row) {
-                $penjDetail = $penjualan->details->where('kode_barang', $row['kode_barang'])->first();
+        // if ($request->filled('no_faktur')) {
+        //     $penjualan = Penjualan::with('details')->findOrFail($request->no_faktur);
+        //     foreach ($request->items as $row) {
+        //         $penjDetail = $penjualan->details->where('kode_barang', $row['kode_barang'])->first();
 
-                if ($penjDetail) {
-                    // Sum already returned qty for this barang from all OTHER returns (excluding current retur)
-                    $returnedQty = DB::table('retur_penjualan_detail')
-                        ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
-                        ->where('retur_penjualan.no_faktur', $request->no_faktur)
-                        ->where('retur_penjualan.no_retur', '!=', $no_retur)
-                        ->where('retur_penjualan_detail.kode_barang', $row['kode_barang'])
-                        ->sum('retur_penjualan_detail.qty');
+        //         if ($penjDetail) {
+        //             // Sum already returned qty for this barang from all OTHER returns (excluding current retur)
+        //             $returnedQty = DB::table('retur_penjualan_detail')
+        //                 ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
+        //                 ->where('retur_penjualan.no_faktur', $request->no_faktur)
+        //                 ->where('retur_penjualan.no_retur', '!=', $no_retur)
+        //                 ->where('retur_penjualan_detail.kode_barang', $row['kode_barang'])
+        //                 ->sum('retur_penjualan_detail.qty');
 
-                    $maxAvailable = $penjDetail->qty - $returnedQty;
-                    if ($row['qty'] > $maxAvailable) {
-                        return redirect()->back()->withInput()->with('error', "Jumlah retur untuk barang {$row['kode_barang']} melebihi sisa penjualan (Maksimal: {$maxAvailable}).");
-                    }
-                }
-            }
-        }
+        //             $maxAvailable = $penjDetail->qty - $returnedQty;
+        //             if ($row['qty'] > $maxAvailable) {
+        //                 return redirect()->back()->withInput()->with('error', "Jumlah retur untuk barang {$row['kode_barang']} melebihi sisa penjualan (Maksimal: {$maxAvailable}).");
+        //             }
+        //         }
+        //     }
+        // }
 
         DB::transaction(function () use ($request, $retur) {
             // Revert old return stock additions (decrement stock back) ONLY if condition was Bagus
