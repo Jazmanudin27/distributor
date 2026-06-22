@@ -57,6 +57,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile', [MobileDashboardController::class, 'profile'])->name('profile');
         Route::post('/profile/update', [ProfileController::class, 'updateMobile'])->name('profile.update-credentials');
 
+        // Barang / Stok
+        Route::get('/barang', [\App\Http\Controllers\Mobile\MobileBarangController::class, 'index'])->name('barang.index');
+
         // Kunjungan (Visits)
         Route::get('/kunjungan', [MobileKunjunganController::class, 'index'])->name('kunjungan.index');
         Route::post('/kunjungan/checkin', [MobileKunjunganController::class, 'checkin'])->name('kunjungan.checkin');

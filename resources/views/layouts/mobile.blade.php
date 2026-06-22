@@ -200,7 +200,6 @@
             font-size: 0.72rem;
             font-weight: 500;
             flex: 1;
-            max-width: 25%;
             transition: color 0.3s ease;
             position: relative;
         }
@@ -503,6 +502,11 @@
                     class="nav-item-mobile {{ Request::routeIs('mobile.kunjungan.*') || Request::routeIs('mobile.order.create') || Request::routeIs('mobile.order.store') || Request::routeIs('mobile.pelanggan.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-store"></i>
                     <span>Pelanggan</span>
+                </a>
+                <a href="{{ route('mobile.barang.index') }}"
+                    class="nav-item-mobile {{ Request::routeIs('mobile.barang.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-box-open"></i>
+                    <span>Barang</span>
                 </a>
                 <a href="{{ route('mobile.order.index') }}"
                     class="nav-item-mobile {{ Request::routeIs('mobile.order.index') ? 'active' : '' }}">

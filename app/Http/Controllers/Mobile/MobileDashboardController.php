@@ -32,6 +32,11 @@ class MobileDashboardController extends Controller
                 ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
                 ->sum('grand_total');
 
+            // Today's sales of all sales
+            $todaySales = Penjualan::where('batal', 0)
+                ->whereDate('tanggal', $today)
+                ->sum('grand_total');
+
             // Today's visits count of all sales
             $todayVisitsCount = PenjualanCheckin::whereDate('checkin', $today)
                 ->count();
@@ -46,6 +51,12 @@ class MobileDashboardController extends Controller
             $achievedSales = Penjualan::where('kode_sales', $nik)
                 ->where('batal', 0)
                 ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+                ->sum('grand_total');
+
+            // 2. Today's sales
+            $todaySales = Penjualan::where('kode_sales', $nik)
+                ->where('batal', 0)
+                ->whereDate('tanggal', $today)
                 ->sum('grand_total');
 
             // 3. Today's visits count
@@ -90,6 +101,7 @@ class MobileDashboardController extends Controller
 
         return view('mobile.dashboard', compact(
             'achievedSales',
+            'todaySales',
             'targetAmount',
             'todayVisitsCount',
             'totalCustomers',

@@ -81,7 +81,7 @@
     @endphp
 
     <!-- Pencapaian Bulan Ini Card -->
-    <div class="mobile-card">
+    <div class="mobile-card mb-3">
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h6 class="text-secondary mb-1"
@@ -94,6 +94,24 @@
             <div class="avatar-glow rounded-circle d-flex align-items-center justify-content-center"
                 style="width: 48px; height: 48px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2);">
                 <i class="fa-solid fa-chart-line" style="font-size: 1.25rem; color: #818cf8;"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pencapaian Hari Ini Card -->
+    <div class="mobile-card">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="text-secondary mb-1"
+                    style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
+                    {{ $isSpv ? 'Total Penjualan Sales Hari Ini' : 'Total Penjualan Hari Ini' }}
+                </h6>
+                <h3 class="fw-bold mb-0" style="font-size: 1.4rem; color: #34d399;">Rp
+                    {{ number_format($todaySales, 0, ',', '.') }}</h3>
+            </div>
+            <div class="avatar-glow rounded-circle d-flex align-items-center justify-content-center"
+                style="width: 48px; height: 48px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);">
+                <i class="fa-solid fa-money-bill-trend-up" style="font-size: 1.25rem; color: #34d399;"></i>
             </div>
         </div>
     </div>
