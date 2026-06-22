@@ -70,6 +70,17 @@
 @section('content')
     <h5 class="fw-bold mb-3" style="font-size: 1.1rem; letter-spacing: 0.5px;">Input Order Penjualan</h5>
 
+    @if ($errors->any())
+        <div class="alert alert-danger rounded-4 py-2 px-3 mb-3 small" style="background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;">
+            <strong class="d-block mb-1"><i class="fa-solid fa-circle-exclamation me-1"></i> Gagal menyimpan pesanan:</strong>
+            <ul class="mb-0 ps-3">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form action="{{ route('mobile.order.store') }}" method="POST" id="order-form">
         @csrf
 
@@ -237,12 +248,12 @@
                     <select name="jenis_transaksi" id="jenis_transaksi"
                         class="form-select form-select-sm bg-dark text-white border-secondary" required>
                         @if (Auth::user()->jenis_sales != '1')
-                            <option value="K" {{ $pelanggan && $pelanggan->metode_bayar === 'K' ? 'selected' : '' }}>
+                            <option value="Kredit" {{ $pelanggan && in_array($pelanggan->metode_bayar, ['K', 'Kredit']) ? 'selected' : '' }}>
                                 Kredit (Tempo)
                             </option>
                         @endif
-                        <option value="T"
-                            {{ Auth::user()->jenis_sales == '1' || ($pelanggan && $pelanggan->metode_bayar === 'T') ? 'selected' : '' }}>
+                        <option value="Tunai"
+                            {{ Auth::user()->jenis_sales == '1' || ($pelanggan && in_array($pelanggan->metode_bayar, ['T', 'Tunai'])) ? 'selected' : '' }}>
                             Tunai (Cash)
                         </option>
                     </select>
@@ -437,8 +448,10 @@
 
                 // Set default payment mode if matching
                 const isRestrictedSales = @json(Auth::user()->jenis_sales == '1');
-                if (customer.metode === 'Tunai' || (customer.metode === 'Kredit' && !isRestrictedSales)) {
-                    jenisTransaksiEl.value = customer.metode;
+                if (customer.metode === 'Tunai' || customer.metode === 'T') {
+                    jenisTransaksiEl.value = 'Tunai';
+                } else if ((customer.metode === 'Kredit' || customer.metode === 'K') && !isRestrictedSales) {
+                    jenisTransaksiEl.value = 'Kredit';
                 } else if (isRestrictedSales) {
                     jenisTransaksiEl.value = 'Tunai';
                 }
@@ -1041,6 +1054,16 @@
                 hiddenKodePelanggan.value = mockCustomer.id;
                 hiddenKodePelanggan.setAttribute('data-overdue', mockCustomer.has_overdue);
                 hiddenKodePelanggan.setAttribute('data-sisa-limit', mockCustomer.sisa_limit);
+
+                // Set default payment mode
+                const isRestrictedSales = @json(Auth::user()->jenis_sales == '1');
+                if (mockCustomer.metode === 'Tunai' || mockCustomer.metode === 'T') {
+                    jenisTransaksiEl.value = 'Tunai';
+                } else if ((mockCustomer.metode === 'Kredit' || mockCustomer.metode === 'K') && !isRestrictedSales) {
+                    jenisTransaksiEl.value = 'Kredit';
+                } else if (isRestrictedSales) {
+                    jenisTransaksiEl.value = 'Tunai';
+                }
             @endif
 
             validateFormState();
