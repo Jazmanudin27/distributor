@@ -209,6 +209,11 @@ class PelangganController extends Controller
                 $wilayahText .= ' / ' . $p->subWilayah->nama_wilayah;
             }
 
+            $overdueInvoices = [];
+            if ($hasOverdue) {
+                $overdueInvoices = $p->getOverdueInvoices($excludeNoFaktur)->pluck('no_faktur')->toArray();
+            }
+
             $results[] = [
                 'id' => $p->kode_pelanggan,
                 'text' => $p->nama_pelanggan . ' (' . $p->kode_pelanggan . ')',
@@ -220,7 +225,8 @@ class PelangganController extends Controller
                 'metode' => $p->metode_bayar ?: '-',
                 'limit' => $p->limit_pelanggan,
                 'sisa_limit' => $sisaLimit,
-                'has_overdue' => $hasOverdue ? 1 : 0
+                'has_overdue' => $hasOverdue ? 1 : 0,
+                'overdue_invoices' => $overdueInvoices
             ];
         }
 

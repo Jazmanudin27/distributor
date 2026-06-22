@@ -89,11 +89,36 @@
                             </div>
 
                             @if ($activeCheckin->pelanggan->hasOverdueInvoices())
+                                @php
+                                    $overdueInvoices = $activeCheckin->pelanggan->getOverdueInvoices();
+                                @endphp
                                 <div class="col-12 mt-2">
-                                    <div class="alert alert-danger p-2 mb-0 d-flex align-items-center rounded-3 border-0"
+                                    <div class="alert alert-danger p-2 mb-0 rounded-3 border-0"
                                         style="font-size: 0.72rem; background-color: rgba(239, 68, 68, 0.15); color: #f87171;">
-                                        <i class="fa-solid fa-triangle-exclamation me-2"></i>
-                                        <span>Toko memiliki tagihan jatuh tempo (Overdue)!</span>
+                                        <div class="d-flex align-items-center mb-1">
+                                            <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                                            <span class="fw-bold">Toko memiliki tagihan jatuh tempo (Overdue):</span>
+                                        </div>
+                                        <ul class="mb-0 ps-3 mt-1" style="list-style-type: disc;">
+                                            @foreach ($overdueInvoices as $inv)
+                                                @php
+                                                    $sisa =
+                                                        $inv->grand_total -
+                                                        $inv->getApprovedPembayaranTotal() -
+                                                        $inv->getTotalRetur();
+                                                    $dueDate = \Carbon\Carbon::parse($inv->tanggal)->addDays(
+                                                        $inv->pelanggan->ljt ?? 30,
+                                                    );
+                                                @endphp
+                                                <li>
+                                                    Faktur <strong
+                                                        class="text-white font-monospace">{{ $inv->no_faktur }}</strong>
+                                                    (JT: {{ $dueDate->format('d/m/Y') }} &bull; Sisa: <strong
+                                                        class="text-white">Rp
+                                                        {{ number_format($sisa, 0, ',', '.') }}</strong>)
+                                                </li>
+                                            @endforeach
+                                        </ul>
                                     </div>
                                 </div>
                             @endif
@@ -223,7 +248,7 @@
                 </div>
                 <div id="overdue-warning-badge" class="mt-2 d-none">
                     <div class="alert alert-danger p-2 mb-0 d-flex align-items-center rounded-3"
-                        style="font-size: 0.75rem; background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3);">
+                        style="font-size: 0.75rem; background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(255, 255, 255, 0.3)3);">
                         <i class="fa-solid fa-circle-exclamation me-2"></i>
                         <span>Toko ini memiliki faktur jatuh tempo (Overdue)!</span>
                     </div>
@@ -853,6 +878,10 @@
                 const warningBadge = document.getElementById('overdue-warning-badge');
                 if (customer.has_overdue === 1) {
                     warningBadge.classList.remove('d-none');
+                    const overdueListStr = customer.overdue_invoices && customer.overdue_invoices.length > 0 ?
+                        customer.overdue_invoices.join(', ') : '-';
+                    warningBadge.querySelector('span').innerHTML =
+                        `Toko ini memiliki faktur jatuh tempo (Overdue): <strong class="text-white">${overdueListStr}</strong>`;
                 } else {
                     warningBadge.classList.add('d-none');
                 }

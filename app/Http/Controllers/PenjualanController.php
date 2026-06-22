@@ -199,7 +199,8 @@ class PenjualanController extends Controller
 
         $pelanggan = Pelanggan::findOrFail($request->kode_pelanggan);
         if ($pelanggan->hasOverdueInvoices()) {
-            return redirect()->back()->withInput()->with('error', "Gagal menyimpan transaksi. Pelanggan ini memiliki faktur yang sudah jatuh tempo!");
+            $overdueInvoices = $pelanggan->getOverdueInvoices()->pluck('no_faktur')->implode(', ');
+            return redirect()->back()->withInput()->with('error', "Gagal menyimpan transaksi. Pelanggan {$pelanggan->nama_pelanggan} memiliki faktur yang sudah jatuh tempo (overdue): {$overdueInvoices}!");
         }
 
         // Verify product restrictions for the salesman

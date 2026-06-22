@@ -199,10 +199,26 @@
 
                 <div id="overdue-warning"
                     class="{{ $pelanggan && $pelanggan->hasOverdueInvoices() ? '' : 'd-none' }} mt-2">
-                    <div class="alert alert-danger p-1 mb-0 d-flex align-items-center rounded-3"
+                    <div class="alert alert-danger p-2 mb-0 rounded-3"
                         style="font-size: 0.7rem; background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;">
-                        <i class="fa-solid fa-triangle-exclamation me-1"></i>
-                        <span>Toko diblokir (Overdue)!</span>
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                            <span class="fw-bold">Toko diblokir (Overdue)! Faktur overdue:</span>
+                        </div>
+                        <ul class="mb-0 ps-3 mt-1" id="overdue-invoices-list" style="font-size: 0.68rem; list-style-type: disc;">
+                            @if ($pelanggan && $pelanggan->hasOverdueInvoices())
+                                @foreach ($pelanggan->getOverdueInvoices() as $inv)
+                                    @php
+                                        $sisa = $inv->grand_total - $inv->getApprovedPembayaranTotal() - $inv->getTotalRetur();
+                                        $dueDate = \Carbon\Carbon::parse($inv->tanggal)->addDays($inv->pelanggan->ljt ?? 30);
+                                    @endphp
+                                    <li>
+                                        Faktur <strong class="text-white font-monospace">{{ $inv->no_faktur }}</strong>
+                                        (JT: {{ $dueDate->format('d/m/Y') }} &bull; Sisa: <strong class="text-white">Rp {{ number_format($sisa, 0, ',', '.') }}</strong>)
+                                    </li>
+                                @endforeach
+                            @endif
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -998,9 +1014,16 @@
                 // 1. Double check Overdue blocker
                 if (overdueStatus === 1) {
                     e.preventDefault();
+                    let overdueList = [];
+                    try {
+                        overdueList = JSON.parse(hiddenKodePelanggan.getAttribute('data-overdue-invoices') || '[]');
+                    } catch(e) {}
+                    const overdueListStr = overdueList.length > 0 ? overdueList.join(', ') : '-';
+                    const customerName = document.getElementById('detail-nama-display')?.innerText || 'Pelanggan';
+
                     Swal.fire({
                         title: 'Transaksi Ditolak',
-                        text: 'Pelanggan ini memiliki tagihan jatuh tempo (Overdue)! Selesaikan pembayaran terlebih dahulu.',
+                        html: `Pelanggan <strong>${customerName}</strong> memiliki tagihan jatuh tempo (Overdue)!<br><br>Faktur overdue: <strong>${overdueListStr}</strong>.<br><br>Harap selesaikan pembayaran terlebih dahulu.`,
                         icon: 'error',
                         background: '#161e31',
                         color: '#f8fafc',
@@ -1048,11 +1071,13 @@
                     id: "{{ $pelanggan->kode_pelanggan }}",
                     text: "{{ $pelanggan->nama_pelanggan }}",
                     has_overdue: {{ $pelanggan->hasOverdueInvoices() ? 1 : 0 }},
+                    overdue_invoices: @json($pelanggan->hasOverdueInvoices() ? $pelanggan->getOverdueInvoices()->pluck('no_faktur')->toArray() : []),
                     sisa_limit: {{ $pelanggan->getSisaLimitKredit() }},
                     metode: "{{ $pelanggan->metode_bayar }}"
                 };
                 hiddenKodePelanggan.value = mockCustomer.id;
                 hiddenKodePelanggan.setAttribute('data-overdue', mockCustomer.has_overdue);
+                hiddenKodePelanggan.setAttribute('data-overdue-invoices', JSON.stringify(mockCustomer.overdue_invoices || []));
                 hiddenKodePelanggan.setAttribute('data-sisa-limit', mockCustomer.sisa_limit);
 
                 // Set default payment mode

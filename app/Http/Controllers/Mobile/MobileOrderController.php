@@ -197,7 +197,8 @@ class MobileOrderController extends Controller
 
         // 1. Verify Overdue Invoices
         if ($pelanggan->hasOverdueInvoices()) {
-            return redirect()->back()->withInput()->with('error', "Transaksi ditolak. Pelanggan memiliki faktur overdue!");
+            $overdueInvoices = $pelanggan->getOverdueInvoices()->pluck('no_faktur')->implode(', ');
+            return redirect()->back()->withInput()->with('error', "Transaksi ditolak. Pelanggan {$pelanggan->nama_pelanggan} memiliki faktur overdue: {$overdueInvoices}!");
         }
 
         // Verify product restrictions for the salesman

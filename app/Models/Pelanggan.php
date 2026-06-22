@@ -54,6 +54,10 @@ class Pelanggan extends Model
 
     public function getOverdueInvoices($excludeNoFaktur = null)
     {
+        if ($this->jenis_pelanggan == '1') {
+            return collect();
+        }
+
         $query = \App\Models\Penjualan::where('kode_pelanggan', $this->kode_pelanggan)
             ->whereIn('jenis_transaksi', ['K', 'Kredit'])
             ->where('batal', 0)
@@ -86,4 +90,6 @@ class Pelanggan extends Model
         
         return $query->exists();
     }
+
+
 }
