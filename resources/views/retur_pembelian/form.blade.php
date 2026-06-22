@@ -323,6 +323,18 @@
                 $('#quick_barang').val('').trigger('change');
                 $('#quick_qty').val(1);
                 $('#quick_harga').val(0);
+
+                setTimeout(function() {
+                    $('#quick_barang').select2('open');
+                }, 50);
+            });
+
+            // Keyboard shortcut to add item on Enter press
+            $('#quick_qty, #quick_harga, #quick_satuan').on('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    $('#btn-add-item').click();
+                }
             });
 
             // Dynamically load invoice details via AJAX when Faktur is selected

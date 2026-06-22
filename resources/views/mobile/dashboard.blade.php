@@ -160,16 +160,18 @@
                     <span style="font-size: 0.85rem;">Pencapaian Sales</span>
                 </a>
             </div>
-            @if ($pendingCustomersCount > 0)
-                <div class="col-12 mt-2">
-                    <a href="{{ route('mobile.spv.pelanggan.pending') }}"
-                        class="btn btn-mobile w-100 py-2.5 d-flex align-items-center justify-content-center"
-                        style="background-color: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); color: #fbbf24;">
-                        <i class="fa-solid fa-user-check me-2" style="font-size: 1.2rem;"></i>
-                        <span style="font-size: 0.85rem;">Persetujuan Pelanggan Baru ({{ $pendingCustomersCount }})</span>
-                    </a>
-                </div>
-            @endif
+            <div class="col-12 mt-2">
+                <a href="{{ route('mobile.spv.pelanggan.pending') }}"
+                    class="btn btn-mobile w-100 py-2.5 d-flex align-items-center justify-content-center"
+                    style="background-color: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); color: #fbbf24;">
+                    <i class="fa-solid fa-user-check me-2" style="font-size: 1.2rem;"></i>
+                    <span style="font-size: 0.85rem;">Persetujuan Pelanggan Baru
+                        @if ($pendingCustomersCount > 0)
+                            ({{ $pendingCustomersCount }})
+                        @endif
+                    </span>
+                </a>
+            </div>
             <div class="col-12 mt-2">
                 <a href="{{ route('mobile.limit-kredit.index') }}#pending-approvals"
                     class="btn btn-mobile w-100 py-2.5 d-flex align-items-center justify-content-center"

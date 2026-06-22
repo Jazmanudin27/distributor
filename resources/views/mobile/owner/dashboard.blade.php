@@ -150,7 +150,7 @@
 
     <div class="row g-3 mb-3">
         <!-- 1. Pencapaian Sales -->
-        <div class="col-6">
+        <div class="col-4">
             <a href="{{ route('mobile.owner.sales-achievement') }}" class="text-decoration-none">
                 <div class="metric-card m-0 p-3 text-center border-opacity-30 border-success"
                     style="background: rgba(16, 185, 129, 0.05); min-height: 110px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
@@ -165,7 +165,7 @@
             </a>
         </div>
         <!-- 2. Kunjungan Sales -->
-        <div class="col-6">
+        <div class="col-4">
             <a href="{{ route('mobile.owner.sales-visits') }}" class="text-decoration-none">
                 <div class="metric-card m-0 p-3 text-center border-opacity-30 border-info"
                     style="background: rgba(0, 191, 255, 0.05); min-height: 110px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
@@ -175,7 +175,22 @@
                     </div>
                     <div class="text-info" style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase;">
                         Kunjungan</div>
-                    <span class="text-secondary" style="font-size: 0.65rem;">Lokasi & Catatan</span>
+                    <span class="text-secondary" style="font-size: 0.65rem;">Lokasi</span>
+                </div>
+            </a>
+        </div>
+        <!-- 3. Daftar Orderan -->
+        <div class="col-4">
+            <a href="{{ route('mobile.owner.order.index') }}" class="text-decoration-none">
+                <div class="metric-card m-0 p-3 text-center border-opacity-30 border-primary"
+                    style="background: rgba(99, 102, 241, 0.05); min-height: 110px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <div class="accent-icon mb-2 rounded-circle"
+                        style="width: 38px; height: 38px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2);">
+                        <i class="fa-solid fa-receipt text-indigo" style="font-size: 1rem; color: #818cf8;"></i>
+                    </div>
+                    <div class="text-indigo" style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; color: #818cf8;">
+                        Orderan</div>
+                    <span class="text-secondary" style="font-size: 0.65rem;">Daftar Order</span>
                 </div>
             </a>
         </div>

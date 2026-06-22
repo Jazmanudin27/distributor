@@ -63,8 +63,7 @@
                             <label class="form-label fw-semibold text-secondary mb-1">Pilih Jenis Laporan</label>
                             <select name="jenis_laporan" class="form-select form-select-sm">
                                 <option value="rekap">Format 1: Rekap (Per Invoice)</option>
-                                <option value="detail">Format 2: Detail (Per Barang)</option>
-                                <option value="detail_rowspan">Format 3: Detail Rowspan (Kolom Lengkap)</option>
+                                <option value="detail">Format 2: Detail (Per Barang - Kolom Lengkap)</option>
                             </select>
                         </div>
 

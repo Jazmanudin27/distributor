@@ -311,12 +311,154 @@ class MobileOwnerController extends Controller
         krsort($dailyBreakdown);
         uasort($salesBreakdown, function($a, $b) { return $b['profit'] <=> $a['profit']; });
 
+        // Supplier-wise query logic
+        $supplierNames = \App\Models\Supplier::pluck('nama_supplier', 'kode_supplier')->toArray();
+        
+        $itemSalesQuery = DB::table('penjualan_detail')
+            ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
+            ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+            ->leftJoin('barang_satuan', 'penjualan_detail.satuan_id', '=', 'barang_satuan.id')
+            ->where('penjualan.batal', 0)
+            ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->select(
+                'barang.kode_supplier',
+                'barang.kode_barang',
+                'barang.nama_barang',
+                'barang_satuan.satuan',
+                DB::raw('SUM(penjualan_detail.qty) as total_qty'),
+                DB::raw('SUM(penjualan_detail.total) as total_sales'),
+                DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp')
+            )
+            ->groupBy('barang.kode_supplier', 'barang.kode_barang', 'barang.nama_barang', 'barang_satuan.satuan')
+            ->get();
+        
+        $itemReturnsQuery = DB::table('retur_penjualan_detail')
+            ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
+            ->join('barang', 'retur_penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+            ->leftJoin('barang_satuan', 'retur_penjualan_detail.id_satuan', '=', 'barang_satuan.id')
+            ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->select(
+                'barang.kode_supplier',
+                'barang.kode_barang',
+                DB::raw('SUM(retur_penjualan_detail.qty) as total_qty'),
+                DB::raw('SUM(retur_penjualan_detail.subtotal_retur - COALESCE(retur_penjualan_detail.total_diskon_rupiah, 0)) as total_return'),
+                DB::raw('SUM(retur_penjualan_detail.qty * barang_satuan.harga_pokok) as total_hpp_return')
+            )
+            ->groupBy('barang.kode_supplier', 'barang.kode_barang')
+            ->get()
+            ->keyBy(function($item) {
+                return $item->kode_supplier . '_' . $item->kode_barang;
+            });
+
+        $returnsBySupplier = DB::table('retur_penjualan_detail')
+            ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
+            ->join('barang', 'retur_penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+            ->leftJoin('barang_satuan', 'retur_penjualan_detail.id_satuan', '=', 'barang_satuan.id')
+            ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->select(
+                'barang.kode_supplier',
+                DB::raw('SUM(retur_penjualan_detail.subtotal_retur - COALESCE(retur_penjualan_detail.total_diskon_rupiah, 0)) as total_return'),
+                DB::raw('SUM(retur_penjualan_detail.qty * barang_satuan.harga_pokok) as total_hpp_return')
+            )
+            ->groupBy('barang.kode_supplier')
+            ->get()
+            ->keyBy('kode_supplier');
+
+        $supplierBreakdown = [];
+
+        foreach ($itemSalesQuery as $sale) {
+            $supCode = $sale->kode_supplier ?: 'TANPA_SUPPLIER';
+            $supName = $supplierNames[$sale->kode_supplier] ?? ($sale->kode_supplier ? $sale->kode_supplier : 'Tanpa Supplier');
+            
+            if (!isset($supplierBreakdown[$supCode])) {
+                $supplierBreakdown[$supCode] = [
+                    'name' => $supName,
+                    'salesGross' => 0,
+                    'salesReturn' => 0,
+                    'hppGross' => 0,
+                    'hppReturn' => 0,
+                    'items' => []
+                ];
+            }
+            
+            $supplierBreakdown[$supCode]['salesGross'] += $sale->total_sales;
+            $supplierBreakdown[$supCode]['hppGross'] += $sale->total_hpp;
+            
+            $retKey = $sale->kode_supplier . '_' . $sale->kode_barang;
+            $retQty = 0;
+            $retVal = 0;
+            $retHpp = 0;
+            if (isset($itemReturnsQuery[$retKey])) {
+                $retItem = $itemReturnsQuery[$retKey];
+                $retQty = $retItem->total_qty;
+                $retVal = $retItem->total_return;
+                $retHpp = $retItem->total_hpp_return;
+            }
+            
+            $netSales = $sale->total_sales - $retVal;
+            $netHpp = $sale->total_hpp - $retHpp;
+            $profit = $netSales - $netHpp;
+            $margin = $netSales > 0 ? ($profit / $netSales) * 100 : 0;
+            
+            $supplierBreakdown[$supCode]['items'][] = [
+                'kode_barang' => $sale->kode_barang,
+                'nama_barang' => $sale->nama_barang,
+                'satuan' => $sale->satuan ?: 'PCS',
+                'qty_sales' => $sale->total_qty,
+                'qty_return' => $retQty,
+                'netSales' => $netSales,
+                'netHpp' => $netHpp,
+                'profit' => $profit,
+                'margin' => $margin
+            ];
+        }
+
+        foreach ($returnsBySupplier as $code => $ret) {
+            $supCode = $code ?: 'TANPA_SUPPLIER';
+            $supName = $supplierNames[$code] ?? ($code ? $code : 'Tanpa Supplier');
+            
+            if (!isset($supplierBreakdown[$supCode])) {
+                $supplierBreakdown[$supCode] = [
+                    'name' => $supName,
+                    'salesGross' => 0,
+                    'salesReturn' => 0,
+                    'hppGross' => 0,
+                    'hppReturn' => 0,
+                    'items' => []
+                ];
+            }
+            
+            $supplierBreakdown[$supCode]['salesReturn'] += $ret->total_return;
+            $supplierBreakdown[$supCode]['hppReturn'] += $ret->total_hpp_return;
+        }
+
+        foreach ($supplierBreakdown as $code => &$data) {
+            $netSales = $data['salesGross'] - $data['salesReturn'];
+            $netHpp = $data['hppGross'] - $data['hppReturn'];
+            $profit = $netSales - $netHpp;
+            $margin = $netSales > 0 ? ($profit / $netSales) * 100 : 0;
+            
+            $data['netSales'] = $netSales;
+            $data['netHpp'] = $netHpp;
+            $data['profit'] = $profit;
+            $data['margin'] = $margin;
+            
+            usort($data['items'], function($a, $b) {
+                return $b['netSales'] <=> $a['netSales'];
+            });
+        }
+        unset($data);
+
+        uasort($supplierBreakdown, function($a, $b) {
+            return $b['profit'] <=> $a['profit'];
+        });
+
         return view('mobile.owner.laba_rugi', compact(
             'tanggal_mulai', 'tanggal_akhir',
             'salesGross', 'salesReturn', 'salesNet',
             'hppGross', 'hppReturn', 'hppNet',
             'profit', 'marginPercent',
-            'dailyBreakdown', 'salesBreakdown'
+            'dailyBreakdown', 'salesBreakdown', 'supplierBreakdown'
         ));
     }
 
@@ -447,5 +589,73 @@ class MobileOwnerController extends Controller
 
         return redirect()->route('mobile.owner.pending-pelanggan')
             ->with('warning', "Pendaftaran pelanggan '{$pelanggan->nama_pelanggan}' ditolak.");
+    }
+
+    /**
+     * Laporan Orderan / Penjualan Mobile untuk Owner
+     */
+    public function orders(Request $request)
+    {
+        $q = $request->input('q');
+        $selected_sales = $request->input('kode_sales', '');
+        $selected_pelanggan = $request->input('kode_pelanggan', '');
+        $filter = $request->input('filter', 'all');
+
+        $query = Penjualan::with(['pelanggan.wilayah', 'sales', 'details.barang', 'details.barangSatuan', 'pembayarans']);
+
+        if ($q) {
+            $query->where(function($sub) use ($q) {
+                $sub->where('no_faktur', 'like', "%{$q}%")
+                    ->orWhereHas('pelanggan', function($custQuery) use ($q) {
+                        $custQuery->where('nama_pelanggan', 'like', "%{$q}%")
+                                  ->orWhere('kode_pelanggan', 'like', "%{$q}%");
+                    });
+            });
+        }
+
+        if ($selected_sales !== '') {
+            $query->where('kode_sales', $selected_sales);
+        }
+
+        if ($selected_pelanggan !== '') {
+            $query->where('kode_pelanggan', $selected_pelanggan);
+        }
+
+        // Apply filters
+        $todayStr = now()->toDateString();
+        $startOfMonth = now()->startOfMonth()->toDateString();
+        $endOfMonth = now()->endOfMonth()->toDateString();
+
+        if ($filter === 'today') {
+            $query->whereDate('tanggal', $todayStr);
+        } elseif ($filter === 'month') {
+            $query->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
+        }
+
+        $orders = $query->orderBy('tanggal', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        // Calculate summary for context
+        $todaySalesQuery = Penjualan::where('batal', 0)->whereDate('tanggal', $todayStr);
+        if ($selected_sales !== '') $todaySalesQuery->where('kode_sales', $selected_sales);
+        if ($selected_pelanggan !== '') $todaySalesQuery->where('kode_pelanggan', $selected_pelanggan);
+        $todaySales = $todaySalesQuery->sum('grand_total');
+
+        $monthSalesQuery = Penjualan::where('batal', 0)->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
+        if ($selected_sales !== '') $monthSalesQuery->where('kode_sales', $selected_sales);
+        if ($selected_pelanggan !== '') $monthSalesQuery->where('kode_pelanggan', $selected_pelanggan);
+        $monthSales = $monthSalesQuery->sum('grand_total');
+
+        // Fetch lists for filter dropdowns
+        $salesmen = \App\Models\User::whereIn('role', ['sales', 'spv sales'])
+            ->where('status', '1')
+            ->orderBy('name')
+            ->get();
+
+        $pelanggans = Pelanggan::orderBy('nama_pelanggan')->get();
+
+        return view('mobile.owner.orders', compact('orders', 'salesmen', 'pelanggans', 'q', 'selected_sales', 'selected_pelanggan', 'filter', 'todaySales', 'monthSales'));
     }
 }

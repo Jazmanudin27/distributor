@@ -507,6 +507,18 @@
                 $('#quick_diskon').val(0);
 
                 calculateTotals();
+
+                setTimeout(function() {
+                    $('#quick_barang').select2('open');
+                }, 50);
+            });
+
+            // Keyboard shortcut to add item on Enter press
+            $('#quick_qty, #quick_harga, #quick_diskon, #quick_diskon_percent, #quick_satuan').on('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    $('#btn-add-quick').click();
+                }
             });
 
             // Append row implementation

@@ -536,6 +536,18 @@
                 $('#quick_diskon').val(0);
 
                 calculateTotals();
+
+                setTimeout(function() {
+                    $('#quick_barang').select2('open');
+                }, 50);
+            });
+
+            // Keyboard shortcut to add item on Enter press
+            $('#quick_qty, #quick_harga, #quick_diskon1_percent, #quick_diskon2_percent, #quick_diskon3_percent, #quick_diskon, #quick_satuan, #quick_kondisi').on('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    $('#btn-add-quick').click();
+                }
             });
 
             function appendRow(barangCode, barangName, satuanId, satuanName, kondisi, qty, harga, d1 = 0, d2 = 0,

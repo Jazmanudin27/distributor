@@ -78,7 +78,20 @@ class StokOpnameController extends Controller
                 // Calculate stock adjustment: add the difference (selisih)
                 // e.g. system = 10, physical = 8, difference = -2
                 // stok = stok + (-2) = 8
-                Barang::where('kode_barang', $row['kode_barang'])->increment('stok', $row['selisih']);
+                $selisih = (float)$row['selisih'];
+                $qtyMasuk = $selisih > 0 ? $selisih : 0;
+                $qtyKeluar = $selisih < 0 ? abs($selisih) : 0;
+
+                \App\Models\StokMutasi::log(
+                    $row['kode_barang'],
+                    $request->tanggal,
+                    'Stok Opname',
+                    $request->no_opname,
+                    $qtyMasuk,
+                    $qtyKeluar,
+                    auth()->id(),
+                    $row['keterangan'] ?? $request->keterangan
+                );
 
                 $details[] = new StokOpnameDetail([
                     'kode_barang' => $row['kode_barang'],
@@ -135,14 +148,40 @@ class StokOpnameController extends Controller
         DB::transaction(function () use ($request, $opname) {
             // Revert old adjustments (decrement stock by old selisih)
             foreach ($opname->details as $oldDetail) {
-                Barang::where('kode_barang', $oldDetail->kode_barang)->decrement('stok', $oldDetail->selisih);
+                $oldSelisih = (float)$oldDetail->selisih;
+                $qtyMasuk = $oldSelisih < 0 ? abs($oldSelisih) : 0;
+                $qtyKeluar = $oldSelisih > 0 ? $oldSelisih : 0;
+
+                \App\Models\StokMutasi::log(
+                    $oldDetail->kode_barang,
+                    $request->tanggal,
+                    'Batal Stok Opname (Edit)',
+                    $opname->no_opname,
+                    $qtyMasuk,
+                    $qtyKeluar,
+                    auth()->id(),
+                    'Reversi stok opname sebelum edit'
+                );
             }
 
             $details = [];
 
             foreach ($request->items as $row) {
                 // Apply new stock adjustment (increment stock by new selisih)
-                Barang::where('kode_barang', $row['kode_barang'])->increment('stok', $row['selisih']);
+                $selisih = (float)$row['selisih'];
+                $qtyMasuk = $selisih > 0 ? $selisih : 0;
+                $qtyKeluar = $selisih < 0 ? abs($selisih) : 0;
+
+                \App\Models\StokMutasi::log(
+                    $row['kode_barang'],
+                    $request->tanggal,
+                    'Stok Opname',
+                    $opname->no_opname,
+                    $qtyMasuk,
+                    $qtyKeluar,
+                    auth()->id(),
+                    $row['keterangan'] ?? $request->keterangan
+                );
 
                 $details[] = new StokOpnameDetail([
                     'kode_barang' => $row['kode_barang'],
@@ -172,7 +211,20 @@ class StokOpnameController extends Controller
         DB::transaction(function () use ($opname) {
             // Revert adjustments (decrement stock by selisih)
             foreach ($opname->details as $detail) {
-                Barang::where('kode_barang', $detail->kode_barang)->decrement('stok', $detail->selisih);
+                $selisih = (float)$detail->selisih;
+                $qtyMasuk = $selisih < 0 ? abs($selisih) : 0;
+                $qtyKeluar = $selisih > 0 ? $selisih : 0;
+
+                \App\Models\StokMutasi::log(
+                    $detail->kode_barang,
+                    $opname->tanggal,
+                    'Batal Stok Opname',
+                    $opname->no_opname,
+                    $qtyMasuk,
+                    $qtyKeluar,
+                    auth()->id(),
+                    'Pembatalan/penghapusan stok opname'
+                );
             }
             $opname->delete();
         });

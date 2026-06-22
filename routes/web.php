@@ -106,6 +106,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/laba-rugi', [MobileOwnerController::class, 'labaRugi'])->name('laba-rugi');
         Route::get('/sales-achievement', [MobileOwnerController::class, 'salesAchievement'])->name('sales-achievement');
         Route::get('/sales-visits', [MobileOwnerController::class, 'salesVisits'])->name('sales-visits');
+        Route::get('/order', [MobileOwnerController::class, 'orders'])->name('order.index');
 
         // Customer approvals
         Route::get('/pending-pelanggan', [MobileOwnerController::class, 'pendingPelanggan'])->name('pending-pelanggan');

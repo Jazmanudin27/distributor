@@ -125,7 +125,16 @@ class ReturPenjualanController extends Controller
                 if (($row['kondisi'] ?? 'Bagus') === 'Bagus') {
                     $satuan = BarangSatuan::findOrFail($row['satuan_id']);
                     $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
-                    Barang::where('kode_barang', $row['kode_barang'])->increment('stok', $qtySmallest);
+                    \App\Models\StokMutasi::log(
+                        $row['kode_barang'],
+                        $request->tanggal,
+                        'Retur Penjualan',
+                        $request->no_retur,
+                        $qtySmallest,
+                        0,
+                        Auth::id(),
+                        'Retur Penjualan (' . ($row['kondisi'] ?? 'Bagus') . ')'
+                    );
                 }
 
                 $subtotal = $row['qty'] * $row['harga_retur'];
@@ -265,11 +274,21 @@ class ReturPenjualanController extends Controller
 
         DB::transaction(function () use ($request, $retur) {
             // Revert old return stock additions (decrement stock back) ONLY if condition was Bagus
+            // Revert old return stock additions (decrement stock back) ONLY if condition was Bagus
             foreach ($retur->details as $oldDetail) {
                 if (($oldDetail->kondisi ?? 'Bagus') === 'Bagus') {
                     $oldSatuan = BarangSatuan::find($oldDetail->id_satuan);
                     $oldQtySmallest = $oldDetail->qty * ($oldSatuan->isi ?? 1);
-                    Barang::where('kode_barang', $oldDetail->kode_barang)->decrement('stok', $oldQtySmallest);
+                    \App\Models\StokMutasi::log(
+                        $oldDetail->kode_barang,
+                        $request->tanggal,
+                        'Batal Retur Penjualan (Edit)',
+                        $retur->no_retur,
+                        0,
+                        $oldQtySmallest,
+                        Auth::id(),
+                        'Reversi retur penjualan sebelum edit'
+                    );
                 }
             }
 
@@ -281,7 +300,16 @@ class ReturPenjualanController extends Controller
                 if (($row['kondisi'] ?? 'Bagus') === 'Bagus') {
                     $satuan = BarangSatuan::findOrFail($row['satuan_id']);
                     $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
-                    Barang::where('kode_barang', $row['kode_barang'])->increment('stok', $qtySmallest);
+                    \App\Models\StokMutasi::log(
+                        $row['kode_barang'],
+                        $request->tanggal,
+                        'Retur Penjualan',
+                        $retur->no_retur,
+                        $qtySmallest,
+                        0,
+                        Auth::id(),
+                        'Retur Penjualan (' . ($row['kondisi'] ?? 'Bagus') . ')'
+                    );
                 }
 
                 $subtotal = $row['qty'] * $row['harga_retur'];
@@ -347,7 +375,16 @@ class ReturPenjualanController extends Controller
                 if (($detail->kondisi ?? 'Bagus') === 'Bagus') {
                     $satuan = BarangSatuan::find($detail->id_satuan);
                     $qtySmallest = $detail->qty * ($satuan->isi ?? 1);
-                    Barang::where('kode_barang', $detail->kode_barang)->decrement('stok', $qtySmallest);
+                    \App\Models\StokMutasi::log(
+                        $detail->kode_barang,
+                        $retur->tanggal,
+                        'Batal Retur Penjualan',
+                        $retur->no_retur,
+                        0,
+                        $qtySmallest,
+                        Auth::id(),
+                        'Pembatalan/penghapusan retur penjualan'
+                    );
                 }
             }
             $retur->delete();

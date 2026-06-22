@@ -485,10 +485,10 @@
                     <i class="fa-solid fa-chart-pie"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="{{ route('mobile.owner.low-stock') }}"
-                    class="nav-item-mobile {{ Request::routeIs('mobile.owner.low-stock') ? 'active' : '' }}">
-                    <i class="fa-solid fa-boxes-stacked"></i>
-                    <span>Stok Menipis</span>
+                <a href="{{ route('mobile.owner.order.index') }}"
+                    class="nav-item-mobile {{ Request::routeIs('mobile.owner.order.index') ? 'active' : '' }}">
+                    <i class="fa-solid fa-receipt"></i>
+                    <span>Orderan</span>
                 </a>
                 <a href="{{ route('mobile.owner.laba-rugi') }}"
                     class="nav-item-mobile {{ Request::routeIs('mobile.owner.laba-rugi') ? 'active' : '' }}">

@@ -118,7 +118,16 @@ class ReturPembelianController extends Controller
                 // Decrement stock
                 $satuan = \App\Models\BarangSatuan::findOrFail($row['satuan_id']);
                 $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
-                Barang::where('kode_barang', $row['kode_barang'])->decrement('stok', $qtySmallest);
+                \App\Models\StokMutasi::log(
+                    $row['kode_barang'],
+                    $request->tanggal,
+                    'Retur Pembelian',
+                    $request->no_retur,
+                    0,
+                    $qtySmallest,
+                    auth()->id(),
+                    'Retur Pembelian (' . $request->kondisi . ')'
+                );
 
                 $subtotal = $row['qty'] * $row['harga_retur'];
                 $totalRetur += $subtotal;
@@ -219,7 +228,16 @@ class ReturPembelianController extends Controller
             foreach ($retur->details as $oldDetail) {
                 $oldSatuan = \App\Models\BarangSatuan::find($oldDetail->satuan_id);
                 $oldQtySmallest = $oldDetail->qty * ($oldSatuan->isi ?? 1);
-                Barang::where('kode_barang', $oldDetail->kode_barang)->increment('stok', $oldQtySmallest);
+                \App\Models\StokMutasi::log(
+                    $oldDetail->kode_barang,
+                    $request->tanggal,
+                    'Batal Retur Pembelian (Edit)',
+                    $retur->no_retur,
+                    $oldQtySmallest,
+                    0,
+                    auth()->id(),
+                    'Reversi retur pembelian sebelum edit'
+                );
             }
 
             $totalRetur = 0;
@@ -229,7 +247,16 @@ class ReturPembelianController extends Controller
                 // Decrement stock for new return details
                 $satuan = \App\Models\BarangSatuan::findOrFail($row['satuan_id']);
                 $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
-                Barang::where('kode_barang', $row['kode_barang'])->decrement('stok', $qtySmallest);
+                \App\Models\StokMutasi::log(
+                    $row['kode_barang'],
+                    $request->tanggal,
+                    'Retur Pembelian',
+                    $retur->no_retur,
+                    0,
+                    $qtySmallest,
+                    auth()->id(),
+                    'Retur Pembelian (' . $request->kondisi . ')'
+                );
 
                 $subtotal = $row['qty'] * $row['harga_retur'];
                 $totalRetur += $subtotal;
@@ -276,7 +303,16 @@ class ReturPembelianController extends Controller
             foreach ($retur->details as $detail) {
                 $satuan = \App\Models\BarangSatuan::find($detail->satuan_id);
                 $qtySmallest = $detail->qty * ($satuan->isi ?? 1);
-                Barang::where('kode_barang', $detail->kode_barang)->increment('stok', $qtySmallest);
+                \App\Models\StokMutasi::log(
+                    $detail->kode_barang,
+                    $retur->tanggal,
+                    'Batal Retur Pembelian',
+                    $retur->no_retur,
+                    $qtySmallest,
+                    0,
+                    auth()->id(),
+                    'Pembatalan/penghapusan retur pembelian'
+                );
             }
             $retur->delete();
 

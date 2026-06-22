@@ -434,7 +434,16 @@ class MobileOrderController extends Controller
                     if ($barang->stok < $qtySmallest) {
                         throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok: " . $barang->formatStok($barang->stok));
                     }
-                    $barang->decrement('stok', $qtySmallest);
+                    \App\Models\StokMutasi::log(
+                        $row['kode_barang'],
+                        $request->tanggal,
+                        'Penjualan',
+                        $noFaktur,
+                        0,
+                        $qtySmallest,
+                        Auth::id(),
+                        'Penjualan via Mobile'
+                    );
 
                     $subtotal    = $row['qty'] * $row['harga'];
                     

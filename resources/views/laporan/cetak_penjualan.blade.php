@@ -140,65 +140,6 @@
                         </tr>
                     </tfoot>
                 </table>
-            @elseif ($jenis_laporan === 'detail')
-                {{-- DETAIL TABLES --}}
-                <table class="table table-sm align-middle w-100">
-                    <thead class="table-light">
-                        <tr>
-                            <th width="40" class="text-center">No</th>
-                            <th>No Faktur</th>
-                            <th>Tanggal</th>
-                            <th>Pelanggan</th>
-                            <th>Wilayah</th>
-                            <th>Kode Barang</th>
-                            <th>Nama Barang</th>
-                            <th class="text-end">Qty</th>
-                            <th>Satuan</th>
-                            <th class="text-end">Harga Satuan</th>
-                            <th class="text-end">Diskon Item</th>
-                            <th class="text-end">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php
-                            $num = 1;
-                            $totQty = 0;
-                            $totDiskonDetail = 0;
-                            $totSubtotal = 0;
-                        @endphp
-                        @foreach ($items as $detail)
-                            @php
-                                $totQty += $detail->qty;
-                                $totDiskonDetail += $detail->diskon;
-                                $totSubtotal += $detail->total;
-                            @endphp
-                            <tr>
-                                <td class="text-center">{{ $num++ }}</td>
-                                <td>{{ $detail->no_faktur }}</td>
-                                <td>{{ \Carbon\Carbon::parse($detail->penjualan->tanggal)->format('d-m-Y') }}</td>
-                                <td>{{ $detail->penjualan->pelanggan->nama_pelanggan ?? '-' }}</td>
-                                <td>{{ $detail->penjualan->pelanggan->wilayah->nama_wilayah ?? '-' }}</td>
-                                <td>{{ $detail->kode_barang }}</td>
-                                <td>{{ $detail->barang->nama_barang ?? '-' }}</td>
-                                <td class="text-end">{{ number_format($detail->qty, 0, ',', '.') }}</td>
-                                <td>{{ $detail->barangSatuan->satuan ?? 'PCS' }}</td>
-                                <td class="text-end">{{ number_format($detail->harga, 0, ',', '.') }}</td>
-                                <td class="text-end">{{ number_format($detail->diskon, 0, ',', '.') }}</td>
-                                <td class="text-end fw-bold">{{ number_format($detail->total, 0, ',', '.') }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot class="fw-bold">
-                        <tr class="table-light">
-                            <td colspan="7" class="text-end">TOTAL KESELURUHAN:</td>
-                            <td class="text-end">{{ number_format($totQty, 0, ',', '.') }}</td>
-                            <td></td>
-                            <td></td>
-                            <td class="text-end">{{ number_format($totDiskonDetail, 0, ',', '.') }}</td>
-                            <td class="text-end">{{ number_format($totSubtotal, 0, ',', '.') }}</td>
-                        </tr>
-                    </tfoot>
-                </table>
             @else
                 {{-- DETAIL ROWSPAN TABLES (Format 3) --}}
                 <table class="table table-sm align-middle w-100 table-rowspan">

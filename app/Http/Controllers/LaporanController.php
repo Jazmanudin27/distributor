@@ -294,73 +294,34 @@ class LaporanController extends Controller
                 $barangs = $query->orderBy('nama_barang', 'asc')->get();
                 $barangIds = $barangs->pluck('kode_barang')->toArray();
 
-                // Bulk queries grouped by product to prevent N+1 queries
-                $purchasesAfterGroup = PembelianDetail::whereIn('kode_barang', $barangIds)
-                    ->whereHas('pembelian', function($q) use ($tanggal_akhir) {
-                        $q->where('tanggal', '>', $tanggal_akhir);
-                    })->with('barangSatuan')->get()->groupBy('kode_barang');
+                // 1. Get latest mutation saldo_akhir on or before tanggal_akhir
+                $latestMutations = DB::table('stok_mutasi')
+                    ->whereIn('kode_barang', $barangIds)
+                    ->where('tanggal', '<=', $tanggal_akhir)
+                    ->whereIn('id', function($q) use ($tanggal_akhir, $barangIds) {
+                        $q->selectRaw('MAX(id)')
+                          ->from('stok_mutasi')
+                          ->whereIn('kode_barang', $barangIds)
+                          ->where('tanggal', '<=', $tanggal_akhir)
+                          ->groupBy('kode_barang');
+                    })
+                    ->select('kode_barang', 'saldo_akhir')
+                    ->get()
+                    ->pluck('saldo_akhir', 'kode_barang');
 
-                $returnsAfterGroup = ReturPembelianDetail::whereIn('kode_barang', $barangIds)
-                    ->whereHas('returPembelian', function($q) use ($tanggal_akhir) {
-                        $q->where('tanggal', '>', $tanggal_akhir);
-                    })->with('barangSatuan')->get()->groupBy('kode_barang');
-
-                $opnameAfterGroup = StokOpnameDetail::whereIn('kode_barang', $barangIds)
-                    ->whereHas('stokOpname', function($q) use ($tanggal_akhir) {
-                        $q->where('tanggal', '>', $tanggal_akhir);
-                    })->get()->groupBy('kode_barang');
-
-                $purchasesPeriodGroup = PembelianDetail::whereIn('kode_barang', $barangIds)
-                    ->whereHas('pembelian', function($q) use ($tanggal_mulai, $tanggal_akhir) {
-                        $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
-                    })->with('barangSatuan')->get()->groupBy('kode_barang');
-
-                $opnamePeriodGroup = StokOpnameDetail::whereIn('kode_barang', $barangIds)
-                    ->whereHas('stokOpname', function($q) use ($tanggal_mulai, $tanggal_akhir) {
-                        $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
-                    })->get()->groupBy('kode_barang');
-
-                $returnsPeriodGroup = ReturPembelianDetail::whereIn('kode_barang', $barangIds)
-                    ->whereHas('returPembelian', function($q) use ($tanggal_mulai, $tanggal_akhir) {
-                        $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
-                    })->with('barangSatuan')->get()->groupBy('kode_barang');
-
-                // === TAMBAHAN: Penjualan & Retur Penjualan ===
-                // After period (untuk mundur hitung stok awal)
-                $salesAfterGroup = PenjualanDetail::whereIn('kode_barang', $barangIds)
-                    ->whereHas('penjualan', function($q) use ($tanggal_akhir) {
-                        $q->where('tanggal', '>', $tanggal_akhir);
-                    })->with('barangSatuan')->get()->groupBy('kode_barang');
-
-                $batalSalesAfterGroup = PenjualanDetail::whereIn('kode_barang', $barangIds)
-                    ->whereHas('penjualan', function($q) use ($tanggal_akhir) {
-                        $q->where('tanggal', '>', $tanggal_akhir)->where('batal', 1);
-                    })->with('barangSatuan')->get()->groupBy('kode_barang');
-
-                $returSalesAfterGroup = ReturPenjualanDetail::whereIn('kode_barang', $barangIds)
-                    ->whereHas('returPenjualan', function($q) use ($tanggal_akhir) {
-                        $q->where('tanggal', '>', $tanggal_akhir);
-                    })->where(function($q) {
-                        $q->where('kondisi', 'Bagus')->orWhereNull('kondisi');
-                    })->with('barangSatuan')->get()->groupBy('kode_barang');
-
-                // Within period
-                $salesPeriodGroup = PenjualanDetail::whereIn('kode_barang', $barangIds)
-                    ->whereHas('penjualan', function($q) use ($tanggal_mulai, $tanggal_akhir) {
-                        $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
-                    })->with('barangSatuan')->get()->groupBy('kode_barang');
-
-                $batalSalesPeriodGroup = PenjualanDetail::whereIn('kode_barang', $barangIds)
-                    ->whereHas('penjualan', function($q) use ($tanggal_mulai, $tanggal_akhir) {
-                        $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])->where('batal', 1);
-                    })->with('barangSatuan')->get()->groupBy('kode_barang');
-
-                $returSalesPeriodGroup = ReturPenjualanDetail::whereIn('kode_barang', $barangIds)
-                    ->whereHas('returPenjualan', function($q) use ($tanggal_mulai, $tanggal_akhir) {
-                        $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
-                    })->where(function($q) {
-                        $q->where('kondisi', 'Bagus')->orWhereNull('kondisi');
-                    })->with('barangSatuan')->get()->groupBy('kode_barang');
+                // 2. Get mutations in period grouped by kode_barang & jenis_transaksi
+                $mutationsInRange = DB::table('stok_mutasi')
+                    ->whereIn('kode_barang', $barangIds)
+                    ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
+                    ->select(
+                        'kode_barang',
+                        'jenis_transaksi',
+                        DB::raw('SUM(qty_masuk) as total_masuk'),
+                        DB::raw('SUM(qty_keluar) as total_keluar')
+                    )
+                    ->groupBy('kode_barang', 'jenis_transaksi')
+                    ->get()
+                    ->groupBy('kode_barang');
 
                 foreach ($barangs as $b) {
                     $kb = $b->kode_barang;
@@ -369,83 +330,24 @@ class LaporanController extends Controller
                     $hargaPokok = $baseSatuan ? (float)$baseSatuan->harga_pokok : 0;
                     $hargaJual = $baseSatuan ? (float)$baseSatuan->harga_jual : 0;
 
-                    $currentStock = (float)$b->stok;
+                    $stokAkhir = (float)($latestMutations->get($kb) ?? 0);
 
-                    // Transactions AFTER the target period (tanggal_akhir to now)
-                    $pAfterList = $purchasesAfterGroup->get($kb) ?? collect();
-                    $purchasesAfter = $pAfterList->sum(function($d) {
-                        return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
-                    });
+                    $pPeriod = $mutationsInRange->get($kb) ?? collect();
 
-                    $rAfterList = $returnsAfterGroup->get($kb) ?? collect();
-                    $returnsAfter = $rAfterList->sum(function($d) {
-                        return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
-                    });
+                    // PENERIMAAN
+                    $pembelianPeriod = (float)$pPeriod->where('jenis_transaksi', 'Pembelian')->sum('total_masuk');
+                    $returJualPeriod = (float)$pPeriod->where('jenis_transaksi', 'Retur Penjualan')->sum('total_masuk');
+                    $batalSalesPeriod = (float)$pPeriod->whereIn('jenis_transaksi', ['Batal Penjualan', 'Batal Penjualan (Edit)', 'Batal Jual'])->sum('total_masuk');
+                    $opnameMasukPeriod = (float)$pPeriod->whereNotIn('jenis_transaksi', ['Pembelian', 'Retur Penjualan', 'Batal Penjualan', 'Batal Penjualan (Edit)', 'Batal Jual'])->sum('total_masuk');
 
-                    $oAfterList = $opnameAfterGroup->get($kb) ?? collect();
-                    $opnameAfter = $oAfterList->sum(function($d) {
-                        return (float)$d->selisih;
-                    });
-
-                    $sAfterList = $salesAfterGroup->get($kb) ?? collect();
-                    $salesAfter = $sAfterList->sum(function($d) {
-                        return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
-                    });
-
-                    $bSalesAfterList = $batalSalesAfterGroup->get($kb) ?? collect();
-                    $batalSalesAfter = $bSalesAfterList->sum(function($d) {
-                        return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
-                    });
-
-                    $rsAfterList = $returSalesAfterGroup->get($kb) ?? collect();
-                    $returSalesAfter = $rsAfterList->sum(function($d) {
-                        return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
-                    });
-
-                    // Stok Akhir periode = stok sekarang dikurangi/tambah semua transaksi setelah periode
-                    // Setelah tanggal_akhir: pembelian +, retur_pembelian -, opname +/-, penjualan -, retur_penjualan +
-                    $stokAkhir = $currentStock
-                        - $purchasesAfter   // pembelian setelah periode menambah stok sekarang → kurangkan
-                        + $returnsAfter     // retur pembelian setelah periode mengurangi stok sekarang → tambahkan
-                        - $opnameAfter      // opname neto setelah periode
-                        + $salesAfter       // penjualan setelah periode mengurangi stok sekarang → tambahkan balik
-                        - $returSalesAfter  // retur penjualan setelah periode menambah stok sekarang → kurangkan
-                        - $batalSalesAfter; // batal penjualan setelah periode menambah stok sekarang → kurangkan
-
-                    // Transactions WITHIN the period
-                    $pPeriodList = $purchasesPeriodGroup->get($kb) ?? collect();
-                    $pembelianPeriod = $pPeriodList->sum(function($d) {
-                        return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
-                    });
-
-                    $oPeriodList = $opnamePeriodGroup->get($kb) ?? collect();
-                    $opnameMasukPeriod = (float)$oPeriodList->where('selisih', '>', 0)->sum('selisih');
-                    $opnameKeluarPeriod = (float)abs($oPeriodList->where('selisih', '<', 0)->sum('selisih'));
-
-                    $rPeriodList = $returnsPeriodGroup->get($kb) ?? collect();
-                    $returBeliPeriod = $rPeriodList->sum(function($d) {
-                        return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
-                    });
-
-                    $sPeriodList = $salesPeriodGroup->get($kb) ?? collect();
-                    $penjualanPeriod = $sPeriodList->sum(function($d) {
-                        return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
-                    });
-
-                    $bPeriodList = $batalSalesPeriodGroup->get($kb) ?? collect();
-                    $batalSalesPeriod = $bPeriodList->sum(function($d) {
-                        return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
-                    });
-
-                    $rsPeriodList = $returSalesPeriodGroup->get($kb) ?? collect();
-                    $returJualPeriod = $rsPeriodList->sum(function($d) {
-                        return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
-                    });
+                    // PENGELUARAN
+                    $penjualanPeriod = (float)$pPeriod->where('jenis_transaksi', 'Penjualan')->sum('total_keluar');
+                    $returBeliPeriod = (float)$pPeriod->where('jenis_transaksi', 'Retur Pembelian')->sum('total_keluar');
+                    $opnameKeluarPeriod = (float)$pPeriod->whereNotIn('jenis_transaksi', ['Penjualan', 'Retur Pembelian'])->sum('total_keluar');
 
                     $penerimaanTotal = $pembelianPeriod + $returJualPeriod + $batalSalesPeriod + $opnameMasukPeriod;
                     $pengeluaranTotal = $penjualanPeriod + $returBeliPeriod + $opnameKeluarPeriod;
 
-                    // Stok Awal of the period
                     $stokAwal = $stokAkhir - $penerimaanTotal + $pengeluaranTotal;
 
                     // Add computed properties
@@ -511,250 +413,154 @@ class LaporanController extends Controller
             if ($isPrintOrExcel && $kode_barang) {
                 $barang = Barang::with('satuans')->find($kode_barang);
                 if ($barang) {
-                    $currentStock = (float)$barang->stok;
-
-                    // Calculate movements from start date to now to determine Stok Awal
-                    // Stok Awal = current_stock - (Purchases + Positive Opname + Sales Returns) + (Purchase Returns + Absolute Negative Opname + Sales)
-                    $purchasesAfter = PembelianDetail::where('kode_barang', $kode_barang)
-                        ->whereHas('pembelian', function($q) use ($tanggal_mulai) {
-                            $q->where('tanggal', '>=', $tanggal_mulai);
-                        })->with('barangSatuan')->get()->sum(function($d) {
-                            return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
-                        });
-
-                    $returnsAfter = ReturPembelianDetail::where('kode_barang', $kode_barang)
-                        ->whereHas('returPembelian', function($q) use ($tanggal_mulai) {
-                            $q->where('tanggal', '>=', $tanggal_mulai);
-                        })->with('barangSatuan')->get()->sum(function($d) {
-                            return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
-                        });
-
-                    $opnameAfter = StokOpnameDetail::where('kode_barang', $kode_barang)
-                        ->whereHas('stokOpname', function($q) use ($tanggal_mulai) {
-                            $q->where('tanggal', '>=', $tanggal_mulai);
-                        })->get()->sum('selisih');
-
-                    $salesAfter = PenjualanDetail::where('kode_barang', $kode_barang)
-                        ->whereHas('penjualan', function($q) use ($tanggal_mulai) {
-                            $q->where('tanggal', '>=', $tanggal_mulai);
-                        })->with('barangSatuan')->get()->sum(function($d) {
-                            return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
-                        });
-
-                    $batalSalesAfter = PenjualanDetail::where('kode_barang', $kode_barang)
-                        ->whereHas('penjualan', function($q) use ($tanggal_mulai) {
-                            $q->where('tanggal', '>=', $tanggal_mulai)->where('batal', 1);
-                        })->with('barangSatuan')->get()->sum(function($d) {
-                            return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
-                        });
-
-                    $returSalesAfter = ReturPenjualanDetail::where('kode_barang', $kode_barang)
-                        ->whereHas('returPenjualan', function($q) use ($tanggal_mulai) {
-                            $q->where('tanggal', '>=', $tanggal_mulai);
-                        })->where(function($q) {
-                            $q->where('kondisi', 'Bagus')->orWhereNull('kondisi');
-                        })->with('barangSatuan')->get()->sum(function($d) {
-                            return (float)$d->qty * (float)($d->barangSatuan->isi ?? 1);
-                        });
-
-                    $stokAwal = $currentStock - $purchasesAfter + $returnsAfter - $opnameAfter + $salesAfter - $returSalesAfter - $batalSalesAfter;
-
-                    // Retrieve movements within range
-                    $purchasesInRange = PembelianDetail::with(['pembelian.supplier', 'barangSatuan'])
+                    // Calculate Stok Awal = saldo_akhir of the last mutation before tanggal_mulai
+                    $lastMutationBefore = DB::table('stok_mutasi')
                         ->where('kode_barang', $kode_barang)
-                        ->whereHas('pembelian', function($q) use ($tanggal_mulai, $tanggal_akhir) {
-                            $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
-                        })->get();
+                        ->where('tanggal', '<', $tanggal_mulai)
+                        ->orderBy('tanggal', 'desc')
+                        ->orderBy('id', 'desc')
+                        ->first();
+                    
+                    $stokAwal = $lastMutationBefore ? (float)$lastMutationBefore->saldo_akhir : 0;
 
-                    $returnsInRange = ReturPembelianDetail::with(['returPembelian.supplier', 'barangSatuan'])
+                    // Retrieve movements within range directly from stok_mutasi
+                    $rawMutations = DB::table('stok_mutasi')
                         ->where('kode_barang', $kode_barang)
-                        ->whereHas('returPembelian', function($q) use ($tanggal_mulai, $tanggal_akhir) {
-                            $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
-                        })->get();
+                        ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
+                        ->orderBy('tanggal', 'asc')
+                        ->orderBy('id', 'asc')
+                        ->get();
 
-                    $opnamesInRange = StokOpnameDetail::with(['stokOpname.user'])
-                        ->where('kode_barang', $kode_barang)
-                        ->whereHas('stokOpname', function($q) use ($tanggal_mulai, $tanggal_akhir) {
-                            $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
-                        })->get();
+                    // Pre-fetch related documents to prevent N+1 query overhead
+                    $refPenjualan = $rawMutations->filter(function($m) {
+                        return in_array($m->jenis_transaksi, ['Penjualan', 'Batal Penjualan', 'Batal Penjualan (Edit)', 'Batal Jual']);
+                    })->pluck('no_referensi')->unique()->toArray();
 
-                    $salesInRange = PenjualanDetail::with(['penjualan.pelanggan.wilayah', 'penjualan.sales', 'barangSatuan'])
-                        ->where('kode_barang', $kode_barang)
-                        ->whereHas('penjualan', function($q) use ($tanggal_mulai, $tanggal_akhir) {
-                            $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
-                        })->get();
+                    $refReturJual = $rawMutations->filter(function($m) {
+                        return in_array($m->jenis_transaksi, ['Retur Penjualan', 'Batal Retur Penjualan', 'Batal Retur Penjualan (Edit)']);
+                    })->pluck('no_referensi')->unique()->toArray();
 
-                    $batalSalesInRange = PenjualanDetail::with(['penjualan.pelanggan.wilayah', 'penjualan.sales', 'barangSatuan'])
-                        ->where('kode_barang', $kode_barang)
-                        ->whereHas('penjualan', function($q) use ($tanggal_mulai, $tanggal_akhir) {
-                            $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])->where('batal', 1);
-                        })->get();
+                    $refPembelian = $rawMutations->filter(function($m) {
+                        return in_array($m->jenis_transaksi, ['Pembelian', 'Batal Pembelian', 'Batal Pembelian (Edit)']);
+                    })->pluck('no_referensi')->unique()->toArray();
 
-                    $returSalesInRange = ReturPenjualanDetail::with(['returPenjualan.pelanggan.wilayah', 'returPenjualan.sales', 'barangSatuan'])
-                        ->where('kode_barang', $kode_barang)
-                        ->whereHas('returPenjualan', function($q) use ($tanggal_mulai, $tanggal_akhir) {
-                            $q->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
-                        })->where(function($q) {
-                            $q->where('kondisi', 'Bagus')->orWhereNull('kondisi');
-                        })->get();
+                    $refReturBeli = $rawMutations->filter(function($m) {
+                        return in_array($m->jenis_transaksi, ['Retur Pembelian', 'Batal Retur Pembelian', 'Batal Retur Pembelian (Edit)']);
+                    })->pluck('no_referensi')->unique()->toArray();
 
-                    // Map movements
-                    foreach ($purchasesInRange as $p) {
-                        $qty_pcs = (float)$p->qty * (float)($p->barangSatuan->isi ?? 1);
-                        $movements->push([
-                            'tanggal' => $p->pembelian->tanggal,
-                            'no_referensi' => $p->no_faktur,
-                            'jenis' => 'Pembelian',
-                            'keterangan' => 'Pembelian',
-                            'pelanggan' => $p->pembelian->supplier->nama_supplier ?? '-',
-                            'wilayah' => '-',
-                            'kode_sales' => '-',
-                            'nama_sales' => '-',
-                            'pembelian_masuk' => $qty_pcs,
-                            'retur_jual' => 0,
-                            'batal_jual' => 0,
-                            'opname_masuk' => 0,
-                            'penjualan_keluar' => 0,
-                            'retur_beli' => 0,
-                            'opname_keluar' => 0,
-                            'masuk' => $qty_pcs,
-                            'keluar' => 0,
-                            'satuan_qty' => $p->qty . ' ' . $p->satuan
-                        ]);
-                    }
+                    $refOpname = $rawMutations->filter(function($m) {
+                        return in_array($m->jenis_transaksi, ['Stok Opname', 'Batal Stok Opname', 'Batal Stok Opname (Edit)']);
+                    })->pluck('no_referensi')->unique()->toArray();
 
-                    foreach ($returnsInRange as $r) {
-                        $qty_pcs = (float)$r->qty * (float)($r->barangSatuan->isi ?? 1);
-                        $movements->push([
-                            'tanggal' => $r->returPembelian->tanggal,
-                            'no_referensi' => $r->no_retur,
-                            'jenis' => 'Retur Pembelian',
-                            'keterangan' => 'Retur Pembelian',
-                            'pelanggan' => $r->returPembelian->supplier->nama_supplier ?? '-',
-                            'wilayah' => '-',
-                            'kode_sales' => '-',
-                            'nama_sales' => '-',
-                            'pembelian_masuk' => 0,
-                            'retur_jual' => 0,
-                            'batal_jual' => 0,
-                            'opname_masuk' => 0,
-                            'penjualan_keluar' => 0,
-                            'retur_beli' => $qty_pcs,
-                            'opname_keluar' => 0,
-                            'masuk' => 0,
-                            'keluar' => $qty_pcs,
-                            'satuan_qty' => $r->qty . ' ' . ($r->barangSatuan->satuan ?? 'PCS')
-                        ]);
-                    }
+                    // Bulk queries
+                    $penjualans = $refPenjualan ? Penjualan::with(['pelanggan.wilayah', 'sales'])->whereIn('no_faktur', $refPenjualan)->get()->keyBy('no_faktur') : collect();
+                    $returPenjualans = $refReturJual ? ReturPenjualan::with(['pelanggan.wilayah', 'sales'])->whereIn('no_retur', $refReturJual)->get()->keyBy('no_retur') : collect();
+                    $pembelians = $refPembelian ? Pembelian::with('supplier')->whereIn('no_faktur', $refPembelian)->get()->keyBy('no_faktur') : collect();
+                    $returPembelians = $refReturBeli ? ReturPembelian::with('supplier')->whereIn('no_retur', $refReturBeli)->get()->keyBy('no_retur') : collect();
+                    $opnames = $refOpname ? \App\Models\StokOpname::with('user')->whereIn('no_opname', $refOpname)->get()->keyBy('no_opname') : collect();
 
-                    foreach ($opnamesInRange as $o) {
-                        $selisih = (float)$o->selisih;
-                        $movements->push([
-                            'tanggal' => $o->stokOpname->tanggal,
-                            'no_referensi' => $o->no_opname,
-                            'jenis' => 'Stok Opname',
-                            'keterangan' => 'Stok Opname (' . ($o->stokOpname->keterangan ?? 'Penyesuaian Fisik') . ')',
-                            'pelanggan' => $o->stokOpname->user->name ?? '-',
-                            'wilayah' => '-',
-                            'kode_sales' => '-',
-                            'nama_sales' => '-',
-                            'pembelian_masuk' => 0,
-                            'retur_jual' => 0,
-                            'batal_jual' => 0,
-                            'opname_masuk' => $selisih > 0 ? $selisih : 0,
-                            'penjualan_keluar' => 0,
-                            'retur_beli' => 0,
-                            'opname_keluar' => $selisih < 0 ? abs($selisih) : 0,
-                            'masuk' => $selisih > 0 ? $selisih : 0,
-                            'keluar' => $selisih < 0 ? abs($selisih) : 0,
-                            'satuan_qty' => ($selisih > 0 ? '+' : '') . $selisih . ' PCS'
-                        ]);
-                    }
-
-                    foreach ($salesInRange as $s) {
-                        $qty_pcs = (float)$s->qty * (float)($s->barangSatuan->isi ?? 1);
-                        $movements->push([
-                            'tanggal' => $s->penjualan->tanggal,
-                            'no_referensi' => $s->no_faktur,
-                            'jenis' => 'Penjualan',
-                            'keterangan' => $s->penjualan->batal == 1 ? 'Penjualan (Batal)' : 'Penjualan',
-                            'pelanggan' => $s->penjualan->pelanggan->nama_pelanggan ?? '-',
-                            'wilayah' => $s->penjualan->pelanggan->wilayah->nama_wilayah ?? '-',
-                            'kode_sales' => $s->penjualan->kode_sales ?? '-',
-                            'nama_sales' => $s->penjualan->sales->name ?? '-',
-                            'pembelian_masuk' => 0,
-                            'retur_jual' => 0,
-                            'batal_jual' => 0,
-                            'opname_masuk' => 0,
-                            'penjualan_keluar' => $qty_pcs,
-                            'retur_beli' => 0,
-                            'opname_keluar' => 0,
-                            'masuk' => 0,
-                            'keluar' => $qty_pcs,
-                            'satuan_qty' => $s->qty . ' ' . ($s->barangSatuan->satuan ?? 'PCS')
-                        ]);
-                    }
-
-                    foreach ($batalSalesInRange as $bs) {
-                        $qty_pcs = (float)$bs->qty * (float)($bs->barangSatuan->isi ?? 1);
-                        $movements->push([
-                            'tanggal' => $bs->penjualan->tanggal,
-                            'no_referensi' => $bs->no_faktur,
-                            'jenis' => 'Batal Jual',
-                            'keterangan' => 'Pembatalan Penjualan (' . ($bs->penjualan->alasan_batal ?? '-') . ')',
-                            'pelanggan' => $bs->penjualan->pelanggan->nama_pelanggan ?? '-',
-                            'wilayah' => $bs->penjualan->pelanggan->wilayah->nama_wilayah ?? '-',
-                            'kode_sales' => $bs->penjualan->kode_sales ?? '-',
-                            'nama_sales' => $bs->penjualan->sales->name ?? '-',
-                            'pembelian_masuk' => 0,
-                            'retur_jual' => 0,
-                            'batal_jual' => $qty_pcs,
-                            'opname_masuk' => 0,
-                            'penjualan_keluar' => 0,
-                            'retur_beli' => 0,
-                            'opname_keluar' => 0,
-                            'masuk' => $qty_pcs,
-                            'keluar' => 0,
-                            'satuan_qty' => $bs->qty . ' ' . ($bs->barangSatuan->satuan ?? 'PCS')
-                        ]);
-                    }
-
-                    foreach ($returSalesInRange as $rs) {
-                        $qty_pcs = (float)$rs->qty * (float)($rs->barangSatuan->isi ?? 1);
-                        $movements->push([
-                            'tanggal' => $rs->returPenjualan->tanggal,
-                            'no_referensi' => $rs->no_retur,
-                            'jenis' => 'Retur Penjualan',
-                            'keterangan' => 'Retur Penjualan',
-                            'pelanggan' => $rs->returPenjualan->pelanggan->nama_pelanggan ?? '-',
-                            'wilayah' => $rs->returPenjualan->pelanggan->wilayah->nama_wilayah ?? '-',
-                            'kode_sales' => $rs->returPenjualan->kode_sales ?? '-',
-                            'nama_sales' => $rs->returPenjualan->sales->name ?? '-',
-                            'pembelian_masuk' => 0,
-                            'retur_jual' => $qty_pcs,
-                            'batal_jual' => 0,
-                            'opname_masuk' => 0,
-                            'penjualan_keluar' => 0,
-                            'retur_beli' => 0,
-                            'opname_keluar' => 0,
-                            'masuk' => $qty_pcs,
-                            'keluar' => 0,
-                            'satuan_qty' => $rs->qty . ' ' . ($rs->barangSatuan->satuan ?? 'PCS')
-                        ]);
-                    }
-
-                    // Sort chronological
-                    $movements = $movements->sortBy(function($m) {
-                        return $m['tanggal'] . '_' . $m['no_referensi'];
-                    })->values();
-
-                    // Calculate running balance
+                    // Map mutations to the format expected by views
                     $running = $stokAwal;
-                    $movements = $movements->map(function($m) use (&$running) {
-                        $running = $running + $m['masuk'] - $m['keluar'];
-                        $m['saldo'] = $running;
-                        return $m;
-                    });
+                    foreach ($rawMutations as $m) {
+                        $pembelian_masuk = 0;
+                        $retur_jual = 0;
+                        $batal_jual = 0;
+                        $opname_masuk = 0;
+                        $penjualan_keluar = 0;
+                        $retur_beli = 0;
+                        $opname_keluar = 0;
+
+                        // Categorize into view columns
+                        if ($m->jenis_transaksi === 'Pembelian') {
+                            $pembelian_masuk = $m->qty_masuk;
+                        } elseif ($m->jenis_transaksi === 'Retur Penjualan') {
+                            $retur_jual = $m->qty_masuk;
+                        } elseif (in_array($m->jenis_transaksi, ['Batal Penjualan', 'Batal Penjualan (Edit)', 'Batal Jual'])) {
+                            $batal_jual = $m->qty_masuk;
+                        } elseif ($m->jenis_transaksi === 'Penjualan') {
+                            $penjualan_keluar = $m->qty_keluar;
+                        } elseif ($m->jenis_transaksi === 'Retur Pembelian') {
+                            $retur_beli = $m->qty_keluar;
+                        } else {
+                            // Opname or adjustments
+                            if ($m->qty_masuk > 0) {
+                                $opname_masuk = $m->qty_masuk;
+                            }
+                            if ($m->qty_keluar > 0) {
+                                $opname_keluar = $m->qty_keluar;
+                            }
+                        }
+
+                        // Determine metadata based on transaction type
+                        $pelanggan = '-';
+                        $wilayah = '-';
+                        $kode_sales = '-';
+                        $nama_sales = '-';
+                        $keterangan = $m->keterangan ?? $m->jenis_transaksi;
+
+                        if (in_array($m->jenis_transaksi, ['Penjualan', 'Batal Penjualan', 'Batal Penjualan (Edit)', 'Batal Jual'])) {
+                            $doc = $penjualans->get($m->no_referensi);
+                            if ($doc) {
+                                $pelanggan = $doc->pelanggan->nama_pelanggan ?? '-';
+                                $wilayah = $doc->pelanggan->wilayah->nama_wilayah ?? '-';
+                                $kode_sales = $doc->kode_sales ?? '-';
+                                $nama_sales = $doc->sales->name ?? '-';
+                                if ($m->jenis_transaksi !== 'Penjualan') {
+                                    $keterangan = 'Pembatalan Penjualan' . ($doc->alasan_batal ? ' (' . $doc->alasan_batal . ')' : '');
+                                }
+                            }
+                        } elseif (in_array($m->jenis_transaksi, ['Retur Penjualan', 'Batal Retur Penjualan', 'Batal Retur Penjualan (Edit)'])) {
+                            $doc = $returPenjualans->get($m->no_referensi);
+                            if ($doc) {
+                                $pelanggan = $doc->pelanggan->nama_pelanggan ?? '-';
+                                $wilayah = $doc->pelanggan->wilayah->nama_wilayah ?? '-';
+                                $kode_sales = $doc->kode_sales ?? '-';
+                                $nama_sales = $doc->sales->name ?? '-';
+                            }
+                        } elseif (in_array($m->jenis_transaksi, ['Pembelian', 'Batal Pembelian', 'Batal Pembelian (Edit)'])) {
+                            $doc = $pembelians->get($m->no_referensi);
+                            if ($doc) {
+                                $pelanggan = $doc->supplier->nama_supplier ?? '-';
+                            }
+                        } elseif (in_array($m->jenis_transaksi, ['Retur Pembelian', 'Batal Retur Pembelian', 'Batal Retur Pembelian (Edit)'])) {
+                            $doc = $returPembelians->get($m->no_referensi);
+                            if ($doc) {
+                                $pelanggan = $doc->supplier->nama_supplier ?? '-';
+                            }
+                        } elseif (in_array($m->jenis_transaksi, ['Stok Opname', 'Batal Stok Opname', 'Batal Stok Opname (Edit)'])) {
+                            $doc = $opnames->get($m->no_referensi);
+                            if ($doc) {
+                                $pelanggan = $doc->user->name ?? '-';
+                                if ($doc->keterangan) {
+                                    $keterangan = 'Stok Opname (' . $doc->keterangan . ')';
+                                }
+                            }
+                        }
+
+                        $running = $running + $m->qty_masuk - $m->qty_keluar;
+
+                        $movements->push([
+                            'class' => 'class', // dummy for mapping logic helper if needed, but not required
+                            'tanggal' => $m->tanggal,
+                            'no_referensi' => $m->no_referensi,
+                            'jenis' => $m->jenis_transaksi,
+                            'keterangan' => $keterangan,
+                            'pelanggan' => $pelanggan,
+                            'wilayah' => $wilayah,
+                            'kode_sales' => $kode_sales,
+                            'nama_sales' => $nama_sales,
+                            'pembelian_masuk' => $pembelian_masuk,
+                            'retur_jual' => $retur_jual,
+                            'batal_jual' => $batal_jual,
+                            'opname_masuk' => $opname_masuk,
+                            'penjualan_keluar' => $penjualan_keluar,
+                            'retur_beli' => $retur_beli,
+                            'opname_keluar' => $opname_keluar,
+                            'masuk' => $m->qty_masuk,
+                            'keluar' => $m->qty_keluar,
+                            'saldo' => $running
+                        ]);
+                    }
 
                     $stokAkhir = $running;
                 }
@@ -834,32 +640,6 @@ class LaporanController extends Controller
                 }
 
                 $items = $query->orderBy('tanggal', 'asc')->orderBy('no_faktur', 'asc')->get();
-            } elseif ($jenis_laporan === 'detail') {
-                $query = PenjualanDetail::with(['penjualan.pelanggan.wilayah', 'penjualan.sales', 'barang', 'barangSatuan'])
-                    ->whereHas('penjualan', function ($q) use ($tanggal_mulai, $tanggal_akhir, $kode_sales, $kode_pelanggan, $jenis_transaksi, $status_faktur) {
-                        if ($status_faktur === 'aktif') {
-                            $q->where('batal', 0);
-                        } elseif ($status_faktur === 'batal') {
-                            $q->where('batal', 1);
-                        }
-                        if ($tanggal_mulai) $q->where('tanggal', '>=', $tanggal_mulai);
-                        if ($tanggal_akhir) $q->where('tanggal', '<=', $tanggal_akhir);
-                        if ($kode_sales) $q->where('kode_sales', $kode_sales);
-                        if ($kode_pelanggan) $q->where('kode_pelanggan', $kode_pelanggan);
-                        if ($jenis_transaksi) $q->where('jenis_transaksi', $jenis_transaksi);
-                    });
-
-                if ($kode_supplier) {
-                    $query->whereHas('barang', function($q) use ($kode_supplier) {
-                        $q->where('kode_supplier', $kode_supplier);
-                    });
-                }
-
-                $items = $query->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
-                    ->orderBy('penjualan.tanggal', 'asc')
-                    ->orderBy('penjualan.no_faktur', 'asc')
-                    ->select('penjualan_detail.*')
-                    ->get();
             } else {
                 // detail_rowspan (Format 3)
                 $query = Penjualan::with([
