@@ -47,18 +47,29 @@ class ReturPenjualanController extends Controller
     public function create()
     {
         $item = new ReturPenjualan();
-        $pelanggans = collect();
-        $penjualans = Penjualan::orderBy('tanggal', 'desc')->get();
+        
+        $selectedKode = old('kode_pelanggan');
+        if ($selectedKode) {
+            $pelanggans = Pelanggan::where('kode_pelanggan', $selectedKode)->get();
+            $penjualans = Penjualan::where('kode_pelanggan', $selectedKode)
+                ->where('batal', 0)
+                ->orderBy('tanggal', 'desc')
+                ->get();
+        } else {
+            $pelanggans = collect();
+            $penjualans = collect();
+        }
+        
         $barangs = Barang::where('status', 1)->with('satuans')->orderBy('nama_barang')->get();
 
-        // Auto-generate RETS-YYYYMMDD-0001
-        $today = date('Ymd');
-        $last = ReturPenjualan::where('no_retur', 'like', 'RETS-' . $today . '%')
+        // Auto-generate RP26010001 (Format: RP + YYMM + 4-digit sequence)
+        $today = date('ym');
+        $last = ReturPenjualan::where('no_retur', 'like', 'RP' . $today . '%')
             ->orderBy('no_retur', 'desc')
             ->first();
 
         $nextNumber = $last ? (intval(substr($last->no_retur, -4)) + 1) : 1;
-        $item->no_retur = 'RETS-' . $today . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        $item->no_retur = 'RP' . $today . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
         return view('retur_penjualan.form', compact('item', 'pelanggans', 'penjualans', 'barangs'));
     }
@@ -192,8 +203,14 @@ class ReturPenjualanController extends Controller
     public function edit($no_retur)
     {
         $item = ReturPenjualan::with(['details.barang', 'details.barangSatuan'])->findOrFail($no_retur);
-        $pelanggans = Pelanggan::where('kode_pelanggan', $item->kode_pelanggan)->get();
-        $penjualans = Penjualan::orderBy('tanggal', 'desc')->get();
+        
+        $selectedKode = old('kode_pelanggan', $item->kode_pelanggan);
+        $pelanggans = Pelanggan::where('kode_pelanggan', $selectedKode)->get();
+        $penjualans = Penjualan::where('kode_pelanggan', $selectedKode)
+            ->where('batal', 0)
+            ->orderBy('tanggal', 'desc')
+            ->get();
+            
         $barangs = Barang::where('status', 1)->with('satuans')->orderBy('nama_barang')->get();
 
         return view('retur_penjualan.form', compact('item', 'pelanggans', 'penjualans', 'barangs'));

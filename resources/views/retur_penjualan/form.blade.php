@@ -9,8 +9,10 @@
                     <i class="fa-solid {{ $item->exists ? 'fa-pen-to-square' : 'fa-plus' }} fs-5"></i>
                 </div>
                 <div>
-                    <h5 class="mb-0 fw-bold">{{ $item->exists ? 'Edit Transaksi Retur Penjualan' : 'Transaksi Retur Penjualan Baru' }}</h5>
-                    <small class="text-white-50">{{ $item->exists ? 'Perbarui detail retur penjualan' : 'Catat penerimaan retur barang dari pelanggan' }}</small>
+                    <h5 class="mb-0 fw-bold">
+                        {{ $item->exists ? 'Edit Transaksi Retur Penjualan' : 'Transaksi Retur Penjualan Baru' }}</h5>
+                    <small
+                        class="text-white-50">{{ $item->exists ? 'Perbarui detail retur penjualan' : 'Catat penerimaan retur barang dari pelanggan' }}</small>
                 </div>
             </div>
             <a href="{{ route('retur-penjualan.index') }}" class="btn btn-light btn-sm fw-bold hover-scale">
@@ -19,7 +21,8 @@
         </div>
 
         <div class="card-body p-4 bg-light">
-            <form action="{{ $item->exists ? route('retur-penjualan.update', $item->no_retur) : route('retur-penjualan.store') }}"
+            <form
+                action="{{ $item->exists ? route('retur-penjualan.update', $item->no_retur) : route('retur-penjualan.store') }}"
                 method="POST" id="returForm">
                 @csrf
                 @if ($item->exists)
@@ -50,19 +53,24 @@
                                     <span class="text-danger">*</span></label>
                                 <input type="date" name="tanggal" id="tanggal"
                                     class="form-control form-control-sm @error('tanggal') is-invalid @enderror"
-                                    value="{{ old('tanggal', $item->tanggal ? $item->tanggal->format('Y-m-d') : date('Y-m-d')) }}" required>
+                                    value="{{ old('tanggal', $item->tanggal ? $item->tanggal->format('Y-m-d') : date('Y-m-d')) }}"
+                                    required>
                             </div>
                             <div class="mb-2">
                                 <label for="jenis_retur" class="form-label fs-7 fw-bold text-secondary mb-1">Jenis Retur
                                     <span class="text-danger">*</span></label>
                                 <select name="jenis_retur" id="jenis_retur" class="form-select form-select-sm" required>
-                                    <option value="Barang Rusak" {{ old('jenis_retur', $item->jenis_retur) === 'Barang Rusak' ? 'selected' : '' }}>Barang Rusak</option>
-                                    <option value="Salah Kirim" {{ old('jenis_retur', $item->jenis_retur) === 'Salah Kirim' ? 'selected' : '' }}>Salah Kirim</option>
-                                    <option value="Lainnya" {{ old('jenis_retur', $item->jenis_retur) === 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
+                                    <option value="PF"
+                                        {{ old('jenis_retur', $item->jenis_retur) === 'PF' ? 'selected' : '' }}>
+                                        Potong Faktur</option>
+                                    <option value="GB"
+                                        {{ old('jenis_retur', $item->jenis_retur) === 'GB' ? 'selected' : '' }}>
+                                        Ganti Barang</option>
                                 </select>
                             </div>
                             <div class="mb-2">
-                                <label for="no_faktur" class="form-label fs-7 fw-bold text-secondary mb-1">Faktur Penjualan (Opsional)</label>
+                                <label for="no_faktur" class="form-label fs-7 fw-bold text-secondary mb-1">Faktur Penjualan
+                                    (Opsional)</label>
                                 <select name="no_faktur" id="no_faktur" class="form-select form-select-sm">
                                     <option value="">-- Tanpa Faktur / Umum --</option>
                                     @foreach ($penjualans as $p)
@@ -76,7 +84,7 @@
                             <div class="mb-0">
                                 <label class="form-label fs-7 fw-bold text-secondary mb-1">Operator</label>
                                 <input type="text" class="form-control form-control-sm bg-light text-muted"
-                                    value="{{ $item->user->name ?? auth()->user()->name ?? '-' }}" readonly>
+                                    value="{{ $item->user->name ?? (auth()->user()->name ?? '-') }}" readonly>
                             </div>
                         </div>
                     </div>
@@ -91,13 +99,12 @@
                                 <label for="kode_pelanggan" class="form-label fs-7 fw-bold text-secondary mb-1">Pelanggan
                                     <span class="text-danger">*</span></label>
                                 <select name="kode_pelanggan" id="kode_pelanggan"
-                                    class="form-select form-select-sm @error('kode_pelanggan') is-invalid @enderror" required>
+                                    class="form-select form-select-sm @error('kode_pelanggan') is-invalid @enderror"
+                                    required>
                                     <option value="">-- Pilih Pelanggan --</option>
                                     @foreach ($pelanggans as $p)
-                                        <option value="{{ $p->kode_pelanggan }}"
-                                            data-kode="{{ $p->kode_pelanggan }}"
-                                            data-hp="{{ $p->no_hp_pelanggan }}"
-                                            data-alamat="{{ $p->alamat_pelanggan }}"
+                                        <option value="{{ $p->kode_pelanggan }}" data-kode="{{ $p->kode_pelanggan }}"
+                                            data-hp="{{ $p->no_hp_pelanggan }}" data-alamat="{{ $p->alamat_pelanggan }}"
                                             {{ old('kode_pelanggan', $item->kode_pelanggan) == $p->kode_pelanggan ? 'selected' : '' }}>
                                             {{ $p->nama_pelanggan }}
                                         </option>
@@ -107,19 +114,23 @@
                             <div class="row g-2 mb-2">
                                 <div class="col-6">
                                     <label class="form-label fs-8 fw-bold text-secondary mb-1">Kode Pelanggan</label>
-                                    <input type="text" id="pelanggan_kode" class="form-control form-control-sm bg-light font-monospace" readonly>
+                                    <input type="text" id="pelanggan_kode"
+                                        class="form-control form-control-sm bg-light font-monospace" readonly>
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label fs-8 fw-bold text-secondary mb-1">No HP</label>
-                                    <input type="text" id="pelanggan_hp" class="form-control form-control-sm bg-light" readonly>
+                                    <input type="text" id="pelanggan_hp" class="form-control form-control-sm bg-light"
+                                        readonly>
                                 </div>
                             </div>
                             <div class="mb-2">
                                 <label class="form-label fs-8 fw-bold text-secondary mb-1">Alamat</label>
-                                <input type="text" id="pelanggan_alamat" class="form-control form-control-sm bg-light" readonly>
+                                <input type="text" id="pelanggan_alamat" class="form-control form-control-sm bg-light"
+                                    readonly>
                             </div>
                             <div class="mb-0">
-                                <label for="keterangan" class="form-label fs-8 fw-bold text-secondary mb-1">Catatan Keterangan</label>
+                                <label for="keterangan" class="form-label fs-8 fw-bold text-secondary mb-1">Catatan
+                                    Keterangan</label>
                                 <input type="text" name="keterangan" id="keterangan" class="form-control form-control-sm"
                                     value="{{ old('keterangan', $item->keterangan) }}" placeholder="Alasan retur...">
                             </div>
@@ -130,10 +141,12 @@
                     <div class="col-lg-4 col-md-12">
                         <div class="card h-100 border-0 text-white p-4 rounded d-flex flex-column justify-content-center position-relative overflow-hidden shadow-sm mb-0"
                             style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); min-height: 200px;">
-                            <span class="text-white-50 text-uppercase fw-bold tracking-wider fs-8 mb-1 d-block">Total Nilai Retur</span>
+                            <span class="text-white-50 text-uppercase fw-bold tracking-wider fs-8 mb-1 d-block">Total Nilai
+                                Retur</span>
                             <h2 class="mb-0 fw-bold fs-2 font-monospace" id="grand-total-display">Rp 0</h2>
                             <div class="mt-4 text-white-50 fs-8">
-                                <i class="fa-solid fa-triangle-exclamation me-1"></i> Stok produk otomatis bertambah setelah retur disimpan.
+                                <i class="fa-solid fa-triangle-exclamation me-1"></i> Stok produk otomatis bertambah
+                                setelah retur disimpan.
                             </div>
                         </div>
                     </div>
@@ -150,7 +163,8 @@
                             <select id="quick_barang" class="form-select form-select-sm" style="width: 100%;">
                                 <option value="">-- Cari / Pilih Barang --</option>
                                 @foreach ($barangs as $b)
-                                    <option value="{{ $b->kode_barang }}">{{ $b->nama_barang }} ({{ $b->kode_barang }})</option>
+                                    <option value="{{ $b->kode_barang }}">{{ $b->nama_barang }} ({{ $b->kode_barang }})
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -169,29 +183,35 @@
                             <label class="form-label fs-8 fw-bold text-secondary mb-1">Harga Retur</label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text">Rp</span>
-                                <input type="text" id="quick_harga" class="form-control form-control-sm text-end input-number-format" value="0">
+                                <input type="text" id="quick_harga"
+                                    class="form-control form-control-sm text-end input-number-format" value="0">
                             </div>
                         </div>
                         <div class="col-lg-1 col-md-2 col-4">
-                            <label class="form-label fs-8 fw-bold text-secondary mb-1">Disc 1 %</label>
-                            <input type="number" id="quick_diskon1_percent" class="form-control form-control-sm text-end"
-                                value="0" min="0" max="100" step="any">
+                            <label class="form-label fs-8 fw-bold text-secondary mb-1">D1 %</label>
+                            <input type="number" id="quick_diskon1_percent"
+                                class="form-control form-control-sm text-end" value="0" min="0"
+                                max="100" step="any">
                         </div>
                         <div class="col-lg-1 col-md-2 col-4">
-                            <label class="form-label fs-8 fw-bold text-secondary mb-1">Disc 2 %</label>
-                            <input type="number" id="quick_diskon2_percent" class="form-control form-control-sm text-end"
-                                value="0" min="0" max="100" step="any">
+                            <label class="form-label fs-8 fw-bold text-secondary mb-1">D2 %</label>
+                            <input type="number" id="quick_diskon2_percent"
+                                class="form-control form-control-sm text-end" value="0" min="0"
+                                max="100" step="any">
                         </div>
                         <div class="col-lg-1 col-md-2 col-4">
-                            <label class="form-label fs-8 fw-bold text-secondary mb-1">Disc 3 %</label>
-                            <input type="number" id="quick_diskon3_percent" class="form-control form-control-sm text-end"
-                                value="0" min="0" max="100" step="any">
+                            <label class="form-label fs-8 fw-bold text-secondary mb-1">D3 %</label>
+                            <input type="number" id="quick_diskon3_percent"
+                                class="form-control form-control-sm text-end" value="0" min="0"
+                                max="100" step="any">
                         </div>
                         <div class="col-lg-1 col-md-4">
                             <label class="form-label fs-8 fw-bold text-secondary mb-1">Potongan</label>
                             <div class="input-group input-group-sm" style="min-width: 100px;">
                                 <span class="input-group-text">Rp</span>
-                                <input type="text" id="quick_diskon" class="form-control form-control-sm text-end input-number-format" value="0" readonly>
+                                <input type="text" id="quick_diskon"
+                                    class="form-control form-control-sm text-end input-number-format" value="0"
+                                    readonly>
                             </div>
                         </div>
                         <div class="col-lg-1 col-md-2">
@@ -217,9 +237,9 @@
                                     <th width="90" class="text-center">Satuan</th>
                                     <th width="70" class="text-end">Qty</th>
                                     <th width="120" class="text-end">Harga Retur</th>
-                                    <th width="65" class="text-end">Disc 1 %</th>
-                                    <th width="65" class="text-end">Disc 2 %</th>
-                                    <th width="65" class="text-end">Disc 3 %</th>
+                                    <th width="65" class="text-end">D1 %</th>
+                                    <th width="65" class="text-end">D2 %</th>
+                                    <th width="65" class="text-end">D3 %</th>
                                     <th width="110" class="text-end">Potongan</th>
                                     <th width="130" class="text-end">Subtotal</th>
                                     <th width="40" class="text-center">Aksi</th>
@@ -255,7 +275,8 @@
 
                 {{-- Action Buttons --}}
                 <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                    <a href="{{ route('retur-penjualan.index') }}" class="btn btn-light px-4 fw-semibold border hover-scale">
+                    <a href="{{ route('retur-penjualan.index') }}"
+                        class="btn btn-light px-4 fw-semibold border hover-scale">
                         <i class="fa-solid fa-arrow-left me-1"></i> Batal
                     </a>
                     <button type="submit" class="btn btn-success px-4 fw-semibold hover-scale" id="btn-save-retur">
@@ -307,16 +328,24 @@
                 updatePelangganInfo(opt);
             });
 
-            $('#no_faktur').select2({ theme: 'bootstrap-5', width: '100%' });
-            $('#quick_barang').select2({ theme: 'bootstrap-5', width: '100%' });
+            $('#no_faktur').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
+            $('#quick_barang').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
 
             // Number format helpers
             function formatNumber(num) {
                 return num.toString().replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
             }
+
             function cleanNumber(str) {
                 return str.toString().replace(/\./g, "").replace(/\D/g, "") || "0";
             }
+
             function formatCurrency(value) {
                 return 'Rp ' + Math.max(0, Math.round(value)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
             }
@@ -331,6 +360,8 @@
                 this.setSelectionRange(start + diff, start + diff);
             });
 
+            let isInitializing = true;
+
             // Pelanggan dropdown change
             function updatePelangganInfo(opt) {
                 $('#pelanggan_kode').val(opt.attr('data-kode') || opt.data('kode') || '');
@@ -341,9 +372,42 @@
             $('#kode_pelanggan').on('change', function() {
                 const opt = $(this).find(':selected');
                 updatePelangganInfo(opt);
+
+                if (isInitializing) {
+                    return;
+                }
+
+                const kodePelanggan = $(this).val();
+                const noFakturSelect = $('#no_faktur');
+
+                noFakturSelect.empty().append('<option value="">-- Tanpa Faktur / Umum --</option>');
+
+                if (kodePelanggan) {
+                    $.ajax({
+                        url: '{{ route('penjualan.by-pelanggan') }}',
+                        type: 'GET',
+                        data: {
+                            kode_pelanggan: kodePelanggan
+                        },
+                        dataType: 'json',
+                        success: function(data) {
+                            data.forEach(function(p) {
+                                const totalFormatted = new Intl.NumberFormat('id-ID')
+                                    .format(Math.round(p.grand_total));
+                                noFakturSelect.append(
+                                    `<option value="${p.no_faktur}">${p.no_faktur} (Rp ${totalFormatted})</option>`
+                                );
+                            });
+                            noFakturSelect.trigger('change');
+                        }
+                    });
+                } else {
+                    noFakturSelect.trigger('change');
+                }
             });
 
             if ($('#kode_pelanggan').val()) $('#kode_pelanggan').trigger('change');
+            isInitializing = false;
 
             // Barang select change
             $('#quick_barang').on('change', function() {
@@ -392,9 +456,10 @@
                 recalcDiskon();
             });
 
-            $('#quick_diskon1_percent, #quick_diskon2_percent, #quick_diskon3_percent').on('input change', function() {
-                recalcDiskon();
-            });
+            $('#quick_diskon1_percent, #quick_diskon2_percent, #quick_diskon3_percent').on('input change',
+                function() {
+                    recalcDiskon();
+                });
 
             // Add item
             $('#btn-add-quick').on('click', function() {
@@ -418,7 +483,8 @@
                         exist = true;
                     }
                 });
-                if (exist) return Swal.fire('Peringatan', 'Barang dengan satuan ini sudah ada di daftar!', 'warning');
+                if (exist) return Swal.fire('Peringatan', 'Barang dengan satuan ini sudah ada di daftar!',
+                    'warning');
 
                 const barang = barangs.find(b => b.kode_barang === barangCode);
                 const satuanName = $('#quick_satuan').find(':selected').data('name');

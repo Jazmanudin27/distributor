@@ -196,7 +196,7 @@ class PelangganController extends Controller
         }
 
         $pelanggans = $query->orderBy('nama_pelanggan')
-            ->limit(30)
+            ->limit(20)
             ->get();
 
         $results = [];

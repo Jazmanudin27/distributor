@@ -116,6 +116,7 @@ Route::middleware('auth')->group(function () {
     // Shared Search / API Routes (Accessible by both Admin & Sales)
     Route::get('/barang-search', [BarangController::class, 'search'])->name('barang.search');
     Route::get('/pelanggan-search', [PelangganController::class, 'search'])->name('pelanggan.search');
+    Route::get('/penjualan-by-pelanggan', [PenjualanController::class, 'getByPelanggan'])->name('penjualan.by-pelanggan');
 
     // Profile Settings (Accessible by any desktop authenticated user)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

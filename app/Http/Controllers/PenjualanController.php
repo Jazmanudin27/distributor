@@ -1014,4 +1014,19 @@ class PenjualanController extends Controller
 
         return redirect()->back()->with('success', 'Persetujuan/penolakan pembayaran berhasil dibatalkan dan status kembali menjadi pending.');
     }
+
+    public function getByPelanggan(Request $request)
+    {
+        $kodePelanggan = $request->query('kode_pelanggan');
+        if (!$kodePelanggan) {
+            return response()->json([]);
+        }
+
+        $penjualans = Penjualan::where('kode_pelanggan', $kodePelanggan)
+            ->where('batal', 0)
+            ->orderBy('tanggal', 'desc')
+            ->get(['no_faktur', 'grand_total']);
+
+        return response()->json($penjualans);
+    }
 }
