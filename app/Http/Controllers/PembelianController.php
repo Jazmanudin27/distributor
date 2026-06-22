@@ -346,6 +346,29 @@ class PembelianController extends Controller
         return redirect()->route('pembelian.show', $no_faktur)->with('success', 'Pembayaran berhasil disimpan');
     }
 
+    public function approve($no_faktur)
+    {
+        $pembelian = Pembelian::findOrFail($no_faktur);
+
+        if ($pembelian->tanggal_approve) {
+            return back()->with('error', 'Transaksi pembelian ini sudah disetujui sebelumnya.');
+        }
+
+        $pembelian->update([
+            'tanggal_approve' => now(),
+        ]);
+
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id() ?? 1,
+            'action' => 'Approve Pembelian',
+            'description' => $pembelian->no_faktur . ' disetujui.',
+            'ip_address' => request()->ip(),
+            'no_faktur' => $pembelian->no_faktur,
+        ]);
+
+        return back()->with('success', 'Transaksi pembelian berhasil disetujui.');
+    }
+
     public function getPurchaseItems($no_faktur)
     {
         $pembelian = Pembelian::with(['details.barang', 'details.barangSatuan', 'supplier'])->find($no_faktur);

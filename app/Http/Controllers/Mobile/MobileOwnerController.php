@@ -174,6 +174,12 @@ class MobileOwnerController extends Controller
      */
     public function labaRugi(Request $request)
     {
+        // Explicitly block sales and spv sales roles from accessing laba rugi financial metrics
+        $role = strtolower(Auth::user()->role ?? '');
+        if (in_array($role, ['sales', 'spv sales'])) {
+            abort(403, 'Akses ditolak. Anda tidak diizinkan melihat Laporan Laba Rugi.');
+        }
+
         $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
         $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
 

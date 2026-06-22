@@ -104,6 +104,17 @@
                                         class="badge bg-{{ $isLunas ? 'success' : 'danger' }}-subtle text-{{ $isLunas ? 'success' : 'warning-emphasis' }} border border-{{ $isLunas ? 'success' : 'warning-subtle' }} px-2 py-1 fw-bold fs-8">
                                         {{ $isLunas ? 'L' : 'BL' }}
                                     </span>
+                                    <div class="mt-1">
+                                        @if($item->tanggal_approve)
+                                            <span class="badge bg-success-subtle text-success border border-success px-2 py-0.5 fw-bold fs-9" title="Disetujui pada {{ \Carbon\Carbon::parse($item->tanggal_approve)->format('d-m-Y') }}">
+                                                Approved
+                                            </span>
+                                        @else
+                                            <span class="badge bg-warning-subtle text-warning border border-warning px-2 py-0.5 fw-bold fs-9">
+                                                Pending
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
 
                                 <td class="text-center">
@@ -112,6 +123,16 @@
                                             class="btn btn-sm btn-outline-secondary rounded" title="Lihat & Bayar">
                                             <i class="fa-solid fa-eye"></i>
                                         </a>
+                                        @if(!$item->tanggal_approve && auth()->user()->can('approve-pembelian'))
+                                            <form action="{{ route('pembelian.approve', $item->no_faktur) }}" method="POST"
+                                                class="d-inline approve-form">
+                                                @csrf
+                                                <button type="button" class="btn btn-sm btn-outline-success approve-btn rounded"
+                                                    title="Setujui Pembelian">
+                                                    <i class="fa-solid fa-check"></i>
+                                                </button>
+                                            </form>
+                                        @endif
                                         @can('edit-pembelian')
                                             <a href="{{ route('pembelian.edit', $item->no_faktur) }}"
                                                 class="btn btn-sm btn-outline-primary rounded" title="Edit">
@@ -157,3 +178,30 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $(document).on('click', '.approve-btn', function(e) {
+                e.preventDefault();
+                let form = $(this).closest('form');
+                Swal.fire({
+                    title: 'Setujui Pembelian?',
+                    text: "Apakah Anda yakin ingin menyetujui transaksi pembelian ini?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#ef4444',
+                    confirmButtonText: 'Ya, Setujui',
+                    cancelButtonText: 'Batal',
+                    background: '#161e31',
+                    color: '#f8fafc'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    </script>
+@endpush

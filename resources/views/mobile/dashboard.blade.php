@@ -48,6 +48,22 @@
         </div>
     @endif
 
+    @if(strtolower(Auth::user()->role) === 'spv sales' && isset($pendingPembelianCount) && $pendingPembelianCount > 0)
+        <div class="alert alert-success rounded-4 mb-3 d-flex align-items-center justify-content-between"
+            style="background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399;">
+            <div class="d-flex align-items-center">
+                <i class="fa-solid fa-cart-flatbed-suitcases me-3" style="font-size: 1.25rem;"></i>
+                <div>
+                    <span style="font-size: 0.8rem; font-weight: 600;">Persetujuan Pembelian</span>
+                    <small class="d-block text-secondary" style="font-size: 0.7rem; color: #34d399 !important; opacity: 0.85;">Ada {{ $pendingPembelianCount }} pengajuan pembelian menunggu persetujuan</small>
+                </div>
+            </div>
+            <a href="{{ route('mobile.spv.pembelian.pending') }}" class="btn btn-sm btn-success text-white fw-bold px-3 py-1-5 fs-8 border-0" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 8px; text-decoration: none;">
+                Tinjau <i class="fa-solid fa-arrow-right ms-0.5"></i>
+            </a>
+        </div>
+    @endif
+
     @php
         $role = strtolower(Auth::user()->role ?? '');
         $isSpv = ($role === 'spv sales');
@@ -131,6 +147,14 @@
                     style="background-color: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); color: #a5b4fc;">
                     <i class="fa-solid fa-file-invoice-dollar me-2" style="font-size: 1.2rem;"></i>
                     <span style="font-size: 0.85rem;">Persetujuan Limit Kredit @if($pendingLimitCount > 0) ({{ $pendingLimitCount }}) @endif</span>
+                </a>
+            </div>
+            <div class="col-12 mt-2">
+                <a href="{{ route('mobile.spv.pembelian.pending') }}"
+                    class="btn btn-mobile w-100 py-2.5 d-flex align-items-center justify-content-center"
+                    style="background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #34d399;">
+                    <i class="fa-solid fa-cart-flatbed-suitcases me-2" style="font-size: 1.2rem;"></i>
+                    <span style="font-size: 0.85rem;">Persetujuan Pembelian @if($pendingPembelianCount > 0) ({{ $pendingPembelianCount }}) @endif</span>
                 </a>
             </div>
         </div>

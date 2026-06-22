@@ -7,6 +7,7 @@ use App\Models\Penjualan;
 use App\Models\PenjualanCheckin;
 use App\Models\Pelanggan;
 use App\Models\AjuanLimitKredit;
+use App\Models\Pembelian;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -75,11 +76,13 @@ class MobileDashboardController extends Controller
         // 7. Pending Customer Approvals (for SPV Sales)
         $pendingCustomersCount = 0;
         $pendingLimitCount = 0;
+        $pendingPembelianCount = 0;
         if ($isSpv) {
             $pendingCustomersCount = Pelanggan::where(function($q) {
                 $q->whereNull('approve')->orWhere('approve', 0);
             })->count();
             $pendingLimitCount = AjuanLimitKredit::where('status', 'pending')->count();
+            $pendingPembelianCount = Pembelian::whereNull('tanggal_approve')->count();
         }
 
         // Target progress percentage
@@ -94,7 +97,8 @@ class MobileDashboardController extends Controller
             'progressPercentage',
             'activeCheckin',
             'pendingCustomersCount',
-            'pendingLimitCount'
+            'pendingLimitCount',
+            'pendingPembelianCount'
         ));
     }
 
@@ -213,5 +217,56 @@ class MobileDashboardController extends Controller
             ->get();
 
         return view('mobile.spv.sales_visits', compact('visits', 'salesmen', 'tanggal_mulai', 'tanggal_akhir', 'selected_sales'));
+    }
+
+    /**
+     * Halaman List Pending Approval Pembelian untuk SPV Sales
+     */
+    public function pendingPembelianListSpv()
+    {
+        $role = strtolower(Auth::user()->role ?? '');
+        if ($role !== 'spv sales') {
+            abort(403, 'Akses khusus SPV Sales.');
+        }
+
+        $pendingPembelians = Pembelian::with(['supplier', 'details.barang'])
+            ->whereNull('tanggal_approve')
+            ->orderBy('tanggal', 'desc')
+            ->get();
+
+        return view('mobile.spv.pembelian_pending', compact('pendingPembelians'));
+    }
+
+    /**
+     * Approve Pembelian via Mobile (SPV Sales)
+     */
+    public function approvePembelianSpv(Request $request, $no_faktur)
+    {
+        $role = strtolower(Auth::user()->role ?? '');
+        if ($role !== 'spv sales') {
+            abort(403, 'Akses khusus SPV Sales.');
+        }
+
+        $pembelian = Pembelian::findOrFail($no_faktur);
+
+        if ($pembelian->tanggal_approve) {
+            return redirect()->route('mobile.spv.pembelian.pending')
+                ->with('error', 'Transaksi pembelian ini sudah disetujui sebelumnya.');
+        }
+
+        $pembelian->update([
+            'tanggal_approve' => now(),
+        ]);
+
+        \App\Models\ActivityLog::create([
+            'user_id' => auth()->id() ?? 1,
+            'action' => 'Approve Pembelian Mobile',
+            'description' => $pembelian->no_faktur . ' disetujui oleh SPV.',
+            'ip_address' => $request->ip(),
+            'no_faktur' => $pembelian->no_faktur,
+        ]);
+
+        return redirect()->route('mobile.spv.pembelian.pending')
+            ->with('success', "Pembelian '" . $pembelian->no_faktur . "' berhasil disetujui.");
     }
 }

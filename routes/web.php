@@ -87,6 +87,10 @@ Route::middleware('auth')->group(function () {
         // SPV Sales Monitoring
         Route::get('/spv/sales-achievement', [MobileDashboardController::class, 'salesAchievement'])->name('spv.sales-achievement');
         Route::get('/spv/sales-visits', [MobileDashboardController::class, 'salesVisits'])->name('spv.sales-visits');
+
+        // SPV Sales Pembelian Approvals
+        Route::get('/spv/pembelian-pending', [MobileDashboardController::class, 'pendingPembelianListSpv'])->name('spv.pembelian.pending');
+        Route::post('/spv/approve-pembelian/{no_faktur}', [MobileDashboardController::class, 'approvePembelianSpv'])->name('spv.pembelian.approve');
     });
 
     // Authenticated Mobile Routes for Owner
@@ -154,6 +158,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/pembelian/{no_faktur}/items', [PembelianController::class, 'getPurchaseItems'])->name('pembelian.items');
         Route::post('/pembelian/{id}/payment', [PembelianController::class, 'storePayment'])->name('pembelian.payment');
+        Route::post('/pembelian/{id}/approve', [PembelianController::class, 'approve'])->name('pembelian.approve');
         Route::resource('pembelian', PembelianController::class);
         Route::resource('retur-pembelian', ReturPembelianController::class);
         Route::resource('stok-opname', StokOpnameController::class);

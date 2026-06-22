@@ -20,6 +20,14 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2">
+                        @if(!$item->tanggal_approve && auth()->user()->can('approve-pembelian'))
+                            <form action="{{ route('pembelian.approve', $item->no_faktur) }}" method="POST" class="d-inline approve-form">
+                                @csrf
+                                <button type="button" class="btn btn-success btn-sm fw-bold hover-scale text-white approve-btn">
+                                    <i class="fa-solid fa-check me-1"></i> Setujui Faktur
+                                </button>
+                            </form>
+                        @endif
                         @can('edit-pembelian')
                             <a href="{{ route('pembelian.edit', $item->no_faktur) }}"
                                 class="btn btn-white btn-sm fw-bold hover-scale text-primary bg-white border">
@@ -442,6 +450,27 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+            $(document).on('click', '.approve-btn', function(e) {
+                e.preventDefault();
+                let form = $(this).closest('form');
+                Swal.fire({
+                    title: 'Setujui Pembelian?',
+                    text: "Apakah Anda yakin ingin menyetujui transaksi pembelian ini?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#ef4444',
+                    confirmButtonText: 'Ya, Setujui',
+                    cancelButtonText: 'Batal',
+                    background: '#161e31',
+                    color: '#f8fafc'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+
             const sisaBayar = {{ (float) $sisaBayar }};
 
             // Format number to thousands separator (dot)

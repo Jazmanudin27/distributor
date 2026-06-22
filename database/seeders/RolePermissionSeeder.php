@@ -145,6 +145,8 @@ class RolePermissionSeeder extends Seeder
             'view-penjualan',
             'view-laporan_penjualan',
             'view-laporan_piutang',
+            'view-pembelian',
+            'approve-pembelian',
         ])->get();
         $spvSales->syncPermissions($spvSalesPermissions);
 
