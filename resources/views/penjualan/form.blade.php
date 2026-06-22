@@ -36,14 +36,16 @@
                         <i class="fa-solid fa-print me-1"></i> Cetak Faktur
                     </a>
                 @endif
-                <a href="{{ route('penjualan.index', request()->query()) }}" class="btn btn-light btn-sm fw-bold hover-scale">
+                <a href="{{ route('penjualan.index', request()->query()) }}"
+                    class="btn btn-light btn-sm fw-bold hover-scale">
                     <i class="fa-solid fa-arrow-left me-1 text-primary"></i> Kembali
                 </a>
             </div>
         </div>
 
         <div class="card-body p-4 bg-light">
-            <form action="{{ $item->exists ? route('penjualan.update', array_merge(['penjualan' => $item->no_faktur], request()->query())) : route('penjualan.store', request()->query()) }}"
+            <form
+                action="{{ $item->exists ? route('penjualan.update', array_merge(['penjualan' => $item->no_faktur], request()->query())) : route('penjualan.store', request()->query()) }}"
                 method="POST" id="penjualanForm">
                 @csrf
                 @if ($item->exists)
@@ -60,12 +62,15 @@
                             </h6>
                             <div class="mb-2">
                                 <label for="no_faktur" class="form-label fs-7 fw-bold text-secondary mb-1">No Faktur
-                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle ms-1" style="font-size:10px; font-weight:500;">Auto</span></label>
+                                    <span
+                                        class="badge bg-secondary-subtle text-secondary border border-secondary-subtle ms-1"
+                                        style="font-size:10px; font-weight:500;">Auto</span></label>
                                 <input type="text" name="no_faktur" id="no_faktur"
                                     class="form-control form-control-sm font-monospace fw-bold bg-light @error('no_faktur') is-invalid @enderror"
-                                    value="{{ old('no_faktur', $item->no_faktur) }}"
-                                    readonly>
-                                <div class="text-muted" style="font-size:10px; margin-top:2px;"><i class="fa-solid fa-circle-info"></i> Nomor faktur digenerate otomatis saat disimpan</div>
+                                    value="{{ old('no_faktur', $item->no_faktur) }}" readonly>
+                                <div class="text-muted" style="font-size:10px; margin-top:2px;"><i
+                                        class="fa-solid fa-circle-info"></i> Nomor faktur digenerate otomatis saat disimpan
+                                </div>
                                 @error('no_faktur')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
@@ -229,22 +234,19 @@
                             </div>
                         </div>
                         <div class="col-lg-1 col-md-3 col-4">
-                            <label class="form-label fs-8 fw-bold text-secondary mb-1">Disc 1 %</label>
-                            <input type="number" id="quick_diskon1_percent"
-                                class="form-control form-control-sm text-end" value="0" min="0"
-                                max="100" step="any">
+                            <label class="form-label fs-8 fw-bold text-secondary mb-1">D1 <span class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d1_type" style="user-select: none;">%</span></label>
+                            <input type="text" id="quick_diskon1_input" class="form-control form-control-sm text-end input-number-format" value="0">
+                            <input type="hidden" id="quick_diskon1_percent" value="0">
                         </div>
                         <div class="col-lg-1 col-md-3 col-4">
-                            <label class="form-label fs-8 fw-bold text-secondary mb-1">Disc 2 %</label>
-                            <input type="number" id="quick_diskon2_percent"
-                                class="form-control form-control-sm text-end" value="0" min="0"
-                                max="100" step="any">
+                            <label class="form-label fs-8 fw-bold text-secondary mb-1">D2 <span class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d2_type" style="user-select: none;">%</span></label>
+                            <input type="text" id="quick_diskon2_input" class="form-control form-control-sm text-end input-number-format" value="0">
+                            <input type="hidden" id="quick_diskon2_percent" value="0">
                         </div>
                         <div class="col-lg-1 col-md-3 col-4">
-                            <label class="form-label fs-8 fw-bold text-secondary mb-1">Disc 3 %</label>
-                            <input type="number" id="quick_diskon3_percent"
-                                class="form-control form-control-sm text-end" value="0" min="0"
-                                max="100" step="any">
+                            <label class="form-label fs-8 fw-bold text-secondary mb-1">D3 <span class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d3_type" style="user-select: none;">%</span></label>
+                            <input type="text" id="quick_diskon3_input" class="form-control form-control-sm text-end input-number-format" value="0">
+                            <input type="hidden" id="quick_diskon3_percent" value="0">
                         </div>
                         <div class="col-lg-1 col-md-5">
                             <label class="form-label fs-8 fw-bold text-secondary mb-1">Potongan</label>
@@ -286,9 +288,9 @@
                                     <th width="60" class="text-center">Promo</th>
                                     <th width="70" class="text-end">Qty</th>
                                     <th width="120" class="text-end">Harga Jual</th>
-                                    <th width="70" class="text-end">D1 %</th>
-                                    <th width="70" class="text-end">D2 %</th>
-                                    <th width="70" class="text-end">D3 %</th>
+                                    <th width="85" class="text-end">D1</th>
+                                    <th width="85" class="text-end">D2</th>
+                                    <th width="85" class="text-end">D3</th>
                                     <th width="110" class="text-end">Potongan</th>
                                     <th width="130" class="text-end">Subtotal</th>
                                     <th width="40" class="text-center">Aksi</th>
@@ -568,15 +570,49 @@
                 const price = parseFloat(cleanNumber($('#quick_harga').val())) || 0;
                 const qty = parseFloat($('#quick_qty').val()) || 0;
                 const base = price * qty;
-                const d1_pct = parseFloat($('#quick_diskon1_percent').val()) || 0;
-                const d2_pct = parseFloat($('#quick_diskon2_percent').val()) || 0;
-                const d3_pct = parseFloat($('#quick_diskon3_percent').val()) || 0;
 
-                const d1 = base * (d1_pct / 100);
-                const d2 = (base - d1) * (d2_pct / 100);
-                const d3 = (base - d1 - d2) * (d3_pct / 100);
-                const computed = Math.round(d1 + d2 + d3);
+                // D1
+                let d1_val = parseFloat(cleanNumber($('#quick_diskon1_input').val())) || 0;
+                let d1_type = $('#quick_d1_type').text().trim();
+                let d1_pct = 0, d1_rp = 0;
+                if (d1_type === '%') {
+                    d1_pct = d1_val;
+                    d1_rp = base * (d1_pct / 100);
+                } else {
+                    d1_rp = d1_val;
+                    d1_pct = base > 0 ? (d1_rp / base) * 100 : 0;
+                }
+                $('#quick_diskon1_percent').val(d1_pct);
 
+                // D2
+                let d2_val = parseFloat(cleanNumber($('#quick_diskon2_input').val())) || 0;
+                let d2_type = $('#quick_d2_type').text().trim();
+                let d2_pct = 0, d2_rp = 0;
+                let base2 = base - d1_rp;
+                if (d2_type === '%') {
+                    d2_pct = d2_val;
+                    d2_rp = base2 * (d2_pct / 100);
+                } else {
+                    d2_rp = d2_val;
+                    d2_pct = base2 > 0 ? (d2_rp / base2) * 100 : 0;
+                }
+                $('#quick_diskon2_percent').val(d2_pct);
+
+                // D3
+                let d3_val = parseFloat(cleanNumber($('#quick_diskon3_input').val())) || 0;
+                let d3_type = $('#quick_d3_type').text().trim();
+                let d3_pct = 0, d3_rp = 0;
+                let base3 = base2 - d2_rp;
+                if (d3_type === '%') {
+                    d3_pct = d3_val;
+                    d3_rp = base3 * (d3_pct / 100);
+                } else {
+                    d3_rp = d3_val;
+                    d3_pct = base3 > 0 ? (d3_rp / base3) * 100 : 0;
+                }
+                $('#quick_diskon3_percent').val(d3_pct);
+
+                const computed = Math.round(d1_rp + d2_rp + d3_rp);
                 $('#quick_diskon').val(formatNumber(computed));
             }
 
@@ -584,10 +620,21 @@
                 recalcDiskon();
             });
 
-            $('#quick_diskon1_percent, #quick_diskon2_percent, #quick_diskon3_percent').on('input change',
+            $('#quick_diskon1_input, #quick_diskon2_input, #quick_diskon3_input').on('input change',
                 function() {
                     recalcDiskon();
                 });
+
+            $(document).on('click', '.toggle-quick-type', function() {
+                const current = $(this).text().trim();
+                $(this).text(current === '%' ? 'Rp' : '%');
+                if (current === '%') {
+                    $(this).removeClass('bg-secondary').addClass('bg-success');
+                } else {
+                    $(this).removeClass('bg-success').addClass('bg-secondary');
+                }
+                recalcDiskon();
+            });
 
             // Add item
             $('#btn-add-quick').on('click', function() {
@@ -611,8 +658,8 @@
                         exist = true;
                     }
                 });
-                if (exist) return Swal.fire('Peringatan', 'Barang dengan satuan ini sudah ada di daftar!',
-                    'warning');
+                // if (exist) return Swal.fire('Peringatan', 'Barang dengan satuan ini sudah ada di daftar!',
+                //     'warning');
 
                 const barang = barangsCache[barangCode];
                 if (barang) {
@@ -657,13 +704,18 @@
                 $('#quick_barang').val('').trigger('change');
                 $('#quick_qty').val(1);
                 $('#quick_harga').val(0);
+                $('#quick_diskon1_input').val(0);
+                $('#quick_diskon2_input').val(0);
+                $('#quick_diskon3_input').val(0);
                 $('#quick_diskon1_percent').val(0);
                 $('#quick_diskon2_percent').val(0);
                 $('#quick_diskon3_percent').val(0);
+                $('#quick_d1_type, #quick_d2_type, #quick_d3_type').text('%').removeClass('bg-success').addClass('bg-secondary');
                 $('#quick_diskon').val(0);
                 $('#quick_is_promo').prop('checked', false).trigger('change');
 
                 calculateTotals();
+                $('#quick_barang').select2('open');
             });
 
             // Handle quick promo checkbox changes
@@ -673,15 +725,15 @@
                     const currentPrice = $('#quick_harga').val();
                     $('#quick_harga').data('temp-original-price', currentPrice);
                     $('#quick_harga').val('0').attr('readonly', true);
-                    $('#quick_diskon1_percent').val('0').attr('readonly', true);
-                    $('#quick_diskon2_percent').val('0').attr('readonly', true);
-                    $('#quick_diskon3_percent').val('0').attr('readonly', true);
+                    $('#quick_diskon1_input').val('0').attr('readonly', true);
+                    $('#quick_diskon2_input').val('0').attr('readonly', true);
+                    $('#quick_diskon3_input').val('0').attr('readonly', true);
                 } else {
                     const originalPrice = $('#quick_harga').data('temp-original-price') || '0';
                     $('#quick_harga').val(originalPrice).removeAttr('readonly');
-                    $('#quick_diskon1_percent').val('0').removeAttr('readonly');
-                    $('#quick_diskon2_percent').val('0').removeAttr('readonly');
-                    $('#quick_diskon3_percent').val('0').removeAttr('readonly');
+                    $('#quick_diskon1_input').val('0').removeAttr('readonly');
+                    $('#quick_diskon2_input').val('0').removeAttr('readonly');
+                    $('#quick_diskon3_input').val('0').removeAttr('readonly');
                 }
                 recalcDiskon();
             });
@@ -1214,6 +1266,24 @@
                     $(this).val(cleanNumber($(this).val()));
                 });
             });
+
+            // Keyboard Shortcuts
+            $(document).on('keydown', function(e) {
+                // Ctrl+Enter to save transaction
+                if (e.ctrlKey && e.key === 'Enter') {
+                    e.preventDefault();
+                    $('#btn-save-penjualan').click();
+                }
+            });
+
+            // Enter to add item in quick input bar
+            $('#quick_satuan, #quick_qty, #quick_harga, #quick_diskon1_percent, #quick_diskon2_percent, #quick_diskon3_percent, #quick_is_promo')
+                .on('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.ctrlKey) {
+                        e.preventDefault();
+                        $('#btn-add-quick').click();
+                    }
+                });
         });
     </script>
 @endpush
