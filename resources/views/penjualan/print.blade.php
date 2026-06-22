@@ -302,7 +302,7 @@
     <table style="margin-top: 10px; border-collapse: collapse; width: 100%;">
         <tr>
             <td style="width:15%; border: none;">Keterangan</td>
-            <td style="width:85%; border: none;" colspan="3">: {{ $item->keterangan ?? '-' }}</td>
+            <td style="width:85%; border: none;" colspan="3">: </td>
         </tr>
     </table>
 
