@@ -64,6 +64,7 @@
                 transform: translateY(-20px);
                 opacity: 0;
             }
+
             to {
                 transform: translateY(0);
                 opacity: 1;
@@ -323,6 +324,7 @@
             width: 100% !important;
             margin-bottom: 2px !important;
         }
+
         .select2-container--default .select2-selection--single {
             background-color: #121824 !important;
             border: 1px solid var(--border-color) !important;
@@ -332,33 +334,40 @@
             align-items: center !important;
             transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
         }
+
         .select2-container--default .select2-selection--single .select2-selection__rendered {
             color: var(--text-primary) !important;
             padding-left: 14px !important;
             font-size: 0.9rem !important;
         }
+
         .select2-container--default .select2-selection--single .select2-selection__arrow {
             height: 46px !important;
             right: 10px !important;
         }
+
         .select2-container--default .select2-selection--single .select2-selection__arrow b {
             border-color: var(--text-secondary) transparent transparent transparent !important;
         }
+
         .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
             border-color: transparent transparent var(--text-secondary) transparent !important;
         }
+
         .select2-container--default .select2-selection--single .select2-selection__placeholder {
             color: var(--text-secondary) !important;
             opacity: 0.6 !important;
         }
+
         .select2-dropdown {
             background-color: var(--bg-secondary) !important;
             border: 1px solid var(--border-color) !important;
             border-radius: 12px !important;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
             overflow: hidden !important;
             z-index: 1050 !important;
         }
+
         .select2-container--default .select2-search--dropdown .select2-search__field {
             background-color: #121824 !important;
             border: 1px solid var(--border-color) !important;
@@ -366,23 +375,28 @@
             border-radius: 8px !important;
             padding: 8px 12px !important;
         }
+
         .select2-container--default .select2-search--dropdown {
             padding: 10px !important;
         }
+
         .select2-container--default .select2-results__option {
             padding: 10px 14px !important;
             font-size: 0.88rem !important;
             color: var(--text-secondary) !important;
             background-color: transparent !important;
         }
+
         .select2-container--default .select2-results__option--highlighted[aria-selected] {
             background: var(--accent-gradient) !important;
             color: #fff !important;
         }
+
         .select2-container--default .select2-results__option[aria-selected=true] {
             background-color: rgba(99, 102, 241, 0.2) !important;
             color: var(--text-primary) !important;
         }
+
         .select2-container--default .select2-results__option--disabled {
             color: rgba(255, 255, 255, 0.2) !important;
         }
@@ -423,7 +437,8 @@
                 <p class="pwa-subtitle">Pasang ke layar utama HP Anda</p>
             </div>
             <div id="pwa-ios-instructions" style="display: none;">
-                <p class="pwa-ios-guide"><i class="fa-solid fa-share-from-square me-1"></i> Tap <strong>Share</strong> lalu pilih <strong>Add to Home Screen</strong></p>
+                <p class="pwa-ios-guide"><i class="fa-solid fa-share-from-square me-1"></i> Tap <strong>Share</strong>
+                    lalu pilih <strong>Add to Home Screen</strong></p>
             </div>
         </div>
         <div class="d-flex align-items-center">
@@ -492,7 +507,7 @@
                 <a href="{{ route('mobile.order.index') }}"
                     class="nav-item-mobile {{ Request::routeIs('mobile.order.index') ? 'active' : '' }}">
                     <i class="fa-solid fa-receipt"></i>
-                    <span>Sales</span>
+                    <span>Penjualan</span>
                 </a>
                 <a href="{{ route('mobile.limit-kredit.index') }}"
                     class="nav-item-mobile {{ Request::routeIs('mobile.limit-kredit.*') ? 'active' : '' }}">
@@ -588,7 +603,7 @@
                 input.addEventListener('input', function(e) {
                     let cursorPosition = this.selectionStart;
                     let originalLength = this.value.length;
-                    
+
                     let formatted = formatRupiah(this.value);
                     this.value = formatted;
 
@@ -602,22 +617,24 @@
                     let rawVal = cleanRupiah(this.value);
                     let numVal = parseFloat(rawVal) || 0;
                     let maxVal = parseFloat(this.getAttribute('max'));
-                    
+
                     if (!isNaN(maxVal) && numVal > maxVal) {
                         this.value = formatRupiah(maxVal.toString());
                         this.dispatchEvent(new Event('input')); // Re-format
-                        
+
                         if (window.Swal) {
                             Swal.fire({
                                 title: 'Melebihi Jumlah Bayar',
-                                text: 'Jumlah bayar tidak boleh melebihi sisa piutang (Maksimal Rp ' + maxVal.toLocaleString('id-ID') + ')',
+                                text: 'Jumlah bayar tidak boleh melebihi sisa piutang (Maksimal Rp ' +
+                                    maxVal.toLocaleString('id-ID') + ')',
                                 icon: 'warning',
                                 background: '#161e31',
                                 color: '#f8fafc',
                                 confirmButtonColor: '#6366f1'
                             });
                         } else {
-                            alert('Jumlah bayar tidak boleh melebihi sisa piutang (Maksimal Rp ' + maxVal.toLocaleString('id-ID') + ')');
+                            alert('Jumlah bayar tidak boleh melebihi sisa piutang (Maksimal Rp ' +
+                                maxVal.toLocaleString('id-ID') + ')');
                         }
                     }
                 });
@@ -630,41 +647,48 @@
                     if (mutation.addedNodes) {
                         mutation.addedNodes.forEach(function(node) {
                             if (node.nodeType === 1) {
-                                if (node.classList && node.classList.contains('rupiah-input')) {
+                                if (node.classList && node.classList.contains(
+                                        'rupiah-input')) {
                                     initRupiahInput(node);
                                 }
-                                node.querySelectorAll('.rupiah-input').forEach(initRupiahInput);
+                                node.querySelectorAll('.rupiah-input').forEach(
+                                    initRupiahInput);
                             }
                         });
                     }
                 });
             });
-            observer.observe(document.body, { childList: true, subtree: true });
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
 
             document.addEventListener('submit', function(e) {
                 const form = e.target;
                 let isValid = true;
-                
+
                 form.querySelectorAll('.rupiah-input').forEach(function(input) {
                     let rawVal = cleanRupiah(input.value);
                     let numVal = parseFloat(rawVal) || 0;
-                    
+
                     let maxVal = parseFloat(input.getAttribute('max'));
                     let minVal = parseFloat(input.getAttribute('min'));
-                    
+
                     if (!isNaN(maxVal) && numVal > maxVal) {
                         isValid = false;
                         if (window.Swal) {
                             Swal.fire({
                                 title: 'Input Tidak Valid',
-                                text: 'Jumlah tidak boleh melebihi Rp ' + maxVal.toLocaleString('id-ID'),
+                                text: 'Jumlah tidak boleh melebihi Rp ' + maxVal
+                                    .toLocaleString('id-ID'),
                                 icon: 'warning',
                                 background: '#161e31',
                                 color: '#f8fafc',
                                 confirmButtonColor: '#6366f1'
                             });
                         } else {
-                            alert('Jumlah tidak boleh melebihi Rp ' + maxVal.toLocaleString('id-ID'));
+                            alert('Jumlah tidak boleh melebihi Rp ' + maxVal.toLocaleString(
+                                'id-ID'));
                         }
                     }
                     if (!isNaN(minVal) && numVal < minVal) {
@@ -672,24 +696,26 @@
                         if (window.Swal) {
                             Swal.fire({
                                 title: 'Input Tidak Valid',
-                                text: 'Jumlah tidak boleh kurang dari Rp ' + minVal.toLocaleString('id-ID'),
+                                text: 'Jumlah tidak boleh kurang dari Rp ' + minVal
+                                    .toLocaleString('id-ID'),
                                 icon: 'warning',
                                 background: '#161e31',
                                 color: '#f8fafc',
                                 confirmButtonColor: '#6366f1'
                             });
                         } else {
-                            alert('Jumlah tidak boleh kurang dari Rp ' + minVal.toLocaleString('id-ID'));
+                            alert('Jumlah tidak boleh kurang dari Rp ' + minVal.toLocaleString(
+                                'id-ID'));
                         }
                     }
                 });
-                
+
                 if (!isValid) {
                     e.preventDefault();
                     e.stopImmediatePropagation();
                     return false;
                 }
-                
+
                 form.querySelectorAll('.rupiah-input').forEach(function(input) {
                     input.value = cleanRupiah(input.value);
                 });
