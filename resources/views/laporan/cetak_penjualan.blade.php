@@ -140,34 +140,20 @@
                         </tr>
                     </tfoot>
                 </table>
-            @else
                 {{-- DETAIL ROWSPAN TABLES (Format 3) --}}
                 <table class="table table-sm align-middle w-100 table-rowspan">
                     <thead>
                         <tr style="background:#0d6efd; color:#fff;">
-                            <th rowspan="2" class="text-center align-middle">No</th>
-                            <th rowspan="2" class="text-center align-middle">Tanggal</th>
-                            <th rowspan="2" class="text-center align-middle">No. Faktur</th>
-                            <th rowspan="2" class="text-center align-middle">Kode</th>
-                            <th rowspan="2" class="align-middle">Nama Pelanggan</th>
-                            <th rowspan="2" class="align-middle">Alamat</th>
-                            <th rowspan="2" class="align-middle">Sales</th>
-                            <th rowspan="2" class="align-middle">Wilayah</th>
-                            <th colspan="11" class="text-center" style="background:#00771a; color:#fff;">Data Barang</th>
-                            <th rowspan="2" class="text-end align-middle">Bruto</th>
-                            <th rowspan="2" class="text-end align-middle">Diskon</th>
-                            <th rowspan="2" class="text-end align-middle">Neto</th>
-                            <th rowspan="2" class="text-end align-middle">Bayar</th>
-                            <th rowspan="2" class="text-end align-middle">Sisa</th>
-                            <th rowspan="2" class="text-center align-middle">Status</th>
-                            <th rowspan="2" class="text-center align-middle">JT</th>
-                            <th rowspan="2" class="text-center align-middle">Diinput</th>
-                            <th rowspan="2" class="text-center align-middle">Update</th>
-                            <th rowspan="2" class="text-center align-middle">Input Oleh</th>
-                        </tr>
-                        <tr style="background:#e8f5e9; color:#000;">
+                            <th class="text-center">No</th>
+                            <th>Tanggal</th>
+                            <th>No. Faktur</th>
                             <th>Kode</th>
-                            <th>Nama</th>
+                            <th>Nama Pelanggan</th>
+                            <th>Alamat</th>
+                            <th>Sales</th>
+                            <th>Wilayah</th>
+                            <th>Kode Barang</th>
+                            <th>Nama Barang</th>
                             <th>Jenis</th>
                             <th>Merk</th>
                             <th class="text-center">Qty</th>
@@ -177,6 +163,16 @@
                             <th class="text-center">D2</th>
                             <th class="text-center">D3</th>
                             <th class="text-end">Total</th>
+                            <th class="text-end">Bruto</th>
+                            <th class="text-end">Diskon</th>
+                            <th class="text-end">Neto</th>
+                            <th class="text-end">Bayar</th>
+                            <th class="text-end">Sisa</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">JT</th>
+                            <th class="text-center">Diinput</th>
+                            <th class="text-center">Update</th>
+                            <th>Input Oleh</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -190,77 +186,53 @@
                         @endphp
                         @foreach ($items as $invoice)
                             @php
-                                $details = $invoice->details;
-                                $rowCount = count($details) ?: 1;
-                                $firstDetail = $details->first();
-                                
                                 $totalBrutoSum += $invoice->total;
                                 $totalDiskonSum += $invoice->diskon;
                                 $totalNetoSum += $invoice->grand_total;
                                 $totalBayarSum += $invoice->total_bayar;
                                 $totalSisaSum += $invoice->sisa_bayar;
                             @endphp
-                            <tr>
-                                <td class="text-center" rowspan="{{ $rowCount }}">{{ $num++ }}</td>
-                                <td class="text-center" rowspan="{{ $rowCount }}">{{ \Carbon\Carbon::parse($invoice->tanggal)->format('d-M-Y') }}</td>
-                                <td class="text-center" rowspan="{{ $rowCount }}">{{ $invoice->no_faktur }}</td>
-                                <td class="text-center" rowspan="{{ $rowCount }}">{{ $invoice->kode_pelanggan }}</td>
-                                <td rowspan="{{ $rowCount }}">{{ $invoice->pelanggan->nama_pelanggan ?? '-' }}</td>
-                                <td rowspan="{{ $rowCount }}">{{ $invoice->pelanggan->alamat ?? '-' }}</td>
-                                <td rowspan="{{ $rowCount }}">{{ $invoice->sales->name ?? '-' }}</td>
-                                <td rowspan="{{ $rowCount }}">{{ $invoice->pelanggan->wilayah->nama_wilayah ?? '-' }}</td>
-                                
-                                @if ($firstDetail)
-                                    <td>{{ $firstDetail->kode_barang }}</td>
-                                    <td>{{ $firstDetail->barang->nama_barang ?? '-' }}</td>
-                                    <td>{{ $firstDetail->barang->kategori ?? '-' }}</td>
-                                    <td>{{ $firstDetail->barang->merk ?? '-' }}</td>
-                                    <td class="text-center" style="mso-number-format:'#,##0.00';">{{ number_format($firstDetail->qty, 2, ',', '.') }}</td>
-                                    <td>{{ $firstDetail->barangSatuan->satuan ?? 'PCS' }}</td>
-                                    <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($firstDetail->harga, 0, ',', '.') }}</td>
-                                    <td class="text-center" style="mso-number-format:'#,##0.00';">{{ $firstDetail->diskon1_persen > 0 ? number_format($firstDetail->diskon1_persen, 2, ',', '.') : '' }}</td>
-                                    <td class="text-center" style="mso-number-format:'#,##0.00';">{{ $firstDetail->diskon2_persen > 0 ? number_format($firstDetail->diskon2_persen, 2, ',', '.') : '' }}</td>
-                                    <td class="text-center" style="mso-number-format:'#,##0.00';">{{ $firstDetail->diskon3_persen > 0 ? number_format($firstDetail->diskon3_persen, 2, ',', '.') : '' }}</td>
-                                    <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($firstDetail->total, 0, ',', '.') }}</td>
-                                @else
-                                    <td colspan="11" class="text-center text-muted">Tidak ada data barang</td>
-                                @endif
+                            @foreach ($invoice->details as $detail)
+                                <tr>
+                                    <td class="text-center">{{ $num++ }}</td>
+                                    <td class="text-center">{{ \Carbon\Carbon::parse($invoice->tanggal)->format('d-M-Y') }}</td>
+                                    <td class="text-center">{{ $invoice->no_faktur }}</td>
+                                    <td class="text-center">{{ $invoice->kode_pelanggan }}</td>
+                                    <td>{{ $invoice->pelanggan->nama_pelanggan ?? '-' }}</td>
+                                    <td>{{ $invoice->pelanggan->alamat ?? '-' }}</td>
+                                    <td>{{ $invoice->sales->name ?? '-' }}</td>
+                                    <td>{{ $invoice->pelanggan->wilayah->nama_wilayah ?? '-' }}</td>
+                                    
+                                    <td>{{ $detail->kode_barang }}</td>
+                                    <td>{{ $detail->barang->nama_barang ?? '-' }}</td>
+                                    <td>{{ $detail->barang->kategori ?? '-' }}</td>
+                                    <td>{{ $detail->barang->merk ?? '-' }}</td>
+                                    <td class="text-center" style="mso-number-format:'#,##0.00';">{{ number_format($detail->qty, 2, ',', '.') }}</td>
+                                    <td>{{ $detail->barangSatuan->satuan ?? 'PCS' }}</td>
+                                    <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($detail->harga, 0, ',', '.') }}</td>
+                                    <td class="text-center" style="mso-number-format:'#,##0.00';">{{ $detail->diskon1_persen > 0 ? number_format($detail->diskon1_persen, 2, ',', '.') : '' }}</td>
+                                    <td class="text-center" style="mso-number-format:'#,##0.00';">{{ $detail->diskon2_persen > 0 ? number_format($detail->diskon2_persen, 2, ',', '.') : '' }}</td>
+                                    <td class="text-center" style="mso-number-format:'#,##0.00';">{{ $detail->diskon3_persen > 0 ? number_format($detail->diskon3_persen, 2, ',', '.') : '' }}</td>
+                                    <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($detail->total, 0, ',', '.') }}</td>
 
-                                <td class="text-end" rowspan="{{ $rowCount }}" style="mso-number-format:'#,##0';">{{ number_format($invoice->total, 0, ',', '.') }}</td>
-                                <td class="text-end" rowspan="{{ $rowCount }}" style="mso-number-format:'#,##0';">{{ number_format($invoice->diskon, 0, ',', '.') }}</td>
-                                <td class="text-end fw-bold" rowspan="{{ $rowCount }}" style="mso-number-format:'#,##0';">{{ number_format($invoice->grand_total, 0, ',', '.') }}</td>
-                                <td class="text-end text-success" rowspan="{{ $rowCount }}" style="mso-number-format:'#,##0';">{{ number_format($invoice->total_bayar, 0, ',', '.') }}</td>
-                                <td class="text-end text-danger" rowspan="{{ $rowCount }}" style="mso-number-format:'#,##0';">{{ number_format($invoice->sisa_bayar, 0, ',', '.') }}</td>
-                                <td class="text-center fw-bold" rowspan="{{ $rowCount }}">
-                                    <span class="{{ $invoice->status_pembayaran === 'Lunas' ? 'text-success' : 'text-danger' }}">
-                                        {{ $invoice->status_pembayaran }}
-                                    </span>
-                                </td>
-                                <td class="text-center fw-bold" rowspan="{{ $rowCount }}" style="color: {{ strtolower(substr($invoice->jenis_transaksi, 0, 1)) === 'k' ? 'orange' : 'green' }};">
-                                    {{ strtoupper(substr($invoice->jenis_transaksi, 0, 1)) }}
-                                </td>
-                                <td class="text-center" rowspan="{{ $rowCount }}">{{ \Carbon\Carbon::parse($invoice->created_at)->format('d M Y H:i') }}</td>
-                                <td class="text-center" rowspan="{{ $rowCount }}">{{ \Carbon\Carbon::parse($invoice->updated_at)->format('d M Y H:i') }}</td>
-                                <td class="text-start" rowspan="{{ $rowCount }}">{{ $invoice->user->name ?? '-' }}</td>
-                            </tr>
-
-                            @if ($details->count() > 1)
-                                @foreach ($details->slice(1) as $detail)
-                                    <tr>
-                                        <td>{{ $detail->kode_barang }}</td>
-                                        <td>{{ $detail->barang->nama_barang ?? '-' }}</td>
-                                        <td>{{ $detail->barang->kategori ?? '-' }}</td>
-                                        <td>{{ $detail->barang->merk ?? '-' }}</td>
-                                        <td class="text-center" style="mso-number-format:'#,##0.00';">{{ number_format($detail->qty, 2, ',', '.') }}</td>
-                                        <td>{{ $detail->barangSatuan->satuan ?? 'PCS' }}</td>
-                                        <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($detail->harga, 0, ',', '.') }}</td>
-                                        <td class="text-center" style="mso-number-format:'#,##0.00';">{{ $detail->diskon1_persen > 0 ? number_format($detail->diskon1_persen, 2, ',', '.') : '' }}</td>
-                                        <td class="text-center" style="mso-number-format:'#,##0.00';">{{ $detail->diskon2_persen > 0 ? number_format($detail->diskon2_persen, 2, ',', '.') : '' }}</td>
-                                        <td class="text-center" style="mso-number-format:'#,##0.00';">{{ $detail->diskon3_persen > 0 ? number_format($detail->diskon3_persen, 2, ',', '.') : '' }}</td>
-                                        <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($detail->total, 0, ',', '.') }}</td>
-                                    </tr>
-                                @endforeach
-                            @endif
+                                    <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($invoice->total, 0, ',', '.') }}</td>
+                                    <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($invoice->diskon, 0, ',', '.') }}</td>
+                                    <td class="text-end fw-bold" style="mso-number-format:'#,##0';">{{ number_format($invoice->grand_total, 0, ',', '.') }}</td>
+                                    <td class="text-end text-success" style="mso-number-format:'#,##0';">{{ number_format($invoice->total_bayar, 0, ',', '.') }}</td>
+                                    <td class="text-end text-danger" style="mso-number-format:'#,##0';">{{ number_format($invoice->sisa_bayar, 0, ',', '.') }}</td>
+                                    <td class="text-center fw-bold">
+                                        <span class="{{ $invoice->status_pembayaran === 'Lunas' ? 'text-success' : 'text-danger' }}">
+                                            {{ $invoice->status_pembayaran }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center fw-bold" style="color: {{ strtolower(substr($invoice->jenis_transaksi, 0, 1)) === 'k' ? 'orange' : 'green' }};">
+                                        {{ strtoupper(substr($invoice->jenis_transaksi, 0, 1)) }}
+                                    </td>
+                                    <td class="text-center">{{ \Carbon\Carbon::parse($invoice->created_at)->format('d M Y H:i') }}</td>
+                                    <td class="text-center">{{ \Carbon\Carbon::parse($invoice->updated_at)->format('d M Y H:i') }}</td>
+                                    <td class="text-start">{{ $invoice->user->name ?? '-' }}</td>
+                                </tr>
+                            @endforeach
                         @endforeach
                     </tbody>
                     <tfoot class="fw-bold table-light">
