@@ -122,10 +122,12 @@ class ReturPenjualanController extends Controller
             $details = [];
 
             foreach ($request->items as $row) {
-                // Increment stock (goods returned to warehouse)
-                $satuan = BarangSatuan::findOrFail($row['satuan_id']);
-                $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
-                Barang::where('kode_barang', $row['kode_barang'])->increment('stok', $qtySmallest);
+                // Increment stock (goods returned to warehouse) ONLY if condition is Bagus
+                if (($row['kondisi'] ?? 'Bagus') === 'Bagus') {
+                    $satuan = BarangSatuan::findOrFail($row['satuan_id']);
+                    $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
+                    Barang::where('kode_barang', $row['kode_barang'])->increment('stok', $qtySmallest);
+                }
 
                 $subtotal = $row['qty'] * $row['harga_retur'];
                 $d1_pct   = floatval($row['diskon1_persen'] ?? 0);
@@ -264,21 +266,25 @@ class ReturPenjualanController extends Controller
         }
 
         DB::transaction(function () use ($request, $retur) {
-            // Revert old return stock additions (decrement stock back)
+            // Revert old return stock additions (decrement stock back) ONLY if condition was Bagus
             foreach ($retur->details as $oldDetail) {
-                $oldSatuan = BarangSatuan::find($oldDetail->id_satuan);
-                $oldQtySmallest = $oldDetail->qty * ($oldSatuan->isi ?? 1);
-                Barang::where('kode_barang', $oldDetail->kode_barang)->decrement('stok', $oldQtySmallest);
+                if (($oldDetail->kondisi ?? 'Bagus') === 'Bagus') {
+                    $oldSatuan = BarangSatuan::find($oldDetail->id_satuan);
+                    $oldQtySmallest = $oldDetail->qty * ($oldSatuan->isi ?? 1);
+                    Barang::where('kode_barang', $oldDetail->kode_barang)->decrement('stok', $oldQtySmallest);
+                }
             }
 
             $totalRetur = 0;
             $details = [];
 
             foreach ($request->items as $row) {
-                // Increment stock with new return details
-                $satuan = BarangSatuan::findOrFail($row['satuan_id']);
-                $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
-                Barang::where('kode_barang', $row['kode_barang'])->increment('stok', $qtySmallest);
+                // Increment stock with new return details ONLY if condition is Bagus
+                if (($row['kondisi'] ?? 'Bagus') === 'Bagus') {
+                    $satuan = BarangSatuan::findOrFail($row['satuan_id']);
+                    $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
+                    Barang::where('kode_barang', $row['kode_barang'])->increment('stok', $qtySmallest);
+                }
 
                 $subtotal = $row['qty'] * $row['harga_retur'];
                 $d1_pct   = floatval($row['diskon1_persen'] ?? 0);
@@ -338,11 +344,13 @@ class ReturPenjualanController extends Controller
         $retur = ReturPenjualan::with('details')->findOrFail($no_retur);
 
         DB::transaction(function () use ($retur) {
-            // Revert stock additions (decrement stock)
+            // Revert stock additions (decrement stock) ONLY if condition was Bagus
             foreach ($retur->details as $detail) {
-                $satuan = BarangSatuan::find($detail->id_satuan);
-                $qtySmallest = $detail->qty * ($satuan->isi ?? 1);
-                Barang::where('kode_barang', $detail->kode_barang)->decrement('stok', $qtySmallest);
+                if (($detail->kondisi ?? 'Bagus') === 'Bagus') {
+                    $satuan = BarangSatuan::find($detail->id_satuan);
+                    $qtySmallest = $detail->qty * ($satuan->isi ?? 1);
+                    Barang::where('kode_barang', $detail->kode_barang)->decrement('stok', $qtySmallest);
+                }
             }
             $retur->delete();
 

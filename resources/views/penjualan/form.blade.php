@@ -28,9 +28,18 @@
                         class="text-white-50">{{ $item->exists ? 'Perbarui detail faktur penjualan' : 'Catat penjualan barang ke pelanggan' }}</small>
                 </div>
             </div>
-            <a href="{{ route('penjualan.index') }}" class="btn btn-light btn-sm fw-bold hover-scale">
-                <i class="fa-solid fa-arrow-left me-1 text-primary"></i> Kembali
-            </a>
+            <div class="d-flex gap-2">
+                @if ($item->exists)
+                    <a href="{{ route('penjualan.print', $item->no_faktur) }}" target="_blank"
+                        class="btn btn-white btn-sm fw-bold hover-scale text-primary bg-white border btn-print-faktur"
+                        data-no-faktur="{{ $item->no_faktur }}" data-cetak="{{ $item->cetak ?? 0 }}">
+                        <i class="fa-solid fa-print me-1"></i> Cetak Faktur
+                    </a>
+                @endif
+                <a href="{{ route('penjualan.index') }}" class="btn btn-light btn-sm fw-bold hover-scale">
+                    <i class="fa-solid fa-arrow-left me-1 text-primary"></i> Kembali
+                </a>
+            </div>
         </div>
 
         <div class="card-body p-4 bg-light">

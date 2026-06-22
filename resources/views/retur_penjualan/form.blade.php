@@ -74,7 +74,7 @@
                                 <select name="no_faktur" id="no_faktur" class="form-select form-select-sm">
                                     <option value="">-- Tanpa Faktur / Umum --</option>
                                     @foreach ($penjualans as $p)
-                                        <option value="{{ $p->no_faktur }}"
+                                        <option value="{{ $p->no_faktur }}" data-total="{{ $p->grand_total }}"
                                             {{ old('no_faktur', $item->no_faktur) == $p->no_faktur ? 'selected' : '' }}>
                                             {{ $p->no_faktur }} (Rp {{ number_format($p->grand_total, 0, ',', '.') }})
                                         </option>
@@ -131,7 +131,8 @@
                             <div class="mb-0">
                                 <label for="keterangan" class="form-label fs-8 fw-bold text-secondary mb-1">Catatan
                                     Keterangan</label>
-                                <input type="text" name="keterangan" id="keterangan" class="form-control form-control-sm"
+                                <input type="text" name="keterangan" id="keterangan"
+                                    class="form-control form-control-sm"
                                     value="{{ old('keterangan', $item->keterangan) }}" placeholder="Alasan retur...">
                             </div>
                         </div>
@@ -183,8 +184,8 @@
                         </div>
                         <div class="col-lg-1 col-md-3">
                             <label class="form-label fs-8 fw-bold text-secondary mb-1">Qty</label>
-                            <input type="number" id="quick_qty" class="form-control form-control-sm text-end"
-                                value="1" min="0.01" step="any">
+                            <input type="text" id="quick_qty" class="form-control form-control-sm text-end input-qty-format"
+                                value="1">
                         </div>
                         <div class="col-lg-2 col-md-4">
                             <label class="form-label fs-8 fw-bold text-secondary mb-1">Harga Retur</label>
@@ -358,12 +359,36 @@
                 return 'Rp ' + Math.max(0, Math.round(value)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
             }
 
+            function formatNumberDecimal(val) {
+                let str = val.toString().replace(/[^0-9,]/g, "");
+                let parts = str.split(',');
+                if (parts.length > 2) {
+                    parts = [parts[0], parts.slice(1).join('')];
+                }
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                return parts.join(',');
+            }
+
+            function cleanNumberDecimal(val) {
+                let str = val.toString().replace(/\./g, "").replace(/,/g, ".");
+                return str || "0";
+            }
+
             // Bind formatter
             $(document).on('input', '.input-number-format', function() {
                 const start = this.selectionStart;
                 const prev = this.value.length;
                 const raw = cleanNumber($(this).val());
                 $(this).val(raw === "0" && $(this).val() === "" ? "" : formatNumber(raw));
+                const diff = this.value.length - prev;
+                this.setSelectionRange(start + diff, start + diff);
+            });
+
+            $(document).on('input', '.input-qty-format', function() {
+                const start = this.selectionStart;
+                const prev = this.value.length;
+                const formatted = formatNumberDecimal($(this).val());
+                $(this).val(formatted);
                 const diff = this.value.length - prev;
                 this.setSelectionRange(start + diff, start + diff);
             });
@@ -403,7 +428,7 @@
                                 const totalFormatted = new Intl.NumberFormat('id-ID')
                                     .format(Math.round(p.grand_total));
                                 noFakturSelect.append(
-                                    `<option value="${p.no_faktur}">${p.no_faktur} (Rp ${totalFormatted})</option>`
+                                    `<option value="${p.no_faktur}" data-total="${p.grand_total}">${p.no_faktur} (Rp ${totalFormatted})</option>`
                                 );
                             });
                             noFakturSelect.trigger('change');
@@ -446,7 +471,7 @@
             // Qty / harga / diskon sync
             function recalcDiskon() {
                 const price = parseFloat(cleanNumber($('#quick_harga').val())) || 0;
-                const qty = parseFloat($('#quick_qty').val()) || 0;
+                const qty = parseFloat(cleanNumberDecimal($('#quick_qty').val())) || 0;
                 const base = price * qty;
                 const d1_pct = parseFloat($('#quick_diskon1_percent').val()) || 0;
                 const d2_pct = parseFloat($('#quick_diskon2_percent').val()) || 0;
@@ -474,7 +499,7 @@
                 const barangCode = $('#quick_barang').val();
                 const satuanId = $('#quick_satuan').val();
                 const kondisi = $('#quick_kondisi').val() || 'Bagus';
-                const qty = parseFloat($('#quick_qty').val()) || 0;
+                const qty = parseFloat(cleanNumberDecimal($('#quick_qty').val())) || 0;
                 const harga = parseFloat(cleanNumber($('#quick_harga').val())) || 0;
                 const d1 = parseFloat($('#quick_diskon1_percent').val()) || 0;
                 const d2 = parseFloat($('#quick_diskon2_percent').val()) || 0;
@@ -498,7 +523,8 @@
                 const barang = barangs.find(b => b.kode_barang === barangCode);
                 const satuanName = $('#quick_satuan').find(':selected').data('name');
 
-                appendRow(barangCode, barang.nama_barang, satuanId, satuanName, kondisi, qty, harga, d1, d2, d3);
+                appendRow(barangCode, barang.nama_barang, satuanId, satuanName, kondisi, qty, harga, d1, d2,
+                    d3);
 
                 // Reset
                 $('#quick_barang').val('').trigger('change');
@@ -512,7 +538,8 @@
                 calculateTotals();
             });
 
-            function appendRow(barangCode, barangName, satuanId, satuanName, kondisi, qty, harga, d1 = 0, d2 = 0, d3 = 0) {
+            function appendRow(barangCode, barangName, satuanId, satuanName, kondisi, qty, harga, d1 = 0, d2 = 0,
+                d3 = 0) {
                 const trId = `row_${rowIndex}`;
                 const fmtHarga = formatNumber(cleanNumber(harga));
                 const html = `
@@ -535,7 +562,7 @@
                             </select>
                         </td>
                         <td>
-                            <input type="number" name="items[${rowIndex}][qty]" class="form-control form-control-sm text-end input-qty" step="any" min="0.01" value="${qty}" style="max-width: 70px; margin-left: auto;" required>
+                            <input type="text" name="items[${rowIndex}][qty]" class="form-control form-control-sm text-end input-qty input-qty-format" value="${formatNumberDecimal(qty.toString().replace('.', ','))}" style="max-width: 70px; margin-left: auto;" required>
                         </td>
                         <td>
                             <div class="input-group input-group-sm" style="max-width: 120px; margin-left: auto;">
@@ -587,7 +614,7 @@
 
                 $('#itemsTable tbody tr').each(function() {
                     $(this).find('.row-number').text(num++);
-                    const qty = parseFloat($(this).find('.input-qty').val()) || 0;
+                    const qty = parseFloat(cleanNumberDecimal($(this).find('.input-qty').val())) || 0;
                     const harga = parseFloat(cleanNumber($(this).find('.input-harga').val())) || 0;
                     const sub = qty * harga;
 
@@ -623,7 +650,8 @@
                     const name = barang ? barang.nama_barang : (d.barang ? d.barang.nama_barang : 'Barang');
                     const satuan = d.barang_satuan ? d.barang_satuan.satuan : '';
                     const kondisi = d.kondisi || 'Bagus';
-                    appendRow(d.kode_barang, name, d.id_satuan, satuan, kondisi, d.qty, parseInt(d.harga_retur),
+                    appendRow(d.kode_barang, name, d.id_satuan, satuan, kondisi, d.qty, parseInt(d
+                            .harga_retur),
                         parseFloat(d.diskon1_persen || 0), parseFloat(d.diskon2_persen || 0),
                         parseFloat(d.diskon3_persen || 0));
                 });
@@ -642,9 +670,29 @@
                     e.preventDefault();
                     return Swal.fire('Peringatan', 'Minimal harus ada 1 item barang!', 'warning');
                 }
+
+                const jenisRetur = $('#jenis_retur').val();
+                if (jenisRetur === 'PF') {
+                    const selectedFaktur = $('#no_faktur').find(':selected');
+                    if (selectedFaktur.val()) {
+                        const totalFaktur = parseFloat(selectedFaktur.attr('data-total') || selectedFaktur
+                            .data('total')) || 0;
+                        const grandTotal = parseFloat(cleanNumber($('#summary-grandtotal').text())) || 0;
+                        if (grandTotal > totalFaktur) {
+                            e.preventDefault();
+                            return Swal.fire('Peringatan',
+                                'Total nilai retur tidak boleh melebihi total faktur penjualan!',
+                                'warning');
+                        }
+                    }
+                }
+
                 // Strip formatting
                 $('.input-number-format').each(function() {
                     $(this).val(cleanNumber($(this).val()));
+                });
+                $('.input-qty-format').each(function() {
+                    $(this).val(cleanNumberDecimal($(this).val()));
                 });
             });
         });
