@@ -673,7 +673,7 @@ class LaporanController extends Controller
                     ->leftJoin('users as sales', 'penjualan.kode_sales', '=', 'sales.nik')
                     ->leftJoin('users as input_user', 'penjualan.id_user', '=', 'input_user.id')
                     ->leftJoin('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
-                    ->leftJoin('barang_satuan', 'penjualan_detail.satuan', '=', 'barang_satuan.id');
+                    ->leftJoin('barang_satuan', 'penjualan_detail.satuan_id', '=', 'barang_satuan.id');
 
                 if ($status_faktur === 'aktif') {
                     $query->where('penjualan.batal', 0);
