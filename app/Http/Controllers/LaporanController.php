@@ -665,44 +665,69 @@ class LaporanController extends Controller
 
                 $items = $query->orderBy('tanggal', 'asc')->orderBy('no_faktur', 'asc')->get();
             } else {
-                // detail_rowspan (Format 3)
-                $query = Penjualan::with([
-                    'pelanggan.wilayah', 
-                    'sales', 
-                    'user', 
-                    'details' => function($q) use ($kode_supplier) {
-                        $q->with(['barang', 'barangSatuan']);
-                        if ($kode_supplier) {
-                            $q->whereHas('barang', function($bq) use ($kode_supplier) {
-                                $bq->where('kode_supplier', $kode_supplier);
-                            });
-                        }
-                    }
-                ])
-                ->where(function($q) use ($status_faktur) {
-                    if ($status_faktur === 'aktif') {
-                        $q->where('batal', 0);
-                    } elseif ($status_faktur === 'batal') {
-                        $q->where('batal', 1);
-                    }
-                });
+                // detail (Format 2 & 3) - flat query using Query Builder
+                $query = DB::table('penjualan_detail')
+                    ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
+                    ->leftJoin('pelanggan', 'penjualan.kode_pelanggan', '=', 'pelanggan.kode_pelanggan')
+                    ->leftJoin('wilayah', 'pelanggan.kode_wilayah', '=', 'wilayah.kode_wilayah')
+                    ->leftJoin('users as sales', 'penjualan.kode_sales', '=', 'sales.nik')
+                    ->leftJoin('users as input_user', 'penjualan.id_user', '=', 'input_user.id')
+                    ->leftJoin('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                    ->leftJoin('barang_satuan', 'penjualan_detail.satuan', '=', 'barang_satuan.id');
+
+                if ($status_faktur === 'aktif') {
+                    $query->where('penjualan.batal', 0);
+                } elseif ($status_faktur === 'batal') {
+                    $query->where('penjualan.batal', 1);
+                }
                 
-                if ($tanggal_mulai) $query->where('tanggal', '>=', $tanggal_mulai);
-                if ($tanggal_akhir) $query->where('tanggal', '<=', $tanggal_akhir);
-                if ($kode_sales) $query->where('kode_sales', $kode_sales);
-                if ($kode_pelanggan) $query->where('kode_pelanggan', $kode_pelanggan);
-                if ($jenis_transaksi) $query->where('jenis_transaksi', $jenis_transaksi);
+                if ($tanggal_mulai) $query->where('penjualan.tanggal', '>=', $tanggal_mulai);
+                if ($tanggal_akhir) $query->where('penjualan.tanggal', '<=', $tanggal_akhir);
+                if ($kode_sales) $query->where('penjualan.kode_sales', $kode_sales);
+                if ($kode_pelanggan) $query->where('penjualan.kode_pelanggan', $kode_pelanggan);
+                if ($jenis_transaksi) $query->where('penjualan.jenis_transaksi', $jenis_transaksi);
                 
                 if ($kode_supplier) {
-                    $query->whereHas('details.barang', function($q) use ($kode_supplier) {
-                        $q->where('kode_supplier', $kode_supplier);
-                    });
+                    $query->where('barang.kode_supplier', $kode_supplier);
                 }
 
-                $items = $query->orderBy('tanggal', 'asc')->orderBy('no_faktur', 'asc')->get();
+                $items = $query->orderBy('penjualan.tanggal', 'asc')
+                    ->orderBy('penjualan.no_faktur', 'asc')
+                    ->select([
+                        'penjualan_detail.no_faktur',
+                        'penjualan_detail.kode_barang',
+                        'penjualan_detail.qty',
+                        'penjualan_detail.harga',
+                        'penjualan_detail.diskon1_persen',
+                        'penjualan_detail.diskon2_persen',
+                        'penjualan_detail.diskon3_persen',
+                        'penjualan_detail.total as detail_total',
+                        
+                        'penjualan.tanggal',
+                        'penjualan.kode_pelanggan',
+                        'penjualan.jenis_transaksi',
+                        'penjualan.total as invoice_total',
+                        'penjualan.diskon as invoice_diskon',
+                        'penjualan.grand_total as invoice_grand_total',
+                        'penjualan.created_at',
+                        'penjualan.updated_at',
+                        
+                        'pelanggan.nama_pelanggan',
+                        'pelanggan.alamat_pelanggan as alamat',
+                        
+                        'wilayah.nama_wilayah',
+                        'sales.name as sales_name',
+                        'input_user.name as input_user_name',
+                        
+                        'barang.nama_barang',
+                        'barang.kategori',
+                        'barang.merk',
+                        'barang_satuan.satuan'
+                    ])
+                    ->get();
 
                 // Pre-aggregate payments and returs for these invoices
-                $invoiceIds = $items->pluck('no_faktur')->toArray();
+                $invoiceIds = $items->pluck('no_faktur')->unique()->toArray();
 
                 $cashPayments = DB::table('penjualan_pembayaran')
                     ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
@@ -735,18 +760,18 @@ class LaporanController extends Controller
                     ->pluck('total', 'no_faktur')
                     ->toArray();
 
-                foreach ($items as $invoice) {
-                    $cashPaid = $cashPayments[$invoice->no_faktur] ?? 0;
-                    $transferPaid = $transferPayments[$invoice->no_faktur] ?? 0;
-                    $giroPaid = $giroPayments[$invoice->no_faktur] ?? 0;
+                foreach ($items as $row) {
+                    $cashPaid = $cashPayments[$row->no_faktur] ?? 0;
+                    $transferPaid = $transferPayments[$row->no_faktur] ?? 0;
+                    $giroPaid = $giroPayments[$row->no_faktur] ?? 0;
                     $paid = $cashPaid + $transferPaid + $giroPaid;
-                    $returPaid = $returs[$invoice->no_faktur] ?? 0;
+                    $returPaid = $returs[$row->no_faktur] ?? 0;
 
-                    $invoice->total_bayar = $paid;
-                    $invoice->total_retur = $returPaid;
-                    $sisa = (float)($invoice->grand_total - $paid - $returPaid);
-                    $invoice->sisa_bayar = $sisa < 1 ? 0.0 : $sisa;
-                    $invoice->status_pembayaran = $invoice->sisa_bayar <= 0 ? 'Lunas' : 'Belum Lunas';
+                    $row->total_bayar = $paid;
+                    $row->total_retur = $returPaid;
+                    $sisa = (float)($row->invoice_grand_total - $paid - $returPaid);
+                    $row->sisa_bayar = $sisa < 1 ? 0.0 : $sisa;
+                    $row->status_pembayaran = $row->sisa_bayar <= 0 ? 'Lunas' : 'Belum Lunas';
                 }
             }
         }
