@@ -156,7 +156,7 @@
                     </tr>
                     <tr>
                         <td>Sales</td>
-                        <td>: {{ $item->kode_sales ?? '-' }}</td>
+                        <td>: {{ $item->sales->name ?? '-' }}</td>
                     </tr>
                     <tr>
                         <td style="vertical-align: top;">Alamat Toko</td>

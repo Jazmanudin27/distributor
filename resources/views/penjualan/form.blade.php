@@ -234,18 +234,27 @@
                             </div>
                         </div>
                         <div class="col-lg-1 col-md-3 col-4">
-                            <label class="form-label fs-8 fw-bold text-secondary mb-1">D1 <span class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d1_type" style="user-select: none;">%</span></label>
-                            <input type="text" id="quick_diskon1_input" class="form-control form-control-sm text-end input-number-format" value="0">
+                            <label class="form-label fs-8 fw-bold text-secondary mb-1">D1 <span
+                                    class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d1_type"
+                                    style="user-select: none;">%</span></label>
+                            <input type="text" id="quick_diskon1_input"
+                                class="form-control form-control-sm text-end input-number-format" value="0">
                             <input type="hidden" id="quick_diskon1_percent" value="0">
                         </div>
                         <div class="col-lg-1 col-md-3 col-4">
-                            <label class="form-label fs-8 fw-bold text-secondary mb-1">D2 <span class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d2_type" style="user-select: none;">%</span></label>
-                            <input type="text" id="quick_diskon2_input" class="form-control form-control-sm text-end input-number-format" value="0">
+                            <label class="form-label fs-8 fw-bold text-secondary mb-1">D2 <span
+                                    class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d2_type"
+                                    style="user-select: none;">%</span></label>
+                            <input type="text" id="quick_diskon2_input"
+                                class="form-control form-control-sm text-end input-number-format" value="0">
                             <input type="hidden" id="quick_diskon2_percent" value="0">
                         </div>
                         <div class="col-lg-1 col-md-3 col-4">
-                            <label class="form-label fs-8 fw-bold text-secondary mb-1">D3 <span class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d3_type" style="user-select: none;">%</span></label>
-                            <input type="text" id="quick_diskon3_input" class="form-control form-control-sm text-end input-number-format" value="0">
+                            <label class="form-label fs-8 fw-bold text-secondary mb-1">D3 <span
+                                    class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d3_type"
+                                    style="user-select: none;">%</span></label>
+                            <input type="text" id="quick_diskon3_input"
+                                class="form-control form-control-sm text-end input-number-format" value="0">
                             <input type="hidden" id="quick_diskon3_percent" value="0">
                         </div>
                         <div class="col-lg-1 col-md-5">
@@ -574,7 +583,8 @@
                 // D1
                 let d1_val = parseFloat(cleanNumber($('#quick_diskon1_input').val())) || 0;
                 let d1_type = $('#quick_d1_type').text().trim();
-                let d1_pct = 0, d1_rp = 0;
+                let d1_pct = 0,
+                    d1_rp = 0;
                 if (d1_type === '%') {
                     d1_pct = d1_val;
                     d1_rp = base * (d1_pct / 100);
@@ -587,7 +597,8 @@
                 // D2
                 let d2_val = parseFloat(cleanNumber($('#quick_diskon2_input').val())) || 0;
                 let d2_type = $('#quick_d2_type').text().trim();
-                let d2_pct = 0, d2_rp = 0;
+                let d2_pct = 0,
+                    d2_rp = 0;
                 let base2 = base - d1_rp;
                 if (d2_type === '%') {
                     d2_pct = d2_val;
@@ -601,7 +612,8 @@
                 // D3
                 let d3_val = parseFloat(cleanNumber($('#quick_diskon3_input').val())) || 0;
                 let d3_type = $('#quick_d3_type').text().trim();
-                let d3_pct = 0, d3_rp = 0;
+                let d3_pct = 0,
+                    d3_rp = 0;
                 let base3 = base2 - d2_rp;
                 if (d3_type === '%') {
                     d3_pct = d3_val;
@@ -710,7 +722,8 @@
                 $('#quick_diskon1_percent').val(0);
                 $('#quick_diskon2_percent').val(0);
                 $('#quick_diskon3_percent').val(0);
-                $('#quick_d1_type, #quick_d2_type, #quick_d3_type').text('%').removeClass('bg-success').addClass('bg-secondary');
+                $('#quick_d1_type, #quick_d2_type, #quick_d3_type').text('%').removeClass('bg-success')
+                    .addClass('bg-secondary');
                 $('#quick_diskon').val(0);
                 $('#quick_is_promo').prop('checked', false).trigger('change');
 
@@ -753,16 +766,16 @@
                     const currentPrice = inputHarga.val();
                     inputHarga.attr('data-original-harga', currentPrice);
                     inputHarga.val('0').attr('readonly', true);
-                    inputDis1.val('0').attr('readonly', true);
-                    inputDis2.val('0').attr('readonly', true);
-                    inputDis3.val('0').attr('readonly', true);
+                    row.find('.input-diskon1-val').val('0').attr('readonly', true);
+                    row.find('.input-diskon2-val').val('0').attr('readonly', true);
+                    row.find('.input-diskon3-val').val('0').attr('readonly', true);
                 } else {
                     row.removeClass('promo-row');
                     const originalPrice = inputHarga.attr('data-original-harga') || '0';
                     inputHarga.val(originalPrice).removeAttr('readonly');
-                    inputDis1.removeAttr('readonly');
-                    inputDis2.removeAttr('readonly');
-                    inputDis3.removeAttr('readonly');
+                    row.find('.input-diskon1-val').removeAttr('readonly');
+                    row.find('.input-diskon2-val').removeAttr('readonly');
+                    row.find('.input-diskon3-val').removeAttr('readonly');
                 }
                 calculateTotals();
             });
@@ -807,13 +820,25 @@
                             </div>
                         </td>
                         <td>
-                            <input type="number" name="items[${rowIndex}][diskon1_persen]" class="form-control form-control-sm text-end input-diskon1" min="0" max="100" step="any" value="${d1}" style="max-width: 60px; margin-left: auto;" ${isPromo ? 'readonly' : ''}>
+                            <div class="input-group input-group-sm" style="min-width: 90px; max-width: 100px; margin-left: auto;">
+                                <span class="input-group-text cursor-pointer toggle-row-type text-primary fw-bold" style="padding: 0.1rem 0.3rem; font-size: 0.65rem; user-select: none;">%</span>
+                                <input type="text" class="form-control form-control-sm text-end input-diskon1-val input-number-format" value="${d1}" ${isPromo ? 'readonly' : ''}>
+                                <input type="hidden" name="items[${rowIndex}][diskon1_persen]" class="input-diskon1" value="${d1}">
+                            </div>
                         </td>
                         <td>
-                            <input type="number" name="items[${rowIndex}][diskon2_persen]" class="form-control form-control-sm text-end input-diskon2" min="0" max="100" step="any" value="${d2}" style="max-width: 60px; margin-left: auto;" ${isPromo ? 'readonly' : ''}>
+                            <div class="input-group input-group-sm" style="min-width: 90px; max-width: 100px; margin-left: auto;">
+                                <span class="input-group-text cursor-pointer toggle-row-type text-primary fw-bold" style="padding: 0.1rem 0.3rem; font-size: 0.65rem; user-select: none;">%</span>
+                                <input type="text" class="form-control form-control-sm text-end input-diskon2-val input-number-format" value="${d2}" ${isPromo ? 'readonly' : ''}>
+                                <input type="hidden" name="items[${rowIndex}][diskon2_persen]" class="input-diskon2" value="${d2}">
+                            </div>
                         </td>
                         <td>
-                            <input type="number" name="items[${rowIndex}][diskon3_persen]" class="form-control form-control-sm text-end input-diskon3" min="0" max="100" step="any" value="${d3}" style="max-width: 60px; margin-left: auto;" ${isPromo ? 'readonly' : ''}>
+                            <div class="input-group input-group-sm" style="min-width: 90px; max-width: 100px; margin-left: auto;">
+                                <span class="input-group-text cursor-pointer toggle-row-type text-primary fw-bold" style="padding: 0.1rem 0.3rem; font-size: 0.65rem; user-select: none;">%</span>
+                                <input type="text" class="form-control form-control-sm text-end input-diskon3-val input-number-format" value="${d3}" ${isPromo ? 'readonly' : ''}>
+                                <input type="hidden" name="items[${rowIndex}][diskon3_persen]" class="input-diskon3" value="${d3}">
+                            </div>
                         </td>
                         <td>
                             <div class="input-group input-group-sm" style="max-width: 110px; margin-left: auto;">
@@ -838,9 +863,23 @@
                 calculateTotals();
             });
 
+            $(document).on('click', '.toggle-row-type', function() {
+                if ($(this).closest('tr').find('.input-promo').is(':checked') || $(this).closest('td').find(
+                        'input[type="text"]').attr('readonly')) return;
+
+                const current = $(this).text().trim();
+                $(this).text(current === '%' ? 'Rp' : '%');
+                if (current === '%') {
+                    $(this).removeClass('text-primary').addClass('text-success');
+                } else {
+                    $(this).removeClass('text-success').addClass('text-primary');
+                }
+                calculateTotals();
+            });
+
             // Recalculate on input
             $(document).on('input change',
-                '.input-qty, .input-harga, .input-diskon1, .input-diskon2, .input-diskon3, #diskon_global',
+                '.input-qty, .input-harga, .input-diskon1-val, .input-diskon2-val, .input-diskon3-val, #diskon_global',
                 calculateTotals);
 
             // Trigger recalculation on jenis transaksi change
@@ -1027,7 +1066,12 @@
 
                     // Apply discount values
                     const inputDis1 = row.find('.input-diskon1');
+                    const inputDis1Val = row.find('.input-diskon1-val');
+                    const inputDis1Type = row.find('.toggle-row-type').eq(0);
+
                     const inputDis2 = row.find('.input-diskon2');
+                    const inputDis2Val = row.find('.input-diskon2-val');
+                    const inputDis2Type = row.find('.toggle-row-type').eq(1);
 
                     if (bestRule && bestDetail) {
                         let d1_pct = 0;
@@ -1053,19 +1097,26 @@
                             }
                         }
 
-                        inputDis1.val(d1_pct.toFixed(2)).attr('readonly', true);
+                        inputDis1.val(d1_pct);
+                        inputDis1Val.val(formatNumber(d1_pct.toFixed(2))).attr('readonly', true);
+                        inputDis1Type.text('%').removeClass('text-success').addClass('text-primary');
 
                         if (jenisTransaksi === 'T') {
-                            inputDis2.val(d2_pct.toFixed(2)).attr('readonly', true);
+                            inputDis2.val(d2_pct);
+                            inputDis2Val.val(formatNumber(d2_pct.toFixed(2))).attr('readonly', true);
+                            inputDis2Type.text('%').removeClass('text-success').addClass('text-primary');
                         } else {
-                            inputDis2.val('0').attr('readonly', true);
+                            inputDis2.val('0');
+                            inputDis2Val.val('0').attr('readonly', true);
                         }
                     } else {
-                        if (inputDis1.attr('readonly')) {
-                            inputDis1.removeAttr('readonly').val('0');
+                        if (inputDis1Val.attr('readonly')) {
+                            inputDis1Val.removeAttr('readonly').val('0');
+                            inputDis1.val('0');
                         }
-                        if (inputDis2.attr('readonly')) {
-                            inputDis2.removeAttr('readonly').val('0');
+                        if (inputDis2Val.attr('readonly')) {
+                            inputDis2Val.removeAttr('readonly').val('0');
+                            inputDis2.val('0');
                         }
                     }
                 });
@@ -1099,14 +1150,48 @@
                     const harga = parseFloat(cleanNumber(row.find('.input-harga').val())) || 0;
                     const sub = qty * harga;
 
-                    const d1_pct = parseFloat(row.find('.input-diskon1').val()) || 0;
-                    const d2_pct = parseFloat(row.find('.input-diskon2').val()) || 0;
-                    const d3_pct = parseFloat(row.find('.input-diskon3').val()) || 0;
+                    const d1_type = row.find('.toggle-row-type').eq(0).text().trim();
+                    const d1_val = parseFloat(cleanNumber(row.find('.input-diskon1-val').val())) || 0;
+                    let d1_pct = 0,
+                        d1_rp = 0;
+                    if (d1_type === '%') {
+                        d1_pct = d1_val;
+                        d1_rp = sub * (d1_pct / 100);
+                    } else {
+                        d1_rp = d1_val;
+                        d1_pct = sub > 0 ? (d1_rp / sub) * 100 : 0;
+                    }
+                    row.find('.input-diskon1').val(d1_pct);
 
-                    const d1 = sub * (d1_pct / 100);
-                    const d2 = (sub - d1) * (d2_pct / 100);
-                    const d3 = (sub - d1 - d2) * (d3_pct / 100);
-                    const diskon = Math.round(d1 + d2 + d3);
+                    const d2_type = row.find('.toggle-row-type').eq(1).text().trim();
+                    const d2_val = parseFloat(cleanNumber(row.find('.input-diskon2-val').val())) || 0;
+                    let d2_pct = 0,
+                        d2_rp = 0;
+                    let sub2 = sub - d1_rp;
+                    if (d2_type === '%') {
+                        d2_pct = d2_val;
+                        d2_rp = sub2 * (d2_pct / 100);
+                    } else {
+                        d2_rp = d2_val;
+                        d2_pct = sub2 > 0 ? (d2_rp / sub2) * 100 : 0;
+                    }
+                    row.find('.input-diskon2').val(d2_pct);
+
+                    const d3_type = row.find('.toggle-row-type').eq(2).text().trim();
+                    const d3_val = parseFloat(cleanNumber(row.find('.input-diskon3-val').val())) || 0;
+                    let d3_pct = 0,
+                        d3_rp = 0;
+                    let sub3 = sub2 - d2_rp;
+                    if (d3_type === '%') {
+                        d3_pct = d3_val;
+                        d3_rp = sub3 * (d3_pct / 100);
+                    } else {
+                        d3_rp = d3_val;
+                        d3_pct = sub3 > 0 ? (d3_rp / sub3) * 100 : 0;
+                    }
+                    row.find('.input-diskon3').val(d3_pct);
+
+                    const diskon = Math.round(d1_rp + d2_rp + d3_rp);
 
                     row.find('.input-diskon').val(formatNumber(diskon));
 

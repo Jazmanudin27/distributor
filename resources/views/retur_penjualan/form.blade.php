@@ -184,8 +184,8 @@
                         </div>
                         <div class="col-lg-1 col-md-3">
                             <label class="form-label fs-8 fw-bold text-secondary mb-1">Qty</label>
-                            <input type="text" id="quick_qty" class="form-control form-control-sm text-end input-qty-format"
-                                value="1">
+                            <input type="text" id="quick_qty"
+                                class="form-control form-control-sm text-end input-qty-format" value="1">
                         </div>
                         <div class="col-lg-2 col-md-4">
                             <label class="form-label fs-8 fw-bold text-secondary mb-1">Harga Retur</label>
