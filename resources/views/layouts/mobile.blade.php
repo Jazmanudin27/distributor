@@ -415,9 +415,11 @@
                 </div>
                 <h1>DIS Mobile</h1>
             </div>
-            <div>
-                <span class="badge-sales me-1">{{ Auth::user()->name }}</span>
-                <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-1" onclick="confirmLogout(event)"
+            <div class="d-flex align-items-center">
+                <a href="{{ route('mobile.profile') }}" class="badge-sales me-2 text-decoration-none d-flex align-items-center text-white">
+                    <i class="fa-solid fa-circle-user me-1"></i> {{ Auth::user()->name }}
+                </a>
+                <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="confirmLogout(event)"
                     style="text-decoration: none;">
                     <i class="fa-solid fa-right-from-bracket" style="font-size: 1.15rem;"></i>
                 </button>
@@ -519,11 +521,6 @@
                     <span>Ajuan Limit</span>
                 </a>
             @endif
-            <a href="{{ route('mobile.profile') }}"
-                class="nav-item-mobile {{ Request::routeIs('mobile.profile') ? 'active' : '' }}">
-                <i class="fa-solid fa-circle-user"></i>
-                <span>Profil</span>
-            </a>
             @if ($isOwner)
                 <form id="logout-form" action="{{ route('mobile.owner.logout') }}" method="POST" class="d-none">
                     @csrf
