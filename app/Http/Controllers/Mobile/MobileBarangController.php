@@ -14,6 +14,7 @@ class MobileBarangController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $filterMerk = $request->input('merk');
 
         $query = Barang::with(['satuans'])->where('status', 1);
 
@@ -35,8 +36,19 @@ class MobileBarangController extends Controller
             });
         }
 
-        $barangs = $query->orderBy('nama_barang', 'asc')->paginate(20)->appends($request->query());
+        if ($filterMerk) {
+            $query->where('merk', $filterMerk);
+        }
 
-        return view('mobile.barang.index', compact('barangs', 'search'));
+        $barangs = $query->orderBy('nama_barang', 'asc')->limit(20)->get();
+
+        $merksQuery = \App\Models\Merk::query();
+        if ($user && $user->jenis_sales === 'merk') {
+            $allowedItems = array_map('trim', explode(',', $user->jenis_barang ?? ''));
+            $merksQuery->whereIn('nama_merk', $allowedItems);
+        }
+        $merks = $merksQuery->orderBy('nama_merk', 'asc')->get();
+
+        return view('mobile.barang.index', compact('barangs', 'search', 'merks', 'filterMerk'));
     }
 }

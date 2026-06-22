@@ -416,7 +416,8 @@
                 <h1>DIS Mobile</h1>
             </div>
             <div class="d-flex align-items-center">
-                <a href="{{ route('mobile.profile') }}" class="badge-sales me-2 text-decoration-none d-flex align-items-center text-white">
+                <a href="{{ route('mobile.profile') }}"
+                    class="badge-sales me-2 text-decoration-none d-flex align-items-center text-white">
                     <i class="fa-solid fa-circle-user me-1"></i> {{ Auth::user()->name }}
                 </a>
                 <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="confirmLogout(event)"
