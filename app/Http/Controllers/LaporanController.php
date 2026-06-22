@@ -1872,6 +1872,220 @@ class LaporanController extends Controller
         ));
     }
 
+    public function laporanPembayaranPiutang(Request $request)
+    {
+        $this->authorizeReport('piutang');
+
+        $salesmen = User::where(function ($q) {
+            $q->where('role', 'sales')->orWhere('role', 'Salesman');
+        })->where('status', '1')->orderBy('name')->get();
+
+        $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
+        $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
+        $kode_sales = $request->input('kode_sales');
+        $kode_pelanggan = $request->input('kode_pelanggan');
+        $jenis_laporan = $request->input('jenis_laporan', 'detail'); // detail
+        $status_pembayaran = $request->input('status_pembayaran', 'semua'); // lunas, belum_lunas, semua
+        $status_faktur = $request->input('status_faktur', 'aktif'); // aktif, batal, semua
+
+        $pelanggans = collect();
+        if ($kode_pelanggan) {
+            $pelanggans = Pelanggan::where('kode_pelanggan', $kode_pelanggan)->get();
+        }
+
+        $items = collect();
+        $isCetak = $request->is('*/cetak');
+        $isExcel = $request->is('*/excel');
+        $isPrintOrExcel = $isCetak || $isExcel;
+
+        if ($isPrintOrExcel) {
+            // Build subqueries for each payment type to get approved payments
+            $cashQuery = DB::table('penjualan_pembayaran')
+                ->select([
+                    'id as payment_id',
+                    'no_bukti as no_bukti',
+                    'tanggal as tgl_bayar',
+                    'no_faktur',
+                    'kode_pelanggan',
+                    'kode_sales',
+                    DB::raw("'Cash' as metode_pembayaran"),
+                    'jumlah as jml_bayar',
+                    DB::raw("'cash' as source_table")
+                ])
+                ->where('status', 'disetujui');
+
+            $transferQuery = DB::table('penjualan_pembayaran_transfer')
+                ->select([
+                    'kode_transfer as payment_id',
+                    'kode_transfer as no_bukti',
+                    'tanggal as tgl_bayar',
+                    'no_faktur',
+                    'kode_pelanggan',
+                    'kode_sales',
+                    DB::raw("COALESCE(jenis_bayar, 'Transfer') as metode_pembayaran"),
+                    'jumlah as jml_bayar',
+                    DB::raw("'transfer' as source_table")
+                ])
+                ->where('status', 'disetujui');
+
+            $giroQuery = DB::table('penjualan_pembayaran_giro')
+                ->select([
+                    'kode_giro as payment_id',
+                    'kode_giro as no_bukti',
+                    'tanggal as tgl_bayar',
+                    'no_faktur',
+                    'kode_pelanggan',
+                    'kode_sales',
+                    DB::raw("COALESCE(jenis_bayar, 'Giro') as metode_pembayaran"),
+                    'jumlah as jml_bayar',
+                    DB::raw("'giro' as source_table")
+                ])
+                ->where('status', 'disetujui');
+
+            // Apply date filters to the payment tables directly
+            if ($tanggal_mulai) {
+                $cashQuery->where('tanggal', '>=', $tanggal_mulai);
+                $transferQuery->where('tanggal', '>=', $tanggal_mulai);
+                $giroQuery->where('tanggal', '>=', $tanggal_mulai);
+            }
+            if ($tanggal_akhir) {
+                $cashQuery->where('tanggal', '<=', $tanggal_akhir);
+                $transferQuery->where('tanggal', '<=', $tanggal_akhir);
+                $giroQuery->where('tanggal', '<=', $tanggal_akhir);
+            }
+
+            // Union all payment tables
+            $unionQuery = $cashQuery->unionAll($transferQuery)->unionAll($giroQuery);
+
+            // Fetch and join
+            $mainQuery = DB::table(DB::raw("({$unionQuery->toSql()}) as pay"))
+                ->mergeBindings($unionQuery)
+                ->join('penjualan', 'pay.no_faktur', '=', 'penjualan.no_faktur')
+                ->join('pelanggan', 'penjualan.kode_pelanggan', '=', 'pelanggan.kode_pelanggan')
+                ->leftJoin('users as sales', 'penjualan.kode_sales', '=', 'sales.nik')
+                ->leftJoin('wilayah', 'pelanggan.kode_wilayah', '=', 'wilayah.kode_wilayah')
+                ->select([
+                    'pay.tgl_bayar',
+                    'pay.no_bukti',
+                    'pay.no_faktur',
+                    'pay.metode_pembayaran',
+                    'pay.jml_bayar',
+                    'penjualan.tanggal as tgl_faktur',
+                    'penjualan.kode_pelanggan',
+                    'penjualan.total as total_bruto',
+                    'penjualan.diskon as total_diskon',
+                    'penjualan.grand_total as total_subtotal',
+                    'penjualan.batal',
+                    'pelanggan.nama_pelanggan',
+                    'sales.name as sales_name',
+                    'wilayah.nama_wilayah',
+                ]);
+
+            // Apply filters
+            if ($kode_sales) {
+                $mainQuery->where('penjualan.kode_sales', $kode_sales);
+            }
+            if ($kode_pelanggan) {
+                $mainQuery->where('penjualan.kode_pelanggan', $kode_pelanggan);
+            }
+            if ($status_faktur === 'aktif') {
+                $mainQuery->where('penjualan.batal', 0);
+            } elseif ($status_faktur === 'batal') {
+                $mainQuery->where('penjualan.batal', 1);
+            }
+
+            $rawItems = $mainQuery->orderBy('pay.tgl_bayar', 'asc')->orderBy('pay.no_faktur', 'asc')->get();
+
+            if ($rawItems->isNotEmpty()) {
+                $noFakturs = $rawItems->pluck('no_faktur')->unique()->toArray();
+
+                // Cumulative approved payments up to now
+                $cashTotals = DB::table('penjualan_pembayaran')
+                    ->whereIn('no_faktur', $noFakturs)
+                    ->where('status', 'disetujui')
+                    ->groupBy('no_faktur')
+                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                $transferTotals = DB::table('penjualan_pembayaran_transfer')
+                    ->whereIn('no_faktur', $noFakturs)
+                    ->where('status', 'disetujui')
+                    ->groupBy('no_faktur')
+                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                $giroTotals = DB::table('penjualan_pembayaran_giro')
+                    ->whereIn('no_faktur', $noFakturs)
+                    ->where('status', 'disetujui')
+                    ->groupBy('no_faktur')
+                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                $returTotals = DB::table('retur_penjualan')
+                    ->whereIn('no_faktur', $noFakturs)
+                    ->groupBy('no_faktur')
+                    ->select('no_faktur', DB::raw('SUM(total) as total'))
+                    ->pluck('total', 'no_faktur')
+                    ->toArray();
+
+                // Compute total bayar and sisa bayar for each row
+                $items = $rawItems->map(function ($item) use ($cashTotals, $transferTotals, $giroTotals, $returTotals) {
+                    $no_faktur = $item->no_faktur;
+                    $cash = $cashTotals[$no_faktur] ?? 0;
+                    $transfer = $transferTotals[$no_faktur] ?? 0;
+                    $giro = $giroTotals[$no_faktur] ?? 0;
+                    $retur = $returTotals[$no_faktur] ?? 0;
+
+                    $total_bayar = (float)($cash + $transfer + $giro);
+                    $subtotal = (float)$item->total_subtotal;
+                    $sisa_bayar = $subtotal - $total_bayar - $retur;
+                    if ($sisa_bayar < 1) {
+                        $sisa_bayar = 0.0;
+                    }
+
+                    $item->total_bayar = $total_bayar;
+                    $item->sisa_bayar = $sisa_bayar;
+                    $item->status_lunas = $sisa_bayar <= 0 ? 'Lunas' : 'Belum Lunas';
+
+                    return $item;
+                });
+
+                // Apply status pembayaran filter (Lunas / Belum Lunas)
+                if ($status_pembayaran === 'lunas') {
+                    $items = $items->filter(function ($item) {
+                        return $item->status_lunas === 'Lunas';
+                    });
+                } elseif ($status_pembayaran === 'belum_lunas') {
+                    $items = $items->filter(function ($item) {
+                        return $item->status_lunas === 'Belum Lunas';
+                    });
+                }
+            }
+        }
+
+        $view = $isPrintOrExcel ? 'laporan.cetak_pembayaran_piutang' : 'laporan.pembayaran_piutang';
+
+        if ($isExcel) {
+            $filename = 'laporan_pembayaran_piutang_' . date('Ymd_His') . '.xls';
+            return response(view($view, compact(
+                'salesmen', 'items', 'tanggal_mulai', 'tanggal_akhir', 
+                'kode_sales', 'kode_pelanggan', 'jenis_laporan', 'status_pembayaran', 'status_faktur', 'isExcel', 'pelanggans'
+            )))
+            ->header('Content-Type', 'application/vnd-ms-excel')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
+        }
+
+        return view($view, compact(
+            'salesmen', 'items', 'tanggal_mulai', 'tanggal_akhir', 
+            'kode_sales', 'kode_pelanggan', 'jenis_laporan', 'status_pembayaran', 'status_faktur', 'pelanggans'
+        ));
+    }
+
     private function authorizeReport($type)
     {
         $permission = 'view-laporan_' . $type;

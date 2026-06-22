@@ -303,6 +303,10 @@
                                 class="{{ request()->routeIs('laporan.rekap-sisa-piutang') ? 'active' : '' }}">Rekap
                                 Tagihan</a>
                         @endcan
+                        @can('view-laporan_piutang')
+                            <a href="{{ route('laporan.pembayaran_piutang') }}"
+                                class="{{ request()->routeIs('laporan.pembayaran_piutang') ? 'active' : '' }}">Pembayaran Piutang</a>
+                        @endcan
                         @can('view-laporan_laba_rugi')
                             <a href="{{ route('laporan.laba-rugi') }}"
                                 class="{{ request()->routeIs('laporan.laba-rugi') ? 'active' : '' }}">Laba Rugi</a>
