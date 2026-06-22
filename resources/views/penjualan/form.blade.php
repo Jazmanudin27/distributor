@@ -87,8 +87,8 @@
                                     <div class="mb-2">
                                         <label class="form-label fs-7 fw-bold text-secondary mb-1">Jenis Transaksi
                                             <span class="text-danger">*</span></label>
-                                        <select name="jenis_transaksi" id="jenis_transaksi" class="form-select form-select-sm"
-                                            required>
+                                        <select name="jenis_transaksi" id="jenis_transaksi"
+                                            class="form-select form-select-sm" required>
                                             <option value="K"
                                                 {{ old('jenis_transaksi', $item->jenis_transaksi) === 'K' ? 'selected' : '' }}>
                                                 Kredit / Tempo</option>
@@ -103,7 +103,8 @@
                                         <label for="kode_sales" class="form-label fs-7 fw-bold text-secondary mb-1">Salesman
                                             <span class="text-danger">*</span></label>
                                         <select name="kode_sales" id="kode_sales"
-                                            class="form-select form-select-sm @error('kode_sales') is-invalid @enderror" required>
+                                            class="form-select form-select-sm @error('kode_sales') is-invalid @enderror"
+                                            required>
                                             <option value="">-- Pilih Salesman --</option>
                                             @foreach ($salesmen as $s)
                                                 <option value="{{ $s->nik }}"
@@ -126,7 +127,8 @@
                                 </div>
                             </div>
                             <div class="mb-2" hidden>
-                                <label for="tanggal_kirim" class="form-label fs-7 fw-bold text-secondary mb-1">Tanggal Kirim</label>
+                                <label for="tanggal_kirim" class="form-label fs-7 fw-bold text-secondary mb-1">Tanggal
+                                    Kirim</label>
                                 <input type="date" name="tanggal_kirim" id="tanggal_kirim"
                                     class="form-control form-control-sm"
                                     value="{{ old('tanggal_kirim', $item->tanggal_kirim ? \Carbon\Carbon::parse($item->tanggal_kirim)->format('Y-m-d') : '') }}">

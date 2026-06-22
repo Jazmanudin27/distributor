@@ -111,10 +111,7 @@ class PembelianController extends Controller
             $details = [];
 
             foreach ($request->items as $row) {
-                // Increment stock
-                $satuan = \App\Models\BarangSatuan::findOrFail($row['satuan_id']);
-                $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
-                Barang::where('kode_barang', $row['kode_barang'])->increment('stok', $qtySmallest);
+                \App\Models\StokMutasi::log($row['kode_barang'], $request->tanggal, 'Pembelian', $noFaktur, $qtySmallest, 0);
 
                 $total = ($row['qty'] * $row['harga']) - $row['diskon'];
                 $subtotal = $row['qty'] * $row['harga'];
@@ -232,7 +229,7 @@ class PembelianController extends Controller
             foreach ($pembelian->details as $oldDetail) {
                 $oldSatuan = \App\Models\BarangSatuan::find($oldDetail->satuan_id);
                 $oldQtySmallest = $oldDetail->qty * ($oldSatuan->isi ?? 1);
-                Barang::where('kode_barang', $oldDetail->kode_barang)->decrement('stok', $oldQtySmallest);
+                \App\Models\StokMutasi::log($oldDetail->kode_barang, $request->tanggal, 'Batal Pembelian (Edit)', $pembelian->no_faktur, 0, $oldQtySmallest);
             }
 
             $subtotalSum = 0;
@@ -242,7 +239,7 @@ class PembelianController extends Controller
                 // Increment new stock
                 $satuan = \App\Models\BarangSatuan::findOrFail($row['satuan_id']);
                 $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
-                Barang::where('kode_barang', $row['kode_barang'])->increment('stok', $qtySmallest);
+                \App\Models\StokMutasi::log($row['kode_barang'], $request->tanggal, 'Pembelian (Edit)', $pembelian->no_faktur, $qtySmallest, 0);
 
                 $total = ($row['qty'] * $row['harga']) - $row['diskon'];
                 $subtotal = $row['qty'] * $row['harga'];
@@ -299,7 +296,7 @@ class PembelianController extends Controller
             foreach ($pembelian->details as $detail) {
                 $satuan = \App\Models\BarangSatuan::find($detail->satuan_id);
                 $qtySmallest = $detail->qty * ($satuan->isi ?? 1);
-                Barang::where('kode_barang', $detail->kode_barang)->decrement('stok', $qtySmallest);
+                \App\Models\StokMutasi::log($detail->kode_barang, now()->toDateString(), 'Batal Pembelian (Hapus)', $pembelian->no_faktur, 0, $qtySmallest);
             }
             $pembelian->delete();
 

@@ -264,7 +264,7 @@ class PenjualanController extends Controller
                     if ($barang->stok < $qtySmallest) {
                         throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok: " . $barang->formatStok($barang->stok));
                     }
-                    $barang->decrement('stok', $qtySmallest);
+                    \App\Models\StokMutasi::log($row['kode_barang'], $request->tanggal, 'Penjualan', $noFaktur, 0, $qtySmallest);
 
                     $subtotal = $row['qty'] * $row['harga'];
                     $d1_pct = floatval($row['diskon1_persen'] ?? 0);
@@ -567,7 +567,7 @@ class PenjualanController extends Controller
                 foreach ($penjualan->details as $oldDetail) {
                     $oldSatuan = BarangSatuan::find($oldDetail->satuan_id);
                     $oldQty = $oldDetail->qty * ($oldSatuan->isi ?? 1);
-                    Barang::where('kode_barang', $oldDetail->kode_barang)->increment('stok', $oldQty);
+                    \App\Models\StokMutasi::log($oldDetail->kode_barang, $request->tanggal, 'Batal Penjualan (Edit)', $penjualan->no_faktur, $oldQty, 0);
                 }
 
                 $subtotalSum = 0;
@@ -583,7 +583,7 @@ class PenjualanController extends Controller
                     if ($barang->stok < $qtySmallest) {
                         throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok: " . $barang->formatStok($barang->stok));
                     }
-                    $barang->decrement('stok', $qtySmallest);
+                    \App\Models\StokMutasi::log($row['kode_barang'], $request->tanggal, 'Penjualan (Edit)', $penjualan->no_faktur, 0, $qtySmallest);
 
                     $subtotal = $row['qty'] * $row['harga'];
                     $d1_pct = floatval($row['diskon1_persen'] ?? 0);
@@ -658,7 +658,7 @@ class PenjualanController extends Controller
             foreach ($penjualan->details as $detail) {
                 $satuan = BarangSatuan::find($detail->satuan_id);
                 $qty = $detail->qty * ($satuan->isi ?? 1);
-                Barang::where('kode_barang', $detail->kode_barang)->increment('stok', $qty);
+                \App\Models\StokMutasi::log($detail->kode_barang, now()->toDateString(), 'Batal Penjualan (Hapus)', $penjualan->no_faktur, $qty, 0);
             }
             $penjualan->delete();
 
@@ -692,7 +692,7 @@ class PenjualanController extends Controller
                 foreach ($penjualan->details as $detail) {
                     $satuan = BarangSatuan::find($detail->satuan_id);
                     $qty = $detail->qty * ($satuan->isi ?? 1);
-                    Barang::where('kode_barang', $detail->kode_barang)->increment('stok', $qty);
+                    \App\Models\StokMutasi::log($detail->kode_barang, now()->toDateString(), 'Batal Penjualan', $penjualan->no_faktur, $qty, 0, null, 'Pembatalan: ' . $request->alasan_batal);
                 }
 
                 // Update penjualan status to canceled
