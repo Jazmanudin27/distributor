@@ -25,4 +25,7 @@ foreach (\App\Models\Pelanggan::where('status', 1)->get() as $p) {
     }
 }
 
-echo json_encode($overdue, JSON_PRETTY_PRINT) . PHP_EOL;
+echo "Total overdue customers under new logic: " . count($overdue) . "\n";
+if (count($overdue) > 0) {
+    echo json_encode(array_slice($overdue, 0, 3), JSON_PRETTY_PRINT) . PHP_EOL;
+}

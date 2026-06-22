@@ -78,9 +78,10 @@
                     $sisaBayar = $order->grand_total - $totalBayar - $totalRetur;
                     $dueDate = \Carbon\Carbon::parse($order->tanggal)->addDays($order->pelanggan->ljt ?? 30);
                     $isOverdue =
-                        $sisaBayar > 0 &&
+                        $sisaBayar >= 1 &&
                         in_array($order->jenis_transaksi, ['K', 'Kredit']) &&
                         $dueDate->lt(\Carbon\Carbon::today());
+                    $allPembayarans = $order->getAllPembayarans();
                 @endphp
                 <!-- Order Card header (tappable for collapse) -->
                 <div class="mobile-card p-3 mb-2" style="cursor: pointer; position: relative;" data-bs-toggle="collapse"
@@ -114,7 +115,7 @@
                                         style="font-size: 0.65rem; font-weight: 600;">
                                         {{ $order->jenis_transaksi }}
                                     </span>
-                                    @if ($sisaBayar <= 0)
+                                    @if ($sisaBayar < 1)
                                         <span class="badge bg-success-subtle text-success px-2 py-1"
                                             style="font-size: 0.65rem; font-weight: 600;">
                                             Lunas
@@ -234,15 +235,15 @@
                             </div>
                             <div class="d-flex justify-content-between text-secondary mb-1">
                                 <span>Sisa Piutang:</span>
-                                <span class="{{ $sisaBayar > 0 ? 'text-warning fw-bold' : 'text-secondary' }}">
-                                    Rp {{ number_format($sisaBayar, 0, ',', '.') }}
+                                <span class="{{ $sisaBayar >= 1 ? 'text-warning fw-bold' : 'text-secondary' }}">
+                                    Rp {{ number_format($sisaBayar >= 1 ? $sisaBayar : 0, 0, ',', '.') }}
                                 </span>
                             </div>
                             <div class="d-flex justify-content-between text-secondary mb-1">
                                 <span>Status Bayar:</span>
                                 <span
-                                    class="{{ $sisaBayar <= 0 ? 'text-success fw-semibold' : 'text-warning fw-semibold' }}">
-                                    {{ $sisaBayar <= 0 ? 'Lunas' : 'Belum Lunas' }}
+                                    class="{{ $sisaBayar < 1 ? 'text-success fw-semibold' : 'text-warning fw-semibold' }}">
+                                    {{ $sisaBayar < 1 ? 'Lunas' : 'Belum Lunas' }}
                                 </span>
                             </div>
                             @if (in_array($order->jenis_transaksi, ['K', 'Kredit']))
@@ -250,7 +251,7 @@
                                     <span>Jatuh Tempo:</span>
                                     <span class="{{ $isOverdue ? 'text-danger fw-semibold' : 'text-info fw-semibold' }}">
                                         {{ $dueDate->format('d/m/Y') }}
-                                        @if ($sisaBayar > 0)
+                                        @if ($sisaBayar >= 1)
                                             @if ($isOverdue)
                                                 (Overdue {{ (int) round(\Carbon\Carbon::today()->diffInDays($dueDate)) }}
                                                 Hari)
@@ -302,7 +303,7 @@
                             @endif
 
                             <!-- Info Sisa Tagihan (Sales tidak bisa input pembayaran) -->
-                            @if ($order->batal !== 1 && $sisaBayar > 0)
+                             @if ($order->batal !== 1 && $sisaBayar >= 1)
                                 <div class="mt-3 pt-2 border-top border-secondary border-opacity-10">
                                     <div class="p-2 rounded-3 d-flex align-items-center gap-2"
                                         style="background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.2);">
