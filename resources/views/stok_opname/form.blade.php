@@ -45,33 +45,69 @@
                     </div>
                 </div>
 
-                {{-- BULK FILTER AND LOAD BAR --}}
-                <div class="bg-light p-3 rounded my-4 border">
-                    <h6 class="fw-bold text-secondary mb-2 fs-7">Muat Barang Massal Berdasarkan Filter</h6>
-                    <div class="row g-2 align-items-end">
-                        <div class="col-md-5">
-                            <label class="form-label fs-8 text-secondary mb-1">Pilih Kategori</label>
-                            <select id="filter_kategori" class="form-select form-select-sm select2-init">
-                                <option value="">-- Semua Kategori --</option>
-                                @foreach ($kategoris as $k)
-                                    <option value="{{ $k->nama_kategori }}">{{ $k->nama_kategori }}</option>
-                                @endforeach
-                            </select>
+                {{-- LOADER SECTION --}}
+                <div class="row g-3 my-4">
+                    <!-- Cari & Tambah Barang Satuan -->
+                    <div class="col-md-6">
+                        <div class="bg-white p-3 rounded border shadow-sm h-100">
+                            <h6 class="fw-bold text-dark mb-2 fs-7">
+                                <i class="fa-solid fa-magnifying-glass me-1 text-success"></i> Cari & Tambah Barang Satuan
+                            </h6>
+                            <small class="text-muted d-block mb-3">Gunakan opsi ini jika Anda hanya ingin melakukan opname
+                                untuk beberapa barang tertentu saja</small>
+                            <div class="row g-2 align-items-end">
+                                <div class="col-8">
+                                    <select id="select_barang_manual" class="form-select form-select-sm select2-init">
+                                        <option value="">-- Cari Barang --</option>
+                                        @foreach ($barangs as $b)
+                                            <option value="{{ $b->kode_barang }}">{{ $b->kode_barang }} -
+                                                {{ $b->nama_barang }} (Stok: {{ $b->stok }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-4">
+                                    <button type="button" id="btn-add-manual"
+                                        class="btn btn-success btn-sm w-100 fw-bold hover-scale" style="height: 31px;">
+                                        <i class="fa-solid fa-plus me-1"></i> Tambah
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-5">
-                            <label class="form-label fs-8 text-secondary mb-1">Pilih Merk</label>
-                            <select id="filter_merk" class="form-select form-select-sm select2-init">
-                                <option value="">-- Semua Merk --</option>
-                                @foreach ($merks as $m)
-                                    <option value="{{ $m->nama_merk }}">{{ $m->nama_merk }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex">
-                            <button type="button" id="btn-load-filtered"
-                                class="btn btn-primary btn-sm w-100 fw-bold hover-scale" style="height: 31px;">
-                                <i class="fa-solid fa-cloud-arrow-down me-1"></i> Muat Barang
-                            </button>
+                    </div>
+
+                    <!-- Muat Barang Massal -->
+                    <div class="col-md-6">
+                        <div class="bg-light p-3 rounded border shadow-sm h-100">
+                            <h6 class="fw-bold text-secondary mb-2 fs-7">
+                                <i class="fa-solid fa-cloud-arrow-down me-1 text-primary"></i> Muat Barang Massal
+                                Berdasarkan Filter
+                            </h6>
+                            <small class="text-muted d-block mb-3">Gunakan opsi ini untuk memuat banyak barang sekaligus
+                                berdasarkan kategori atau merk</small>
+                            <div class="row g-2 align-items-end">
+                                <div class="col-5">
+                                    <select id="filter_kategori" class="form-select form-select-sm select2-init">
+                                        <option value="">-- Semua Kategori --</option>
+                                        @foreach ($kategoris as $k)
+                                            <option value="{{ $k->nama_kategori }}">{{ $k->nama_kategori }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-5">
+                                    <select id="filter_merk" class="form-select form-select-sm select2-init">
+                                        <option value="">-- Semua Merk --</option>
+                                        @foreach ($merks as $m)
+                                            <option value="{{ $m->nama_merk }}">{{ $m->nama_merk }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-2">
+                                    <button type="button" id="btn-load-filtered"
+                                        class="btn btn-primary btn-sm w-100 fw-bold hover-scale" style="height: 31px;">
+                                        Muat
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -240,6 +276,62 @@
                 });
             });
 
+            // Add Manual Button Click
+            $('#btn-add-manual').on('click', function() {
+                const kodeBarang = $('#select_barang_manual').val();
+                if (!kodeBarang) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Pilih Barang',
+                        text: 'Silakan pilih barang terlebih dahulu.'
+                    });
+                    return;
+                }
+
+                const barang = barangs.find(b => b.kode_barang === kodeBarang);
+                if (!barang) return;
+
+                // Check duplicate
+                let exists = false;
+                $('#table-items tbody tr').each(function() {
+                    if ($(this).find('.kode-barang-val').val() === barang.kode_barang) {
+                        exists = true;
+                        return false;
+                    }
+                });
+
+                if (exists) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Barang Sudah Ada',
+                        text: 'Barang tersebut sudah ada dalam daftar.'
+                    });
+                    return;
+                }
+
+                const stokSistem = parseFloat(barang.stok) || 0;
+                addItemRow({
+                    kode_barang: barang.kode_barang,
+                    nama_barang: barang.nama_barang,
+                    stok_sistem: stokSistem,
+                    stok_fisik: stokSistem,
+                    selisih: 0,
+                    keterangan: '',
+                    satuans: barang.satuans
+                });
+
+                // Reset Select2
+                $('#select_barang_manual').val('').trigger('change');
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Barang ditambahkan',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            });
 
             function addItemRow(data) {
                 // Find units from barangs array if not provided in data
