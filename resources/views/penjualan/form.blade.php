@@ -37,8 +37,8 @@
                     </a>
                 @endif
                 <a href="{{ route('penjualan.index', request()->query()) }}"
-                    class="btn btn-light btn-sm fw-bold hover-scale">
-                    <i class="fa-solid fa-arrow-left me-1 text-primary"></i> Kembali
+                    class="btn btn-secondary btn-sm fw-bold hover-scale">
+                    <i class="fa-solid fa-arrow-left me-1 text-white"></i> Kembali
                 </a>
             </div>
         </div>
