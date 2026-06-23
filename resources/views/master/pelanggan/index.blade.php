@@ -135,6 +135,18 @@
             border-color: rgba(52, 211, 153, 0.1);
         }
 
+        .meta-pill-warning {
+            color: #FBBF24 !important;
+            background: rgba(251, 191, 36, 0.05);
+            border-color: rgba(251, 191, 36, 0.1);
+        }
+
+        .meta-pill-info {
+            color: #38BDF8 !important;
+            background: rgba(56, 189, 248, 0.05);
+            border-color: rgba(56, 189, 248, 0.1);
+        }
+
         @media (max-width: 768px) {
             .filter-select {
                 flex: 1 1 120px;
@@ -281,6 +293,18 @@
                                             <i class="fa-solid fa-location-crosshairs opacity-75"></i>
                                             <span>{{ $item->subWilayah->nama_wilayah ?? '-' }}</span>
                                         </span>
+
+                                        @if ($item->jenis_pelanggan == '1')
+                                            <span class="meta-pill meta-pill-warning">
+                                                <i class="fa-solid fa-star opacity-75"></i>
+                                                <span>Khusus (Bypass Overdue)</span>
+                                            </span>
+                                        @else
+                                            <span class="meta-pill meta-pill-info">
+                                                <i class="fa-solid fa-circle-user opacity-75"></i>
+                                                <span>Regular</span>
+                                            </span>
+                                        @endif
 
                                         @if ($item->latitude && $item->longitude)
                                             <a href="https://www.google.com/maps/search/?api=1&query={{ $item->latitude }},{{ $item->longitude }}"

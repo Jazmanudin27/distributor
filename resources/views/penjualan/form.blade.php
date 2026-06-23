@@ -1622,7 +1622,7 @@
                 if (!isEditMode) {
                     const opt = $('#kode_pelanggan').find(':selected');
                     if (opt.val()) {
-                        const hasOverdue = parseInt(opt.data('has-overdue')) === 1;
+                        const hasOverdue = parseInt(opt.attr('data-has-overdue') || opt.data('has-overdue')) === 1;
                         if (hasOverdue) {
                             e.preventDefault();
                             return Swal.fire({
