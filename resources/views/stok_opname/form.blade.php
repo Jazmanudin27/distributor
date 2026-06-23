@@ -132,6 +132,32 @@
                 width: '100%'
             });
 
+            // Format stock to UOM readable format
+            function formatStokJS(stok, satuans) {
+                let remaining = Math.abs(stok);
+                let isNegative = stok < 0;
+                let breakdowns = [];
+                if (satuans && satuans.length > 0) {
+                    let sorted = [...satuans].sort((a, b) => b.isi - a.isi);
+                    sorted.forEach(sat => {
+                        let factor = parseFloat(sat.isi) || 1;
+                        let unitQty = Math.floor(remaining / factor);
+                        if (unitQty > 0) {
+                            breakdowns.push(`${unitQty} ${sat.satuan}`);
+                            remaining = remaining % factor;
+                        }
+                    });
+                    if (remaining > 0 && sorted.length > 0) {
+                        let last = sorted[sorted.length - 1];
+                        breakdowns.push(`${remaining} ${last.satuan}`);
+                    }
+                } else {
+                    breakdowns.push(`${remaining} PCS`);
+                }
+                let formatted = breakdowns.join(', ') || '0 PCS';
+                return isNegative ? '-' + formatted : formatted;
+            }
+
             // Function to break down physical stock into UOM quantities
             function breakdownStock(qty, satuans) {
                 let result = {};
@@ -193,12 +219,13 @@
                     });
 
                     if (!exists) {
+                        const stokSistem = parseFloat(barang.stok) || 0;
                         addItemRow({
                             kode_barang: barang.kode_barang,
                             nama_barang: barang.nama_barang,
-                            stok_sistem: parseFloat(barang.stok) || 0,
-                            stok_fisik: null, // start empty
-                            selisih: null,
+                            stok_sistem: stokSistem,
+                            stok_fisik: stokSistem,
+                            selisih: 0,
                             keterangan: '',
                             satuans: barang.satuans
                         });
@@ -279,6 +306,9 @@
                         </td>
                         <td>
                             <input type="number" name="items[${rowIndex}][stok_sistem]" class="form-control form-control-sm text-end bg-light sistem-input font-monospace" value="${data.stok_sistem}" readonly>
+                            <div class="text-end text-muted small mt-1 font-monospace fw-semibold" style="font-size: 0.73rem;">
+                                ${formatStokJS(data.stok_sistem, satuans)}
+                            </div>
                         </td>
                         <td>
                             ${uomInputsHtml}
