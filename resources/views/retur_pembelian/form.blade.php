@@ -339,6 +339,7 @@
 
             // Dynamically load invoice details via AJAX when Faktur is selected
             $('#no_faktur').on('change', function() {
+                if (window.isRestoringDraft) return;
                 const faktur = $(this).val();
                 $('#table-items tbody').empty();
                 $('#top-invoice-no').text(faktur || '-');
@@ -516,6 +517,7 @@
                 $(this).closest('tr').remove();
                 reorderRows();
                 calculateGrandTotal();
+                saveDraft();
             });
 
             // Handle edit mode or old inputs loading
@@ -579,8 +581,153 @@
                 }
             }
 
-            // Remove disabled attribute before submit so value goes through
+            // --- Draft Persist System ---
+            function saveDraft() {
+                if (window.isRestoringDraft) return;
+                const key = isEditMode ? `retur_pembelian_edit_draft_${$('#no_retur').val()}` : `retur_pembelian_create_draft`;
+                
+                const items = [];
+                $('#table-items tbody tr').each(function() {
+                    const row = $(this);
+                    const isManual = row.hasClass('manual-row');
+                    const item = {
+                        kode_barang: row.find('input[name*="[kode_barang]"]').val(),
+                        nama_barang: row.find('td').eq(2).find('input').val(),
+                        satuan_id: row.find('input[name*="[satuan_id]"]').val(),
+                        satuan: row.find('td').eq(3).find('input').val(),
+                        qty_beli: parseFloat(row.find('td').eq(4).find('span').text()) || 0,
+                        qty_retur_sebelumnya: parseFloat(row.find('td').eq(5).find('span').text()) || 0,
+                        qty_available: parseFloat(row.find('.qty-input').attr('max')) || 999999,
+                        qty_retur: parseFloat(row.find('.qty-input').val()) || 0,
+                        harga_retur: parseFloat(cleanNumber(row.find('.harga-input').val())) || 0,
+                        isFromInvoice: !isManual
+                    };
+                    items.push(item);
+                });
+
+                const draft = {
+                    tanggal: $('#tanggal').val(),
+                    no_faktur: $('#no_faktur').val(),
+                    kode_supplier: $('#kode_supplier').val(),
+                    jenis_retur: $('#jenis_retur').val(),
+                    kondisi: $('#kondisi').val(),
+                    keterangan: $('#keterangan').val(),
+                    items: items,
+                    timestamp: new Date().getTime()
+                };
+                
+                localStorage.setItem(key, JSON.stringify(draft));
+            }
+
+            function restoreDraft(draft) {
+                window.isRestoringDraft = true;
+
+                if (draft.tanggal) $('#tanggal').val(draft.tanggal);
+                if (draft.jenis_retur) $('#jenis_retur').val(draft.jenis_retur);
+                if (draft.kondisi) $('#kondisi').val(draft.kondisi);
+                if (draft.keterangan) $('#keterangan').val(draft.keterangan);
+                
+                if (draft.no_faktur) {
+                    $('#no_faktur').val(draft.no_faktur).trigger('change.select2');
+                    $('#top-invoice-no').text(draft.no_faktur);
+                    $('#manual-item-adder').hide();
+                    $('#th-qty-beli').show();
+                    $('#th-qty-sebelumnya').show();
+                } else {
+                    $('#no_faktur').val('').trigger('change.select2');
+                    $('#top-invoice-no').text('-');
+                    $('#manual-item-adder').show();
+                    $('#th-qty-beli').hide();
+                    $('#th-qty-sebelumnya').hide();
+                }
+
+                if (draft.kode_supplier) {
+                    $('#kode_supplier').val(draft.kode_supplier).trigger('change.select2');
+                    if (draft.no_faktur) {
+                        $('#kode_supplier').prop('disabled', true);
+                        if (!$('#hidden_kode_supplier').length) {
+                            $('#returForm').append(`<input type="hidden" name="kode_supplier" id="hidden_kode_supplier" value="${draft.kode_supplier}">`);
+                        } else {
+                            $('#hidden_kode_supplier').val(draft.kode_supplier);
+                        }
+                    } else {
+                        $('#kode_supplier').prop('disabled', false);
+                        $('#hidden_kode_supplier').remove();
+                    }
+                }
+
+                $('#table-items tbody').empty();
+                if (draft.items && draft.items.length > 0) {
+                    draft.items.forEach(item => {
+                        addItemRow({
+                            kode_barang: item.kode_barang,
+                            nama_barang: item.nama_barang,
+                            satuan_id: item.satuan_id,
+                            satuan: item.satuan,
+                            qty_beli: item.qty_beli,
+                            qty_retur_sebelumnya: item.qty_retur_sebelumnya,
+                            qty_available: item.qty_available,
+                            qty_retur: item.qty_retur,
+                            harga_retur: item.harga_retur
+                        }, item.isFromInvoice);
+                    });
+                }
+                
+                calculateGrandTotal();
+
+                window.isRestoringDraft = false;
+            }
+
+            function initDraftSystem() {
+                const key = isEditMode ? `retur_pembelian_edit_draft_${$('#no_retur').val()}` : `retur_pembelian_create_draft`;
+                const savedDraftStr = localStorage.getItem(key);
+                if (savedDraftStr) {
+                    try {
+                        const savedDraft = JSON.parse(savedDraftStr);
+                        if (savedDraft && savedDraft.items && savedDraft.items.length > 0) {
+                            Swal.fire({
+                                title: 'Draft Retur Pembelian Ditemukan',
+                                text: isEditMode 
+                                    ? 'Ditemukan draf perubahan untuk retur ini yang belum disimpan. Pulihkan?' 
+                                    : 'Ditemukan draft transaksi retur yang belum disimpan. Apakah Anda ingin melanjutkan?',
+                                icon: 'info',
+                                showCancelButton: true,
+                                confirmButtonText: 'Pulihkan',
+                                cancelButtonText: 'Abaikan',
+                                confirmButtonColor: '#4f46e5',
+                                cancelButtonColor: '#6b7280'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    restoreDraft(savedDraft);
+                                } else {
+                                    localStorage.removeItem(key);
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.error('Error parsing draft:', e);
+                    }
+                }
+            }
+
+            // Initialize draft system
+            initDraftSystem();
+
+            // Save draft on form inputs change
+            $(document).on('input change', '#returForm input, #returForm select, #returForm textarea', function() {
+                saveDraft();
+            });
+
+            // Clear draft when user explicitly cancels/goes back
+            $(document).on('click', 'a[href*="retur-pembelian.index"]', function() {
+                const key = isEditMode ? `retur_pembelian_edit_draft_${$('#no_retur').val()}` : `retur_pembelian_create_draft`;
+                localStorage.removeItem(key);
+            });
+
+            // Remove disabled attribute before submit so value goes through and clear draft
             $('#returForm').on('submit', function() {
+                const key = isEditMode ? `retur_pembelian_edit_draft_${$('#no_retur').val()}` : `retur_pembelian_create_draft`;
+                localStorage.removeItem(key);
                 $('#kode_supplier').prop('disabled', false);
             });
         });

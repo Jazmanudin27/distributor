@@ -343,6 +343,7 @@
             const barangs = {!! json_encode($barangs) !!};
             const suppliers = {!! json_encode($suppliers) !!};
             const existingDetails = {!! json_encode($existingDetails ?? []) !!};
+            const isEditMode = {{ $item->exists ? 'true' : 'false' }};
             let rowIndex = 0;
 
             // Initialize Search Selects
@@ -507,6 +508,7 @@
                 $('#quick_diskon').val(0);
 
                 calculateTotals();
+                saveDraft();
 
                 setTimeout(function() {
                     $('#quick_barang').select2('open');
@@ -577,6 +579,7 @@
             $(document).on('click', '.btn-remove-row', function() {
                 $(this).closest('tr').remove();
                 calculateTotals();
+                saveDraft();
             });
 
             // Inputs change inside table rows
@@ -689,6 +692,129 @@
 
                 const rawPotongan = cleanNumber($('#potongan').val());
                 $('#potongan').val(rawPotongan);
+
+                // Clear draft since transaction is being saved
+                const key = isEditMode ? `pembelian_edit_draft_${$('#no_faktur').val()}` : `pembelian_create_draft`;
+                localStorage.removeItem(key);
+            });
+
+            // --- Draft Persist System ---
+            function saveDraft() {
+                if (window.isRestoringDraft) return;
+                const key = isEditMode ? `pembelian_edit_draft_${$('#no_faktur').val()}` : `pembelian_create_draft`;
+
+                const items = [];
+                $('#itemsTable tbody tr').each(function() {
+                    const row = $(this);
+                    const item = {
+                        kode_barang: row.find('input[name*="[kode_barang]"]').val(),
+                        nama_barang: row.find('td').eq(2).text().trim(),
+                        satuan_id: row.find('input[name*="[satuan_id]"]').val(),
+                        satuan: row.find('input[name*="[satuan]"]').val(),
+                        qty: parseFloat(row.find('.input-qty').val()) || 0,
+                        harga: parseFloat(cleanNumber(row.find('.input-harga').val())) || 0,
+                        diskon: parseFloat(cleanNumber(row.find('.input-diskon').val())) || 0
+                    };
+                    items.push(item);
+                });
+
+                const draft = {
+                    tanggal: $('#tanggal').val(),
+                    jatuh_tempo: $('#jatuh_tempo').val(),
+                    kode_supplier: $('#kode_supplier').val(),
+                    no_po: $('#no_po').val(),
+                    potongan_claim: $('#potongan_claim').val(),
+                    pajak: $('#pajak').val(),
+                    biaya_lain: $('#biaya_lain').val(),
+                    items: items,
+                    timestamp: new Date().getTime()
+                };
+
+                localStorage.setItem(key, JSON.stringify(draft));
+            }
+
+            function restoreDraft(draft) {
+                window.isRestoringDraft = true;
+
+                if (draft.tanggal) $('#tanggal').val(draft.tanggal);
+                if (draft.jatuh_tempo) $('#jatuh_tempo').val(draft.jatuh_tempo);
+                if (draft.no_po) {
+                    $('#no_po').val(draft.no_po);
+                    $('#keterangan_hidden').val(draft.no_po);
+                }
+                if (draft.potongan_claim) $('#potongan_claim').val(formatNumber(cleanNumber(draft.potongan_claim)));
+                if (draft.pajak) $('#pajak').val(formatNumber(cleanNumber(draft.pajak)));
+                if (draft.biaya_lain) $('#biaya_lain').val(formatNumber(cleanNumber(draft.biaya_lain)));
+
+                if (draft.kode_supplier) {
+                    $('#kode_supplier').val(draft.kode_supplier).trigger('change');
+                }
+
+                // Restore items Table
+                $('#itemsTable tbody').empty();
+                if (draft.items && draft.items.length > 0) {
+                    draft.items.forEach(item => {
+                        appendRow(
+                            item.kode_barang,
+                            item.nama_barang,
+                            item.satuan_id,
+                            item.satuan,
+                            item.qty,
+                            item.harga,
+                            item.diskon
+                        );
+                    });
+                }
+
+                calculateTotals();
+
+                window.isRestoringDraft = false;
+            }
+
+            function initDraftSystem() {
+                const key = isEditMode ? `pembelian_edit_draft_${$('#no_faktur').val()}` : `pembelian_create_draft`;
+                const savedDraftStr = localStorage.getItem(key);
+                if (savedDraftStr) {
+                    try {
+                        const savedDraft = JSON.parse(savedDraftStr);
+                        if (savedDraft && savedDraft.items && savedDraft.items.length > 0) {
+                            Swal.fire({
+                                title: 'Draft Pembelian Ditemukan',
+                                text: isEditMode 
+                                    ? 'Ditemukan draf perubahan untuk faktur ini yang belum disimpan. Pulihkan?' 
+                                    : 'Ditemukan draft transaksi pembelian yang belum disimpan. Apakah Anda ingin melanjutkan?',
+                                icon: 'info',
+                                showCancelButton: true,
+                                confirmButtonText: 'Pulihkan',
+                                cancelButtonText: 'Abaikan',
+                                confirmButtonColor: '#0d6efd',
+                                cancelButtonColor: '#6b7280'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    restoreDraft(savedDraft);
+                                } else {
+                                    localStorage.removeItem(key);
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.error('Error parsing draft:', e);
+                    }
+                }
+            }
+
+            // Initialize draft system
+            initDraftSystem();
+
+            // Save draft on inputs change
+            $(document).on('input change', '#pembelianForm input, #pembelianForm select', function() {
+                saveDraft();
+            });
+
+            // Clear draft when user explicitly cancels/goes back
+            $(document).on('click', 'a[href*="pembelian.index"]', function() {
+                const key = isEditMode ? `pembelian_edit_draft_${$('#no_faktur').val()}` : `pembelian_create_draft`;
+                localStorage.removeItem(key);
             });
         });
     </script>

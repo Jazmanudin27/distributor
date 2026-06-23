@@ -22,9 +22,13 @@ class MobileOrderController extends Controller
         $nik = Auth::user()->nik;
         $q = $request->input('q');
         $filter = $request->input('filter', 'all');
+        $isSpv = strtolower(Auth::user()->role ?? '') === 'spv sales';
 
-        $query = Penjualan::with(['pelanggan', 'details.barang', 'details.barangSatuan', 'pembayarans'])
-            ->where('kode_sales', $nik);
+        $query = Penjualan::with(['pelanggan', 'details.barang', 'details.barangSatuan', 'pembayarans']);
+
+        if (!$isSpv) {
+            $query->where('kode_sales', $nik);
+        }
 
         if ($q) {
             $query->where(function($sub) use ($q) {
@@ -48,15 +52,19 @@ class MobileOrderController extends Controller
         }
 
         // Calculate summary for today & month
-        $todaySales = Penjualan::where('kode_sales', $nik)
-            ->where('batal', 0)
-            ->whereDate('tanggal', $todayStr)
-            ->sum('grand_total');
+        $todaySalesQuery = Penjualan::where('batal', 0)
+            ->whereDate('tanggal', $todayStr);
 
-        $monthSales = Penjualan::where('kode_sales', $nik)
-            ->where('batal', 0)
-            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
-            ->sum('grand_total');
+        $monthSalesQuery = Penjualan::where('batal', 0)
+            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
+
+        if (!$isSpv) {
+            $todaySalesQuery->where('kode_sales', $nik);
+            $monthSalesQuery->where('kode_sales', $nik);
+        }
+
+        $todaySales = $todaySalesQuery->sum('grand_total');
+        $monthSales = $monthSalesQuery->sum('grand_total');
 
         $orders = $query->orderBy('tanggal', 'desc')
             ->orderBy('created_at', 'desc')

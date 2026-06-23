@@ -66,15 +66,35 @@ class StokOpnameController extends Controller
             'items' => 'required|array|min:1',
             'items.*.kode_barang' => 'required|exists:barang,kode_barang',
             'items.*.stok_sistem' => 'required|numeric',
-            'items.*.stok_fisik' => 'required|numeric|min:0',
-            'items.*.selisih' => 'required|numeric',
+            'items.*.stok_fisik' => 'nullable|numeric|min:0',
+            'items.*.selisih' => 'nullable|numeric',
             'items.*.keterangan' => 'nullable|string',
         ]);
+
+        $hasActive = false;
+        if ($request->has('items')) {
+            foreach ($request->items as $row) {
+                if (isset($row['stok_fisik']) && $row['stok_fisik'] !== '' && $row['stok_fisik'] !== null) {
+                    $hasActive = true;
+                    break;
+                }
+            }
+        }
+
+        if (!$hasActive) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['items' => 'Minimal harus ada 1 item barang yang diisi stok fisiknya!']);
+        }
 
         DB::transaction(function () use ($request) {
             $details = [];
 
             foreach ($request->items as $row) {
+                if (!isset($row['stok_fisik']) || $row['stok_fisik'] === '' || $row['stok_fisik'] === null) {
+                    continue;
+                }
+
                 // Calculate stock adjustment: add the difference (selisih)
                 // e.g. system = 10, physical = 8, difference = -2
                 // stok = stok + (-2) = 8
@@ -140,10 +160,26 @@ class StokOpnameController extends Controller
             'items' => 'required|array|min:1',
             'items.*.kode_barang' => 'required|exists:barang,kode_barang',
             'items.*.stok_sistem' => 'required|numeric',
-            'items.*.stok_fisik' => 'required|numeric|min:0',
-            'items.*.selisih' => 'required|numeric',
+            'items.*.stok_fisik' => 'nullable|numeric|min:0',
+            'items.*.selisih' => 'nullable|numeric',
             'items.*.keterangan' => 'nullable|string',
         ]);
+
+        $hasActive = false;
+        if ($request->has('items')) {
+            foreach ($request->items as $row) {
+                if (isset($row['stok_fisik']) && $row['stok_fisik'] !== '' && $row['stok_fisik'] !== null) {
+                    $hasActive = true;
+                    break;
+                }
+            }
+        }
+
+        if (!$hasActive) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['items' => 'Minimal harus ada 1 item barang yang diisi stok fisiknya!']);
+        }
 
         DB::transaction(function () use ($request, $opname) {
             // Revert old adjustments (decrement stock by old selisih)
@@ -167,6 +203,10 @@ class StokOpnameController extends Controller
             $details = [];
 
             foreach ($request->items as $row) {
+                if (!isset($row['stok_fisik']) || $row['stok_fisik'] === '' || $row['stok_fisik'] === null) {
+                    continue;
+                }
+
                 // Apply new stock adjustment (increment stock by new selisih)
                 $selisih = (float)$row['selisih'];
                 $qtyMasuk = $selisih > 0 ? $selisih : 0;

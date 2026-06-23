@@ -71,7 +71,8 @@
     <h5 class="fw-bold mb-3" style="font-size: 1.1rem; letter-spacing: 0.5px;">Input Order Penjualan</h5>
 
     @if ($errors->any())
-        <div class="alert alert-danger rounded-4 py-2 px-3 mb-3 small" style="background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;">
+        <div class="alert alert-danger rounded-4 py-2 px-3 mb-3 small"
+            style="background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;">
             <strong class="d-block mb-1"><i class="fa-solid fa-circle-exclamation me-1"></i> Gagal menyimpan pesanan:</strong>
             <ul class="mb-0 ps-3">
                 @foreach ($errors->all() as $error)
@@ -205,16 +206,23 @@
                             <i class="fa-solid fa-triangle-exclamation me-1"></i>
                             <span class="fw-bold">Toko diblokir (Overdue)! Faktur overdue:</span>
                         </div>
-                        <ul class="mb-0 ps-3 mt-1" id="overdue-invoices-list" style="font-size: 0.68rem; list-style-type: disc;">
+                        <ul class="mb-0 ps-3 mt-1" id="overdue-invoices-list"
+                            style="font-size: 0.68rem; list-style-type: disc;">
                             @if ($pelanggan && $pelanggan->hasOverdueInvoices())
                                 @foreach ($pelanggan->getOverdueInvoices() as $inv)
                                     @php
-                                        $sisa = $inv->grand_total - $inv->getApprovedPembayaranTotal() - $inv->getTotalRetur();
-                                        $dueDate = \Carbon\Carbon::parse($inv->tanggal)->addDays($inv->pelanggan->ljt ?? 30);
+                                        $sisa =
+                                            $inv->grand_total -
+                                            $inv->getApprovedPembayaranTotal() -
+                                            $inv->getTotalRetur();
+                                        $dueDate = \Carbon\Carbon::parse($inv->tanggal)->addDays(
+                                            $inv->pelanggan->ljt ?? 30,
+                                        );
                                     @endphp
                                     <li>
                                         Faktur <strong class="text-white font-monospace">{{ $inv->no_faktur }}</strong>
-                                        (JT: {{ $dueDate->format('d/m/Y') }} &bull; Sisa: <strong class="text-white">Rp {{ number_format($sisa, 0, ',', '.') }}</strong>)
+                                        (JT: {{ $dueDate->format('d/m/Y') }} &bull; Sisa: <strong class="text-white">Rp
+                                            {{ number_format($sisa, 0, ',', '.') }}</strong>)
                                     </li>
                                 @endforeach
                             @endif
@@ -264,7 +272,8 @@
                     <select name="jenis_transaksi" id="jenis_transaksi"
                         class="form-select form-select-sm bg-dark text-white border-secondary" required>
                         @if (Auth::user()->jenis_sales != '1')
-                            <option value="Kredit" {{ $pelanggan && in_array($pelanggan->metode_bayar, ['K', 'Kredit']) ? 'selected' : '' }}>
+                            <option value="Kredit"
+                                {{ $pelanggan && in_array($pelanggan->metode_bayar, ['K', 'Kredit']) ? 'selected' : '' }}>
                                 Kredit (Tempo)
                             </option>
                         @endif
@@ -1016,10 +1025,12 @@
                     e.preventDefault();
                     let overdueList = [];
                     try {
-                        overdueList = JSON.parse(hiddenKodePelanggan.getAttribute('data-overdue-invoices') || '[]');
-                    } catch(e) {}
+                        overdueList = JSON.parse(hiddenKodePelanggan.getAttribute(
+                            'data-overdue-invoices') || '[]');
+                    } catch (e) {}
                     const overdueListStr = overdueList.length > 0 ? overdueList.join(', ') : '-';
-                    const customerName = document.getElementById('detail-nama-display')?.innerText || 'Pelanggan';
+                    const customerName = document.getElementById('detail-nama-display')?.innerText ||
+                        'Pelanggan';
 
                     Swal.fire({
                         title: 'Transaksi Ditolak',
@@ -1077,14 +1088,16 @@
                 };
                 hiddenKodePelanggan.value = mockCustomer.id;
                 hiddenKodePelanggan.setAttribute('data-overdue', mockCustomer.has_overdue);
-                hiddenKodePelanggan.setAttribute('data-overdue-invoices', JSON.stringify(mockCustomer.overdue_invoices || []));
+                hiddenKodePelanggan.setAttribute('data-overdue-invoices', JSON.stringify(mockCustomer
+                    .overdue_invoices || []));
                 hiddenKodePelanggan.setAttribute('data-sisa-limit', mockCustomer.sisa_limit);
 
                 // Set default payment mode
                 const isRestrictedSales = @json(Auth::user()->jenis_sales == '1');
                 if (mockCustomer.metode === 'Tunai' || mockCustomer.metode === 'T') {
                     jenisTransaksiEl.value = 'Tunai';
-                } else if ((mockCustomer.metode === 'Kredit' || mockCustomer.metode === 'K') && !isRestrictedSales) {
+                } else if ((mockCustomer.metode === 'Kredit' || mockCustomer.metode === 'K') && !
+                    isRestrictedSales) {
                     jenisTransaksiEl.value = 'Kredit';
                 } else if (isRestrictedSales) {
                     jenisTransaksiEl.value = 'Tunai';

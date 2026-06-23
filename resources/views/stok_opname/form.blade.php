@@ -135,6 +135,9 @@
             // Function to break down physical stock into UOM quantities
             function breakdownStock(qty, satuans) {
                 let result = {};
+                if (qty === null || qty === undefined || qty === '') {
+                    return result;
+                }
                 if (!satuans || satuans.length === 0) {
                     result[1] = qty;
                     return result;
@@ -194,9 +197,8 @@
                             kode_barang: barang.kode_barang,
                             nama_barang: barang.nama_barang,
                             stok_sistem: parseFloat(barang.stok) || 0,
-                            stok_fisik: parseFloat(barang.stok) ||
-                                0, // default physical to system stock
-                            selisih: 0,
+                            stok_fisik: null, // start empty
+                            selisih: null,
                             keterangan: '',
                             satuans: barang.satuans
                         });
@@ -228,7 +230,7 @@
                     // Sort descending by factor (isi)
                     let sorted = [...satuans].sort((a, b) => b.isi - a.isi);
                     sorted.forEach(function(sat) {
-                        let val = breakdown[sat.id] || 0;
+                        let val = breakdown[sat.id] !== undefined ? breakdown[sat.id] : '';
                         uomInputsHtml += `
                             <div class="input-group input-group-sm" style="width: 85px;">
                                 <input type="number" class="form-control text-end uom-qty-input font-monospace p-1" 
@@ -238,23 +240,31 @@
                         `;
                     });
                 } else {
+                    let val = data.stok_fisik !== null && data.stok_fisik !== undefined ? data.stok_fisik : '';
                     uomInputsHtml += `
                         <div class="input-group input-group-sm" style="width: 100px;">
-                            <input type="number" class="form-control text-end uom-qty-input font-monospace" data-isi="1" value="${data.stok_fisik}" min="0" step="any">
+                            <input type="number" class="form-control text-end uom-qty-input font-monospace" data-isi="1" value="${val}" min="0" step="any">
                             <span class="input-group-text px-1.5 text-secondary text-xs">PCS</span>
                         </div>
                     `;
                 }
                 uomInputsHtml += '</div>';
 
+                const isFisikEmpty = data.stok_fisik === null || data.stok_fisik === undefined || data.stok_fisik === '';
+                const stokFisikVal = isFisikEmpty ? '' : data.stok_fisik;
+                const totalFisikLabel = isFisikEmpty ? '-' : data.stok_fisik;
+
+                const selisihVal = isFisikEmpty ? '' : data.selisih;
+                const selisihLabel = isFisikEmpty ? '-' : (data.selisih > 0 ? '+' + data.selisih : data.selisih);
+
                 const diffVal = parseFloat(data.selisih) || 0;
-                let badgeClass = 'bg-secondary';
-                let sign = '';
-                if (diffVal > 0) {
-                    badgeClass = 'bg-success-subtle text-success border border-success-subtle';
-                    sign = '+';
-                } else if (diffVal < 0) {
-                    badgeClass = 'bg-danger-subtle text-danger border border-danger-subtle';
+                let badgeClass = 'bg-secondary-subtle text-secondary border';
+                if (!isFisikEmpty) {
+                    if (diffVal > 0) {
+                        badgeClass = 'bg-success-subtle text-success border border-success-subtle';
+                    } else if (diffVal < 0) {
+                        badgeClass = 'bg-danger-subtle text-danger border border-danger-subtle';
+                    }
                 }
 
                 const rowHtml = `
@@ -271,17 +281,17 @@
                         </td>
                         <td>
                             ${uomInputsHtml}
-                            <input type="hidden" name="items[${rowIndex}][stok_fisik]" class="fisik-input" value="${data.stok_fisik}">
+                            <input type="hidden" name="items[${rowIndex}][stok_fisik]" class="fisik-input" value="${stokFisikVal}">
                             <div class="text-end text-muted small mt-1 font-monospace fw-semibold" style="font-size: 0.73rem;">
-                                Total Fisik: <span class="total-fisik-label fw-bold text-dark">${data.stok_fisik}</span>
+                                Total Fisik: <span class="total-fisik-label fw-bold text-dark">${totalFisikLabel}</span>
                             </div>
                         </td>
                         <td class="text-center">
-                            <input type="hidden" name="items[${rowIndex}][selisih]" class="selisih-val" value="${data.selisih}">
-                            <span class="badge ${badgeClass} fw-bold font-monospace py-1.5 px-2.5 fs-8 selisih-span">${sign}${data.selisih}</span>
+                            <input type="hidden" name="items[${rowIndex}][selisih]" class="selisih-val" value="${selisihVal}">
+                            <span class="badge ${badgeClass} fw-bold font-monospace py-1.5 px-2.5 fs-8 selisih-span">${selisihLabel}</span>
                         </td>
                         <td>
-                            <input type="text" name="items[${rowIndex}][keterangan]" class="form-control form-control-sm" value="${data.keterangan}" placeholder="Catatan item...">
+                            <input type="text" name="items[${rowIndex}][keterangan]" class="form-control form-control-sm" value="${data.keterangan || ''}" placeholder="Catatan item...">
                         </td>
                         <td class="text-center">
                             <button type="button" class="btn btn-outline-danger btn-sm rounded btn-delete-row" title="Hapus Item">
@@ -306,6 +316,30 @@
             // Input changes in UOM inputs inside the table grid
             $(document).on('input change', '.uom-qty-input', function() {
                 const tr = $(this).closest('tr');
+                
+                // First check if all inputs in this row are empty/blank
+                let isAnyFilled = false;
+                tr.find('.uom-qty-input').each(function() {
+                    if ($(this).val() !== '') {
+                        isAnyFilled = true;
+                    }
+                });
+
+                if (!isAnyFilled) {
+                    // Set physical stock hidden value and label to empty
+                    tr.find('.fisik-input').val('');
+                    tr.find('.total-fisik-label').text('-');
+                    tr.find('.selisih-val').val('');
+                    
+                    const span = tr.find('.selisih-span');
+                    span.removeClass(
+                        'bg-secondary bg-success-subtle text-success bg-danger-subtle text-danger border border-success-subtle border-danger-subtle'
+                    );
+                    span.addClass('bg-secondary-subtle text-secondary border');
+                    span.text('-');
+                    return;
+                }
+
                 let totalFisik = 0;
                 tr.find('.uom-qty-input').each(function() {
                     const qty = parseFloat($(this).val()) || 0;
@@ -324,7 +358,7 @@
 
                 const span = tr.find('.selisih-span');
                 span.removeClass(
-                    'bg-secondary bg-success-subtle text-success bg-danger-subtle text-danger border border-success-subtle border-danger-subtle'
+                    'bg-secondary bg-success-subtle text-success bg-danger-subtle text-danger border border-success-subtle border-danger-subtle bg-secondary-subtle text-secondary border'
                 );
 
                 let sign = '';
