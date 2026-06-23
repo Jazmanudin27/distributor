@@ -640,6 +640,45 @@ body {
     color: var(--text-primary, #F1F5F9) !important;
 }
 
+/* Fix Select2 inside Bootstrap 5 input-group */
+.input-group > .select2-container {
+    flex: 1 1 auto !important;
+    width: 1% !important;
+}
+
+.input-group > .select2-container .select2-selection--single {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.input-group > .select2-container .select2-selection__rendered {
+    line-height: 36px !important;
+}
+
+.input-group > .select2-container .select2-selection__arrow {
+    height: 36px !important;
+}
+
+/* Small input group size compatibility */
+.input-group-sm > .select2-container .select2-selection--single {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    height: 31px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.input-group-sm > .select2-container .select2-selection__rendered {
+    line-height: 29px !important;
+}
+
+.input-group-sm > .select2-container .select2-selection__arrow {
+    height: 29px !important;
+}
+
 /* =============================================
    BOOTSTRAP UTILITY DARK MODE OVERRIDES
    Mengatasi kelas bg-light, table-light, text-dark,
