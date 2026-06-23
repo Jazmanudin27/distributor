@@ -104,15 +104,17 @@
 
                         <!-- Jumlah -->
                         <div class="mb-3">
-                            <label for="jumlah" class="form-label fs-7 fw-bold text-secondary">Jumlah (Nominal)</label>
+                            <label for="jumlah_formatted" class="form-label fs-7 fw-bold text-secondary">Jumlah
+                                (Nominal)</label>
                             <div class="input-group input-group-merge input-group-sm">
                                 <span class="input-group-text bg-white border-end-0 text-secondary">
                                     <strong>Rp</strong>
                                 </span>
-                                <input type="number" name="jumlah" id="jumlah" min="0.01" step="0.01"
+                                <input type="text" id="jumlah_formatted"
                                     class="form-control form-control-sm border-start-0 @error('jumlah') is-invalid @enderror"
-                                    placeholder="Masukkan jumlah nominal..." value="{{ old('jumlah', $item->jumlah) }}"
-                                    required>
+                                    placeholder="Masukkan jumlah nominal..." required>
+                                <input type="hidden" name="jumlah" id="jumlah"
+                                    value="{{ old('jumlah', $item->jumlah) }}">
                             </div>
                             @error('jumlah')
                                 <div class="text-danger small mt-1">
@@ -150,3 +152,61 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            const $jumlahHidden = $('#jumlah');
+            const $jumlahFormatted = $('#jumlah_formatted');
+
+            function formatRupiah(angka) {
+                let number_string = angka.replace(/[^,\d]/g, '').toString();
+                let split = number_string.split(',');
+                let sisa = split[0].length % 3;
+                let rupiah = split[0].substr(0, sisa);
+                let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+                if (ribuan) {
+                    let separator = sisa ? '.' : '';
+                    rupiah += separator + ribuan.join('.');
+                }
+
+                rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+                return rupiah;
+            }
+
+            function cleanRupiah(value) {
+                if (!value) return '';
+                return value.toString().replace(/\./g, '').replace(/,/g, '.');
+            }
+
+            // Initialize with old/existing value
+            let initialVal = $jumlahHidden.val();
+            if (initialVal) {
+                let parsedVal = parseFloat(initialVal) || 0;
+                if (parsedVal > 0) {
+                    let formatted = formatRupiah(parsedVal.toString().replace('.', ','));
+                    $jumlahFormatted.val(formatted);
+                }
+            }
+
+            // On input in formatted field
+            $jumlahFormatted.on('input', function() {
+                let cursorPosition = this.selectionStart;
+                let originalLength = this.value.length;
+
+                let val = this.value;
+                let formatted = formatRupiah(val);
+                this.value = formatted;
+
+                let newLength = this.value.length;
+                cursorPosition = cursorPosition + (newLength - originalLength);
+                this.setSelectionRange(cursorPosition, cursorPosition);
+
+                // Set clean value to hidden field
+                let cleanVal = cleanRupiah(formatted);
+                $jumlahHidden.val(cleanVal);
+            });
+        });
+    </script>
+@endpush
