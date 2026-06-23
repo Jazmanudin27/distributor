@@ -250,7 +250,8 @@
                 }
                 uomInputsHtml += '</div>';
 
-                const isFisikEmpty = data.stok_fisik === null || data.stok_fisik === undefined || data.stok_fisik === '';
+                const isFisikEmpty = data.stok_fisik === null || data.stok_fisik === undefined || data
+                    .stok_fisik === '';
                 const stokFisikVal = isFisikEmpty ? '' : data.stok_fisik;
                 const totalFisikLabel = isFisikEmpty ? '-' : data.stok_fisik;
 
@@ -316,7 +317,7 @@
             // Input changes in UOM inputs inside the table grid
             $(document).on('input change', '.uom-qty-input', function() {
                 const tr = $(this).closest('tr');
-                
+
                 // First check if all inputs in this row are empty/blank
                 let isAnyFilled = false;
                 tr.find('.uom-qty-input').each(function() {
@@ -330,7 +331,7 @@
                     tr.find('.fisik-input').val('');
                     tr.find('.total-fisik-label').text('-');
                     tr.find('.selisih-val').val('');
-                    
+
                     const span = tr.find('.selisih-span');
                     span.removeClass(
                         'bg-secondary bg-success-subtle text-success bg-danger-subtle text-danger border border-success-subtle border-danger-subtle'

@@ -646,7 +646,7 @@ class PenjualanController extends Controller
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
 
-        return redirect()->route('penjualan.index', $request->query())->with('success', 'Transaksi penjualan berhasil diperbarui.');
+        return redirect()->route('penjualan.edit', $no_faktur)->with('success', 'Transaksi penjualan berhasil diperbarui.');
     }
 
     public function destroy($no_faktur)

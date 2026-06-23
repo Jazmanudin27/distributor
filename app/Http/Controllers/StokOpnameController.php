@@ -74,7 +74,7 @@ class StokOpnameController extends Controller
         $hasActive = false;
         if ($request->has('items')) {
             foreach ($request->items as $row) {
-                if (isset($row['stok_fisik']) && $row['stok_fisik'] !== '' && $row['stok_fisik'] !== null) {
+                if (isset($row['stok_fisik']) && $row['stok_fisik'] !== '' && $row['stok_fisik'] !== null && (float)$row['stok_fisik'] !== 0.0) {
                     $hasActive = true;
                     break;
                 }
@@ -84,14 +84,14 @@ class StokOpnameController extends Controller
         if (!$hasActive) {
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['items' => 'Minimal harus ada 1 item barang yang diisi stok fisiknya!']);
+                ->withErrors(['items' => 'Minimal harus ada 1 item barang yang diisi stok fisiknya (lebih dari 0)!']);
         }
 
         DB::transaction(function () use ($request) {
             $details = [];
 
             foreach ($request->items as $row) {
-                if (!isset($row['stok_fisik']) || $row['stok_fisik'] === '' || $row['stok_fisik'] === null) {
+                if (!isset($row['stok_fisik']) || $row['stok_fisik'] === '' || $row['stok_fisik'] === null || (float)$row['stok_fisik'] === 0.0) {
                     continue;
                 }
 
@@ -168,7 +168,7 @@ class StokOpnameController extends Controller
         $hasActive = false;
         if ($request->has('items')) {
             foreach ($request->items as $row) {
-                if (isset($row['stok_fisik']) && $row['stok_fisik'] !== '' && $row['stok_fisik'] !== null) {
+                if (isset($row['stok_fisik']) && $row['stok_fisik'] !== '' && $row['stok_fisik'] !== null && (float)$row['stok_fisik'] !== 0.0) {
                     $hasActive = true;
                     break;
                 }
@@ -178,7 +178,7 @@ class StokOpnameController extends Controller
         if (!$hasActive) {
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['items' => 'Minimal harus ada 1 item barang yang diisi stok fisiknya!']);
+                ->withErrors(['items' => 'Minimal harus ada 1 item barang yang diisi stok fisiknya (lebih dari 0)!']);
         }
 
         DB::transaction(function () use ($request, $opname) {
@@ -203,7 +203,7 @@ class StokOpnameController extends Controller
             $details = [];
 
             foreach ($request->items as $row) {
-                if (!isset($row['stok_fisik']) || $row['stok_fisik'] === '' || $row['stok_fisik'] === null) {
+                if (!isset($row['stok_fisik']) || $row['stok_fisik'] === '' || $row['stok_fisik'] === null || (float)$row['stok_fisik'] === 0.0) {
                     continue;
                 }
 
