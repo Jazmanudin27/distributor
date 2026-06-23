@@ -1031,6 +1031,131 @@ class PenjualanController extends Controller
         return redirect()->back()->with('success', 'Persetujuan/penolakan pembayaran berhasil dibatalkan dan status kembali menjadi pending.');
     }
 
+    public function updatePayment(Request $request, $id)
+    {
+        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasRole('Admin')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $source = $request->query('source');
+        
+        $request->validate([
+            'tanggal' => 'required|date',
+            'no_bukti' => 'required|string|max:50',
+            'jumlah' => 'required|numeric|min:0.01',
+            'kode_sales' => 'required|string|exists:users,nik',
+            'keterangan' => 'nullable|string',
+        ]);
+
+        if ($source === 'transfer' && $request->no_bukti !== $id) {
+            $exists = DB::table('penjualan_pembayaran_transfer')->where('kode_transfer', $request->no_bukti)->exists();
+            if ($exists) {
+                return redirect()->back()->with('error', 'Kode Transfer / No Bukti sudah digunakan.');
+            }
+        }
+        if ($source === 'giro' && $request->no_bukti !== $id) {
+            $exists = DB::table('penjualan_pembayaran_giro')->where('kode_giro', $request->no_bukti)->exists();
+            if ($exists) {
+                return redirect()->back()->with('error', 'Kode Giro / No Bukti sudah digunakan.');
+            }
+        }
+
+        $no_faktur = '';
+        if ($source === 'transfer') {
+            $payment = DB::table('penjualan_pembayaran_transfer')->where('kode_transfer', $id)->first();
+            if (!$payment) {
+                return redirect()->back()->with('error', 'Pembayaran tidak ditemukan.');
+            }
+            $no_faktur = $payment->no_faktur;
+        } elseif ($source === 'giro') {
+            $payment = DB::table('penjualan_pembayaran_giro')->where('kode_giro', $id)->first();
+            if (!$payment) {
+                return redirect()->back()->with('error', 'Pembayaran tidak ditemukan.');
+            }
+            $no_faktur = $payment->no_faktur;
+        } else {
+            $payment = PenjualanPembayaran::findOrFail($id);
+            $no_faktur = $payment->no_faktur;
+        }
+
+        $item = Penjualan::findOrFail($no_faktur);
+
+        // Calculate sisa piutang excluding this current payment's approved/pending amount
+        $totalBayarApproved = 0;
+        $totalBayarPending = 0;
+
+        // Cash
+        $cashPayments = DB::table('penjualan_pembayaran')->where('no_faktur', $no_faktur)->get();
+        foreach ($cashPayments as $cp) {
+            if ($source === 'cash' && $cp->id == $id) continue;
+            if ($cp->status === 'disetujui') $totalBayarApproved += $cp->jumlah;
+            if ($cp->status === 'pending') $totalBayarPending += $cp->jumlah;
+        }
+
+        // Transfer
+        $transferPayments = DB::table('penjualan_pembayaran_transfer')->where('no_faktur', $no_faktur)->get();
+        foreach ($transferPayments as $tp) {
+            if ($source === 'transfer' && $tp->kode_transfer == $id) continue;
+            if ($tp->status === 'disetujui') $totalBayarApproved += $tp->jumlah;
+            if ($tp->status === 'pending') $totalBayarPending += $tp->jumlah;
+        }
+
+        // Giro
+        $giroPayments = DB::table('penjualan_pembayaran_giro')->where('no_faktur', $no_faktur)->get();
+        foreach ($giroPayments as $gp) {
+            if ($source === 'giro' && $gp->kode_giro == $id) continue;
+            if ($gp->status === 'disetujui') $totalBayarApproved += $gp->jumlah;
+            if ($gp->status === 'pending') $totalBayarPending += $gp->jumlah;
+        }
+
+        $totalRetur = $item->getTotalRetur();
+        $sisaBayarValidation = $item->grand_total - ($totalBayarApproved + $totalBayarPending) - $totalRetur;
+        if ($sisaBayarValidation < 1) {
+            $sisaBayarValidation = 0.0;
+        }
+
+        if ($request->jumlah > $sisaBayarValidation) {
+            return redirect()->back()->with('error', 'Jumlah pembayaran melebihi sisa piutang! Batas maksimal yang diperbolehkan: Rp ' . number_format($sisaBayarValidation, 0, ',', '.'));
+        }
+
+        // Perform update
+        if ($source === 'transfer') {
+            DB::table('penjualan_pembayaran_transfer')->where('kode_transfer', $id)->update([
+                'kode_transfer' => $request->no_bukti,
+                'tanggal' => $request->tanggal,
+                'jumlah' => $request->jumlah,
+                'kode_sales' => $request->kode_sales,
+                'keterangan' => $request->keterangan,
+            ]);
+        } elseif ($source === 'giro') {
+            DB::table('penjualan_pembayaran_giro')->where('kode_giro', $id)->update([
+                'kode_giro' => $request->no_bukti,
+                'tanggal' => $request->tanggal,
+                'jumlah' => $request->jumlah,
+                'kode_sales' => $request->kode_sales,
+                'keterangan' => $request->keterangan,
+            ]);
+        } else {
+            $payment->update([
+                'no_bukti' => $request->no_bukti,
+                'tanggal' => $request->tanggal,
+                'jumlah' => $request->jumlah,
+                'kode_sales' => $request->kode_sales,
+                'keterangan' => $request->keterangan,
+            ]);
+        }
+
+        ActivityLog::create([
+            'user_id' => Auth::id() ?? 1,
+            'action' => 'Edit Pembayaran',
+            'description' => 'Mengubah Pembayaran ' . $id . ' menjadi ' . $request->no_bukti . ' senilai Rp ' . number_format($request->jumlah, 0, ',', '.') . ' untuk Faktur ' . $no_faktur,
+            'ip_address' => $request->ip(),
+            'no_faktur' => $no_faktur,
+        ]);
+
+        return redirect()->route('penjualan.show', $no_faktur)->with('success', 'Pembayaran berhasil diperbarui.');
+    }
+
     public function getByPelanggan(Request $request)
     {
         $kodePelanggan = $request->query('kode_pelanggan');

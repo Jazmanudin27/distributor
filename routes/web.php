@@ -225,5 +225,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/pembayaran/{id}/approve', [PenjualanController::class, 'approvePayment'])->name('pembayaran.approve');
         Route::post('/pembayaran/{id}/reject', [PenjualanController::class, 'rejectPayment'])->name('pembayaran.reject');
         Route::post('/pembayaran/{id}/cancel-approval', [PenjualanController::class, 'cancelPaymentApproval'])->name('pembayaran.cancel-approval');
+        Route::post('/pembayaran/{id}/edit', [PenjualanController::class, 'updatePayment'])->name('pembayaran.update-payment');
     });
 });

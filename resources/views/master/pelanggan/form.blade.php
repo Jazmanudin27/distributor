@@ -88,7 +88,7 @@
                                     </span>
                                     <input type="number" name="limit_pelanggan" id="limit_pelanggan"
                                         class="form-control form-control-sm border-start-0 @error('limit_pelanggan') is-invalid @enderror"
-                                        placeholder="0" value="{{ old('limit_pelanggan', $item->exists ? (int)$item->limit_pelanggan : 0) }}" required>
+                                        placeholder="200000" value="{{ old('limit_pelanggan', $item->exists ? (int)$item->limit_pelanggan : 200000) }}" required>
                                 </div>
                                 @error('limit_pelanggan')
                                     <div class="text-danger small mt-1"><i

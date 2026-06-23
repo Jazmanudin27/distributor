@@ -403,12 +403,24 @@
                                                                     <i class="fa-solid fa-xmark"></i>
                                                                 </button>
                                                             </form>
+                                                            <button type="button"
+                                                                class="btn btn-primary btn-xs px-2 py-0 fw-semibold edit-payment-btn"
+                                                                data-id="{{ $bayar->id }}"
+                                                                data-source="{{ $bayar->source_table }}"
+                                                                data-tanggal="{{ \Carbon\Carbon::parse($bayar->tanggal)->format('Y-m-d') }}"
+                                                                data-bukti="{{ $bayar->no_bukti }}"
+                                                                data-jumlah="{{ (int) $bayar->jumlah }}"
+                                                                data-sales="{{ $bayar->kode_sales }}"
+                                                                data-keterangan="{{ $bayar->keterangan ?? '' }}"
+                                                                style="font-size: 0.65rem;" title="Edit Pembayaran">
+                                                                <i class="fa-solid fa-pen"></i>
+                                                            </button>
                                                         </div>
                                                     @endif
                                                 @elseif($bayar->status === 'disetujui')
                                                     <span class="badge bg-success px-2 py-1 fs-8">Disetujui</span>
                                                     @if (auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin'))
-                                                        <div class="d-flex justify-content-center mt-1">
+                                                        <div class="d-flex justify-content-center gap-1 mt-1">
                                                             <form
                                                                 action="{{ route('pembayaran.cancel-approval', [$bayar->id, 'source' => $bayar->source_table]) }}"
                                                                 method="POST" class="d-inline"
@@ -421,12 +433,24 @@
                                                                     <i class="fa-solid fa-arrow-rotate-left"></i> Batal
                                                                 </button>
                                                             </form>
+                                                            <button type="button"
+                                                                class="btn btn-primary btn-xs px-2 py-0 fw-semibold edit-payment-btn"
+                                                                data-id="{{ $bayar->id }}"
+                                                                data-source="{{ $bayar->source_table }}"
+                                                                data-tanggal="{{ \Carbon\Carbon::parse($bayar->tanggal)->format('Y-m-d') }}"
+                                                                data-bukti="{{ $bayar->no_bukti }}"
+                                                                data-jumlah="{{ (int) $bayar->jumlah }}"
+                                                                data-sales="{{ $bayar->kode_sales }}"
+                                                                data-keterangan="{{ $bayar->keterangan ?? '' }}"
+                                                                style="font-size: 0.65rem;" title="Edit Pembayaran">
+                                                                <i class="fa-solid fa-pen"></i>
+                                                            </button>
                                                         </div>
                                                     @endif
                                                 @else
                                                     <span class="badge bg-danger px-2 py-1 fs-8">Ditolak</span>
                                                     @if (auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin'))
-                                                        <div class="d-flex justify-content-center mt-1">
+                                                        <div class="d-flex justify-content-center gap-1 mt-1">
                                                             <form
                                                                 action="{{ route('pembayaran.cancel-approval', [$bayar->id, 'source' => $bayar->source_table]) }}"
                                                                 method="POST" class="d-inline"
@@ -439,6 +463,18 @@
                                                                     <i class="fa-solid fa-arrow-rotate-left"></i> Batal
                                                                 </button>
                                                             </form>
+                                                            <button type="button"
+                                                                class="btn btn-primary btn-xs px-2 py-0 fw-semibold edit-payment-btn"
+                                                                data-id="{{ $bayar->id }}"
+                                                                data-source="{{ $bayar->source_table }}"
+                                                                data-tanggal="{{ \Carbon\Carbon::parse($bayar->tanggal)->format('Y-m-d') }}"
+                                                                data-bukti="{{ $bayar->no_bukti }}"
+                                                                data-jumlah="{{ (int) $bayar->jumlah }}"
+                                                                data-sales="{{ $bayar->kode_sales }}"
+                                                                data-keterangan="{{ $bayar->keterangan ?? '' }}"
+                                                                style="font-size: 0.65rem;" title="Edit Pembayaran">
+                                                                <i class="fa-solid fa-pen"></i>
+                                                            </button>
                                                         </div>
                                                     @endif
                                                 @endif
@@ -616,6 +652,79 @@
             </div>
         </div>
     @endif
+
+    {{-- MODAL EDIT PEMBAYARAN --}}
+    <div class="modal fade" id="editPaymentModal" tabindex="-1" aria-labelledby="editPaymentModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 rounded-4 shadow">
+                <div class="modal-header bg-primary text-white py-3 border-0">
+                    <h6 class="modal-title fw-bold" id="editPaymentModalLabel">
+                        <i class="fa-solid fa-pen-to-square me-2"></i> Edit Pembayaran
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form action="" method="POST" id="formEditPembayaran">
+                        @csrf
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fs-7 fw-bold text-secondary">Tanggal <span
+                                        class="text-danger">*</span></label>
+                                <input type="date" name="tanggal" id="edit_payment_tanggal"
+                                    class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fs-7 fw-bold text-secondary">No Bukti / BKK <span
+                                        class="text-danger">*</span></label>
+                                <input type="text" name="no_bukti" id="edit_payment_no_bukti"
+                                    class="form-control form-control-sm font-monospace" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fs-7 fw-bold text-secondary">Jumlah Bayar <span
+                                        class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">Rp</span>
+                                    <input type="text" name="jumlah" id="edit_payment_jumlah"
+                                        class="form-control form-control-sm text-end fw-bold text-primary input-number-format"
+                                        required>
+                                </div>
+                                <div id="edit_payment_limit_warning" class="text-danger small mt-1 d-none">
+                                    <i class="fa-solid fa-circle-exclamation me-1"></i>Jumlah melebihi sisa piutang!
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fs-7 fw-bold text-secondary">Salesman <span
+                                        class="text-danger">*</span></label>
+                                <select name="kode_sales" id="edit_payment_kode_sales" class="form-select form-select-sm"
+                                    required>
+                                    <option value="">-- Pilih Salesman --</option>
+                                    @foreach ($salesmen as $s)
+                                        <option value="{{ $s->nik }}">
+                                            {{ $s->name }} ({{ $s->nik }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fs-7 fw-bold text-secondary">Keterangan</label>
+                                <input type="text" name="keterangan" id="edit_payment_keterangan"
+                                    class="form-control form-control-sm" placeholder="Nama bank, no ref, catatan...">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <button type="button" class="btn btn-light btn-sm fw-semibold border"
+                                data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary btn-sm fw-bold" id="btnSubmitEditPembayaran">
+                                <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -657,6 +766,65 @@
 
             $('#formPembayaran').on('submit', function() {
                 $('#payment_jumlah').val(cleanNumber($('#payment_jumlah').val()));
+            });
+
+            $(document).on('click', '.edit-payment-btn', function() {
+                const id = $(this).data('id');
+                const source = $(this).data('source');
+                const tanggal = $(this).data('tanggal');
+                const bukti = $(this).data('bukti');
+                const jumlah = $(this).data('jumlah');
+                const sales = $(this).data('sales');
+                const keterangan = $(this).data('keterangan');
+
+                // Get status from the row badge
+                const status = $(this).closest('tr').find('td:nth-child(4) span').text().trim()
+                .toLowerCase();
+
+                // Set values
+                $('#edit_payment_tanggal').val(tanggal);
+                $('#edit_payment_no_bukti').val(bukti);
+                $('#edit_payment_jumlah').val(formatNumber(jumlah));
+                $('#edit_payment_kode_sales').val(sales);
+                $('#edit_payment_keterangan').val(keterangan);
+
+                // Set form action url dynamically
+                let actionUrl = `{{ url('/pembayaran') }}/${id}/edit?source=${source}`;
+                $('#formEditPembayaran').attr('action', actionUrl);
+
+                // Store current payment values for validation
+                $('#formEditPembayaran').data('original-amount', jumlah);
+                $('#formEditPembayaran').data('status', status);
+
+                // Trigger validation once on open
+                $('#edit_payment_jumlah').trigger('input');
+
+                // Show modal
+                $('#editPaymentModal').modal('show');
+            });
+
+            $('#edit_payment_jumlah').on('input', function() {
+                const val = parseFloat(cleanNumber($(this).val())) || 0;
+                const originalAmount = parseFloat($('#formEditPembayaran').data('original-amount')) || 0;
+                const status = $('#formEditPembayaran').data('status') || '';
+
+                // If it was disetujui (approved), we add originalAmount back to sisaBayar for the limit
+                let limit = sisaBayar;
+                if (status === 'disetujui') {
+                    limit += originalAmount;
+                }
+
+                if (val > limit) {
+                    $('#edit_payment_limit_warning').removeClass('d-none');
+                    $('#btnSubmitEditPembayaran').attr('disabled', true);
+                } else {
+                    $('#edit_payment_limit_warning').addClass('d-none');
+                    $('#btnSubmitEditPembayaran').attr('disabled', false);
+                }
+            });
+
+            $('#formEditPembayaran').on('submit', function() {
+                $('#edit_payment_jumlah').val(cleanNumber($('#edit_payment_jumlah').val()));
             });
 
             $(document).on('click', '.btn-batal-faktur', function(e) {

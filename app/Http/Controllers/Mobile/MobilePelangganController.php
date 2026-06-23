@@ -88,7 +88,7 @@ class MobilePelangganController extends Controller
             'tanggal_register' => now()->toDateString(),
             'no_hp_pelanggan'  => $request->no_hp_pelanggan,
             'metode_bayar'     => $request->metode_bayar,
-            'limit_pelanggan'  => 0, // Default to 0 limit
+            'limit_pelanggan'  => 200000, // Default to 200 rb limit
             'ljt'              => 30, // Default to 30 days LJT
             'latitude'         => $request->filled('latitude') ? $request->latitude : null,
             'longitude'        => $request->filled('longitude') ? $request->longitude : null,

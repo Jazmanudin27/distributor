@@ -197,7 +197,7 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-mobile btn-mobile-primary w-100 py-3 mt-2 fw-bold">
+        <button type="submit" id="btn-submit" class="btn btn-mobile btn-mobile-primary w-100 py-3 mt-2 fw-bold">
             <i class="fa-solid fa-floppy-disk me-2"></i> Daftarkan Pelanggan
         </button>
     </form>
@@ -246,21 +246,130 @@
             }
         });
 
-        // Image Preview logic
+        let compressionInProgress = 0;
+
+        function updateSubmitButtonState() {
+            const btnSubmit = document.getElementById('btn-submit');
+            if (btnSubmit) {
+                if (compressionInProgress > 0) {
+                    btnSubmit.disabled = true;
+                    btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Memproses Foto...';
+                } else {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i> Daftarkan Pelanggan';
+                }
+            }
+        }
+
+        function compressAndResizeImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.7) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function() {
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height = Math.round((height * maxWidth) / width);
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width = Math.round((width * maxHeight) / height);
+                                height = maxHeight;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob((blob) => {
+                            if (blob) {
+                                let filename = file.name;
+                                const extIndex = filename.lastIndexOf('.');
+                                if (extIndex !== -1) {
+                                    filename = filename.substring(0, extIndex) + '.jpg';
+                                } else {
+                                    filename = filename + '.jpg';
+                                }
+
+                                const compressedFile = new File([blob], filename, {
+                                    type: 'image/jpeg',
+                                    lastModified: Date.now()
+                                });
+                                resolve(compressedFile);
+                            } else {
+                                reject(new Error('Canvas compression failed'));
+                            }
+                        }, 'image/jpeg', quality);
+                    };
+                    img.onerror = function(err) {
+                        reject(err);
+                    };
+                };
+                reader.onerror = function(err) {
+                    reject(err);
+                };
+            });
+        }
+
+        // Image Preview logic with client-side compression
         function previewFile(input, previewId, labelId) {
             const preview = document.getElementById(previewId);
             const label = document.getElementById(labelId);
 
             if (input.files && input.files[0]) {
                 const file = input.files[0];
-                label.innerText = file.name.substring(0, 15) + (file.name.length > 15 ? '...' : '');
 
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
+                if (file.type.startsWith('image/')) {
+                    compressionInProgress++;
+                    updateSubmitButtonState();
+                    label.innerText = 'Memproses...';
+
+                    compressAndResizeImage(file, 1024, 1024, 0.7)
+                        .then(compressedFile => {
+                            // Update input.files with compressed file
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(compressedFile);
+                            input.files = dataTransfer.files;
+
+                            const compressedSizeKB = (compressedFile.size / 1024).toFixed(1);
+                            label.innerText = compressedFile.name.substring(0, 10) + '... (' + compressedSizeKB +
+                                ' KB)';
+
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                preview.src = e.target.result;
+                                preview.style.display = 'block';
+                            }
+                            reader.readAsDataURL(compressedFile);
+                        })
+                        .catch(err => {
+                            console.error('Image compression error:', err);
+                            label.innerText = file.name.substring(0, 15) + (file.name.length > 15 ? '...' : '');
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                preview.src = e.target.result;
+                                preview.style.display = 'block';
+                            }
+                            reader.readAsDataURL(file);
+                        })
+                        .finally(() => {
+                            compressionInProgress--;
+                            updateSubmitButtonState();
+                        });
+                } else {
+                    label.innerText = file.name.substring(0, 15) + (file.name.length > 15 ? '...' : '');
+                    preview.src = '';
+                    preview.style.display = 'none';
                 }
-                reader.readAsDataURL(file);
             } else {
                 preview.src = '';
                 preview.style.display = 'none';
