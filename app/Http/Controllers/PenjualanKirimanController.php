@@ -372,7 +372,7 @@ class PenjualanKirimanController extends Controller
                 'penjualan.grand_total',
                 'penjualan_kiriman.keterangan'
             )
-            ->orderBy('penjualan_kiriman.no_faktur', 'asc')
+            ->orderBy('pelanggan.nama_pelanggan', 'asc')
             ->get();
 
         return view('penjualan_kiriman.print_rekap', compact('tanggal', 'wilayah', 'kirimanke', 'invoices'));
@@ -420,7 +420,7 @@ class PenjualanKirimanController extends Controller
                 'pelanggan.nama_pelanggan',
                 'penjualan.grand_total'
             )
-            ->orderBy('penjualan_kiriman.no_faktur', 'asc')
+            ->orderBy('pelanggan.nama_pelanggan', 'asc')
             ->get();
 
         return view('penjualan_kiriman.print_barang', compact('tanggal', 'wilayah', 'kirimanke', 'details', 'invoices'));
