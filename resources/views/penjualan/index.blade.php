@@ -120,9 +120,7 @@
                                 <td class="text-center text-secondary small fw-bold">{{ $items->firstItem() + $index }}
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary font-monospace px-2 py-1">
-                                        {{ $item->no_faktur }}
-                                    </span>
+                                    {{ $item->no_faktur }}
                                 </td>
                                 <td class="small">{{ \Carbon\Carbon::parse($item->tanggal)->format('d-m-Y') }}</td>
                                 <td class="fw-bold text-dark">

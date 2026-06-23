@@ -156,6 +156,7 @@
                                         @endphp
                                         <option value="{{ $p->kode_pelanggan }}" data-kode="{{ $p->kode_pelanggan }}"
                                             data-hp="{{ $p->no_hp_pelanggan }}" data-alamat="{{ $p->alamat_pelanggan }}"
+                                            data-wilayah="{{ $p->wilayah?->nama_wilayah ?? '-' }}"
                                             data-metode="{{ $p->metode_bayar }}" data-limit="{{ $p->limit_pelanggan }}"
                                             data-sisa-limit="{{ $sisaLimit }}"
                                             data-has-overdue="{{ $hasOverdue ? 1 : 0 }}"
@@ -183,6 +184,11 @@
                             <div class="mb-2">
                                 <label class="form-label fs-8 fw-bold text-secondary mb-1">Alamat</label>
                                 <input type="text" id="pelanggan_alamat" class="form-control form-control-sm bg-light"
+                                    readonly>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fs-8 fw-bold text-secondary mb-1">Wilayah</label>
+                                <input type="text" id="pelanggan_wilayah" class="form-control form-control-sm bg-light"
                                     readonly>
                             </div>
                             <div class="row g-2 mb-0">
@@ -586,6 +592,7 @@
                 opt.attr('data-kode', data.kode);
                 opt.attr('data-hp', data.hp);
                 opt.attr('data-alamat', data.alamat);
+                opt.attr('data-wilayah', data.wilayah || '-');
                 opt.attr('data-metode', data.metode);
                 opt.attr('data-limit', data.limit);
                 opt.attr('data-sisa-limit', data.sisa_limit);
@@ -598,6 +605,7 @@
                 $('#pelanggan_kode').val(opt.attr('data-kode') || opt.data('kode') || '');
                 $('#pelanggan_hp').val(opt.attr('data-hp') || opt.data('hp') || '-');
                 $('#pelanggan_alamat').val(opt.attr('data-alamat') || opt.data('alamat') || '-');
+                $('#pelanggan_wilayah').val(opt.attr('data-wilayah') || opt.data('wilayah') || '-');
                 $('#pelanggan_metode').val(opt.attr('data-metode') || opt.data('metode') || '-');
 
                 // Display credit limits
@@ -942,8 +950,7 @@
                             <input type="hidden" name="items[${rowIndex}][kode_barang]" value="${barangCode}">
                         </td>
                         <td class="fw-bold text-dark">${barangName}</td>
-                        <td class="text-center">
-                            <span class="badge bg-info-subtle text-info border border-info-subtle font-monospace px-2 py-1 fs-8">${satuanName}</span>
+                        <td class="text-center">${satuanName}
                             <input type="hidden" name="items[${rowIndex}][satuan_id]" value="${satuanId}">
                             <input type="hidden" name="items[${rowIndex}][satuan]" value="${satuanName}">
                         </td>

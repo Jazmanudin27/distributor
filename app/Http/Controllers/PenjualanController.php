@@ -142,7 +142,7 @@ class PenjualanController extends Controller
 
         $selectedKode = old('kode_pelanggan');
         if ($selectedKode) {
-            $pelanggans = Pelanggan::where('kode_pelanggan', $selectedKode)
+            $pelanggans = Pelanggan::with(['wilayah'])->where('kode_pelanggan', $selectedKode)
                 ->select('pelanggan.*')
                 ->addSelect([
                     'outstanding_piutang' => $outstandingSubquery,
@@ -466,7 +466,7 @@ class PenjualanController extends Controller
 
         $selectedKode = old('kode_pelanggan', $item->kode_pelanggan);
         if ($selectedKode) {
-            $pelanggans = Pelanggan::where('kode_pelanggan', $selectedKode)
+            $pelanggans = Pelanggan::with(['wilayah'])->where('kode_pelanggan', $selectedKode)
                 ->select('pelanggan.*')
                 ->addSelect([
                     'outstanding_piutang' => $outstandingSubquery,
@@ -1038,11 +1038,21 @@ class PenjualanController extends Controller
             return response()->json([]);
         }
 
-        $penjualans = Penjualan::where('kode_pelanggan', $kodePelanggan)
+        $penjualans = Penjualan::with(['pembayarans'])
+            ->where('kode_pelanggan', $kodePelanggan)
             ->where('batal', 0)
             ->orderBy('tanggal', 'desc')
             ->get(['no_faktur', 'grand_total']);
 
-        return response()->json($penjualans);
+        $result = $penjualans->map(function ($p) {
+            return [
+                'no_faktur'    => $p->no_faktur,
+                'grand_total'  => $p->grand_total,
+                'sisa_piutang' => $p->getSisaPiutang(),
+            ];
+        });
+
+        return response()->json($result);
     }
 }
+

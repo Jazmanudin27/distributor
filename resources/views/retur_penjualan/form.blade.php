@@ -274,9 +274,26 @@
                                 <span class="text-secondary small">Total Potongan Diskon</span>
                                 <span class="fw-semibold text-danger" id="summary-diskon-item">- Rp 0</span>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center border-top pt-2">
+                            <div class="d-flex justify-content-between align-items-center border-top pt-2 mb-3">
                                 <span class="fw-bold text-success">Total Nilai Retur</span>
                                 <span class="fw-bold text-success fs-5" id="summary-grandtotal">Rp 0</span>
+                            </div>
+                            {{-- Faktur info (shown when faktur is selected) --}}
+                            <div id="faktur-info-section" class="border-top pt-2" style="display:none;">
+                                <div class="d-flex justify-content-between align-items-center mb-1 mt-2">
+                                    <span class="text-secondary small"><i class="fa-solid fa-file-invoice me-1"></i>Total
+                                        Faktur</span>
+                                    <span class="fw-semibold text-dark" id="summary-total-faktur">Rp 0</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-secondary small"><i
+                                            class="fa-solid fa-clock-rotate-left me-1"></i>Sudah Dibayar / Diretur</span>
+                                    <span class="fw-semibold text-dark" id="summary-sudah-dibayar">Rp 0</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center border-top pt-2">
+                                    <span class="fw-bold text-warning">Sisa Tagihan Setelah Retur</span>
+                                    <span class="fw-bold text-warning fs-6" id="summary-sisa-tagihan">Rp 0</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -429,7 +446,7 @@
                                 const totalFormatted = new Intl.NumberFormat('id-ID')
                                     .format(Math.round(p.grand_total));
                                 noFakturSelect.append(
-                                    `<option value="${p.no_faktur}" data-total="${p.grand_total}">${p.no_faktur} (Rp ${totalFormatted})</option>`
+                                    `<option value="${p.no_faktur}" data-total="${p.grand_total}" data-sisa="${p.sisa_piutang}">${p.no_faktur} (Rp ${totalFormatted})</option>`
                                 );
                             });
                             noFakturSelect.trigger('change');
@@ -437,6 +454,27 @@
                     });
                 } else {
                     noFakturSelect.trigger('change');
+                }
+            });
+
+            // Update faktur summary when no_faktur changes
+            $('#no_faktur').on('change', function() {
+                const opt = $(this).find(':selected');
+                const totalFaktur = parseFloat(opt.attr('data-total') || opt.data('total')) || 0;
+                const sisaPiutang = parseFloat(opt.attr('data-sisa') || opt.data('sisa'));
+
+                if (opt.val() && totalFaktur > 0) {
+                    const sudahDibayar = totalFaktur - (isNaN(sisaPiutang) ? totalFaktur : sisaPiutang);
+                    const grandTotal = parseFloat(cleanNumber($('#summary-grandtotal').text())) || 0;
+                    const sisaSetelahRetur = Math.max(0, (isNaN(sisaPiutang) ? totalFaktur : sisaPiutang) -
+                        grandTotal);
+
+                    $('#summary-total-faktur').text(formatCurrency(totalFaktur));
+                    $('#summary-sudah-dibayar').text(formatCurrency(sudahDibayar));
+                    $('#summary-sisa-tagihan').text(formatCurrency(sisaSetelahRetur));
+                    $('#faktur-info-section').show();
+                } else {
+                    $('#faktur-info-section').hide();
                 }
             });
 
@@ -545,12 +583,13 @@
             });
 
             // Keyboard shortcut to add item on Enter press
-            $('#quick_qty, #quick_harga, #quick_diskon1_percent, #quick_diskon2_percent, #quick_diskon3_percent, #quick_diskon, #quick_satuan, #quick_kondisi').on('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    $('#btn-add-quick').click();
-                }
-            });
+            $('#quick_qty, #quick_harga, #quick_diskon1_percent, #quick_diskon2_percent, #quick_diskon3_percent, #quick_diskon, #quick_satuan, #quick_kondisi')
+                .on('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        $('#btn-add-quick').click();
+                    }
+                });
 
             function appendRow(barangCode, barangName, satuanId, satuanName, kondisi, qty, harga, d1 = 0, d2 = 0,
                 d3 = 0) {
@@ -656,6 +695,16 @@
                 $('#summary-diskon-item').text('- ' + formatCurrency(totalDiskon));
                 $('#summary-grandtotal').text(formatCurrency(grandTotal));
                 $('#grand-total-display').text(formatCurrency(grandTotal));
+
+                // Update sisa tagihan based on selected faktur
+                const optFaktur = $('#no_faktur').find(':selected');
+                if (optFaktur.val()) {
+                    const sisaPiutang = parseFloat(optFaktur.attr('data-sisa') || optFaktur.data('sisa'));
+                    if (!isNaN(sisaPiutang)) {
+                        const sisaSetelahRetur = Math.max(0, sisaPiutang - grandTotal);
+                        $('#summary-sisa-tagihan').text(formatCurrency(sisaSetelahRetur));
+                    }
+                }
             }
 
             // Load existing details (edit mode)
@@ -711,14 +760,16 @@
                 });
 
                 // Clear draft since transaction is being saved
-                const key = isEditMode ? `retur_penjualan_edit_draft_${$('#no_retur').val()}` : `retur_penjualan_create_draft`;
+                const key = isEditMode ? `retur_penjualan_edit_draft_${$('#no_retur').val()}` :
+                    `retur_penjualan_create_draft`;
                 localStorage.removeItem(key);
             });
 
             // --- Draft Persist System ---
             function saveDraft() {
                 if (window.isRestoringDraft) return;
-                const key = isEditMode ? `retur_penjualan_edit_draft_${$('#no_retur').val()}` : `retur_penjualan_create_draft`;
+                const key = isEditMode ? `retur_penjualan_edit_draft_${$('#no_retur').val()}` :
+                    `retur_penjualan_create_draft`;
 
                 const items = [];
                 $('#itemsTable tbody tr').each(function() {
@@ -792,9 +843,12 @@
 
                 // Restore Faktur (Select2 dynamic options)
                 if (draft.no_faktur) {
-                    const totalFormatted = new Intl.NumberFormat('id-ID').format(Math.round(draft.fakturInfo ? draft.fakturInfo.total : 0));
+                    const totalFormatted = new Intl.NumberFormat('id-ID').format(Math.round(draft.fakturInfo ? draft
+                        .fakturInfo.total : 0));
                     $('#no_faktur').empty().append('<option value="">-- Tanpa Faktur / Umum --</option>');
-                    $('#no_faktur').append(`<option value="${draft.no_faktur}" data-total="${draft.fakturInfo ? draft.fakturInfo.total : 0}" selected>${draft.no_faktur} (Rp ${totalFormatted})</option>`);
+                    $('#no_faktur').append(
+                        `<option value="${draft.no_faktur}" data-total="${draft.fakturInfo ? draft.fakturInfo.total : 0}" selected>${draft.no_faktur} (Rp ${totalFormatted})</option>`
+                    );
                     $('#no_faktur').val(draft.no_faktur).trigger('change.select2');
                 } else {
                     $('#no_faktur').val('').trigger('change.select2');
@@ -825,7 +879,8 @@
             }
 
             function initDraftSystem() {
-                const key = isEditMode ? `retur_penjualan_edit_draft_${$('#no_retur').val()}` : `retur_penjualan_create_draft`;
+                const key = isEditMode ? `retur_penjualan_edit_draft_${$('#no_retur').val()}` :
+                    `retur_penjualan_create_draft`;
                 const savedDraftStr = localStorage.getItem(key);
                 if (savedDraftStr) {
                     try {
@@ -833,9 +888,9 @@
                         if (savedDraft && savedDraft.items && savedDraft.items.length > 0) {
                             Swal.fire({
                                 title: 'Draft Retur Penjualan Ditemukan',
-                                text: isEditMode 
-                                    ? 'Ditemukan draf perubahan untuk retur ini yang belum disimpan. Pulihkan?' 
-                                    : 'Ditemukan draft transaksi retur yang belum disimpan. Apakah Anda ingin melanjutkan?',
+                                text: isEditMode ?
+                                    'Ditemukan draf perubahan untuk retur ini yang belum disimpan. Pulihkan?' :
+                                    'Ditemukan draft transaksi retur yang belum disimpan. Apakah Anda ingin melanjutkan?',
                                 icon: 'info',
                                 showCancelButton: true,
                                 confirmButtonText: 'Pulihkan',
@@ -866,7 +921,8 @@
 
             // Clear draft when user explicitly cancels/goes back
             $(document).on('click', 'a[href*="retur-penjualan.index"]', function() {
-                const key = isEditMode ? `retur_penjualan_edit_draft_${$('#no_retur').val()}` : `retur_penjualan_create_draft`;
+                const key = isEditMode ? `retur_penjualan_edit_draft_${$('#no_retur').val()}` :
+                    `retur_penjualan_create_draft`;
                 localStorage.removeItem(key);
             });
         });
