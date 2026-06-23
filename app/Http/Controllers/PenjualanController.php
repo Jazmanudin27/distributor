@@ -206,7 +206,7 @@ class PenjualanController extends Controller
             $tempSubtotalSum += $sub;
             $tempTotalDiskon += round($d1 + $d2 + $d3, 2);
         }
-        $tempGrandTotal = $tempSubtotalSum - $tempTotalDiskon - ($request->diskon_global ?? 0);
+        $tempGrandTotal = $tempSubtotalSum - $tempTotalDiskon - floatval($request->diskon_global ?? 0);
 
         $pelanggan = Pelanggan::findOrFail($request->kode_pelanggan);
         if ($pelanggan->hasOverdueInvoices()) {
@@ -296,8 +296,8 @@ class PenjualanController extends Controller
                     ]);
                 }
 
-                $diskonGlobal = $request->diskon_global ?? 0;
-                $grandTotal = $subtotalSum - $totalDiskon - $diskonGlobal;
+                $diskonGlobal = floatval($request->diskon_global ?? 0);
+                $grandTotal = round($subtotalSum - $totalDiskon - $diskonGlobal, 2);
 
                 $penjualan = Penjualan::create([
                     'no_faktur' => $noFaktur,
@@ -308,7 +308,7 @@ class PenjualanController extends Controller
                     'jenis_transaksi' => $isKredit ? 'K' : 'T',
                     'jenis_bayar' => $isKredit ? 'Kredit' : 'Tunai',
                     'total' => $subtotalSum,
-                    'diskon' => $totalDiskon + $diskonGlobal,
+                    'diskon' => round($totalDiskon + $diskonGlobal, 2),
                     'grand_total' => $grandTotal,
                     'keterangan' => $request->keterangan,
                     'id_user' => Auth::id() ?? 1,
@@ -532,7 +532,7 @@ class PenjualanController extends Controller
             $tempSubtotalSum += $sub;
             $tempTotalDiskon += round($d1 + $d2 + $d3, 2);
         }
-        $tempGrandTotal = $tempSubtotalSum - $tempTotalDiskon - ($request->diskon_global ?? 0);
+        $tempGrandTotal = $tempSubtotalSum - $tempTotalDiskon - floatval($request->diskon_global ?? 0);
 
         $pelanggan = Pelanggan::findOrFail($request->kode_pelanggan);
 
@@ -615,8 +615,8 @@ class PenjualanController extends Controller
                     ]);
                 }
 
-                $diskonGlobal = $request->diskon_global ?? 0;
-                $grandTotal = $subtotalSum - $totalDiskon - $diskonGlobal;
+                $diskonGlobal = floatval($request->diskon_global ?? 0);
+                $grandTotal = round($subtotalSum - $totalDiskon - $diskonGlobal, 2);
 
                 $penjualan->update([
                     'tanggal' => $request->tanggal,
@@ -626,7 +626,7 @@ class PenjualanController extends Controller
                     'jenis_transaksi' => $isKredit ? 'K' : 'T',
                     'jenis_bayar' => $isKredit ? 'Kredit' : 'Tunai',
                     'total' => $subtotalSum,
-                    'diskon' => $totalDiskon + $diskonGlobal,
+                    'diskon' => round($totalDiskon + $diskonGlobal, 2),
                     'grand_total' => $grandTotal,
                     'keterangan' => $request->keterangan,
                 ]);

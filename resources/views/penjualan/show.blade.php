@@ -291,7 +291,7 @@
                                     <span class="fw-semibold text-danger">-Rp
                                         {{ number_format((float) $item->details->sum('total_diskon'), 0, ',', '.') }}</span>
                                 </div>
-                                @php $diskonGlobal = $item->diskon - $item->details->sum('total_diskon'); @endphp
+                                @php $diskonGlobal = round($item->diskon - $item->details->sum('total_diskon'), 2); @endphp
                                 @if ($diskonGlobal > 0)
                                     <div class="d-flex justify-content-between mb-2">
                                         <span class="text-secondary small">Diskon Global</span>

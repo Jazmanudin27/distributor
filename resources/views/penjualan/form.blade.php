@@ -225,7 +225,7 @@
                                     <span class="input-group-text bg-white bg-opacity-25 border-0 text-white">Rp</span>
                                     <input type="text" name="diskon_global" id="diskon_global"
                                         class="form-control form-control-sm bg-white bg-opacity-25 border-0 text-white text-end input-number-format fw-bold"
-                                        value="{{ old('diskon_global', $item->exists ? $item->diskon - $item->details->sum('total_diskon') : 0) }}"
+                                        value="{{ old('diskon_global', $item->exists ? round($item->diskon - $item->details->sum('total_diskon'), 2) : 0) }}"
                                         placeholder="0" style="color: white !important;">
                                 </div>
                             </div>
@@ -508,7 +508,12 @@
             }
 
             function cleanNumber(str) {
-                return str.toString().replace(/\./g, "").replace(/\D/g, "") || "0";
+                let s = str.toString();
+                if (s.includes('e') || s.includes('E')) {
+                    let num = parseFloat(s);
+                    return isNaN(num) ? "0" : Math.round(num).toString();
+                }
+                return s.replace(/\./g, "").replace(/\D/g, "") || "0";
             }
 
             function formatCurrency(value) {
