@@ -79,10 +79,49 @@ class MobileOwnerController extends Controller
             $q->whereNull('approve')->orWhere('approve', 0);
         })->count();
 
+        // 6. Top Pencapaian Sales Bulan Ini (Top 5)
+        $salesList = \App\Models\User::whereIn('role', ['sales', 'spv sales'])
+            ->where('status', '1')
+            ->get();
+
+        $topSales = [];
+        foreach ($salesList as $sales) {
+            $totalSales = (float) Penjualan::where('kode_sales', $sales->nik)
+                ->where('batal', 0)
+                ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+                ->sum('grand_total');
+
+            $invoiceCount = Penjualan::where('kode_sales', $sales->nik)
+                ->where('batal', 0)
+                ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+                ->count();
+
+            $visitCount = \App\Models\PenjualanCheckin::where('kode_sales', $sales->nik)
+                ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+                ->count();
+
+            $topSales[] = [
+                'name' => $sales->name,
+                'nik' => $sales->nik,
+                'total_sales' => $totalSales,
+                'invoice_count' => $invoiceCount,
+                'visit_count' => $visitCount,
+            ];
+        }
+
+        // Sort by total_sales descending
+        usort($topSales, function ($a, $b) {
+            return $b['total_sales'] <=> $a['total_sales'];
+        });
+
+        // Take top 5
+        $topSales = array_slice($topSales, 0, 5);
+
         return view('mobile.owner.dashboard', compact(
             'salesToday', 'salesMonth', 'purchaseToday', 'purchaseMonth', 
             'paymentsToday', 'paymentsMonth', 'profitMonth', 
-            'lowStockCount', 'pendingApprovalsCount', 'pendingPelangganCount'
+            'lowStockCount', 'pendingApprovalsCount', 'pendingPelangganCount',
+            'topSales'
         ));
     }
 

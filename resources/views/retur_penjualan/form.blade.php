@@ -69,6 +69,22 @@
                                 </select>
                             </div>
                             <div class="mb-2">
+                                <label for="kode_sales" class="form-label fs-7 fw-bold text-secondary mb-1">Salesman
+                                    <span class="text-danger">*</span></label>
+                                <select name="kode_sales" id="kode_sales" class="form-select form-select-sm" required>
+                                    <option value="">-- Pilih Salesman --</option>
+                                    @foreach ($salesmen as $s)
+                                        <option value="{{ $s->nik }}"
+                                            {{ old('kode_sales', $item->kode_sales) === $s->nik ? 'selected' : '' }}>
+                                            {{ $s->name }} ({{ $s->nik }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('kode_sales')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="mb-2">
                                 <label for="no_faktur" class="form-label fs-7 fw-bold text-secondary mb-1">Faktur Penjualan
                                     (Opsional)</label>
                                 <select name="no_faktur" id="no_faktur" class="form-select form-select-sm">
@@ -356,6 +372,10 @@
             });
 
             $('#no_faktur').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
+            $('#kode_sales').select2({
                 theme: 'bootstrap-5',
                 width: '100%'
             });
@@ -811,6 +831,7 @@
                     fakturInfo: fakturInfo,
                     kode_pelanggan: $('#kode_pelanggan').val(),
                     pelangganInfo: pelangganInfo,
+                    kode_sales: $('#kode_sales').val(),
                     keterangan: $('#keterangan').val(),
                     items: items,
                     timestamp: new Date().getTime()
@@ -824,6 +845,7 @@
 
                 if (draft.tanggal) $('#tanggal').val(draft.tanggal);
                 if (draft.jenis_retur) $('#jenis_retur').val(draft.jenis_retur);
+                if (draft.kode_sales) $('#kode_sales').val(draft.kode_sales).trigger('change.select2');
                 if (draft.keterangan) $('#keterangan').val(draft.keterangan);
 
                 // Restore Pelanggan (Select2)

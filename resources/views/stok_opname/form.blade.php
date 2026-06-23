@@ -170,23 +170,28 @@
 
             // Format stock to UOM readable format
             function formatStokJS(stok, satuans) {
-                let remaining = Math.abs(stok);
-                let isNegative = stok < 0;
+                let qtyFloat = parseFloat(stok) || 0;
+                let isNegative = qtyFloat < 0;
+                let remaining = Math.round(Math.abs(qtyFloat) * 10000) / 10000;
                 let breakdowns = [];
                 if (satuans && satuans.length > 0) {
                     let sorted = [...satuans].sort((a, b) => b.isi - a.isi);
-                    sorted.forEach(sat => {
+                    let count = sorted.length;
+                    sorted.forEach((sat, index) => {
                         let factor = parseFloat(sat.isi) || 1;
-                        let unitQty = Math.floor(remaining / factor);
-                        if (unitQty > 0) {
-                            breakdowns.push(`${unitQty} ${sat.satuan}`);
-                            remaining = remaining % factor;
+                        if (index === count - 1) {
+                            let unitQty = Math.round((remaining / factor) * 10000) / 10000;
+                            if (unitQty > 0) {
+                                breakdowns.push(`${unitQty} ${sat.satuan}`);
+                            }
+                        } else {
+                            let unitQty = Math.floor(Math.round((remaining / factor) * 100000000) / 100000000);
+                            if (unitQty > 0) {
+                                breakdowns.push(`${unitQty} ${sat.satuan}`);
+                                remaining = Math.round((remaining - (unitQty * factor)) * 10000) / 10000;
+                            }
                         }
                     });
-                    if (remaining > 0 && sorted.length > 0) {
-                        let last = sorted[sorted.length - 1];
-                        breakdowns.push(`${remaining} ${last.satuan}`);
-                    }
                 } else {
                     breakdowns.push(`${remaining} PCS`);
                 }
@@ -197,27 +202,29 @@
             // Function to break down physical stock into UOM quantities
             function breakdownStock(qty, satuans) {
                 let result = {};
-                if (qty === null || qty === undefined || qty === '') {
+                let qtyFloat = parseFloat(qty);
+                if (isNaN(qtyFloat)) {
                     return result;
                 }
                 if (!satuans || satuans.length === 0) {
-                    result[1] = qty;
+                    result[1] = qtyFloat;
                     return result;
                 }
                 // Sort units by conversion factor descending
                 let sorted = [...satuans].sort((a, b) => b.isi - a.isi);
-                let remaining = qty;
-                sorted.forEach(function(sat) {
-                    let factor = sat.isi || 1;
-                    let unitQty = Math.floor(remaining / factor);
-                    result[sat.id] = unitQty;
-                    remaining = remaining % factor;
+                let remaining = Math.round(qtyFloat * 10000) / 10000;
+                let count = sorted.length;
+                sorted.forEach(function(sat, index) {
+                    let factor = parseFloat(sat.isi) || 1;
+                    if (index === count - 1) {
+                        let unitQty = Math.round((remaining / factor) * 10000) / 10000;
+                        result[sat.id] = unitQty;
+                    } else {
+                        let unitQty = Math.floor(Math.round((remaining / factor) * 100000000) / 100000000);
+                        result[sat.id] = unitQty;
+                        remaining = Math.round((remaining - (unitQty * factor)) * 10000) / 10000;
+                    }
                 });
-                // Add any leftover to the smallest unit (which is last)
-                if (remaining > 0 && sorted.length > 0) {
-                    let smallestUnitId = sorted[sorted.length - 1].id;
-                    result[smallestUnitId] += remaining;
-                }
                 return result;
             }
 

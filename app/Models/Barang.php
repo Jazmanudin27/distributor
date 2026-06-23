@@ -30,27 +30,33 @@ class Barang extends Model
     {
         $qtyFloat = (float)$qty;
         $isNegative = $qtyFloat < 0;
-        $absQty = abs($qtyFloat);
+        $absQty = round(abs($qtyFloat), 4);
 
         $satuans = $this->satuans;
         $breakdowns = [];
         if ($satuans && $satuans->count() > 0) {
             $sorted = $satuans->sortByDesc('isi');
             $remaining = $absQty;
+            $count = $sorted->count();
+            $i = 0;
             foreach ($sorted as $sat) {
+                $i++;
                 $factor = (float)($sat->isi ?: 1);
-                $unitQty = floor($remaining / $factor);
-                if ($unitQty > 0) {
-                    $breakdowns[] = $unitQty . ' ' . $sat->satuan;
-                    $remaining = fmod($remaining, $factor);
+                if ($i === $count) {
+                    $unitQty = round($remaining / $factor, 4);
+                    if ($unitQty > 0) {
+                        $breakdowns[] = (float)$unitQty . ' ' . $sat->satuan;
+                    }
+                } else {
+                    $unitQty = floor(round($remaining / $factor, 8));
+                    if ($unitQty > 0) {
+                        $breakdowns[] = $unitQty . ' ' . $sat->satuan;
+                        $remaining = round($remaining - ($unitQty * $factor), 4);
+                    }
                 }
             }
-            if ($remaining > 0 && $sorted->count() > 0) {
-                $last = $sorted->last();
-                $breakdowns[] = $remaining . ' ' . $last->satuan;
-            }
         } else {
-            $breakdowns[] = $absQty . ' PCS';
+            $breakdowns[] = (float)$absQty . ' PCS';
         }
         $formatted = implode(', ', $breakdowns) ?: '0 PCS';
         return $isNegative ? '-' . $formatted : $formatted;

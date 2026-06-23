@@ -105,12 +105,15 @@
                                         {{ $isLunas ? 'L' : 'BL' }}
                                     </span>
                                     <div class="mt-1">
-                                        @if($item->tanggal_approve)
-                                            <span class="badge bg-success-subtle text-success border border-success px-2 py-0.5 fw-bold fs-9" title="Disetujui pada {{ \Carbon\Carbon::parse($item->tanggal_approve)->format('d-m-Y') }}">
+                                        @if ($item->tanggal_approve)
+                                            <span
+                                                class="badge bg-success-subtle text-success border border-success px-2 py-0.5 fw-bold fs-9"
+                                                title="Disetujui pada {{ \Carbon\Carbon::parse($item->tanggal_approve)->format('d-m-Y') }}">
                                                 Approved
                                             </span>
                                         @else
-                                            <span class="badge bg-warning-subtle text-warning border border-warning px-2 py-0.5 fw-bold fs-9">
+                                            <span
+                                                class="badge bg-warning-subtle text-warning border border-warning px-2 py-0.5 fw-bold fs-9">
                                                 Pending
                                             </span>
                                         @endif
@@ -123,11 +126,12 @@
                                             class="btn btn-sm btn-outline-secondary rounded" title="Lihat & Bayar">
                                             <i class="fa-solid fa-eye"></i>
                                         </a>
-                                        @if(!$item->tanggal_approve && auth()->user()->can('approve-pembelian'))
-                                            <form action="{{ route('pembelian.approve', $item->no_faktur) }}" method="POST"
-                                                class="d-inline approve-form">
+                                        @if (!$item->tanggal_approve && auth()->user()->can('approve-pembelian'))
+                                            <form action="{{ route('pembelian.approve', $item->no_faktur) }}"
+                                                method="POST" class="d-inline approve-form">
                                                 @csrf
-                                                <button type="button" class="btn btn-sm btn-outline-success approve-btn rounded"
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-success approve-btn rounded"
                                                     title="Setujui Pembelian">
                                                     <i class="fa-solid fa-check"></i>
                                                 </button>

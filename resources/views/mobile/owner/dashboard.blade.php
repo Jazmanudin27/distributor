@@ -88,6 +88,50 @@
                 box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
             }
         }
+
+        /* Leaderboard styling */
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .leaderboard-item:last-child {
+            border-bottom: none;
+        }
+        .leaderboard-rank {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .rank-1 {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #0f172a;
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+        }
+        .rank-2 {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            color: #0f172a;
+            box-shadow: 0 0 12px rgba(203, 213, 225, 0.3);
+        }
+        .rank-3 {
+            background: linear-gradient(135deg, #cd7f32 0%, #a0522d 100%);
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(160, 82, 45, 0.3);
+        }
+        .rank-other {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
     </style>
 @endpush
 
@@ -195,6 +239,56 @@
             </a>
         </div>
     </div>
+
+    <!-- Top Pencapaian Sales -->
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+        <h5 class="fw-bold mb-0" style="font-size: 0.95rem; letter-spacing: 0.5px; color: var(--text-primary);">Top Pencapaian Sales (Bulan Ini)</h5>
+        <a href="{{ route('mobile.owner.sales-achievement') }}" class="text-decoration-none" style="font-size: 0.75rem; color: var(--active-color); font-weight: 600;">Lihat Semua <i class="fa-solid fa-angle-right ms-0.5"></i></a>
+    </div>
+
+    <div class="metric-card p-3 mb-4">
+        @if (count($topSales) === 0)
+            <div class="text-center py-3">
+                <p class="text-secondary mb-0" style="font-size: 0.8rem;">Belum ada data penjualan sales bulan ini.</p>
+            </div>
+        @else
+            <div class="d-flex flex-column animate-list">
+                @foreach ($topSales as $index => $sales)
+                    @php
+                        $rank = $index + 1;
+                        $rankClass = 'rank-other';
+                        if ($rank === 1) $rankClass = 'rank-1';
+                        elseif ($rank === 2) $rankClass = 'rank-2';
+                        elseif ($rank === 3) $rankClass = 'rank-3';
+                    @endphp
+                    <div class="leaderboard-item">
+                        <div class="d-flex align-items-center">
+                            <div class="leaderboard-rank {{ $rankClass }}">
+                                @if ($rank === 1)
+                                    <i class="fa-solid fa-trophy" style="font-size: 0.75rem;"></i>
+                                @else
+                                    {{ $rank }}
+                                @endif
+                            </div>
+                            <div>
+                                <div class="fw-bold text-white" style="font-size: 0.88rem; line-height: 1.2;">{{ $sales['name'] }}</div>
+                                <span class="text-secondary" style="font-size: 0.7rem;">NIK: {{ $sales['nik'] }}</span>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold text-success" style="font-size: 0.95rem; font-family: monospace;">
+                                Rp {{ number_format($sales['total_sales'], 0, ',', '.') }}
+                            </div>
+                            <span class="text-secondary" style="font-size: 0.7rem;">
+                                {{ $sales['invoice_count'] }} Faktur &bull; {{ $sales['visit_count'] }} Kunjungan
+                            </span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
     <!-- Metrik Keuangan -->
     <h5 class="fw-bold mb-3" style="font-size: 0.95rem; letter-spacing: 0.5px; color: var(--text-primary);">Ringkasan
         Keuangan</h5>

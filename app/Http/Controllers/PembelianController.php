@@ -111,6 +111,8 @@ class PembelianController extends Controller
             $details = [];
 
             foreach ($request->items as $row) {
+                $satuan = \App\Models\BarangSatuan::findOrFail($row['satuan_id']);
+                $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
                 \App\Models\StokMutasi::log($row['kode_barang'], $request->tanggal, 'Pembelian', $noFaktur, $qtySmallest, 0);
 
                 $total = ($row['qty'] * $row['harga']) - $row['diskon'];

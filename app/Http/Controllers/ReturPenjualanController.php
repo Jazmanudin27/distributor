@@ -61,6 +61,7 @@ class ReturPenjualanController extends Controller
         }
         
         $barangs = Barang::where('status', 1)->with('satuans')->orderBy('nama_barang')->get();
+        $salesmen = \App\Models\User::where('role', 'sales')->where('status', 1)->orderBy('name')->get();
 
         // Auto-generate RP26010001 (Format: RP + YYMM + 4-digit sequence)
         $today = date('ym');
@@ -71,7 +72,7 @@ class ReturPenjualanController extends Controller
         $nextNumber = $last ? (intval(substr($last->no_retur, -4)) + 1) : 1;
         $item->no_retur = 'RP' . $today . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
-        return view('retur_penjualan.form', compact('item', 'pelanggans', 'penjualans', 'barangs'));
+        return view('retur_penjualan.form', compact('item', 'pelanggans', 'penjualans', 'barangs', 'salesmen'));
     }
 
     public function store(Request $request)
@@ -81,6 +82,7 @@ class ReturPenjualanController extends Controller
             'tanggal'         => 'required|date',
             'jenis_retur'     => 'required|string',
             'kode_pelanggan'  => 'required|string|exists:pelanggan,kode_pelanggan',
+            'kode_sales'      => 'required|string|exists:users,nik',
             'no_faktur'       => 'nullable|string|exists:penjualan,no_faktur',
             'keterangan'      => 'nullable|string',
             'items'           => 'required|array|min:1',
@@ -224,8 +226,9 @@ class ReturPenjualanController extends Controller
             ->get();
             
         $barangs = Barang::where('status', 1)->with('satuans')->orderBy('nama_barang')->get();
+        $salesmen = \App\Models\User::where('role', 'sales')->where('status', 1)->orderBy('name')->get();
 
-        return view('retur_penjualan.form', compact('item', 'pelanggans', 'penjualans', 'barangs'));
+        return view('retur_penjualan.form', compact('item', 'pelanggans', 'penjualans', 'barangs', 'salesmen'));
     }
 
     public function update(Request $request, $no_retur)
@@ -236,6 +239,7 @@ class ReturPenjualanController extends Controller
             'tanggal'         => 'required|date',
             'jenis_retur'     => 'required|string',
             'kode_pelanggan'  => 'required|string|exists:pelanggan,kode_pelanggan',
+            'kode_sales'      => 'required|string|exists:users,nik',
             'no_faktur'       => 'nullable|string|exists:penjualan,no_faktur',
             'keterangan'      => 'nullable|string',
             'items'           => 'required|array|min:1',
