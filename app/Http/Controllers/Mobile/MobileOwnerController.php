@@ -598,54 +598,21 @@ class MobileOwnerController extends Controller
     {
         $q = $request->input('q');
         $selected_sales = $request->input('kode_sales', '');
-        $selected_pelanggan = $request->input('kode_pelanggan', '');
         $filter = $request->input('filter', 'all');
-
-        $query = Penjualan::with(['pelanggan.wilayah', 'sales', 'details.barang', 'details.barangSatuan', 'pembayarans']);
-
-        if ($q) {
-            $query->where(function($sub) use ($q) {
-                $sub->where('no_faktur', 'like', "%{$q}%")
-                    ->orWhereHas('pelanggan', function($custQuery) use ($q) {
-                        $custQuery->where('nama_pelanggan', 'like', "%{$q}%")
-                                  ->orWhere('kode_pelanggan', 'like', "%{$q}%");
-                    });
-            });
-        }
-
-        if ($selected_sales !== '') {
-            $query->where('kode_sales', $selected_sales);
-        }
-
-        if ($selected_pelanggan !== '') {
-            $query->where('kode_pelanggan', $selected_pelanggan);
-        }
+        $jenis_laporan = $request->input('jenis_laporan', 'detail'); // detail, rekap
 
         // Apply filters
         $todayStr = now()->toDateString();
         $startOfMonth = now()->startOfMonth()->toDateString();
         $endOfMonth = now()->endOfMonth()->toDateString();
 
-        if ($filter === 'today') {
-            $query->whereDate('tanggal', $todayStr);
-        } elseif ($filter === 'month') {
-            $query->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
-        }
-
-        $orders = $query->orderBy('tanggal', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10)
-            ->withQueryString();
-
         // Calculate summary for context
         $todaySalesQuery = Penjualan::where('batal', 0)->whereDate('tanggal', $todayStr);
         if ($selected_sales !== '') $todaySalesQuery->where('kode_sales', $selected_sales);
-        if ($selected_pelanggan !== '') $todaySalesQuery->where('kode_pelanggan', $selected_pelanggan);
         $todaySales = $todaySalesQuery->sum('grand_total');
 
         $monthSalesQuery = Penjualan::where('batal', 0)->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
         if ($selected_sales !== '') $monthSalesQuery->where('kode_sales', $selected_sales);
-        if ($selected_pelanggan !== '') $monthSalesQuery->where('kode_pelanggan', $selected_pelanggan);
         $monthSales = $monthSalesQuery->sum('grand_total');
 
         // Fetch lists for filter dropdowns
@@ -654,8 +621,68 @@ class MobileOwnerController extends Controller
             ->orderBy('name')
             ->get();
 
-        $pelanggans = Pelanggan::orderBy('nama_pelanggan')->get();
+        $orders = collect();
+        $rekapSales = collect();
 
-        return view('mobile.owner.orders', compact('orders', 'salesmen', 'pelanggans', 'q', 'selected_sales', 'selected_pelanggan', 'filter', 'todaySales', 'monthSales'));
+        if ($jenis_laporan === 'rekap') {
+            $rekapQuery = Penjualan::where('penjualan.batal', 0)
+                ->leftJoin('users as sales', 'penjualan.kode_sales', '=', 'sales.nik')
+                ->select([
+                    'penjualan.kode_sales',
+                    DB::raw('COALESCE(sales.name, penjualan.kode_sales) as sales_name'),
+                    DB::raw('COUNT(penjualan.no_faktur) as order_count'),
+                    DB::raw('SUM(penjualan.grand_total) as total_sales')
+                ])
+                ->groupBy('penjualan.kode_sales', 'sales.name');
+
+            if ($filter === 'today') {
+                $rekapQuery->whereDate('penjualan.tanggal', $todayStr);
+            } elseif ($filter === 'month') {
+                $rekapQuery->whereBetween('penjualan.tanggal', [$startOfMonth, $endOfMonth]);
+            }
+
+            if ($selected_sales !== '') {
+                $rekapQuery->where('penjualan.kode_sales', $selected_sales);
+            }
+
+            if ($q) {
+                $rekapQuery->where(function($sub) use ($q) {
+                    $sub->where('sales.name', 'like', "%{$q}%")
+                        ->orWhere('penjualan.kode_sales', 'like', "%{$q}%");
+                });
+            }
+
+            $rekapSales = $rekapQuery->orderBy('total_sales', 'desc')->get();
+        } else {
+            // detail
+            $query = Penjualan::with(['pelanggan.wilayah', 'sales', 'details.barang', 'details.barangSatuan', 'pembayarans']);
+
+            if ($q) {
+                $query->where(function($sub) use ($q) {
+                    $sub->where('no_faktur', 'like', "%{$q}%")
+                        ->orWhereHas('pelanggan', function($custQuery) use ($q) {
+                            $custQuery->where('nama_pelanggan', 'like', "%{$q}%")
+                                      ->orWhere('kode_pelanggan', 'like', "%{$q}%");
+                        });
+                });
+            }
+
+            if ($selected_sales !== '') {
+                $query->where('kode_sales', $selected_sales);
+            }
+
+            if ($filter === 'today') {
+                $query->whereDate('tanggal', $todayStr);
+            } elseif ($filter === 'month') {
+                $query->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
+            }
+
+            $orders = $query->orderBy('tanggal', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->paginate(10)
+                ->withQueryString();
+        }
+
+        return view('mobile.owner.orders', compact('orders', 'rekapSales', 'salesmen', 'q', 'selected_sales', 'filter', 'jenis_laporan', 'todaySales', 'monthSales'));
     }
 }
