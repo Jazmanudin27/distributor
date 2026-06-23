@@ -90,7 +90,7 @@
 
     $pctFmt = function($val, $decimals = 2) use ($isExcel) {
         if ($isExcel) {
-            return $val ? (float)$val / 100 : '';
+            return $val ? round((float)$val, $decimals) / 100 : '';
         }
         return $val > 0 ? number_format((float)$val, $decimals, ',', '.') : '';
     };
@@ -263,13 +263,13 @@
                                 <td class="text-end" style="border: 1px solid #dee2e6; text-align: right; padding: 6px 6px; mso-number-format:'#,##0';">{{ $numFmt($row->harga) }}</td>
                                 <td class="text-end" style="border: 1px solid #dee2e6; text-align: right; padding: 6px 6px; mso-number-format:'#,##0';">{{ $numFmt($row->qty) }}</td>
                                 <td class="text-center" style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px;">{{ $row->satuan ?? 'PCS' }}</td>
-                                <td class="text-center" style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px; mso-number-format:'0.00';">
+                                <td class="text-center" style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px; mso-number-format:'0.00%';">
                                     {{ $row->diskon1_persen > 0 ? $pctFmt($row->diskon1_persen) : '' }}
                                 </td>
-                                <td class="text-center" style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px; mso-number-format:'0.00';">
+                                <td class="text-center" style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px; mso-number-format:'0.00%';">
                                     {{ $row->diskon2_persen > 0 ? $pctFmt($row->diskon2_persen) : '' }}
                                 </td>
-                                <td class="text-center" style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px; mso-number-format:'0.00';">
+                                <td class="text-center" style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px; mso-number-format:'0.00%';">
                                     {{ $row->diskon3_persen > 0 ? $pctFmt($row->diskon3_persen) : '' }}
                                 </td>
                             </tr>
@@ -353,13 +353,13 @@
                                 <td style="border: 1px solid #999; padding: 5px 6px; text-align: center;">{{ $row->satuan ?? 'PCS' }}</td>
                                 <td class="text-end" style="border: 1px solid #999; text-align: right; padding: 5px 6px; mso-number-format:'#,##0';">
                                     {{ $numFmt($row->harga) }}</td>
-                                <td class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'0.00';">
+                                <td class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'0.00%';">
                                     {{ $row->diskon1_persen > 0 ? $pctFmt($row->diskon1_persen) : '' }}
                                 </td>
-                                <td class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'0.00';">
+                                <td class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'0.00%';">
                                     {{ $row->diskon2_persen > 0 ? $pctFmt($row->diskon2_persen) : '' }}
                                 </td>
-                                <td class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'0.00';">
+                                <td class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'0.00%';">
                                     {{ $row->diskon3_persen > 0 ? $pctFmt($row->diskon3_persen) : '' }}
                                 </td>
                                 <td class="text-end" style="border: 1px solid #999; text-align: right; padding: 5px 6px; mso-number-format:'#,##0';">
