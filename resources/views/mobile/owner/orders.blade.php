@@ -128,7 +128,7 @@
                         $totalBayar = $order->getApprovedPembayaranTotal();
                         $totalRetur = $order->getTotalRetur();
                         $sisaBayar = $order->grand_total - $totalBayar - $totalRetur;
-                        $dueDate = \Carbon\Carbon::parse($order->tanggal)->addDays($order->pelanggan->ljt ?? 30);
+                        $dueDate = \Carbon\Carbon::parse($order->tanggal)->addDays($order->pelanggan ? ($order->pelanggan->ljt ?? 30) : 30);
                         $isOverdue =
                             $sisaBayar >= 1 &&
                             in_array($order->jenis_transaksi, ['K', 'Kredit']) &&
@@ -139,13 +139,13 @@
                         <div class="d-flex justify-content-between align-items-start mb-2 border-bottom border-secondary border-opacity-10 pb-2">
                             <div>
                                 <h6 class="fw-bold text-white mb-0" style="font-size: 0.95rem;">
-                                    {{ $order->pelanggan->nama_pelanggan }}
+                                    {{ $order->pelanggan ? $order->pelanggan->nama_pelanggan : 'Umum / Tanpa Pelanggan' }}
                                 </h6>
                                 <span class="text-secondary font-monospace" style="font-size: 0.65rem;">
                                     {{ $order->no_faktur }}
                                 </span>
                                 <div class="text-secondary mt-0.5" style="font-size: 0.65rem;">
-                                    Tgl: {{ $order->tanggal->format('d M Y') }}
+                                    Tgl: {{ $order->tanggal ? $order->tanggal->format('d M Y') : '-' }}
                                     @if (in_array($order->jenis_transaksi, ['K', 'Kredit']))
                                         &bull; <span class="{{ $isOverdue ? 'text-danger fw-bold' : '' }}">JT: {{ $dueDate->format('d/m/Y') }}</span>
                                     @endif
@@ -170,7 +170,7 @@
                             <div class="text-secondary font-monospace mb-1.5" style="font-size: 0.65rem; text-transform: uppercase;">Barang Belanja:</div>
                             @foreach ($order->details as $detail)
                                 <div class="d-flex justify-content-between text-white-50 py-0.5 border-bottom border-secondary border-opacity-5">
-                                    <span>{{ $detail->barang->nama_barang }} ({{ $detail->qty }} {{ $detail->barangSatuan->satuan }})</span>
+                                    <span>{{ $detail->barang ? $detail->barang->nama_barang : 'Barang Terhapus' }} ({{ $detail->qty }} {{ $detail->barangSatuan ? $detail->barangSatuan->satuan : 'PCS' }})</span>
                                     <span>Rp {{ number_format($detail->total, 0, ',', '.') }}</span>
                                 </div>
                             @endforeach
@@ -191,6 +191,27 @@
             @endif
         @endif
     </div>
+
+    @if(config('app.debug') || (Auth::check() && (in_array(strtolower(Auth::user()->role ?? ''), ['owner', 'admin', 'super admin', 'superadmin']) || Auth::user()->name === 'kasir')))
+        <!-- Diagnostic Box -->
+        <div class="mt-4 p-3 rounded text-warning" style="background: rgba(245, 158, 11, 0.05); border: 1px dashed rgba(245, 158, 11, 0.2); font-size: 0.72rem; font-family: monospace;">
+            <div class="fw-bold mb-2 border-bottom border-warning border-opacity-25 pb-1"><i class="fa-solid fa-bug me-1"></i> DIAGNOSTIC INFO (Owner/Admin Only)</div>
+            <div class="row g-2">
+                <div class="col-6">Database Name: <span class="text-white">{{ DB::connection()->getDatabaseName() }}</span></div>
+                <div class="col-6">Total Penjualan: <span class="text-white">{{ \App\Models\Penjualan::count() }}</span></div>
+                <div class="col-6">Total Users: <span class="text-white">{{ \App\Models\User::count() }}</span></div>
+                <div class="col-6">Total Salesmen: <span class="text-white">{{ $salesmen->count() }}</span></div>
+                <div class="col-6">Current Filter: <span class="text-white">{{ $filter }}</span></div>
+                <div class="col-6">Selected Sales: <span class="text-white">{{ $selected_sales ?: '-' }}</span></div>
+                <div class="col-6">Search Query: <span class="text-white">{{ $q ?: '-' }}</span></div>
+                <div class="col-6">Tipe Laporan: <span class="text-white">{{ $jenis_laporan }}</span></div>
+                <div class="col-12 mt-1 pt-1 border-top border-warning border-opacity-10">
+                    <div>PHP Time: <span class="text-white">{{ now()->toDateTimeString() }} ({{ config('app.timezone') }})</span></div>
+                    <div>SQL Time: <span class="text-white">{{ DB::select("SELECT NOW() as now")[0]->now ?? '-' }}</span></div>
+                </div>
+            </div>
+        </div>
+    @endif
 @endsection
 
 @push('scripts')

@@ -867,6 +867,7 @@
                 $('#quick_is_promo').prop('checked', false).trigger('change');
 
                 calculateTotals();
+                saveDraft();
                 $('#quick_barang').select2('open');
             });
 
@@ -1000,6 +1001,7 @@
             $(document).on('click', '.btn-remove-row', function() {
                 $(this).closest('tr').remove();
                 calculateTotals();
+                saveDraft();
             });
 
             $(document).on('click', '.toggle-row-type', function() {
@@ -1418,6 +1420,190 @@
                 if (v) $(this).val(formatNumber(cleanNumber(v)));
             });
 
+            // --- Draft Persist System ---
+            function saveDraft() {
+                const key = isEditMode ? `penjualan_edit_draft_${$('#no_faktur').val()}` : `penjualan_create_draft`;
+
+                const items = [];
+                $('#itemsTable tbody tr').each(function() {
+                    const row = $(this);
+                    const item = {
+                        kode_barang: row.find('input[name*="[kode_barang]"]').val(),
+                        nama_barang: row.find('td').eq(2).text().trim(),
+                        satuan_id: row.find('input[name*="[satuan_id]"]').val(),
+                        satuan: row.find('input[name*="[satuan]"]').val(),
+                        is_promo: row.find('.input-promo').is(':checked'),
+                        qty: parseFloat(row.find('.input-qty').val()) || 0,
+                        harga: parseFloat(cleanNumber(row.find('.input-harga').val())) || 0,
+                        diskon1_persen: parseFloat(row.find('.input-diskon1').val()) || 0,
+                        diskon2_persen: parseFloat(row.find('.input-diskon2').val()) || 0,
+                        diskon3_persen: parseFloat(row.find('.input-diskon3').val()) || 0,
+                        diskon1_val: row.find('.input-diskon1-val').val() || '0',
+                        diskon2_val: row.find('.input-diskon2-val').val() || '0',
+                        diskon3_val: row.find('.input-diskon3-val').val() || '0',
+                        diskon1_type: row.find('.toggle-row-type').eq(0).text().trim() || '%',
+                        diskon2_type: row.find('.toggle-row-type').eq(1).text().trim() || '%',
+                        diskon3_type: row.find('.toggle-row-type').eq(2).text().trim() || '%'
+                    };
+                    items.push(item);
+                });
+
+                const opt = $('#kode_pelanggan').find(':selected');
+                const pelangganInfo = opt.val() ? {
+                    id: opt.val(),
+                    text: opt.text().trim(),
+                    kode: opt.attr('data-kode') || opt.data('kode'),
+                    hp: opt.attr('data-hp') || opt.data('hp'),
+                    alamat: opt.attr('data-alamat') || opt.data('alamat'),
+                    metode: opt.attr('data-metode') || opt.data('metode'),
+                    limit: opt.attr('data-limit') || opt.data('limit'),
+                    sisa_limit: opt.attr('data-sisa-limit') || opt.data('sisa-limit'),
+                    has_overdue: opt.attr('data-has-overdue') || opt.data('has-overdue')
+                } : null;
+
+                const draft = {
+                    tanggal: $('#tanggal').val(),
+                    jenis_transaksi: $('#jenis_transaksi').val(),
+                    kode_sales: $('#kode_sales').val(),
+                    kode_pelanggan: $('#kode_pelanggan').val(),
+                    pelangganInfo: pelangganInfo,
+                    diskon_global: $('#diskon_global').val(),
+                    items: items,
+                    barangsCache: barangsCache,
+                    timestamp: new Date().getTime()
+                };
+
+                localStorage.setItem(key, JSON.stringify(draft));
+            }
+
+            function restoreDraft(draft) {
+                // 1. Restore metadata
+                if (draft.tanggal) $('#tanggal').val(draft.tanggal);
+                if (draft.jenis_transaksi) $('#jenis_transaksi').val(draft.jenis_transaksi).trigger('change');
+
+                if (draft.kode_sales) {
+                    $('#kode_sales').val(draft.kode_sales).trigger('change');
+                }
+
+                if (draft.diskon_global) {
+                    $('#diskon_global').val(formatNumber(cleanNumber(draft.diskon_global)));
+                }
+
+                // 2. Restore barangsCache
+                if (draft.barangsCache) {
+                    Object.assign(barangsCache, draft.barangsCache);
+                }
+
+                // 3. Clear existing table rows
+                $('#itemsTable tbody').empty();
+
+                // 4. Append draft rows
+                if (draft.items && draft.items.length > 0) {
+                    draft.items.forEach(item => {
+                        appendRow(
+                            item.kode_barang,
+                            item.nama_barang,
+                            item.satuan_id,
+                            item.satuan,
+                            item.qty,
+                            item.harga,
+                            item.diskon1_persen,
+                            item.diskon2_persen,
+                            item.diskon3_persen,
+                            item.is_promo
+                        );
+
+                        const row = $('#itemsTable tbody tr').last();
+                        row.find('.toggle-row-type').eq(0).text(item.diskon1_type || '%');
+                        row.find('.toggle-row-type').eq(1).text(item.diskon2_type || '%');
+                        row.find('.toggle-row-type').eq(2).text(item.diskon3_type || '%');
+
+                        for (let i = 0; i < 3; i++) {
+                            const toggle = row.find('.toggle-row-type').eq(i);
+                            if (toggle.text().trim() === 'Rp') {
+                                toggle.removeClass('text-primary').addClass('text-success');
+                            } else {
+                                toggle.removeClass('text-success').addClass('text-primary');
+                            }
+                        }
+
+                        row.find('.input-diskon1-val').val(item.diskon1_val || '0');
+                        row.find('.input-diskon2-val').val(item.diskon2_val || '0');
+                        row.find('.input-diskon3-val').val(item.diskon3_val || '0');
+                    });
+                }
+
+                // 5. Restore select2 value for pelanggan if exists
+                if (draft.pelangganInfo) {
+                    const p = draft.pelangganInfo;
+                    const newOption = new Option(p.text, p.id, true, true);
+                    $(newOption).attr('data-kode', p.kode);
+                    $(newOption).attr('data-hp', p.hp);
+                    $(newOption).attr('data-alamat', p.alamat);
+                    $(newOption).attr('data-metode', p.metode);
+                    $(newOption).attr('data-limit', p.limit);
+                    $(newOption).attr('data-sisa-limit', p.sisa_limit);
+                    $(newOption).attr('data-has-overdue', p.has_overdue);
+
+                    $('#kode_pelanggan').append(newOption).trigger('change');
+                    updatePelangganInfo($(newOption));
+                }
+
+                calculateTotals();
+            }
+
+            function initDraftSystem() {
+                const key = isEditMode ? `penjualan_edit_draft_${$('#no_faktur').val()}` : `penjualan_create_draft`;
+                const savedDraftStr = localStorage.getItem(key);
+                if (savedDraftStr) {
+                    try {
+                        const savedDraft = JSON.parse(savedDraftStr);
+                        if (savedDraft && savedDraft.items && savedDraft.items.length > 0) {
+                            Swal.fire({
+                                title: 'Draft Transaksi Ditemukan',
+                                text: isEditMode ?
+                                    'Ditemukan draf perubahan untuk faktur ini yang belum disimpan. Pulihkan?' :
+                                    'Ditemukan draft transaksi yang belum disimpan. Apakah Anda ingin melanjutkan?',
+                                icon: 'info',
+                                showCancelButton: true,
+                                confirmButtonText: 'Pulihkan',
+                                cancelButtonText: 'Abaikan',
+                                confirmButtonColor: '#10b981',
+                                cancelButtonColor: '#6b7280'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    restoreDraft(savedDraft);
+                                } else {
+                                    localStorage.removeItem(key);
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.error('Error parsing draft:', e);
+                    }
+                }
+            }
+
+            // Initialize draft system
+            initDraftSystem();
+
+            // Save draft on form inputs change
+            $(document).on('input change', '#penjualanForm input, #penjualanForm select', function() {
+                saveDraft();
+            });
+
+            // Save draft when row properties toggle
+            $(document).on('click', '.toggle-row-type', function() {
+                setTimeout(saveDraft, 50);
+            });
+
+            // Clear draft when user explicitly cancels/goes back
+            $(document).on('click', 'a[href*="penjualan.index"]', function() {
+                const key = isEditMode ? `penjualan_edit_draft_${$('#no_faktur').val()}` :
+                    `penjualan_create_draft`;
+                localStorage.removeItem(key);
+            });
+
             // Form submit guard
             $('#penjualanForm').on('submit', function(e) {
                 if ($('#itemsTable tbody tr').length === 0) {
@@ -1532,6 +1718,11 @@
                     calculateTotals();
                     return false;
                 }
+
+                // Clear draft since transaction is being saved
+                const key = isEditMode ? `penjualan_edit_draft_${$('#no_faktur').val()}` :
+                    `penjualan_create_draft`;
+                localStorage.removeItem(key);
 
                 // Strip formatting
                 $('.input-number-format').each(function() {
