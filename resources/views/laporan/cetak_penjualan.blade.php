@@ -88,6 +88,13 @@
         return number_format((float)$val, $decimals, ',', '.');
     };
 
+    $pctFmt = function($val, $decimals = 2) use ($isExcel) {
+        if ($isExcel) {
+            return $val ? (float)$val / 100 : '';
+        }
+        return $val > 0 ? number_format((float)$val, $decimals, ',', '.') : '';
+    };
+
     if (!function_exists('formatTanggalIndo')) {
         function formatTanggalIndo($date)
         {
@@ -209,18 +216,18 @@
                                 <td style="border: 1px solid #000; padding: 4px 6px;">{{ $invoice->pelanggan->nama_pelanggan ?? '-' }}</td>
                                 <td style="border: 1px solid #000; padding: 4px 6px;">{{ $invoice->pelanggan->wilayah->nama_wilayah ?? '-' }}</td>
                                 <td style="border: 1px solid #000; padding: 4px 6px;">{{ $invoice->sales->name ?? '-' }}</td>
-                                <td class="text-end" style="border: 1px solid #000; text-align: right; padding: 4px 6px; mso-number-format: '\#\,\#\#0';">{{ $numFmt($invoice->total) }}</td>
-                                <td class="text-end" style="border: 1px solid #000; text-align: right; padding: 4px 6px; mso-number-format: '\#\,\#\#0';">{{ $numFmt($invoice->diskon) }}</td>
-                                <td class="text-end fw-bold" style="border: 1px solid #000; text-align: right; font-weight: bold; padding: 4px 6px; mso-number-format: '\#\,\#\#0';">{{ $numFmt($invoice->grand_total) }}</td>
+                                <td class="text-end" style="border: 1px solid #000; text-align: right; padding: 4px 6px; mso-number-format: '#,##0';">{{ $numFmt($invoice->total) }}</td>
+                                <td class="text-end" style="border: 1px solid #000; text-align: right; padding: 4px 6px; mso-number-format: '#,##0';">{{ $numFmt($invoice->diskon) }}</td>
+                                <td class="text-end fw-bold" style="border: 1px solid #000; text-align: right; font-weight: bold; padding: 4px 6px; mso-number-format: '#,##0';">{{ $numFmt($invoice->grand_total) }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                     <tfoot class="fw-bold">
                         <tr class="table-light">
                             <td colspan="6" class="text-end" style="border: 1px solid #000; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 4px 6px;">TOTAL KESELURUHAN:</td>
-                            <td class="text-end" style="border: 1px solid #000; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 4px 6px; mso-number-format: '\#\,\#\#0';">{{ $numFmt($totTotal) }}</td>
-                            <td class="text-end" style="border: 1px solid #000; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 4px 6px; mso-number-format: '\#\,\#\#0';">{{ $numFmt($totDiskon) }}</td>
-                            <td class="text-end" style="border: 1px solid #000; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 4px 6px; mso-number-format: '\#\,\#\#0';">{{ $numFmt($totGrand) }}</td>
+                            <td class="text-end" style="border: 1px solid #000; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 4px 6px; mso-number-format: '#,##0';">{{ $numFmt($totTotal) }}</td>
+                            <td class="text-end" style="border: 1px solid #000; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 4px 6px; mso-number-format: '#,##0';">{{ $numFmt($totDiskon) }}</td>
+                            <td class="text-end" style="border: 1px solid #000; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 4px 6px; mso-number-format: '#,##0';">{{ $numFmt($totGrand) }}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -253,17 +260,17 @@
                                 <td style="border: 1px solid #dee2e6; padding: 6px 6px;">{{ $row->nama_pelanggan ?? '-' }}</td>
                                 <td class="text-center" style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px; mso-number-format: '\@';">{{ $row->no_faktur }}</td>
                                 <td style="border: 1px solid #dee2e6; padding: 6px 6px;">{{ $row->nama_barang ?? '-' }}</td>
-                                <td class="text-end" style="border: 1px solid #dee2e6; text-align: right; padding: 6px 6px; mso-number-format:'\#\,\#\#0';">{{ $numFmt($row->harga) }}</td>
-                                <td class="text-end" style="border: 1px solid #dee2e6; text-align: right; padding: 6px 6px; mso-number-format:'\#\,\#\#0';">{{ $numFmt($row->qty) }}</td>
+                                <td class="text-end" style="border: 1px solid #dee2e6; text-align: right; padding: 6px 6px; mso-number-format:'#,##0';">{{ $numFmt($row->harga) }}</td>
+                                <td class="text-end" style="border: 1px solid #dee2e6; text-align: right; padding: 6px 6px; mso-number-format:'#,##0';">{{ $numFmt($row->qty) }}</td>
                                 <td class="text-center" style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px;">{{ $row->satuan ?? 'PCS' }}</td>
-                                <td class="text-center" style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px; mso-number-format:'\#\,\#\#0\.00';">
-                                    {{ $row->diskon1_persen > 0 ? $numFmt($row->diskon1_persen, 2) : '' }}
+                                <td class="text-center" style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px; mso-number-format:'0.00';">
+                                    {{ $row->diskon1_persen > 0 ? $pctFmt($row->diskon1_persen) : '' }}
                                 </td>
-                                <td class="text-center" style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px; mso-number-format:'\#\,\#\#0\.00';">
-                                    {{ $row->diskon2_persen > 0 ? $numFmt($row->diskon2_persen, 2) : '' }}
+                                <td class="text-center" style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px; mso-number-format:'0.00';">
+                                    {{ $row->diskon2_persen > 0 ? $pctFmt($row->diskon2_persen) : '' }}
                                 </td>
-                                <td class="text-center" style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px; mso-number-format:'\#\,\#\#0\.00';">
-                                    {{ $row->diskon3_persen > 0 ? $numFmt($row->diskon3_persen, 2) : '' }}
+                                <td class="text-center" style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px; mso-number-format:'0.00';">
+                                    {{ $row->diskon3_persen > 0 ? $pctFmt($row->diskon3_persen) : '' }}
                                 </td>
                             </tr>
                         @endforeach
@@ -341,32 +348,32 @@
                                 <td style="border: 1px solid #999; padding: 5px 6px;">{{ $row->nama_barang ?? '-' }}</td>
                                 <td style="border: 1px solid #999; padding: 5px 6px;">{{ $row->kategori ?? '-' }}</td>
                                 <td style="border: 1px solid #999; padding: 5px 6px;">{{ $row->merk ?? '-' }}</td>
-                                <td class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'\#\,\#\#0\.00';">
+                                <td class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'#,##0.00';">
                                     {{ $numFmt($row->qty, 2) }}</td>
                                 <td style="border: 1px solid #999; padding: 5px 6px; text-align: center;">{{ $row->satuan ?? 'PCS' }}</td>
-                                <td class="text-end" style="border: 1px solid #999; text-align: right; padding: 5px 6px; mso-number-format:'\#\,\#\#0';">
+                                <td class="text-end" style="border: 1px solid #999; text-align: right; padding: 5px 6px; mso-number-format:'#,##0';">
                                     {{ $numFmt($row->harga) }}</td>
-                                <td class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'\#\,\#\#0\.00';">
-                                    {{ $row->diskon1_persen > 0 ? $numFmt($row->diskon1_persen, 2) : '' }}
+                                <td class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'0.00';">
+                                    {{ $row->diskon1_persen > 0 ? $pctFmt($row->diskon1_persen) : '' }}
                                 </td>
-                                <td class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'\#\,\#\#0\.00';">
-                                    {{ $row->diskon2_persen > 0 ? $numFmt($row->diskon2_persen, 2) : '' }}
+                                <td class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'0.00';">
+                                    {{ $row->diskon2_persen > 0 ? $pctFmt($row->diskon2_persen) : '' }}
                                 </td>
-                                <td class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'\#\,\#\#0\.00';">
-                                    {{ $row->diskon3_persen > 0 ? $numFmt($row->diskon3_persen, 2) : '' }}
+                                <td class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'0.00';">
+                                    {{ $row->diskon3_persen > 0 ? $pctFmt($row->diskon3_persen) : '' }}
                                 </td>
-                                <td class="text-end" style="border: 1px solid #999; text-align: right; padding: 5px 6px; mso-number-format:'\#\,\#\#0';">
+                                <td class="text-end" style="border: 1px solid #999; text-align: right; padding: 5px 6px; mso-number-format:'#,##0';">
                                     {{ $numFmt($row->detail_total) }}</td>
 
-                                <td class="text-end" style="border: 1px solid #999; text-align: right; padding: 5px 6px; mso-number-format:'\#\,\#\#0';">
+                                <td class="text-end" style="border: 1px solid #999; text-align: right; padding: 5px 6px; mso-number-format:'#,##0';">
                                     {{ $numFmt($row->invoice_total) }}</td>
-                                <td class="text-end" style="border: 1px solid #999; text-align: right; padding: 5px 6px; mso-number-format:'\#\,\#\#0';">
+                                <td class="text-end" style="border: 1px solid #999; text-align: right; padding: 5px 6px; mso-number-format:'#,##0';">
                                     {{ $numFmt($row->invoice_diskon) }}</td>
-                                <td class="text-end fw-bold" style="border: 1px solid #999; text-align: right; font-weight: bold; padding: 5px 6px; mso-number-format:'\#\,\#\#0';">
+                                <td class="text-end fw-bold" style="border: 1px solid #999; text-align: right; font-weight: bold; padding: 5px 6px; mso-number-format:'#,##0';">
                                     {{ $numFmt($row->invoice_grand_total) }}</td>
-                                <td class="text-end text-success" style="border: 1px solid #999; text-align: right; color: green; padding: 5px 6px; mso-number-format:'\#\,\#\#0';">
+                                <td class="text-end text-success" style="border: 1px solid #999; text-align: right; color: green; padding: 5px 6px; mso-number-format:'#,##0';">
                                     {{ $numFmt($row->total_bayar) }}</td>
-                                <td class="text-end text-danger" style="border: 1px solid #999; text-align: right; color: red; padding: 5px 6px; mso-number-format:'\#\,\#\#0';">
+                                <td class="text-end text-danger" style="border: 1px solid #999; text-align: right; color: red; padding: 5px 6px; mso-number-format:'#,##0';">
                                     {{ $numFmt($row->sisa_bayar) }}</td>
                                 <td class="text-center fw-bold" style="border: 1px solid #999; text-align: center; font-weight: bold; padding: 5px 6px;">
                                     <span class="{{ $row->status_pembayaran === 'Lunas' ? 'text-success' : 'text-danger' }}" style="color: {{ $row->status_pembayaran === 'Lunas' ? 'green' : 'red' }};">
@@ -387,15 +394,15 @@
                     <tfoot class="fw-bold table-light">
                         <tr>
                             <td colspan="19" class="text-end" style="border: 1px solid #999; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 5px 6px;">TOTAL KESELURUHAN:</td>
-                            <td class="text-end" style="border: 1px solid #999; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 5px 6px; mso-number-format:'\#\,\#\#0';">
+                            <td class="text-end" style="border: 1px solid #999; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 5px 6px; mso-number-format:'#,##0';">
                                 {{ $numFmt($totalBrutoSum) }}</td>
-                            <td class="text-end" style="border: 1px solid #999; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 5px 6px; mso-number-format:'\#\,\#\#0';">
+                            <td class="text-end" style="border: 1px solid #999; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 5px 6px; mso-number-format:'#,##0';">
                                 {{ $numFmt($totalDiskonSum) }}</td>
-                            <td class="text-end" style="border: 1px solid #999; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 5px 6px; mso-number-format:'\#\,\#\#0';">
+                            <td class="text-end" style="border: 1px solid #999; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 5px 6px; mso-number-format:'#,##0';">
                                 {{ $numFmt($totalNetoSum) }}</td>
-                            <td class="text-end text-success" style="border: 1px solid #999; text-align: right; font-weight: bold; background-color: #f2f2f2; color: green; padding: 5px 6px; mso-number-format:'\#\,\#\#0';">
+                            <td class="text-end text-success" style="border: 1px solid #999; text-align: right; font-weight: bold; background-color: #f2f2f2; color: green; padding: 5px 6px; mso-number-format:'#,##0';">
                                 {{ $numFmt($totalBayarSum) }}</td>
-                            <td class="text-end text-danger" style="border: 1px solid #999; text-align: right; font-weight: bold; background-color: #f2f2f2; color: red; padding: 5px 6px; mso-number-format:'\#\,\#\#0';">
+                            <td class="text-end text-danger" style="border: 1px solid #999; text-align: right; font-weight: bold; background-color: #f2f2f2; color: red; padding: 5px 6px; mso-number-format:'#,##0';">
                                 {{ $numFmt($totalSisaSum) }}</td>
                             <td colspan="5" style="border: 1px solid #999; background-color: #f2f2f2;"></td>
                         </tr>
