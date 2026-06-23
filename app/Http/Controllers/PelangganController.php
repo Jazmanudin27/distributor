@@ -123,6 +123,15 @@ class PelangganController extends Controller
         return redirect()->back()->with('success', 'Status pelanggan berhasil diubah');
     }
 
+    public function toggleJenis($id)
+    {
+        $pelanggan = Pelanggan::findOrFail($id);
+        $pelanggan->jenis_pelanggan = $pelanggan->jenis_pelanggan == '1' ? '0' : '1';
+        $pelanggan->save();
+
+        return redirect()->back()->with('success', "Tipe pelanggan '{$pelanggan->nama_pelanggan}' berhasil diubah!");
+    }
+
     public function search(Request $request)
     {
         $search = $request->input('q');

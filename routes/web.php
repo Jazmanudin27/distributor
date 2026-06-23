@@ -135,6 +135,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('pelanggan', PelangganController::class);
         Route::get('/pelanggan-map', [PelangganController::class, 'map'])->name('pelanggan.map');
         Route::post('/pelanggan/{id}/toggle-status', [PelangganController::class, 'toggleStatus'])->name('pelanggan.toggle-status');
+        Route::post('/pelanggan/{id}/toggle-jenis', [PelangganController::class, 'toggleJenis'])->name('pelanggan.toggle-jenis');
         Route::post('/pelanggan/{kode_pelanggan}/approve', [PelangganController::class, 'approve'])->name('pelanggan.approve');
         Route::post('/pelanggan/{kode_pelanggan}/reject', [PelangganController::class, 'reject'])->name('pelanggan.reject');
         Route::resource('users', UserController::class);

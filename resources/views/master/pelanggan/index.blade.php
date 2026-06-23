@@ -106,45 +106,64 @@
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 6px;
-            padding: 2px 8px;
-            font-size: 0.75rem;
-            font-weight: 500;
+            padding: 3px 9px;
+            font-size: 0.72rem;
+            font-weight: 600;
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
             color: #94A3B8 !important;
             text-decoration: none !important;
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .meta-pill:hover {
-            background: rgba(108, 99, 255, 0.08);
-            border-color: rgba(108, 99, 255, 0.2);
-            color: #a78bfa !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .meta-pill-primary {
             color: #a78bfa !important;
-            background: rgba(108, 99, 255, 0.05);
-            border-color: rgba(108, 99, 255, 0.1);
+            background: rgba(108, 99, 255, 0.06) !important;
+            border-color: rgba(108, 99, 255, 0.15) !important;
+        }
+        .meta-pill-primary:hover {
+            background: rgba(108, 99, 255, 0.12) !important;
+            border-color: rgba(108, 99, 255, 0.3) !important;
+            color: #c084fc !important;
         }
 
         .meta-pill-success {
             color: #34D399 !important;
-            background: rgba(52, 211, 153, 0.05);
-            border-color: rgba(52, 211, 153, 0.1);
+            background: rgba(52, 211, 153, 0.06) !important;
+            border-color: rgba(52, 211, 153, 0.15) !important;
+        }
+        .meta-pill-success:hover {
+            background: rgba(52, 211, 153, 0.12) !important;
+            border-color: rgba(52, 211, 153, 0.3) !important;
+            color: #6ee7b7 !important;
         }
 
         .meta-pill-warning {
             color: #FBBF24 !important;
-            background: rgba(251, 191, 36, 0.05);
-            border-color: rgba(251, 191, 36, 0.1);
+            background: rgba(251, 191, 36, 0.06) !important;
+            border-color: rgba(251, 191, 36, 0.15) !important;
+        }
+        .meta-pill-warning:hover {
+            background: rgba(251, 191, 36, 0.12) !important;
+            border-color: rgba(251, 191, 36, 0.3) !important;
+            color: #fde047 !important;
         }
 
         .meta-pill-info {
             color: #38BDF8 !important;
-            background: rgba(56, 189, 248, 0.05);
-            border-color: rgba(56, 189, 248, 0.1);
+            background: rgba(56, 189, 248, 0.06) !important;
+            border-color: rgba(56, 189, 248, 0.15) !important;
+        }
+        .meta-pill-info:hover {
+            background: rgba(56, 189, 248, 0.12) !important;
+            border-color: rgba(56, 189, 248, 0.3) !important;
+            color: #7dd3fc !important;
         }
 
         @media (max-width: 768px) {
@@ -404,6 +423,16 @@
                                                 class="btn btn-sm btn-outline-primary rounded px-2 py-1" title="Edit">
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </a>
+                                            <form action="{{ route('pelanggan.toggle-jenis', $item->kode_pelanggan) }}"
+                                                method="POST" class="d-inline">
+                                                @csrf
+                                                <button type="submit"
+                                                    class="btn btn-sm btn-outline-{{ $item->jenis_pelanggan == '1' ? 'warning' : 'secondary' }} rounded px-2 py-1"
+                                                    title="Ubah ke {{ $item->jenis_pelanggan == '1' ? 'Regular (Blokir jika Overdue)' : 'Khusus (Bypass Overdue)' }}"
+                                                    onclick="return confirm('Ubah tipe pelanggan \'{{ $item->nama_pelanggan }}\' menjadi {{ $item->jenis_pelanggan == '1' ? 'Regular' : 'Khusus (Bypass Overdue)' }}?')">
+                                                    <i class="{{ $item->jenis_pelanggan == '1' ? 'fa-solid fa-star text-warning' : 'fa-regular fa-star' }}"></i>
+                                                </button>
+                                            </form>
                                         @endcan
                                         @can('delete-pelanggan')
                                             <form action="{{ route('pelanggan.destroy', $item->kode_pelanggan) }}"
