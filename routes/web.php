@@ -144,6 +144,7 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/penjualan/{no_faktur}/payment', [PenjualanController::class, 'storePayment'])->name('penjualan.payment');
         Route::post('/penjualan/{no_faktur}/batal', [PenjualanController::class, 'batal'])->name('penjualan.batal');
+        Route::post('/penjualan/{no_faktur}/restore', [PenjualanController::class, 'restore'])->name('penjualan.restore');
         Route::get('/penjualan/{no_faktur}/print', [PenjualanController::class, 'print'])->name('penjualan.print');
         Route::get('/retur-penjualan/{no_retur}/print', [ReturPenjualanController::class, 'print'])->name('retur-penjualan.print');
         Route::resource('penjualan', PenjualanController::class);
@@ -226,5 +227,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/pembayaran/{id}/reject', [PenjualanController::class, 'rejectPayment'])->name('pembayaran.reject');
         Route::post('/pembayaran/{id}/cancel-approval', [PenjualanController::class, 'cancelPaymentApproval'])->name('pembayaran.cancel-approval');
         Route::post('/pembayaran/{id}/edit', [PenjualanController::class, 'updatePayment'])->name('pembayaran.update-payment');
+        Route::delete('/pembayaran/{id}', [PenjualanController::class, 'destroyPayment'])->name('pembayaran.destroy');
     });
 });

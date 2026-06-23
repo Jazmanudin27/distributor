@@ -725,6 +725,13 @@
         });
     </script>
     <script src="{{ asset('js/pwa.js') }}"></script>
+    @if(session('success'))
+        <script>
+            if (window.localStorage && '{{ Auth::user() ? Auth::user()->nik : "" }}') {
+                localStorage.removeItem('mobile_order_cart_' + '{{ Auth::user() ? Auth::user()->nik : "" }}');
+            }
+        </script>
+    @endif
     @stack('scripts')
 </body>
 

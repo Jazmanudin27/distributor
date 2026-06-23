@@ -431,6 +431,35 @@
                 this.setSelectionRange(start + diff, start + diff);
             });
 
+            // Convert dot (.) to comma (,) for decimal input compatibility
+            $(document).on('keypress', '.input-qty-format', function(e) {
+                if (e.key === '.' || e.key === 'Decimal') {
+                    e.preventDefault();
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+                    const val = $(this).val();
+                    $(this).val(val.substring(0, start) + ',' + val.substring(end));
+                    this.setSelectionRange(start + 1, start + 1);
+                    $(this).trigger('input');
+                }
+            });
+
+            $(document).on('paste', '.input-qty-format', function(e) {
+                const clipboardData = e.originalEvent.clipboardData || window.clipboardData;
+                const pastedData = clipboardData.getData('text');
+                if (pastedData.includes('.') && !pastedData.includes(',')) {
+                    e.preventDefault();
+                    const converted = pastedData.replace(/\./g, ',');
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+                    const val = $(this).val();
+                    $(this).val(val.substring(0, start) + converted + val.substring(end));
+                    const newCursor = start + converted.length;
+                    this.setSelectionRange(newCursor, newCursor);
+                    $(this).trigger('input');
+                }
+            });
+
             let isInitializing = true;
 
             // Pelanggan dropdown change

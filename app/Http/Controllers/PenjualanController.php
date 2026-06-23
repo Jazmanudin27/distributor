@@ -732,6 +732,92 @@ class PenjualanController extends Controller
         return redirect()->route('penjualan.index')->with('success', 'Transaksi penjualan berhasil dibatalkan.');
     }
 
+    public function restore(Request $request, $no_faktur)
+    {
+        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasRole('Admin')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $penjualan = Penjualan::with(['details'])->findOrFail($no_faktur);
+
+        if ($penjualan->batal != 1) {
+            return redirect()->back()->with('error', 'Transaksi ini tidak dalam status batal.');
+        }
+
+        try {
+            DB::transaction(function () use ($penjualan, $request) {
+                // 1. Validate stock level first
+                foreach ($penjualan->details as $detail) {
+                    $satuan = BarangSatuan::findOrFail($detail->satuan_id);
+                    $qtySmallest = $detail->qty * ($satuan->isi ?? 1);
+
+                    $barang = Barang::lockForUpdate()->findOrFail($detail->kode_barang);
+                    if ($barang->stok < $qtySmallest) {
+                        throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok: " . $barang->formatStok($barang->stok));
+                    }
+                }
+
+                // 2. Decrement stock & Log mutation
+                foreach ($penjualan->details as $detail) {
+                    $satuan = BarangSatuan::findOrFail($detail->satuan_id);
+                    $qtySmallest = $detail->qty * ($satuan->isi ?? 1);
+
+                    \App\Models\StokMutasi::log(
+                        $detail->kode_barang,
+                        now()->toDateString(),
+                        'Pulihkan Penjualan',
+                        $penjualan->no_faktur,
+                        0,
+                        $qtySmallest,
+                        null,
+                        'Pemulihan dari pembatalan'
+                    );
+                }
+
+                // 3. Revert penjualan header
+                $penjualan->update([
+                    'batal' => 0,
+                    'alasan_batal' => null,
+                ]);
+
+                // 4. Update associated payments back to pending, strip ' (Faktur Dibatalkan)' from keterangan
+                $paymentTables = [
+                    'penjualan_pembayaran',
+                    'penjualan_pembayaran_transfer',
+                    'penjualan_pembayaran_giro'
+                ];
+
+                foreach ($paymentTables as $table) {
+                    $idColumn = $table === 'penjualan_pembayaran' ? 'id' : ($table === 'penjualan_pembayaran_transfer' ? 'kode_transfer' : 'kode_giro');
+                    $payments = DB::table($table)->where('no_faktur', $penjualan->no_faktur)->where('status', 'ditolak')->get();
+                    foreach ($payments as $payment) {
+                        $keterangan = $payment->keterangan;
+                        if (!empty($keterangan)) {
+                            $keterangan = str_replace(' (Faktur Dibatalkan)', '', $keterangan);
+                        }
+                        DB::table($table)->where($idColumn, $payment->$idColumn)->update([
+                            'status' => 'pending',
+                            'keterangan' => $keterangan
+                        ]);
+                    }
+                }
+
+                // 5. Activity Log
+                ActivityLog::create([
+                    'user_id' => Auth::id() ?? 1,
+                    'action' => 'Pulihkan Penjualan',
+                    'description' => 'Memulihkan faktur yang batal: ' . $penjualan->no_faktur,
+                    'ip_address' => $request->ip(),
+                    'no_faktur' => $penjualan->no_faktur,
+                ]);
+            });
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memulihkan transaksi: ' . $e->getMessage());
+        }
+
+        return redirect()->route('penjualan.index')->with('success', 'Transaksi penjualan ' . $penjualan->no_faktur . ' berhasil dipulihkan.');
+    }
+
     public function storePayment(Request $request, $no_faktur)
     {
         $item = Penjualan::findOrFail($no_faktur);
@@ -1178,6 +1264,53 @@ class PenjualanController extends Controller
         });
 
         return response()->json($result);
+    }
+
+    public function destroyPayment(Request $request, $id)
+    {
+        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasRole('Admin')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $source = $request->query('source');
+        $no_bukti = $id;
+        $no_faktur = '';
+        $jumlah = 0;
+
+        if ($source === 'transfer') {
+            $payment = DB::table('penjualan_pembayaran_transfer')->where('kode_transfer', $id)->first();
+            if ($payment) {
+                $no_faktur = $payment->no_faktur;
+                $no_bukti = $payment->kode_transfer;
+                $jumlah = $payment->jumlah;
+                DB::table('penjualan_pembayaran_transfer')->where('kode_transfer', $id)->delete();
+            }
+        } elseif ($source === 'giro') {
+            $payment = DB::table('penjualan_pembayaran_giro')->where('kode_giro', $id)->first();
+            if ($payment) {
+                $no_faktur = $payment->no_faktur;
+                $no_bukti = $payment->kode_giro;
+                $jumlah = $payment->jumlah;
+                DB::table('penjualan_pembayaran_giro')->where('kode_giro', $id)->delete();
+            }
+        } else {
+            // cash or default
+            $payment = PenjualanPembayaran::findOrFail($id);
+            $no_faktur = $payment->no_faktur;
+            $no_bukti = $payment->no_bukti;
+            $jumlah = $payment->jumlah;
+            $payment->delete();
+        }
+
+        ActivityLog::create([
+            'user_id' => Auth::id() ?? 1,
+            'action' => 'Hapus Pembayaran',
+            'description' => 'Menghapus Pembayaran ' . $no_bukti . ' senilai Rp ' . number_format($jumlah, 0, ',', '.') . ' untuk Faktur ' . $no_faktur,
+            'ip_address' => $request->ip(),
+            'no_faktur' => $no_faktur,
+        ]);
+
+        return redirect()->back()->with('success', 'Pembayaran berhasil dihapus.');
     }
 }
 

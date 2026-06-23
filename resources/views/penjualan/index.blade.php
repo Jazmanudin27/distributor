@@ -206,12 +206,21 @@
                                             </a>
                                         @endcan
                                         @can('delete-penjualan')
-                                            <button type="button"
-                                                class="btn btn-sm btn-outline-warning btn-batal-faktur rounded"
-                                                data-action="{{ route('penjualan.batal', $item->no_faktur) }}"
-                                                data-no-faktur="{{ $item->no_faktur }}" title="Batalkan Transaksi">
-                                                <i class="fa-solid fa-ban"></i>
-                                            </button>
+                                            @if ($item->batal == 1)
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-success btn-restore-faktur rounded"
+                                                    data-action="{{ route('penjualan.restore', $item->no_faktur) }}"
+                                                    data-no-faktur="{{ $item->no_faktur }}" title="Pulihkan Transaksi">
+                                                    <i class="fa-solid fa-rotate-left"></i>
+                                                </button>
+                                            @else
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-warning btn-batal-faktur rounded"
+                                                    data-action="{{ route('penjualan.batal', $item->no_faktur) }}"
+                                                    data-no-faktur="{{ $item->no_faktur }}" title="Batalkan Transaksi">
+                                                    <i class="fa-solid fa-ban"></i>
+                                                </button>
+                                            @endif
                                             <form action="{{ route('penjualan.destroy', $item->no_faktur) }}" method="POST"
                                                 class="d-inline">
                                                 @csrf
@@ -288,6 +297,36 @@
                             type: 'hidden',
                             name: 'alasan_batal',
                             value: result.value
+                        }));
+                        $('body').append(form);
+                        form.submit();
+                    }
+                });
+            });
+
+            $(document).on('click', '.btn-restore-faktur', function(e) {
+                e.preventDefault();
+                const actionUrl = $(this).data('action');
+                const noFaktur = $(this).data('no-faktur');
+
+                Swal.fire({
+                    title: 'Pulihkan Transaksi?',
+                    text: `Apakah Anda yakin ingin memulihkan transaksi ${noFaktur}? Sediaan stok akan dikurangi kembali.`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Pulihkan!',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#6c757d'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = $('<form>', {
+                            action: actionUrl,
+                            method: 'POST'
+                        }).append($('<input>', {
+                            type: 'hidden',
+                            name: '_token',
+                            value: '{{ csrf_token() }}'
                         }));
                         $('body').append(form);
                         form.submit();

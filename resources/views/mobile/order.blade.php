@@ -584,7 +584,7 @@
                 return true;
             }
 
-            function addProductToCart(product) {
+            function addProductToCart(product, savedValues = null) {
                 productSearchResults.classList.add('d-none');
                 productSearchInput.value = '';
 
@@ -613,7 +613,7 @@
 
                 // Check if product already exists in cart, if so, just increment qty
                 const existingCard = document.querySelector(`.cart-item-card[data-code="${product.kode_barang}"]`);
-                if (existingCard) {
+                if (existingCard && !savedValues) {
                     const qtyInput = existingCard.querySelector('.input-qty');
                     const oldVal = parseFloat(qtyInput.value) || 0;
                     qtyInput.value = oldVal + 1;
@@ -637,13 +637,25 @@
 
                 // Build units option: sorted by capacity (already sorted descending from backend)
                 let unitOptions = '';
+                const selectedSatuanId = savedValues ? parseInt(savedValues.satuan_id) : (product.satuans.length >
+                    0 ? product.satuans[0].id : null);
+
                 product.satuans.forEach((sat, i) => {
+                    const isSelected = selectedSatuanId ? (sat.id === selectedSatuanId) : (i === 0);
                     unitOptions +=
-                        `<option value="${sat.id}" data-name="${sat.satuan}" data-harga="${sat.harga_jual}" data-isi="${sat.isi}" ${i === 0 ? 'selected' : ''}>${sat.satuan} (${sat.isi})</option>`;
+                        `<option value="${sat.id}" data-name="${sat.satuan}" data-harga="${sat.harga_jual}" data-isi="${sat.isi}" ${isSelected ? 'selected' : ''}>${sat.satuan} (${sat.isi})</option>`;
                 });
 
-                // Get initial default price of first unit
-                const defaultPrice = product.satuans.length > 0 ? product.satuans[0].harga_jual : 0;
+                // Get initial default price
+                let defaultPrice = product.satuans.length > 0 ? product.satuans[0].harga_jual : 0;
+                if (savedValues) {
+                    defaultPrice = savedValues.harga;
+                }
+
+                const initialQty = savedValues ? savedValues.qty : 1;
+                const initialD1 = savedValues ? savedValues.diskon1 : 0;
+                const initialD2 = savedValues ? savedValues.diskon2 : 0;
+                const initialD3 = savedValues ? savedValues.diskon3 : 0;
 
                 card.innerHTML = `
                     <div class="d-flex justify-content-between align-items-start mb-2 border-bottom border-secondary border-opacity-20 pb-2">
@@ -672,7 +684,7 @@
                             <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Jumlah (Qty)</label>
                             <div class="input-group input-group-sm">
                                 <button type="button" class="btn btn-outline-secondary btn-qty-minus text-white px-2" style="border-radius: 8px 0 0 8px; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">-</button>
-                                <input type="number" name="items[${rowIndex}][qty]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-qty px-1" min="0.01" step="any" value="1" required style="font-size: 0.8rem; border-color: rgba(255,255,255,0.15); height: 34px;">
+                                <input type="number" name="items[${rowIndex}][qty]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-qty px-1" min="0.01" step="any" value="${initialQty}" required style="font-size: 0.8rem; border-color: rgba(255,255,255,0.15); height: 34px;">
                                 <button type="button" class="btn btn-outline-secondary btn-qty-plus text-white px-2" style="border-radius: 0 8px 8px 0; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">+</button>
                             </div>
                         </div>
@@ -696,19 +708,19 @@
                         <div class="row g-1">
                             <div class="col-4">
                                 <div class="input-group input-group-sm">
-                                    <input type="number" name="items[${rowIndex}][diskon1_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon1" min="0" max="100" step="any" value="0" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px; background-color: rgba(255, 255, 255, 0.05);" placeholder="D1" readonly>
+                                    <input type="number" name="items[${rowIndex}][diskon1_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon1" min="0" max="100" step="any" value="${initialD1}" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px; background-color: rgba(255, 255, 255, 0.05);" placeholder="D1" readonly>
                                     <span class="input-group-text bg-transparent text-secondary border-0 px-1" style="font-size: 0.7rem;">%</span>
                                 </div>
                             </div>
                             <div class="col-4">
                                 <div class="input-group input-group-sm">
-                                    <input type="number" name="items[${rowIndex}][diskon2_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon2" min="0" max="100" step="any" value="0" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px; background-color: rgba(255, 255, 255, 0.05);" placeholder="D2" readonly>
+                                    <input type="number" name="items[${rowIndex}][diskon2_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon2" min="0" max="100" step="any" value="${initialD2}" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px; background-color: rgba(255, 255, 255, 0.05);" placeholder="D2" readonly>
                                     <span class="input-group-text bg-transparent text-secondary border-0 px-1" style="font-size: 0.7rem;">%</span>
                                 </div>
                             </div>
                             <div class="col-4">
                                 <div class="input-group input-group-sm">
-                                    <input type="number" name="items[${rowIndex}][diskon3_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon3" min="0" max="100" step="any" value="0" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px; background-color: rgba(255, 255, 255, 0.05);" placeholder="D3" readonly>
+                                    <input type="number" name="items[${rowIndex}][diskon3_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon3" min="0" max="100" step="any" value="${initialD3}" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px; background-color: rgba(255, 255, 255, 0.05);" placeholder="D3" readonly>
                                     <span class="input-group-text bg-transparent text-secondary border-0 px-1" style="font-size: 0.7rem;">%</span>
                                 </div>
                             </div>
@@ -737,10 +749,16 @@
                 const btnQtyMinus = card.querySelector('.btn-qty-minus');
                 const btnQtyPlus = card.querySelector('.btn-qty-plus');
 
-                selectSatuan.addEventListener('change', function() {
-                    const selectedOpt = this.options[this.selectedIndex];
+                // Set initial hidden unit name
+                const selectedOpt = selectSatuan.options[selectSatuan.selectedIndex];
+                if (selectedOpt) {
                     hiddenSatuanName.value = selectedOpt.getAttribute('data-name');
-                    inputHarga.value = selectedOpt.getAttribute('data-harga');
+                }
+
+                selectSatuan.addEventListener('change', function() {
+                    const opt = this.options[this.selectedIndex];
+                    hiddenSatuanName.value = opt.getAttribute('data-name');
+                    inputHarga.value = opt.getAttribute('data-harga');
                     inputHarga.dispatchEvent(new Event('input')); // Trigger formatting!
                     checkStockLimit(card);
                     calculateTotals();
@@ -1008,6 +1026,9 @@
 
                 // Save temporary total for validation
                 btnSubmitOrder.setAttribute('data-grand-total', grandTotal);
+
+                // Save cart to storage
+                saveCartToStorage();
             }
 
             // --- 5. Form Validation & Guards ---
@@ -1108,6 +1129,93 @@
                     jenisTransaksiEl.value = 'Tunai';
                 }
             @endif
+
+            // --- 6. LocalStorage Cart Persistence ---
+            let isRestoringCart = false;
+
+            function saveCartToStorage() {
+                if (isRestoringCart) return;
+
+                const items = [];
+                cartContainer.querySelectorAll('.cart-item-card').forEach(card => {
+                    const code = card.getAttribute('data-code');
+                    const qty = card.querySelector('.input-qty').value;
+                    const satuanId = card.querySelector('.select-satuan').value;
+                    const harga = card.querySelector('.input-harga').value;
+                    const diskon1 = card.querySelector('.input-diskon1').value;
+                    const diskon2 = card.querySelector('.input-diskon2').value;
+                    const diskon3 = card.querySelector('.input-diskon3').value;
+                    const product = barangsCache[code];
+
+                    items.push({
+                        code: code,
+                        qty: qty,
+                        satuan_id: satuanId,
+                        harga: harga,
+                        diskon1: diskon1,
+                        diskon2: diskon2,
+                        diskon3: diskon3,
+                        product: product
+                    });
+                });
+
+                const cartData = {
+                    kode_pelanggan: hiddenKodePelanggan.value,
+                    jenis_transaksi: jenisTransaksiEl.value,
+                    keterangan: document.querySelector('input[name="keterangan"]')?.value || '',
+                    items: items
+                };
+
+                localStorage.setItem('mobile_order_cart_' + '{{ Auth::user()->nik }}', JSON.stringify(cartData));
+            }
+
+            function loadCartFromStorage() {
+                try {
+                    const dataStr = localStorage.getItem('mobile_order_cart_' + '{{ Auth::user()->nik }}');
+                    if (!dataStr) return;
+                    const data = JSON.parse(dataStr);
+                    if (!data || !data.items || data.items.length === 0) return;
+
+                    const lockedKode = "{{ $pelanggan ? $pelanggan->kode_pelanggan : '' }}";
+                    if (lockedKode && data.kode_pelanggan !== lockedKode) {
+                        // Locked customer changed (different check-in), discard cart
+                        localStorage.removeItem('mobile_order_cart_' + '{{ Auth::user()->nik }}');
+                        return;
+                    }
+
+                    isRestoringCart = true;
+
+                    data.items.forEach(item => {
+                        if (item.product) {
+                            addProductToCart(item.product, item);
+                        }
+                    });
+
+                    if (jenisTransaksiEl) {
+                        jenisTransaksiEl.value = data.jenis_transaksi || 'Tunai';
+                    }
+                    const keteranganEl = document.querySelector('input[name="keterangan"]');
+                    if (keteranganEl) {
+                        keteranganEl.value = data.keterangan || '';
+                    }
+
+                    isRestoringCart = false;
+
+                    calculateTotals();
+                    validateFormState();
+                } catch (e) {
+                    console.error("Failed to load cart from storage", e);
+                    isRestoringCart = false;
+                }
+            }
+
+            const keteranganEl = document.querySelector('input[name="keterangan"]');
+            if (keteranganEl) {
+                keteranganEl.addEventListener('input', saveCartToStorage);
+            }
+
+            // Load saved cart from localStorage if present
+            loadCartFromStorage();
 
             validateFormState();
         });

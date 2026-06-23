@@ -67,41 +67,70 @@
             border: 1px solid #dee2e6 !important;
             text-align: center !important;
             font-weight: bold !important;
+            white-space: nowrap !important;
         }
 
         .table-simple td {
             font-size: 11px !important;
             padding: 6px 6px !important;
             border: 1px solid #dee2e6 !important;
+            white-space: nowrap !important;
         }
     </style>
 </head>
 
 @php
     if (!function_exists('formatTanggalIndo')) {
-        function formatTanggalIndo($date) {
-            if (!$date) return '-';
+        function formatTanggalIndo($date)
+        {
+            if (!$date) {
+                return '-';
+            }
             $d = \Carbon\Carbon::parse($date);
             $bulanIndo = [
-                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
-                7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                1 => 'Januari',
+                2 => 'Februari',
+                3 => 'Maret',
+                4 => 'April',
+                5 => 'Mei',
+                6 => 'Juni',
+                7 => 'Juli',
+                8 => 'Agustus',
+                9 => 'September',
+                10 => 'Oktober',
+                11 => 'November',
+                12 => 'Desember',
             ];
             return $d->day . ' ' . $bulanIndo[$d->month] . ' ' . $d->year;
         }
     }
 
     if (!function_exists('formatTanggalShortIndo')) {
-        function formatTanggalShortIndo($date) {
-            if (!$date) return '-';
+        function formatTanggalShortIndo($date)
+        {
+            if (!$date) {
+                return '-';
+            }
             $d = \Carbon\Carbon::parse($date);
             $bulanIndo = [
-                1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
-                7 => 'Jul', 8 => 'Ags', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'
+                1 => 'Jan',
+                2 => 'Feb',
+                3 => 'Mar',
+                4 => 'Apr',
+                5 => 'Mei',
+                6 => 'Jun',
+                7 => 'Jul',
+                8 => 'Ags',
+                9 => 'Sep',
+                10 => 'Okt',
+                11 => 'Nov',
+                12 => 'Des',
             ];
             return $d->day . '-' . $bulanIndo[$d->month] . '-' . $d->year;
         }
     }
 @endphp
+
 <body>
     <div class="container-fluid py-3">
         {{-- HEADER --}}
@@ -192,18 +221,18 @@
                 {{-- DETAIL SIMPLE TABLES (Format 3) --}}
                 <table class="table table-sm align-middle w-100 table-simple">
                     <thead>
-                        <tr style="background:#0d6efd; color:#fff;">
-                            <th class="text-center">No</th>
-                            <th class="text-center">Tanggal</th>
-                            <th>Nama Pelanggan</th>
-                            <th class="text-center">No. Faktur</th>
-                            <th>Nama Barang</th>
-                            <th class="text-end">Harga</th>
-                            <th class="text-end">Qty</th>
-                            <th class="text-center">Satuan</th>
-                            <th class="text-center">D1</th>
-                            <th class="text-center">D2</th>
-                            <th class="text-center">D3</th>
+                        <tr style="background-color:#0d6efd; color:#ffffff;">
+                            <th class="text-center" style="background-color:#0d6efd; color:#ffffff;">No</th>
+                            <th class="text-center" style="background-color:#0d6efd; color:#ffffff;">Tanggal</th>
+                            <th style="background-color:#0d6efd; color:#ffffff;">Nama Pelanggan</th>
+                            <th class="text-center" style="background-color:#0d6efd; color:#ffffff;">No. Faktur</th>
+                            <th style="background-color:#0d6efd; color:#ffffff;">Nama Barang</th>
+                            <th class="text-end" style="background-color:#0d6efd; color:#ffffff;">Harga</th>
+                            <th class="text-end" style="background-color:#0d6efd; color:#ffffff;">Qty</th>
+                            <th class="text-center" style="background-color:#0d6efd; color:#ffffff;">Satuan</th>
+                            <th class="text-center" style="background-color:#0d6efd; color:#ffffff;">D1</th>
+                            <th class="text-center" style="background-color:#0d6efd; color:#ffffff;">D2</th>
+                            <th class="text-center" style="background-color:#0d6efd; color:#ffffff;">D3</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -217,16 +246,16 @@
                                 <td>{{ $row->nama_pelanggan ?? '-' }}</td>
                                 <td class="text-center">{{ $row->no_faktur }}</td>
                                 <td>{{ $row->nama_barang ?? '-' }}</td>
-                                <td class="text-end">{{ number_format($row->harga, 0, ',', '.') }}</td>
-                                <td class="text-end">{{ number_format($row->qty, 0, ',', '.') }}</td>
+                                <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($row->harga, 0, ',', '.') }}</td>
+                                <td class="text-end" style="mso-number-format:'#,##0';">{{ number_format($row->qty, 0, ',', '.') }}</td>
                                 <td class="text-center">{{ $row->satuan ?? 'PCS' }}</td>
-                                <td class="text-center">
+                                <td class="text-center" style="mso-number-format:'#,##0.00';">
                                     {{ $row->diskon1_persen > 0 ? number_format($row->diskon1_persen, 2, ',', '.') : '' }}
                                 </td>
-                                <td class="text-center">
+                                <td class="text-center" style="mso-number-format:'#,##0.00';">
                                     {{ $row->diskon2_persen > 0 ? number_format($row->diskon2_persen, 2, ',', '.') : '' }}
                                 </td>
-                                <td class="text-center">
+                                <td class="text-center" style="mso-number-format:'#,##0.00';">
                                     {{ $row->diskon3_persen > 0 ? number_format($row->diskon3_persen, 2, ',', '.') : '' }}
                                 </td>
                             </tr>
