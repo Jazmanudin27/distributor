@@ -63,7 +63,9 @@ class PenjualanController extends Controller
                 });
             }
         } else {
-            $query->where('batal', 0);
+            if (!$request->filled('search')) {
+                $query->where('batal', 0);
+            }
         }
 
         if ($request->filled('kode_sales')) {
