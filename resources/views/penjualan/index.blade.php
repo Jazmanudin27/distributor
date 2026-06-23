@@ -182,7 +182,7 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group gap-1">
-                                        <a href="{{ route('penjualan.print', $item->no_faktur) }}"
+                                        <a href="#"
                                             class="btn btn-sm btn-outline-info rounded position-relative btn-print-faktur"
                                             data-no-faktur="{{ $item->no_faktur }}" data-cetak="{{ $item->cetak ?? 0 }}"
                                             title="Cetak Faktur">

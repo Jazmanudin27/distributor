@@ -291,18 +291,28 @@
                                         @endif
                                         @if ($item->foto)
                                             @php
-                                                $fotoUrl = Str::contains($item->foto, '/') ? asset($item->foto) : asset('storage/pelanggan/' . $item->foto);
+                                                $fotoUrl = Str::contains($item->foto, '/')
+                                                    ? asset($item->foto)
+                                                    : asset('storage/pelanggan/' . $item->foto);
                                             @endphp
-                                            <a href="{{ $fotoUrl }}" target="_blank" class="meta-pill preview-image-trigger" data-title="Foto Toko - {{ $item->nama_pelanggan }}" data-src="{{ $fotoUrl }}">
+                                            <a href="{{ $fotoUrl }}" target="_blank"
+                                                class="meta-pill preview-image-trigger"
+                                                data-title="Foto Toko - {{ $item->nama_pelanggan }}"
+                                                data-src="{{ $fotoUrl }}">
                                                 <i class="fa-solid fa-image text-secondary"></i>
                                                 <span>Foto Toko</span>
                                             </a>
                                         @endif
                                         @if ($item->foto_ktp)
                                             @php
-                                                $fotoKtpUrl = Str::contains($item->foto_ktp, '/') ? asset($item->foto_ktp) : asset('storage/pelanggan_ktp/' . $item->foto_ktp);
+                                                $fotoKtpUrl = Str::contains($item->foto_ktp, '/')
+                                                    ? asset($item->foto_ktp)
+                                                    : asset('storage/pelanggan_ktp/' . $item->foto_ktp);
                                             @endphp
-                                            <a href="{{ $fotoKtpUrl }}" target="_blank" class="meta-pill preview-image-trigger" data-title="KTP Pelanggan - {{ $item->nama_pelanggan }}" data-src="{{ $fotoKtpUrl }}">
+                                            <a href="{{ $fotoKtpUrl }}" target="_blank"
+                                                class="meta-pill preview-image-trigger"
+                                                data-title="KTP Pelanggan - {{ $item->nama_pelanggan }}"
+                                                data-src="{{ $fotoKtpUrl }}">
                                                 <i class="fa-solid fa-id-card text-secondary"></i>
                                                 <span>KTP</span>
                                             </a>
@@ -407,15 +417,18 @@
     </div>
 
     <!-- Image Preview Modal -->
-    <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
+    <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content" style="background-color: #1A1D27; border: 1px solid rgba(255, 255, 255, 0.1);">
                 <div class="modal-header border-bottom border-white-10">
                     <h6 class="modal-title text-white fw-bold" id="imagePreviewModalLabel">Preview Foto</h6>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center p-3">
-                    <img id="previewModalImage" src="" class="img-fluid rounded border border-white-10" style="max-height: 70vh; object-fit: contain; background-color: #0F1117;">
+                    <img id="previewModalImage" src="" class="img-fluid rounded border border-white-10"
+                        style="max-height: 70vh; object-fit: contain; background-color: #0F1117;">
                 </div>
             </div>
         </div>
