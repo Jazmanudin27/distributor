@@ -23,6 +23,7 @@ class PenjualanKirimanController extends Controller
         $query = DB::table('penjualan_kiriman')
             ->join('wilayah', 'penjualan_kiriman.kode_wilayah', '=', 'wilayah.kode_wilayah')
             ->join('penjualan', 'penjualan_kiriman.no_faktur', '=', 'penjualan.no_faktur')
+            ->where('penjualan.batal', 0)
             ->select(
                 'penjualan_kiriman.tanggal',
                 'penjualan_kiriman.kode_wilayah',
@@ -192,6 +193,9 @@ class PenjualanKirimanController extends Controller
         $currentInvoices = PenjualanKiriman::where('tanggal', $tanggal)
             ->where('kode_wilayah', $kode_wilayah)
             ->where('kirimanke', $kirimanke)
+            ->whereHas('penjualan', function ($q) {
+                $q->where('batal', 0);
+            })
             ->pluck('no_faktur')
             ->toArray();
 
@@ -222,6 +226,7 @@ class PenjualanKirimanController extends Controller
 
         $shipmentInvoices = Penjualan::with(['pelanggan.wilayah', 'sales'])
             ->whereIn('no_faktur', $currentInvoices)
+            ->where('batal', 0)
             ->get();
 
         $isEdit = true;
@@ -364,6 +369,7 @@ class PenjualanKirimanController extends Controller
             ->where('penjualan_kiriman.tanggal', $tanggal)
             ->where('penjualan_kiriman.kode_wilayah', $kode_wilayah)
             ->where('penjualan_kiriman.kirimanke', $kirimanke)
+            ->where('penjualan.batal', 0)
             ->select(
                 'penjualan_kiriman.no_faktur',
                 'penjualan.tanggal',
@@ -392,11 +398,13 @@ class PenjualanKirimanController extends Controller
         // Left Column: Grouped items/barang
         $details = DB::table('penjualan_kiriman')
             ->join('penjualan_detail', 'penjualan_kiriman.no_faktur', '=', 'penjualan_detail.no_faktur')
+            ->join('penjualan', 'penjualan_kiriman.no_faktur', '=', 'penjualan.no_faktur')
             ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
             ->join('barang_satuan', 'penjualan_detail.satuan_id', '=', 'barang_satuan.id')
             ->where('penjualan_kiriman.tanggal', $tanggal)
             ->where('penjualan_kiriman.kode_wilayah', $kode_wilayah)
             ->where('penjualan_kiriman.kirimanke', $kirimanke)
+            ->where('penjualan.batal', 0)
             ->select(
                 'penjualan_detail.kode_barang',
                 'barang.nama_barang',
@@ -414,6 +422,7 @@ class PenjualanKirimanController extends Controller
             ->where('penjualan_kiriman.tanggal', $tanggal)
             ->where('penjualan_kiriman.kode_wilayah', $kode_wilayah)
             ->where('penjualan_kiriman.kirimanke', $kirimanke)
+            ->where('penjualan.batal', 0)
             ->select(
                 'penjualan_kiriman.no_faktur',
                 'penjualan.tanggal',

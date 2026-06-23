@@ -132,6 +132,18 @@
                     <div class="text-danger small mt-1">{{ $message }}</div>
                 @enderror
             </div>
+
+            <div class="mb-3">
+                <label class="form-label text-secondary small fw-semibold mb-1">Metode Pembayaran *</label>
+                <select name="metode_bayar" class="form-control form-control-mobile" required>
+                    <option value="Cash" {{ old('metode_bayar') == 'Cash' ? 'selected' : '' }}>Cash</option>
+                    <option value="Kredit" {{ old('metode_bayar') == 'Kredit' ? 'selected' : '' }}>Kredit</option>
+                    <option value="Transfer" {{ old('metode_bayar') == 'Transfer' ? 'selected' : '' }}>Transfer</option>
+                </select>
+                @error('metode_bayar')
+                    <div class="text-danger small mt-1">{{ $message }}</div>
+                @enderror
+            </div>
         </div>
 
         <!-- Section: GPS & Berkas -->
@@ -202,6 +214,10 @@
             $('select[name="sub_wilayah"]').select2({
                 placeholder: "-- Pilih Sub Wilayah --",
                 allowClear: true
+            });
+            $('select[name="metode_bayar"]').select2({
+                placeholder: "-- Pilih Metode Pembayaran --",
+                minimumResultsForSearch: Infinity
             });
 
             // Geolocation Capturing
