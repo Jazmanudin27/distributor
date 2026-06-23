@@ -64,6 +64,7 @@
                             <select name="jenis_laporan" class="form-select form-select-sm">
                                 <option value="rekap">Format 1: Rekap (Per Invoice)</option>
                                 <option value="detail">Format 2: Detail (Per Barang - Kolom Lengkap)</option>
+                                <option value="detail_simple">Format 3: Detail Simple (Sesuai Layout)</option>
                             </select>
                         </div>
 

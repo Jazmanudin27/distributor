@@ -58,18 +58,66 @@
                 padding: 10px;
             }
         }
+
+        .table-simple th {
+            background-color: #0d6efd !important;
+            color: #fff !important;
+            font-size: 11px !important;
+            padding: 8px 6px !important;
+            border: 1px solid #dee2e6 !important;
+            text-align: center !important;
+            font-weight: bold !important;
+        }
+
+        .table-simple td {
+            font-size: 11px !important;
+            padding: 6px 6px !important;
+            border: 1px solid #dee2e6 !important;
+        }
     </style>
 </head>
 
+@php
+    if (!function_exists('formatTanggalIndo')) {
+        function formatTanggalIndo($date) {
+            if (!$date) return '-';
+            $d = \Carbon\Carbon::parse($date);
+            $bulanIndo = [
+                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
+                7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+            ];
+            return $d->day . ' ' . $bulanIndo[$d->month] . ' ' . $d->year;
+        }
+    }
+
+    if (!function_exists('formatTanggalShortIndo')) {
+        function formatTanggalShortIndo($date) {
+            if (!$date) return '-';
+            $d = \Carbon\Carbon::parse($date);
+            $bulanIndo = [
+                1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
+                7 => 'Jul', 8 => 'Ags', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'
+            ];
+            return $d->day . '-' . $bulanIndo[$d->month] . '-' . $d->year;
+        }
+    }
+@endphp
 <body>
     <div class="container-fluid py-3">
         {{-- HEADER --}}
         <div class="text-center mb-4">
-            <h4 class="fw-bold mb-1">LAPORAN PENJUALAN BARANG</h4>
-            <div class="small">
-                Periode: {{ \Carbon\Carbon::parse($tanggal_mulai)->format('d/m/Y') }} s/d
-                {{ \Carbon\Carbon::parse($tanggal_akhir)->format('d/m/Y') }}
-            </div>
+            @if ($jenis_laporan === 'detail_simple')
+                <h4 class="fw-bold mb-1">LAPORAN PENJUALAN</h4>
+                <div class="small">
+                    Periode: {{ formatTanggalIndo($tanggal_mulai) }} s/d {{ formatTanggalIndo($tanggal_akhir) }}
+                </div>
+            @else
+                <h4 class="fw-bold mb-1">LAPORAN PENJUALAN BARANG</h4>
+                <div class="small">
+                    Periode: {{ \Carbon\Carbon::parse($tanggal_mulai)->format('d/m/Y') }} s/d
+                    {{ \Carbon\Carbon::parse($tanggal_akhir)->format('d/m/Y') }}
+                </div>
+            @endif
             @if ($kode_sales)
                 @php $salesName = $salesmen->firstWhere('nik', $kode_sales)->name ?? $kode_sales; @endphp
                 <div class="small">Salesman: {{ $salesName }}</div>
@@ -139,6 +187,51 @@
                             <td class="text-end">{{ number_format($totGrand, 0, ',', '.') }}</td>
                         </tr>
                     </tfoot>
+                </table>
+            @elseif ($jenis_laporan === 'detail_simple')
+                {{-- DETAIL SIMPLE TABLES (Format 3) --}}
+                <table class="table table-sm align-middle w-100 table-simple">
+                    <thead>
+                        <tr style="background:#0d6efd; color:#fff;">
+                            <th class="text-center">No</th>
+                            <th class="text-center">Tanggal</th>
+                            <th>Nama Pelanggan</th>
+                            <th class="text-center">No. Faktur</th>
+                            <th>Nama Barang</th>
+                            <th class="text-end">Harga</th>
+                            <th class="text-end">Qty</th>
+                            <th class="text-center">Satuan</th>
+                            <th class="text-center">D1</th>
+                            <th class="text-center">D2</th>
+                            <th class="text-center">D3</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php
+                            $num = 1;
+                        @endphp
+                        @foreach ($items as $row)
+                            <tr>
+                                <td class="text-center">{{ $num++ }}</td>
+                                <td class="text-center">{{ formatTanggalShortIndo($row->tanggal) }}</td>
+                                <td>{{ $row->nama_pelanggan ?? '-' }}</td>
+                                <td class="text-center">{{ $row->no_faktur }}</td>
+                                <td>{{ $row->nama_barang ?? '-' }}</td>
+                                <td class="text-end">{{ number_format($row->harga, 0, ',', '.') }}</td>
+                                <td class="text-end">{{ number_format($row->qty, 0, ',', '.') }}</td>
+                                <td class="text-center">{{ $row->satuan ?? 'PCS' }}</td>
+                                <td class="text-center">
+                                    {{ $row->diskon1_persen > 0 ? number_format($row->diskon1_persen, 2, ',', '.') : '' }}
+                                </td>
+                                <td class="text-center">
+                                    {{ $row->diskon2_persen > 0 ? number_format($row->diskon2_persen, 2, ',', '.') : '' }}
+                                </td>
+                                <td class="text-center">
+                                    {{ $row->diskon3_persen > 0 ? number_format($row->diskon3_persen, 2, ',', '.') : '' }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
                 </table>
             @else
                 {{-- DETAIL ROWSPAN TABLES (Format 3) --}}

@@ -188,8 +188,8 @@
                             </div>
                             <div class="mb-2">
                                 <label class="form-label fs-8 fw-bold text-secondary mb-1">Wilayah</label>
-                                <input type="text" id="pelanggan_wilayah" class="form-control form-control-sm bg-light"
-                                    readonly>
+                                <input type="text" id="pelanggan_wilayah"
+                                    class="form-control form-control-sm bg-light" readonly>
                             </div>
                             <div class="row g-2 mb-0">
                                 <div class="col-6">
@@ -431,7 +431,8 @@
                                 breakdowns.push(`${unitQty} ${sat.satuan}`);
                             }
                         } else {
-                            let unitQty = Math.floor(Math.round((remaining / factor) * 100000000) / 100000000);
+                            let unitQty = Math.floor(Math.round((remaining / factor) * 100000000) /
+                                100000000);
                             if (unitQty > 0) {
                                 breakdowns.push(`${unitQty} ${sat.satuan}`);
                                 remaining = Math.round((remaining - (unitQty * factor)) * 10000) / 10000;
@@ -1632,7 +1633,8 @@
                 if (!isEditMode) {
                     const opt = $('#kode_pelanggan').find(':selected');
                     if (opt.val()) {
-                        const hasOverdue = parseInt(opt.attr('data-has-overdue') || opt.data('has-overdue')) === 1;
+                        const hasOverdue = parseInt(opt.attr('data-has-overdue') || opt.data(
+                            'has-overdue')) === 1;
                         if (hasOverdue) {
                             e.preventDefault();
                             return Swal.fire({
