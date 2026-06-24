@@ -312,11 +312,31 @@
                                         {{ number_format((float) $totalRetur, 0, ',', '.') }}</span>
                                 </div>
 
-                                <div class="d-flex justify-content-between border-top pt-2 mb-3 text-danger">
-                                    <span class="fw-bold fs-6">Sisa Piutang</span>
-                                    <span class="fw-bold fs-5">Rp
-                                        {{ number_format((float) max(0, $sisaBayar), 0, ',', '.') }}</span>
-                                </div>
+                                @php
+                                    $sisaReal = (float) ($item->grand_total - $totalBayar - $totalRetur);
+                                @endphp
+
+                                @if ($sisaReal < 0)
+                                    <div class="d-flex justify-content-between border-top pt-2 mb-2 text-secondary">
+                                        <span class="fw-bold fs-6">Sisa Piutang</span>
+                                        <span class="fw-bold fs-6">Rp 0</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-3 text-success">
+                                        <span class="fw-bold fs-6">Lebih Bayar</span>
+                                        <span class="fw-bold fs-5">Rp
+                                            {{ number_format(abs($sisaReal), 0, ',', '.') }}</span>
+                                    </div>
+                                @elseif ($sisaReal > 0)
+                                    <div class="d-flex justify-content-between border-top pt-2 mb-3 text-danger">
+                                        <span class="fw-bold fs-6">Sisa Piutang (Kurang Bayar)</span>
+                                        <span class="fw-bold fs-5">Rp {{ number_format($sisaReal, 0, ',', '.') }}</span>
+                                    </div>
+                                @else
+                                    <div class="d-flex justify-content-between border-top pt-2 mb-3 text-secondary">
+                                        <span class="fw-bold fs-6">Sisa Piutang</span>
+                                        <span class="fw-bold fs-5">Rp 0</span>
+                                    </div>
+                                @endif
 
                                 <div class="progress mb-1" style="height: 8px;">
                                     <div class="progress-bar bg-success" role="progressbar"

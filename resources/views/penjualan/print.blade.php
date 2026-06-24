@@ -251,17 +251,17 @@
                     <td class="text-end">Rp {{ number_format((float) $detail->harga, 0, ',', '.') }}</td>
                     @if ($showD1)
                         <td class="text-center">
-                            {{ floatval($detail->diskon1_persen) > 0 ? floatval($detail->diskon1_persen) . '%' : '-' }}
+                            {{ floatval($detail->diskon1_persen) > 0 ? number_format((float) $detail->diskon1_persen, 2, ',', '.') . '%' : '-' }}
                         </td>
                     @endif
                     @if ($showD2)
                         <td class="text-center">
-                            {{ floatval($detail->diskon2_persen) > 0 ? floatval($detail->diskon2_persen) . '%' : '-' }}
+                            {{ floatval($detail->diskon2_persen) > 0 ? number_format((float) $detail->diskon2_persen, 2, ',', '.') . '%' : '-' }}
                         </td>
                     @endif
                     @if ($showD3)
                         <td class="text-center">
-                            {{ floatval($detail->diskon3_persen) > 0 ? floatval($detail->diskon3_persen) . '%' : '-' }}
+                            {{ floatval($detail->diskon3_persen) > 0 ? number_format((float) $detail->diskon3_persen, 2, ',', '.') . '%' : '-' }}
                         </td>
                     @endif
                     <td class="text-end">Rp
