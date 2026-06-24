@@ -521,13 +521,6 @@
                     <span>Pelanggan</span>
                 </a>
 
-                {{-- Barang — untuk semua sales --}}
-                <a href="{{ route('mobile.barang.index') }}"
-                    class="nav-item-mobile {{ Request::routeIs('mobile.barang.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-box-open"></i>
-                    <span>Barang</span>
-                </a>
-
                 {{-- Penjualan (selalu ada, aktif juga saat canvas order) --}}
                 <a href="{{ route('mobile.order.index') }}"
                     class="nav-item-mobile {{ (Request::routeIs('mobile.order.index') || (Request::routeIs('mobile.order.canvas.*') && !Request::routeIs('mobile.order.canvas.dpb*'))) ? 'active' : '' }}">
