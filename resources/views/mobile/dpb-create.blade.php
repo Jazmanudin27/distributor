@@ -107,64 +107,84 @@
                     placeholder="Catatan tambahan (opsional)..."></textarea>
             </div>
 
-            <!-- Product Search (Daftar Barang Gudang) -->
-            <div class="position-relative mb-3" style="position: relative; z-index: 10;">
-                <label class="form-label text-secondary small mb-1">Cari & Tambah Barang</label>
-                <div class="input-group input-group-sm">
+            <!-- Product List Container (Daftar Semua Barang) -->
+            <div class="mb-3">
+                <label class="form-label text-secondary small mb-1">Pilih Barang dari Gudang</label>
+                <div class="input-group input-group-sm mb-2">
                     <span class="input-group-text bg-dark text-secondary border-secondary">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </span>
-                    <input type="text" id="product-search-input"
+                    <input type="text" id="product-filter-input"
                         class="form-control form-control-sm bg-dark text-white border-secondary"
-                        placeholder="Ketik nama atau kode barang...">
+                        placeholder="Filter nama atau kode barang...">
                 </div>
-                <div id="product-search-results" class="list-group position-absolute w-100 shadow-lg mt-1 d-none"
-                    style="z-index: 1050; max-height: 220px; overflow-y: auto; background-color: #161e31; border: 1px solid var(--border-color); border-radius: 8px;">
+
+                <div id="product-list-container" class="list-group shadow-sm"
+                    style="max-height: 220px; overflow-y: auto; background-color: #161e31; border: 1px solid var(--border-color); border-radius: 8px;">
                 </div>
             </div>
 
             <!-- SELECTED PRODUCT DETAILS INPUT (Show when product is selected) -->
-            <div id="selected-product-panel" class="mobile-card p-3 mb-3 d-none" 
+            <div id="selected-product-panel" class="mobile-card p-3 mb-3 d-none"
                 style="background: rgba(99, 102, 241, 0.08) !important; border: 1px solid rgba(99, 102, 241, 0.25) !important;">
-                <div class="d-flex justify-content-between align-items-start mb-2 pb-2 border-bottom border-secondary border-opacity-20">
+                <div
+                    class="d-flex justify-content-between align-items-start mb-2 pb-2 border-bottom border-secondary border-opacity-20">
                     <div>
                         <span class="badge bg-primary mb-1" style="font-size: 0.6rem;">Barang Terpilih</span>
-                        <h6 class="fw-bold text-white mb-0" id="selected-product-name" style="font-size: 0.85rem; line-height: 1.3;">-</h6>
-                        <span class="text-secondary font-monospace" id="selected-product-code" style="font-size: 0.65rem;">Kode: -</span>
+                        <h6 class="fw-bold text-white mb-0" id="selected-product-name"
+                            style="font-size: 0.85rem; line-height: 1.3;">-</h6>
+                        <span class="text-secondary font-monospace" id="selected-product-code"
+                            style="font-size: 0.65rem;">Kode: -</span>
                     </div>
-                    <button type="button" id="btn-cancel-select" class="btn btn-sm text-secondary border-0 p-1" style="font-size: 0.9rem;">
+                    <button type="button" id="btn-cancel-select" class="btn btn-sm text-secondary border-0 p-1"
+                        style="font-size: 0.9rem;">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
 
                 <div class="row g-2 mb-3">
                     <div class="col-6">
-                        <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Pilih Satuan</label>
-                        <select id="select-temp-satuan" class="form-select form-select-sm bg-dark text-white border-secondary" style="font-size: 0.75rem; border-radius: 8px; height: 34px;">
+                        <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Pilih
+                            Satuan</label>
+                        <select id="select-temp-satuan"
+                            class="form-select form-select-sm bg-dark text-white border-secondary"
+                            style="font-size: 0.75rem; border-radius: 8px; height: 34px;">
                         </select>
                     </div>
                     <div class="col-6">
-                        <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Jumlah (Qty)</label>
+                        <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Jumlah
+                            (Qty)</label>
                         <div class="input-group input-group-sm">
-                            <button type="button" id="btn-temp-minus" class="btn btn-outline-secondary btn-qty-minus text-white px-2" style="border-radius: 8px 0 0 8px; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">-</button>
-                            <input type="number" id="input-temp-qty" class="form-control form-control-sm bg-dark text-white border-secondary text-center px-1" min="0.01" step="any" value="1" style="font-size: 0.8rem; border-color: rgba(255,255,255,0.15); height: 34px;">
-                            <button type="button" id="btn-temp-plus" class="btn btn-outline-secondary btn-qty-plus text-white px-2" style="border-radius: 0 8px 8px 0; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">+</button>
+                            <button type="button" id="btn-temp-minus"
+                                class="btn btn-outline-secondary btn-qty-minus text-white px-2"
+                                style="border-radius: 8px 0 0 8px; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">-</button>
+                            <input type="number" id="input-temp-qty"
+                                class="form-control form-control-sm bg-dark text-white border-secondary text-center px-1"
+                                min="0.01" step="any" value="1"
+                                style="font-size: 0.8rem; border-color: rgba(255,255,255,0.15); height: 34px;">
+                            <button type="button" id="btn-temp-plus"
+                                class="btn btn-outline-secondary btn-qty-plus text-white px-2"
+                                style="border-radius: 0 8px 8px 0; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">+</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center bg-dark bg-opacity-40 p-2 rounded-3 mb-3 border border-secondary border-opacity-10">
+                <div
+                    class="d-flex justify-content-between align-items-center bg-dark bg-opacity-40 p-2 rounded-3 mb-3 border border-secondary border-opacity-10">
                     <div class="small">
                         <span class="text-secondary d-block" style="font-size: 0.65rem;">Stok Gudang</span>
-                        <span class="text-info fw-bold font-monospace" id="selected-product-stock-info" style="font-size: 0.75rem;">-</span>
+                        <span class="text-info fw-bold font-monospace" id="selected-product-stock-info"
+                            style="font-size: 0.75rem;">-</span>
                     </div>
                     <div class="small text-end">
                         <span class="text-secondary d-block" style="font-size: 0.65rem;">Muat Diminta</span>
-                        <span class="text-warning fw-bold font-monospace" id="selected-product-req-info" style="font-size: 0.75rem;">0 PCS</span>
+                        <span class="text-warning fw-bold font-monospace" id="selected-product-req-info"
+                            style="font-size: 0.75rem;">0 PCS</span>
                     </div>
                 </div>
 
-                <button type="button" id="btn-add-to-cart" class="btn btn-sm btn-primary w-100 py-2 fw-semibold" style="font-size: 0.75rem; border-radius: 8px;">
+                <button type="button" id="btn-add-to-cart" class="btn btn-sm btn-primary w-100 py-2 fw-semibold"
+                    style="font-size: 0.75rem; border-radius: 8px;">
                     <i class="fa-solid fa-plus me-1"></i> Masukkan ke Keranjang
                 </button>
             </div>
@@ -191,6 +211,7 @@
     <script>
         let barangsCache = {};
         let rowIndex = 0;
+        const allProducts = @json($products);
 
         function formatStokJS(stok, satuans) {
             let qtyFloat = parseFloat(stok) || 0;
@@ -220,17 +241,9 @@
             return isNegative ? '-' + formatted : formatted;
         }
 
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
-            const productSearchInput = document.getElementById('product-search-input');
-            const productSearchResults = document.getElementById('product-search-results');
+            const productFilterInput = document.getElementById('product-filter-input');
+            const productListContainer = document.getElementById('product-list-container');
             const cartContainer = document.getElementById('cart-container');
             const emptyCartMessage = document.getElementById('empty-cart-message');
             const btnSubmitDpb = document.getElementById('btn-submit-dpb');
@@ -250,50 +263,50 @@
 
             let currentSelectedProduct = null;
 
-            // Autocomplete Search
-            productSearchInput.addEventListener('input', debounce(function() {
-                const q = this.value.trim();
-                if (q.length < 2) {
-                    productSearchResults.classList.add('d-none');
+            // Render Product List Client-Side
+            function renderProductList(filterText = '') {
+                productListContainer.innerHTML = '';
+                const query = filterText.toLowerCase().trim();
+
+                const filtered = allProducts.filter(item => {
+                    return item.nama_barang.toLowerCase().includes(query) ||
+                        item.kode_barang.toLowerCase().includes(query) ||
+                        (item.kode_item && item.kode_item.toLowerCase().includes(query));
+                });
+
+                if (filtered.length === 0) {
+                    productListContainer.innerHTML =
+                        '<div class="p-3 text-secondary text-center" style="font-size: 0.75rem;">Barang tidak ditemukan.</div>';
                     return;
                 }
 
-                fetch(`{{ route('barang.search') }}?q=${encodeURIComponent(q)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        productSearchResults.innerHTML = '';
-                        if (data.length === 0) {
-                            productSearchResults.innerHTML =
-                                '<div class="p-2 text-secondary text-center" style="font-size: 0.75rem;">Barang tidak ditemukan.</div>';
-                            productSearchResults.classList.remove('d-none');
-                            return;
-                        }
+                filtered.forEach(item => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className =
+                        'list-group-item list-group-item-action text-white border-0 py-2 px-3 d-flex justify-content-between align-items-center';
+                    btn.style.backgroundColor = 'transparent';
+                    btn.style.borderBottom = '1px solid rgba(255,255,255,0.05) !important';
 
-                        data.forEach(item => {
-                            const btn = document.createElement('button');
-                            btn.type = 'button';
-                            btn.className =
-                                'list-group-item list-group-item-action text-white border-0 py-2 px-3 d-flex flex-column';
-                            btn.style.backgroundColor = 'transparent';
-                            btn.style.borderBottom =
-                                '1px solid rgba(255,255,255,0.05) !important';
-                            btn.innerHTML = `
-                                <span class="fw-semibold text-white" style="font-size: 0.8rem;">${item.text}</span>
-                                <span class="text-secondary mt-1" style="font-size: 0.7rem;">Kode: ${item.kode_barang} | Stok: ${formatStokJS(item.stok, item.satuans)}</span>
-                            `;
-                            btn.addEventListener('click', () => {
-                                selectProduct(item);
-                            });
-                            productSearchResults.appendChild(btn);
-                        });
-                        productSearchResults.classList.remove('d-none');
+                    const formattedStock = formatStokJS(item.stok, item.satuans);
+                    btn.innerHTML = `
+                        <div class="d-flex flex-column text-start" style="max-width: 80%;">
+                            <span class="fw-semibold text-white" style="font-size: 0.8rem;">${item.nama_barang}</span>
+                            <span class="text-secondary mt-0.5" style="font-size: 0.7rem;">Kode: ${item.kode_barang} | Stok: ${formattedStock}</span>
+                        </div>
+                        <span class="badge bg-primary rounded-pill px-2.5 py-1" style="font-size: 0.65rem; font-weight: 600;">Pilih</span>
+                    `;
+
+                    btn.addEventListener('click', () => {
+                        selectProduct(item);
                     });
-            }, 300));
+                    productListContainer.appendChild(btn);
+                });
+            }
 
-            document.addEventListener('click', function(e) {
-                if (!productSearchInput.contains(e.target) && !productSearchResults.contains(e.target)) {
-                    productSearchResults.classList.add('d-none');
-                }
+            // Listen to Filter Input
+            productFilterInput.addEventListener('input', function() {
+                renderProductList(this.value);
             });
 
             // Function to select product and open configuration details
@@ -333,12 +346,14 @@
                 inputTempQty.value = 1;
                 updateRequestedQtyInfo();
 
-                // Hide search results, clear search input
-                productSearchResults.classList.add('d-none');
-                productSearchInput.value = '';
-
                 // Show panel
                 selectedProductPanel.classList.remove('d-none');
+
+                // Scroll selected panel into view
+                selectedProductPanel.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest'
+                });
                 inputTempQty.focus();
             }
 
@@ -378,7 +393,8 @@
             function clearSelection() {
                 currentSelectedProduct = null;
                 selectedProductPanel.classList.add('d-none');
-                productSearchInput.value = '';
+                productFilterInput.value = '';
+                renderProductList('');
             }
 
             // Add configured product to cart
@@ -406,7 +422,8 @@
 
                 // Validate Warehouse Stock
                 if (qtySmallest > currentSelectedProduct.stok) {
-                    const formattedStok = formatStokJS(currentSelectedProduct.stok, currentSelectedProduct.satuans);
+                    const formattedStok = formatStokJS(currentSelectedProduct.stok, currentSelectedProduct
+                        .satuans);
                     Swal.fire({
                         title: 'Stok Gudang Tidak Cukup',
                         html: `Stok gudang barang <b>${currentSelectedProduct.nama_barang}</b> tidak mencukupi!<br><br>` +
@@ -421,7 +438,8 @@
                 }
 
                 // Check if already in cart (duplicate check)
-                const existingCard = document.querySelector(`.cart-item-card[data-code="${currentSelectedProduct.kode_barang}"]`);
+                const existingCard = document.querySelector(
+                    `.cart-item-card[data-code="${currentSelectedProduct.kode_barang}"]`);
                 if (existingCard) {
                     existingCard.remove();
                 }
@@ -468,7 +486,10 @@
                 validateFormState();
 
                 // Scroll down to cart
-                cartContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                cartContainer.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest'
+                });
             });
 
             function validateFormState() {
@@ -476,6 +497,8 @@
                 hasItems ? btnSubmitDpb.removeAttribute('disabled') : btnSubmitDpb.setAttribute('disabled', 'true');
             }
 
+            // Initial list render
+            renderProductList('');
             validateFormState();
         });
     </script>

@@ -698,7 +698,12 @@ class MobileOrderController extends Controller
             return redirect()->route('mobile.order.canvas.dpb')->with('error', 'Anda sudah memiliki sesi DPB yang aktif.');
         }
 
-        return view('mobile.dpb-create');
+        $products = \App\Models\Barang::where('status', 1)
+            ->with('satuans')
+            ->orderBy('nama_barang', 'asc')
+            ->get();
+
+        return view('mobile.dpb-create', compact('products'));
     }
 
     /**
