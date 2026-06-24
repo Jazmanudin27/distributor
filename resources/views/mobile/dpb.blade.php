@@ -117,8 +117,8 @@
                     <span class="text-secondary font-monospace" style="font-size: 0.65rem;">{{ $session->no_canvas }}</span>
                     <h6 class="fw-bold text-white mb-0" style="font-size: 0.85rem;">Status Bawaan Hari Ini</h6>
                 </div>
-                <span class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-20 px-2 py-1"
-                    style="font-size: 0.625rem; font-weight: 600; border-radius: 6px;">
+                <span class="badge px-2 py-1"
+                    style="font-size: 0.625rem; font-weight: 600; border-radius: 6px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35);">
                     <i class="fa-solid fa-truck-moving me-1"></i> Di Jalan
                 </span>
             </div>
