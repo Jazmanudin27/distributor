@@ -169,7 +169,8 @@
                     <select name="metode_bayar" class="form-control form-control-mobile" required>
                         <option value="Cash" {{ old('metode_bayar') == 'Cash' ? 'selected' : '' }}>Cash</option>
                         <option value="Kredit" {{ old('metode_bayar') == 'Kredit' ? 'selected' : '' }}>Kredit</option>
-                        <option value="Transfer" {{ old('metode_bayar') == 'Transfer' ? 'selected' : '' }}>Transfer</option>
+                        <option value="Transfer" {{ old('metode_bayar') == 'Transfer' ? 'selected' : '' }}>Transfer
+                        </option>
                     </select>
                     @error('metode_bayar')
                         <div class="text-danger small mt-1">{{ $message }}</div>
@@ -191,12 +192,14 @@
                         <div class="col-6">
                             <input type="text" name="latitude" id="latitude" readonly
                                 class="form-control form-control-mobile font-monospace py-2" placeholder="Latitude"
-                                value="{{ old('latitude') }}" style="background-color: rgba(255,255,255,0.02) !important;">
+                                value="{{ old('latitude') }}"
+                                style="background-color: rgba(255,255,255,0.02) !important;">
                         </div>
                         <div class="col-6">
                             <input type="text" name="longitude" id="longitude" readonly
                                 class="form-control form-control-mobile font-monospace py-2" placeholder="Longitude"
-                                value="{{ old('longitude') }}" style="background-color: rgba(255,255,255,0.02) !important;">
+                                value="{{ old('longitude') }}"
+                                style="background-color: rgba(255,255,255,0.02) !important;">
                         </div>
                     </div>
                 </div>
