@@ -299,7 +299,7 @@
                         <p class="text-white-50 mb-2" style="font-size: 0.7rem; line-height: 1.3;">
                             Toko ini memiliki faktur jatuh tempo yang belum diselesaikan. Detail tagihan:
                         </p>
-                        <ul class="mb-0 ps-3" id="overdue-list-ul"
+                        <ul class="mb-0 ps-3" id="overdue-list-ul p-2"
                             style="font-size: 0.7rem; list-style-type: disc; color: #f8fafc;">
                             <!-- Will be populated dynamically by JS selectCustomer -->
                         </ul>
