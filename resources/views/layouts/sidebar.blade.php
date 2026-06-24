@@ -32,20 +32,43 @@
         request()->routeIs('pelanggan.*') ||
         request()->routeIs('diskon-strata.*');
 
-    $isTransaksiActive =
+    $isTxPenjualanActive =
         request()->routeIs('penjualan.*') ||
-        request()->routeIs('retur-penjualan.*') ||
         request()->routeIs('penjualan-kiriman.*') ||
+        request()->routeIs('retur-penjualan.*');
+
+    $isTxPembelianActive =
         request()->routeIs('pembelian.*') ||
-        request()->routeIs('retur-pembelian.*') ||
+        request()->routeIs('retur-pembelian.*');
+
+    $isTxGudangActive =
         request()->routeIs('stok-opname.*') ||
+        request()->routeIs('canvas.*');
+
+    $isTxKeuanganActive =
         request()->routeIs('ajuan-limit-kredit.*') ||
         request()->routeIs('pembayaran.pending.*') ||
         request()->routeIs('kas-bank.*');
 
     $isSalesActive = request()->routeIs('sales-tracking.*');
 
-    $isLaporanActive = request()->routeIs('laporan.*');
+    $isLapPenjualanActive =
+        request()->routeIs('laporan.penjualan') ||
+        request()->routeIs('laporan.retur-penjualan') ||
+        request()->routeIs('laporan.setoran');
+
+    $isLapPembelianActive =
+        request()->routeIs('laporan.pembelian') ||
+        request()->routeIs('laporan.retur-pembelian');
+
+    $isLapGudangActive =
+        request()->routeIs('laporan.stok');
+
+    $isLapKeuanganActive =
+        request()->routeIs('laporan.piutang') ||
+        request()->routeIs('laporan.rekap-sisa-piutang') ||
+        request()->routeIs('laporan.pembayaran_piutang') ||
+        request()->routeIs('laporan.laba-rugi');
 
     $isSettingActive = request()->routeIs('users.*') || request()->routeIs('roles.*');
 @endphp
@@ -162,72 +185,130 @@
                 $user->hasRole('Admin') ||
                 $user->can('view-kas_bank'))
             <div class="section-title">Transaksi</div>
-            <div>
-                <div class="dropdown-trigger {{ $isTransaksiActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
-                    data-bs-target="#collapseTransaksi" role="button"
-                    aria-expanded="{{ $isTransaksiActive ? 'true' : 'false' }}" aria-controls="collapseTransaksi">
-                    <i class="fa-solid fa-receipt"></i>
-                    <span>Transaksi</span>
-                    @if ($totalTransaksiPending > 0)
-                        <span class="badge bg-danger text-light rounded-pill ms-2"
-                            style="font-size: 0.65rem; padding: 0.25em 0.55em;">{{ $totalTransaksiPending }}</span>
-                    @endif
-                    <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
-                </div>
-                <div class="collapse {{ $isTransaksiActive ? 'show' : '' }}" id="collapseTransaksi">
-                    <div class="submenu-container">
-                        @can('view-penjualan')
-                            <a href="{{ route('penjualan.index') }}"
-                                class="{{ request()->routeIs('penjualan.*') ? 'active' : '' }}">Penjualan</a>
-                        @endcan
-                        @can('view-retur_penjualan')
-                            <a href="{{ route('retur-penjualan.index') }}"
-                                class="{{ request()->routeIs('retur-penjualan.*') ? 'active' : '' }}">Retur Penjualan</a>
-                        @endcan
-                        @can('view-penjualan_kiriman')
-                            <a href="{{ route('penjualan-kiriman.index') }}"
-                                class="{{ request()->routeIs('penjualan-kiriman.*') ? 'active' : '' }}">Kiriman
-                                Penjualan</a>
-                        @endcan
-                        @can('view-pembelian')
-                            <a href="{{ route('pembelian.index') }}"
-                                class="{{ request()->routeIs('pembelian.*') ? 'active' : '' }}">Pembelian</a>
-                        @endcan
-                        @can('view-retur_pembelian')
-                            <a href="{{ route('retur-pembelian.index') }}"
-                                class="{{ request()->routeIs('retur-pembelian.*') ? 'active' : '' }}">Retur Pembelian</a>
-                        @endcan
-                        @can('view-stok_opname')
-                            <a href="{{ route('stok-opname.index') }}"
-                                class="{{ request()->routeIs('stok-opname.*') ? 'active' : '' }}">Stok Opname</a>
-                        @endcan
-                        @can('view-ajuan_limit_kredit')
-                            <a href="{{ route('ajuan-limit-kredit.index') }}"
-                                class="{{ request()->routeIs('ajuan-limit-kredit.*') ? 'active' : '' }} d-flex justify-content-between align-items-center">
-                                <span>Ajuan Limit Kredit</span>
-                                @if ($pendingLimitCount > 0)
-                                    <span class="badge bg-danger text-light rounded-pill"
-                                        style="font-size: 0.7rem; padding: 0.25em 0.6em;">{{ $pendingLimitCount }}</span>
-                                @endif
-                            </a>
-                        @endcan
-                        @if ($user->hasRole('Super Admin') || $user->hasRole('Admin'))
-                            <a href="{{ route('pembayaran.pending.index') }}"
-                                class="{{ request()->routeIs('pembayaran.pending.*') ? 'active' : '' }} d-flex justify-content-between align-items-center">
-                                <span>Pembayaran</span>
-                                @if ($pendingPembayaranCount > 0)
-                                    <span class="badge bg-danger text-light rounded-pill"
-                                        style="font-size: 0.7rem; padding: 0.25em 0.6em;">{{ $pendingPembayaranCount }}</span>
-                                @endif
-                            </a>
-                        @endif
-                        @if ($user->hasRole('Super Admin') || $user->hasRole('Admin') || $user->can('view-kas_bank'))
-                            <a href="{{ route('kas-bank.index') }}"
-                                class="{{ request()->routeIs('kas-bank.*') ? 'active' : '' }}">Kas & Bank</a>
-                        @endif
+            
+            <!-- PENJUALAN -->
+            @if ($user->can('view-penjualan') || $user->can('view-retur_penjualan') || $user->can('view-penjualan_kiriman') || $user->hasRole('Super Admin') || $user->hasRole('Admin'))
+                <div class="mb-2">
+                    <div class="dropdown-trigger {{ $isTxPenjualanActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
+                        data-bs-target="#collapseTxPenjualan" role="button"
+                        aria-expanded="{{ $isTxPenjualanActive ? 'true' : 'false' }}" aria-controls="collapseTxPenjualan">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <span>Penjualan</span>
+                        <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
+                    </div>
+                    <div class="collapse {{ $isTxPenjualanActive ? 'show' : '' }}" id="collapseTxPenjualan">
+                        <div class="submenu-container">
+                            @can('view-penjualan')
+                                <a href="{{ route('penjualan.index') }}"
+                                    class="{{ request()->routeIs('penjualan.*') ? 'active' : '' }}">Penjualan</a>
+                            @endcan
+                            @can('view-penjualan_kiriman')
+                                <a href="{{ route('penjualan-kiriman.index') }}"
+                                    class="{{ request()->routeIs('penjualan-kiriman.*') ? 'active' : '' }}">Kiriman Penjualan</a>
+                            @endcan
+                            @can('view-retur_penjualan')
+                                <a href="{{ route('retur-penjualan.index') }}"
+                                    class="{{ request()->routeIs('retur-penjualan.*') ? 'active' : '' }}">Retur Penjualan</a>
+                            @endcan
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endif
+
+            <!-- PEMBELIAN -->
+            @if ($user->can('view-pembelian') || $user->can('view-retur_pembelian'))
+                <div class="mb-2">
+                    <div class="dropdown-trigger {{ $isTxPembelianActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
+                        data-bs-target="#collapseTxPembelian" role="button"
+                        aria-expanded="{{ $isTxPembelianActive ? 'true' : 'false' }}" aria-controls="collapseTxPembelian">
+                        <i class="fa-solid fa-truck"></i>
+                        <span>Pembelian</span>
+                        <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
+                    </div>
+                    <div class="collapse {{ $isTxPembelianActive ? 'show' : '' }}" id="collapseTxPembelian">
+                        <div class="submenu-container">
+                            @can('view-pembelian')
+                                <a href="{{ route('pembelian.index') }}"
+                                    class="{{ request()->routeIs('pembelian.*') ? 'active' : '' }}">Pembelian</a>
+                            @endcan
+                            @can('view-retur_pembelian')
+                                <a href="{{ route('retur-pembelian.index') }}"
+                                    class="{{ request()->routeIs('retur-pembelian.*') ? 'active' : '' }}">Retur Pembelian</a>
+                            @endcan
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- GUDANG / STOK -->
+            @if ($user->can('view-stok_opname') || $user->hasRole('Super Admin') || $user->hasRole('Admin') || $user->can('view-canvas'))
+                <div class="mb-2">
+                    <div class="dropdown-trigger {{ $isTxGudangActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
+                        data-bs-target="#collapseTxGudang" role="button"
+                        aria-expanded="{{ $isTxGudangActive ? 'true' : 'false' }}" aria-controls="collapseTxGudang">
+                        <i class="fa-solid fa-warehouse"></i>
+                        <span>Gudang / Stok</span>
+                        <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
+                    </div>
+                    <div class="collapse {{ $isTxGudangActive ? 'show' : '' }}" id="collapseTxGudang">
+                        <div class="submenu-container">
+                            @can('view-stok_opname')
+                                <a href="{{ route('stok-opname.index') }}"
+                                    class="{{ request()->routeIs('stok-opname.*') ? 'active' : '' }}">Stok Opname</a>
+                            @endcan
+                            @if ($user->hasRole('Super Admin') || $user->hasRole('Admin') || $user->can('view-canvas'))
+                                <a href="{{ route('canvas.index') }}"
+                                    class="{{ request()->routeIs('canvas.*') ? 'active' : '' }}">DPB (Data Pengambilan Barang)</a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- KEUANGAN -->
+            @if ($user->can('view-ajuan_limit_kredit') || $user->hasRole('Super Admin') || $user->hasRole('Admin') || $user->can('view-kas_bank'))
+                <div class="mb-2">
+                    <div class="dropdown-trigger {{ $isTxKeuanganActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
+                        data-bs-target="#collapseTxKeuangan" role="button"
+                        aria-expanded="{{ $isTxKeuanganActive ? 'true' : 'false' }}" aria-controls="collapseTxKeuangan">
+                        <i class="fa-solid fa-wallet"></i>
+                        <span>Keuangan</span>
+                        @if ($totalTransaksiPending > 0)
+                            <span class="badge bg-danger text-light rounded-pill ms-2"
+                                style="font-size: 0.65rem; padding: 0.25em 0.55em;">{{ $totalTransaksiPending }}</span>
+                        @endif
+                        <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
+                    </div>
+                    <div class="collapse {{ $isTxKeuanganActive ? 'show' : '' }}" id="collapseTxKeuangan">
+                        <div class="submenu-container">
+                            @can('view-ajuan_limit_kredit')
+                                <a href="{{ route('ajuan-limit-kredit.index') }}"
+                                    class="{{ request()->routeIs('ajuan-limit-kredit.*') ? 'active' : '' }} d-flex justify-content-between align-items-center">
+                                    <span>Ajuan Limit Kredit</span>
+                                    @if ($pendingLimitCount > 0)
+                                        <span class="badge bg-danger text-light rounded-pill"
+                                            style="font-size: 0.7rem; padding: 0.25em 0.6em;">{{ $pendingLimitCount }}</span>
+                                    @endif
+                                </a>
+                            @endcan
+                            @if ($user->hasRole('Super Admin') || $user->hasRole('Admin'))
+                                <a href="{{ route('pembayaran.pending.index') }}"
+                                    class="{{ request()->routeIs('pembayaran.pending.*') ? 'active' : '' }} d-flex justify-content-between align-items-center">
+                                    <span>Pembayaran Pending</span>
+                                    @if ($pendingPembayaranCount > 0)
+                                        <span class="badge bg-danger text-light rounded-pill"
+                                            style="font-size: 0.7rem; padding: 0.25em 0.6em;">{{ $pendingPembayaranCount }}</span>
+                                    @endif
+                                </a>
+                            @endif
+                            @if ($user->hasRole('Super Admin') || $user->hasRole('Admin') || $user->can('view-kas_bank'))
+                                <a href="{{ route('kas-bank.index') }}"
+                                    class="{{ request()->routeIs('kas-bank.*') ? 'active' : '' }}">Kas & Bank</a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
         @endif
 
         {{-- AKTIVITAS SALES --}}
@@ -251,7 +332,7 @@
             </div>
         @endif
 
-        {{-- LAPORAN --}}
+        <!-- LAPORAN -->
         @if (
             $user->can('view-laporan_pembelian') ||
                 $user->can('view-laporan_retur_pembelian') ||
@@ -262,62 +343,108 @@
                 $user->can('view-laporan_laba_rugi') ||
                 $user->can('view-laporan_setoran'))
             <div class="section-title">Laporan</div>
-            <div>
-                <div class="dropdown-trigger {{ $isLaporanActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
-                    data-bs-target="#collapseLaporan" role="button"
-                    aria-expanded="{{ $isLaporanActive ? 'true' : 'false' }}" aria-controls="collapseLaporan">
-                    <i class="fa-solid fa-chart-line"></i>
-                    <span>Laporan</span>
-                    <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
-                </div>
-                <div class="collapse {{ $isLaporanActive ? 'show' : '' }}" id="collapseLaporan">
-                    <div class="submenu-container">
-                        @can('view-laporan_pembelian')
-                            <a href="{{ route('laporan.pembelian') }}"
-                                class="{{ request()->routeIs('laporan.pembelian') ? 'active' : '' }}">Pembelian</a>
-                        @endcan
-                        @can('view-laporan_retur_pembelian')
-                            <a href="{{ route('laporan.retur-pembelian') }}"
-                                class="{{ request()->routeIs('laporan.retur-pembelian') ? 'active' : '' }}">Retur
-                                Pembelian</a>
-                        @endcan
-                        @can('view-laporan_stok')
-                            <a href="{{ route('laporan.stok') }}"
-                                class="{{ request()->routeIs('laporan.stok') ? 'active' : '' }}">Stok Barang</a>
-                        @endcan
-                        @can('view-laporan_penjualan')
-                            <a href="{{ route('laporan.penjualan') }}"
-                                class="{{ request()->routeIs('laporan.penjualan') ? 'active' : '' }}">Penjualan</a>
-                        @endcan
-                        @can('view-laporan_retur_penjualan')
-                            <a href="{{ route('laporan.retur-penjualan') }}"
-                                class="{{ request()->routeIs('laporan.retur-penjualan') ? 'active' : '' }}">Retur
-                                Penjualan</a>
-                        @endcan
-                        @can('view-laporan_piutang')
-                            <a href="{{ route('laporan.piutang') }}"
-                                class="{{ request()->routeIs('laporan.piutang') ? 'active' : '' }}">Piutang Pelanggan</a>
-                        @endcan
-                        @can('view-laporan_piutang')
-                            <a href="{{ route('laporan.rekap-sisa-piutang') }}"
-                                class="{{ request()->routeIs('laporan.rekap-sisa-piutang') ? 'active' : '' }}">Rekap
-                                Tagihan</a>
-                        @endcan
-                        @can('view-laporan_piutang')
-                            <a href="{{ route('laporan.pembayaran_piutang') }}"
-                                class="{{ request()->routeIs('laporan.pembayaran_piutang') ? 'active' : '' }}">Pembayaran Piutang</a>
-                        @endcan
-                        @can('view-laporan_laba_rugi')
-                            <a href="{{ route('laporan.laba-rugi') }}"
-                                class="{{ request()->routeIs('laporan.laba-rugi') ? 'active' : '' }}">Laba Rugi</a>
-                        @endcan
-                        @can('view-laporan_setoran')
-                            <a href="{{ route('laporan.setoran') }}"
-                                class="{{ request()->routeIs('laporan.setoran') ? 'active' : '' }}">Setoran Sales</a>
-                        @endcan
+
+            <!-- LAPORAN PENJUALAN -->
+            @if ($user->can('view-laporan_penjualan') || $user->can('view-laporan_retur_penjualan') || $user->can('view-laporan_setoran'))
+                <div class="mb-2">
+                    <div class="dropdown-trigger {{ $isLapPenjualanActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
+                        data-bs-target="#collapseLapPenjualan" role="button"
+                        aria-expanded="{{ $isLapPenjualanActive ? 'true' : 'false' }}" aria-controls="collapseLapPenjualan">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                        <span>Penjualan</span>
+                        <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
+                    </div>
+                    <div class="collapse {{ $isLapPenjualanActive ? 'show' : '' }}" id="collapseLapPenjualan">
+                        <div class="submenu-container">
+                            @can('view-laporan_penjualan')
+                                <a href="{{ route('laporan.penjualan') }}"
+                                    class="{{ request()->routeIs('laporan.penjualan') ? 'active' : '' }}">Penjualan</a>
+                            @endcan
+                            @can('view-laporan_retur_penjualan')
+                                <a href="{{ route('laporan.retur-penjualan') }}"
+                                    class="{{ request()->routeIs('laporan.retur-penjualan') ? 'active' : '' }}">Retur Penjualan</a>
+                            @endcan
+                            @can('view-laporan_setoran')
+                                <a href="{{ route('laporan.setoran') }}"
+                                    class="{{ request()->routeIs('laporan.setoran') ? 'active' : '' }}">Setoran Sales</a>
+                            @endcan
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endif
+
+            <!-- LAPORAN PEMBELIAN -->
+            @if ($user->can('view-laporan_pembelian') || $user->can('view-laporan_retur_pembelian'))
+                <div class="mb-2">
+                    <div class="dropdown-trigger {{ $isLapPembelianActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
+                        data-bs-target="#collapseLapPembelian" role="button"
+                        aria-expanded="{{ $isLapPembelianActive ? 'true' : 'false' }}" aria-controls="collapseLapPembelian">
+                        <i class="fa-solid fa-file-invoice"></i>
+                        <span>Pembelian</span>
+                        <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
+                    </div>
+                    <div class="collapse {{ $isLapPembelianActive ? 'show' : '' }}" id="collapseLapPembelian">
+                        <div class="submenu-container">
+                            @can('view-laporan_pembelian')
+                                <a href="{{ route('laporan.pembelian') }}"
+                                    class="{{ request()->routeIs('laporan.pembelian') ? 'active' : '' }}">Pembelian</a>
+                            @endcan
+                            @can('view-laporan_retur_pembelian')
+                                <a href="{{ route('laporan.retur-pembelian') }}"
+                                    class="{{ request()->routeIs('laporan.retur-pembelian') ? 'active' : '' }}">Retur Pembelian</a>
+                            @endcan
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- LAPORAN GUDANG -->
+            @can('view-laporan_stok')
+                <div class="mb-2">
+                    <div class="dropdown-trigger {{ $isLapGudangActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
+                        data-bs-target="#collapseLapGudang" role="button"
+                        aria-expanded="{{ $isLapGudangActive ? 'true' : 'false' }}" aria-controls="collapseLapGudang">
+                        <i class="fa-solid fa-warehouse"></i>
+                        <span>Gudang / Stok</span>
+                        <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
+                    </div>
+                    <div class="collapse {{ $isLapGudangActive ? 'show' : '' }}" id="collapseLapGudang">
+                        <div class="submenu-container">
+                            <a href="{{ route('laporan.stok') }}"
+                                class="{{ request()->routeIs('laporan.stok') ? 'active' : '' }}">Stok Barang</a>
+                        </div>
+                    </div>
+                </div>
+            @endcan
+
+            <!-- LAPORAN KEUANGAN -->
+            @if ($user->can('view-laporan_piutang') || $user->can('view-laporan_laba_rugi'))
+                <div class="mb-2">
+                    <div class="dropdown-trigger {{ $isLapKeuanganActive ? '' : 'collapsed' }}" data-bs-toggle="collapse"
+                        data-bs-target="#collapseLapKeuangan" role="button"
+                        aria-expanded="{{ $isLapKeuanganActive ? 'true' : 'false' }}" aria-controls="collapseLapKeuangan">
+                        <i class="fa-solid fa-coins"></i>
+                        <span>Keuangan</span>
+                        <i class="fa-solid fa-chevron-down ms-auto chevron" style="font-size: 0.8rem;"></i>
+                    </div>
+                    <div class="collapse {{ $isLapKeuanganActive ? 'show' : '' }}" id="collapseLapKeuangan">
+                        <div class="submenu-container">
+                            @can('view-laporan_piutang')
+                                <a href="{{ route('laporan.piutang') }}"
+                                    class="{{ request()->routeIs('laporan.piutang') ? 'active' : '' }}">Piutang Pelanggan</a>
+                                <a href="{{ route('laporan.rekap-sisa-piutang') }}"
+                                    class="{{ request()->routeIs('laporan.rekap-sisa-piutang') ? 'active' : '' }}">Rekap Tagihan</a>
+                                <a href="{{ route('laporan.pembayaran_piutang') }}"
+                                    class="{{ request()->routeIs('laporan.pembayaran_piutang') ? 'active' : '' }}">Pembayaran Piutang</a>
+                            @endcan
+                            @can('view-laporan_laba_rugi')
+                                <a href="{{ route('laporan.laba-rugi') }}"
+                                    class="{{ request()->routeIs('laporan.laba-rugi') ? 'active' : '' }}">Laba Rugi</a>
+                            @endcan
+                        </div>
+                    </div>
+                </div>
+            @endif
         @endif
 
         {{-- SETTING --}}

@@ -220,7 +220,19 @@ class PelangganController extends Controller
 
             $overdueInvoices = [];
             if ($hasOverdue) {
-                $overdueInvoices = $p->getOverdueInvoices($excludeNoFaktur)->pluck('no_faktur')->toArray();
+                $invoices = $p->getOverdueInvoices($excludeNoFaktur)->load('sales');
+                foreach ($invoices as $inv) {
+                    $sisa = $inv->grand_total - $inv->getApprovedPembayaranTotal() - $inv->getTotalRetur();
+                    $dueDate = \Carbon\Carbon::parse($inv->tanggal)->addDays($p->ljt ?? 30);
+                    $overdueInvoices[] = [
+                        'no_faktur' => $inv->no_faktur,
+                        'tanggal' => \Carbon\Carbon::parse($inv->tanggal)->format('d/m/Y'),
+                        'ljt' => $p->ljt ?? 30,
+                        'due_date' => $dueDate->format('d/m/Y'),
+                        'sales_name' => $inv->sales->name ?? $inv->kode_sales,
+                        'sisa' => $sisa
+                    ];
+                }
             }
 
             $results[] = [

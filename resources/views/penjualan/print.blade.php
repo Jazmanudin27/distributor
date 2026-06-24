@@ -129,7 +129,7 @@
         <tr>
             <td style="width: 35%;">
                 <div style="display: flex; align-items: center; gap: 8px; padding-bottom:8px;">
-                    <img src="http://mjap.aspartech.com/assets/img/MJAP.png" alt="Logo MJAP" style="height: 50px;">
+                    <img src="{{ asset('assets/img/MJAP.png') }}" alt="Logo MJAP" style="height: 50px;">
                     <div>
                         <div class="header-title">FAKTUR PENJUALAN</div>
                         <div class="header-subtitle">CV MITRA JAYA ABADI PERSADA</div>

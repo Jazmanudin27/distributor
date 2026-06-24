@@ -146,6 +146,23 @@ class BarangController extends Controller
 
         // Apply sales product restriction
         $user = auth()->user();
+        $isCanvas = false;
+        $activeCanvasDetails = collect();
+        if ($user && \App\Services\CanvasService::isCanvasSalesman($user->nik)) {
+            $isCanvas = true;
+            $session = \App\Services\CanvasService::getActiveSession($user->nik);
+            if ($session) {
+                $activeCanvasDetails = $session->details->keyBy('kode_barang');
+                $query->whereIn('kode_barang', $activeCanvasDetails->keys()->toArray());
+            } else {
+                $query->whereIn('kode_barang', []);
+            }
+        }
+
+        if ($request->input('has_stock') == 1 && !$isCanvas) {
+            $query->where('stok', '>', 0);
+        }
+
         if ($user) {
             if ($user->jenis_sales === 'kategori' && $user->jenis_barang) {
                 $categories = array_map('trim', explode(',', $user->jenis_barang));
@@ -181,15 +198,30 @@ class BarangController extends Controller
                 ];
             }
 
+            $stokVal = (float)$b->stok;
+            if ($isCanvas && isset($activeCanvasDetails[$b->kode_barang])) {
+                $detail = $activeCanvasDetails[$b->kode_barang];
+                $stokVal = \App\Services\CanvasService::convertQuantity(
+                    (float)$detail->qty_ambil - (float)$detail->qty_terjual,
+                    $detail->satuan_id,
+                    null,
+                    $b->kode_barang
+                );
+            }
+
+            if ($request->input('has_stock') == 1 && $stokVal <= 0) {
+                continue; // skip items with no stock in canvas
+            }
+
             $results[] = [
                 'id' => $b->kode_barang,
-                'text' => $b->nama_barang . ' (Stok ' . $b->formatStok($b->stok) . ')',
+                'text' => $b->nama_barang . ' (Stok ' . $b->formatStok($stokVal) . ')',
                 'kode_barang' => $b->kode_barang,
                 'nama_barang' => $b->nama_barang,
                 'kategori' => $b->kategori,
                 'merk' => $b->merk,
                 'kode_supplier' => $b->kode_supplier,
-                'stok' => (float)$b->stok,
+                'stok' => $stokVal,
                 'satuans' => $satuansList
             ];
         }

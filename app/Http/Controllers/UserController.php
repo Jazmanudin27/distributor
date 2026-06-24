@@ -34,6 +34,7 @@ class UserController extends Controller
             'status' => 'required',
             'jenis_sales' => 'nullable|string|in:kategori,merk,semua',
             'jenis_barang' => 'nullable|array',
+            'is_kanvas' => 'nullable|boolean',
         ]);
         
         if (isset($data['jenis_barang']) && is_array($data['jenis_barang'])) {
@@ -42,6 +43,7 @@ class UserController extends Controller
             $data['jenis_barang'] = null;
         }
 
+        $data['is_kanvas'] = $request->has('is_kanvas');
         $data['password'] = bcrypt($data['password'] ?? 'password');
         $user = \App\Models\User::create($data);
 
@@ -66,7 +68,6 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $row = User::findOrFail($id);
-
         $data = $request->validate([
             'name' => 'required',
             'email' => 'required',
@@ -76,6 +77,7 @@ class UserController extends Controller
             'status' => 'required',
             'jenis_sales' => 'nullable|string|in:kategori,merk,semua',
             'jenis_barang' => 'nullable|array',
+            'is_kanvas' => 'nullable|boolean',
         ]);
 
         if (isset($data['jenis_barang']) && is_array($data['jenis_barang'])) {
@@ -83,6 +85,8 @@ class UserController extends Controller
         } else {
             $data['jenis_barang'] = null;
         }
+
+        $data['is_kanvas'] = $request->has('is_kanvas');
 
         if (empty($data['password'])) {
             unset($data['password']);

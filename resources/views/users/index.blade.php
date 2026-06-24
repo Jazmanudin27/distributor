@@ -40,6 +40,9 @@
                                     @else
                                         <span class="badge bg-light text-muted">-</span>
                                     @endif
+                                    @if ($item->is_kanvas)
+                                        <span class="badge bg-success ms-1"><i class="fa-solid fa-truck me-1"></i> Kanvas</span>
+                                    @endif
                                 </td>
                                 <td class="small text-secondary">{{ $item->nik ?? '-' }}</td>
                                 <td>

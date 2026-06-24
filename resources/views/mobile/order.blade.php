@@ -221,8 +221,14 @@
                                     @endphp
                                     <li>
                                         Faktur <strong class="text-white font-monospace">{{ $inv->no_faktur }}</strong>
-                                        (JT: {{ $dueDate->format('d/m/Y') }} &bull; Sisa: <strong class="text-white">Rp
-                                            {{ number_format($sisa, 0, ',', '.') }}</strong>)
+                                        <div class="text-white-50 ps-1" style="font-size: 0.65rem;">
+                                            Tgl: {{ \Carbon\Carbon::parse($inv->tanggal)->format('d/m/Y') }} &bull; 
+                                            LJT: {{ $inv->pelanggan->ljt ?? 30 }} hari &bull; 
+                                            JT: <span class="text-danger fw-bold">{{ $dueDate->format('d/m/Y') }}</span>
+                                            <br>
+                                            Sales: {{ $inv->sales->name ?? $inv->kode_sales }} &bull; 
+                                            Sisa: <strong class="text-white">Rp {{ number_format($sisa, 0, ',', '.') }}</strong>
+                                        </div>
                                     </li>
                                 @endforeach
                             @endif
@@ -466,8 +472,34 @@
                     .toLocaleString('id-ID');
                 document.getElementById('info-metode-bayar').innerText = customer.metode || '-';
 
+                // Populate overdue invoices list
+                const overdueListEl = document.getElementById('overdue-invoices-list');
+                if (overdueListEl) {
+                    overdueListEl.innerHTML = '';
+                    if (customer.overdue_invoices && customer.overdue_invoices.length > 0) {
+                        customer.overdue_invoices.forEach(inv => {
+                            const li = document.createElement('li');
+                            const formattedSisa = Number(inv.sisa).toLocaleString('id-ID');
+                            li.innerHTML = `
+                                Faktur <strong class="text-white font-monospace">${inv.no_faktur}</strong>
+                                <div class="text-white-50 ps-1" style="font-size: 0.65rem;">
+                                    Tgl: ${inv.tanggal} &bull; 
+                                    LJT: ${inv.ljt} hari &bull; 
+                                    JT: <span class="text-danger fw-bold">${inv.due_date}</span>
+                                    <br>
+                                    Sales: ${inv.sales_name} &bull; 
+                                    Sisa: <strong class="text-white">Rp ${formattedSisa}</strong>
+                                </div>
+                            `;
+                            overdueListEl.appendChild(li);
+                        });
+                    }
+                }
+
                 // Set data attributes on input for validation checks
                 hiddenKodePelanggan.setAttribute('data-overdue', customer.has_overdue);
+                const overdueInvoiceNums = (customer.overdue_invoices || []).map(inv => typeof inv === 'object' ? inv.no_faktur : inv);
+                hiddenKodePelanggan.setAttribute('data-overdue-invoices', JSON.stringify(overdueInvoiceNums));
                 hiddenKodePelanggan.setAttribute('data-sisa-limit', customer.sisa_limit);
 
                 if (customer.has_overdue === 1) {
@@ -1104,18 +1136,35 @@
 
             // Initialize state if pre-populated customer exists
             @if ($pelanggan)
+                @php
+                    $overdueInvoicesData = [];
+                    if ($pelanggan->hasOverdueInvoices()) {
+                        foreach ($pelanggan->getOverdueInvoices() as $inv) {
+                            $sisa = $inv->grand_total - $inv->getApprovedPembayaranTotal() - $inv->getTotalRetur();
+                            $dueDate = \Carbon\Carbon::parse($inv->tanggal)->addDays($pelanggan->ljt ?? 30);
+                            $overdueInvoicesData[] = [
+                                'no_faktur' => $inv->no_faktur,
+                                'tanggal' => \Carbon\Carbon::parse($inv->tanggal)->format('d/m/Y'),
+                                'ljt' => $pelanggan->ljt ?? 30,
+                                'due_date' => $dueDate->format('d/m/Y'),
+                                'sales_name' => $inv->sales->name ?? $inv->kode_sales,
+                                'sisa' => $sisa
+                            ];
+                        }
+                    }
+                @endphp
                 const mockCustomer = {
                     id: "{{ $pelanggan->kode_pelanggan }}",
                     text: "{{ $pelanggan->nama_pelanggan }}",
                     has_overdue: {{ $pelanggan->hasOverdueInvoices() ? 1 : 0 }},
-                    overdue_invoices: @json($pelanggan->hasOverdueInvoices() ? $pelanggan->getOverdueInvoices()->pluck('no_faktur')->toArray() : []),
+                    overdue_invoices: @json($overdueInvoicesData),
                     sisa_limit: {{ $pelanggan->getSisaLimitKredit() }},
                     metode: "{{ $pelanggan->metode_bayar }}"
                 };
                 hiddenKodePelanggan.value = mockCustomer.id;
                 hiddenKodePelanggan.setAttribute('data-overdue', mockCustomer.has_overdue);
-                hiddenKodePelanggan.setAttribute('data-overdue-invoices', JSON.stringify(mockCustomer
-                    .overdue_invoices || []));
+                const overdueInvoiceNums = (mockCustomer.overdue_invoices || []).map(inv => typeof inv === 'object' ? inv.no_faktur : inv);
+                hiddenKodePelanggan.setAttribute('data-overdue-invoices', JSON.stringify(overdueInvoiceNums));
                 hiddenKodePelanggan.setAttribute('data-sisa-limit', mockCustomer.sisa_limit);
 
                 // Set default payment mode

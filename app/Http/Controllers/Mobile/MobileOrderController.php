@@ -432,26 +432,57 @@ class MobileOrderController extends Controller
                 $totalDiskon  = 0;
                 $details      = [];
 
+                $isCanvas = \App\Services\CanvasService::isCanvasSalesman(Auth::user()->nik);
+
                 foreach ($request->items as $row) {
                     // Decrement Stock based on smallest capacity unit
                     $satuan = BarangSatuan::findOrFail($row['satuan_id']);
                     $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
 
-                    // Validate stock level
-                    $barang = Barang::lockForUpdate()->findOrFail($row['kode_barang']);
-                    if ($barang->stok < $qtySmallest) {
-                        throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok: " . $barang->formatStok($barang->stok));
+                    if (!$isCanvas) {
+                        // Validate stock level
+                        $barang = Barang::lockForUpdate()->findOrFail($row['kode_barang']);
+                        if ($barang->stok < $qtySmallest) {
+                            throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok: " . $barang->formatStok($barang->stok));
+                        }
+                        \App\Models\StokMutasi::log(
+                            $row['kode_barang'],
+                            $request->tanggal,
+                            'Penjualan',
+                            $noFaktur,
+                            0,
+                            $qtySmallest,
+                            Auth::id(),
+                            'Penjualan via Mobile'
+                        );
+                    } else {
+                        $barang = Barang::lockForUpdate()->findOrFail($row['kode_barang']);
+
+                        // Validate canvas stock level
+                        $session = \App\Services\CanvasService::getActiveSession(Auth::user()->nik, $request->tanggal);
+                        if (!$session) {
+                            throw new \Exception("Tidak ada sesi DPB (Data Pengambilan Barang) yang aktif untuk Anda pada tanggal tersebut.");
+                        }
+
+                        $canvasDetail = $session->details()
+                            ->where('kode_barang', $row['kode_barang'])
+                            ->first();
+
+                        if (!$canvasDetail) {
+                            throw new \Exception("Barang '{$barang->nama_barang}' tidak ditemukan dalam daftar pengambilan barang (DPB) Anda.");
+                        }
+
+                        $remainingCanvasQty = \App\Services\CanvasService::convertQuantity(
+                            (float)$canvasDetail->qty_ambil - (float)$canvasDetail->qty_terjual,
+                            $canvasDetail->satuan_id,
+                            null,
+                            $row['kode_barang']
+                        );
+
+                        if ($remainingCanvasQty < $qtySmallest) {
+                            throw new \Exception("Stok DPB untuk barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok DPB Anda: " . $barang->formatStok($remainingCanvasQty));
+                        }
                     }
-                    \App\Models\StokMutasi::log(
-                        $row['kode_barang'],
-                        $request->tanggal,
-                        'Penjualan',
-                        $noFaktur,
-                        0,
-                        $qtySmallest,
-                        Auth::id(),
-                        'Penjualan via Mobile'
-                    );
 
                     $subtotal    = $row['qty'] * $row['harga'];
                     
@@ -507,6 +538,9 @@ class MobileOrderController extends Controller
                 ]);
 
                 $penjualan->details()->saveMany($details);
+
+                // Track canvas sale
+                \App\Services\CanvasService::trackSale($penjualan);
 
                 // Note: Pembayaran TIDAK dilakukan otomatis.
                 // Semua transaksi (Tunai maupun Kredit) akan berstatus BELUM LUNAS.

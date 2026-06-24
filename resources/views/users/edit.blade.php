@@ -110,6 +110,11 @@
                         <small class="text-muted">Gunakan Ctrl + Klik untuk memilih lebih dari satu merk.</small>
                     </div>
 
+                    <div class="mb-3 form-check ms-1">
+                        <input type="checkbox" name="is_kanvas" id="is_kanvas" class="form-check-input" value="1" {{ old('is_kanvas', $row->is_kanvas) ? 'checked' : '' }}>
+                        <label for="is_kanvas" class="form-check-label fs-7 fw-bold text-secondary">Sales Kanvas (Gunakan sistem kanvas barang)</label>
+                    </div>
+
                     <div class="mb-4">
                         <label for="status" class="form-label fs-7 fw-bold text-secondary">Status</label>
                         <select name="status" id="status"

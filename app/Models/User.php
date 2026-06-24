@@ -28,6 +28,7 @@ class User extends Authenticatable
         'status',
         'jenis_sales',
         'jenis_barang',
+        'is_kanvas',
     ];
 
     /**

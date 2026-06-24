@@ -27,6 +27,7 @@ use App\Http\Controllers\LaporanKeuanganController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\KeuanganMutasiController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CanvasController;
 
 // Mobile Controllers
 use App\Http\Controllers\Mobile\MobileAuthController;
@@ -152,6 +153,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/retur-penjualan/{no_retur}/print', [ReturPenjualanController::class, 'print'])->name('retur-penjualan.print');
         Route::resource('penjualan', PenjualanController::class);
         Route::resource('retur-penjualan', ReturPenjualanController::class);
+        Route::resource('canvas', CanvasController::class);
 
         // Kiriman Penjualan Routes
         Route::get('/penjualan-kiriman', [PenjualanKirimanController::class, 'index'])->name('penjualan-kiriman.index');

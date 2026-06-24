@@ -256,17 +256,21 @@ class PenjualanController extends Controller
                 $totalDiskon = 0;
                 $details = [];
 
+                $isCanvas = \App\Services\CanvasService::isCanvasSalesman($request->kode_sales);
+
                 foreach ($request->items as $row) {
                     // Decrement stock
                     $satuan = BarangSatuan::findOrFail($row['satuan_id']);
                     $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
 
-                    // Validate stock level
-                    $barang = Barang::lockForUpdate()->findOrFail($row['kode_barang']);
-                    if ($barang->stok < $qtySmallest) {
-                        throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok: " . $barang->formatStok($barang->stok));
+                    if (!$isCanvas) {
+                        // Validate stock level
+                        $barang = Barang::lockForUpdate()->findOrFail($row['kode_barang']);
+                        if ($barang->stok < $qtySmallest) {
+                            throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok: " . $barang->formatStok($barang->stok));
+                        }
+                        \App\Models\StokMutasi::log($row['kode_barang'], $request->tanggal, 'Penjualan', $noFaktur, 0, $qtySmallest);
                     }
-                    \App\Models\StokMutasi::log($row['kode_barang'], $request->tanggal, 'Penjualan', $noFaktur, 0, $qtySmallest);
 
                     $subtotal = $row['qty'] * $row['harga'];
                     $d1_pct = floatval($row['diskon1_persen'] ?? 0);
@@ -318,6 +322,9 @@ class PenjualanController extends Controller
                 ]);
 
                 $penjualan->details()->saveMany($details);
+
+                // Track canvas sale
+                \App\Services\CanvasService::trackSale($penjualan);
 
                 // Jika Tunai, langsung catat pembayaran lunas
                 if (!$isKredit) {
@@ -584,32 +591,36 @@ class PenjualanController extends Controller
                 // Collect all unique product codes from both old and new lists
                 $allBarangCodes = array_unique(array_merge(array_keys($oldDetailGrouped), array_keys($newItemGrouped)));
 
-                foreach ($allBarangCodes as $kodeBarang) {
-                    $barang = Barang::lockForUpdate()->findOrFail($kodeBarang);
-                    $oldQty = $oldDetailGrouped[$kodeBarang] ?? 0;
-                    $newQty = $newItemGrouped[$kodeBarang] ?? 0;
-                    $diff = $newQty - $oldQty;
+                $isCanvas = \App\Services\CanvasService::isCanvasSalesman($penjualan->kode_sales);
 
-                    if ($diff > 0) {
-                        // Additional stock is sold
-                        if ($barang->stok < $diff) {
-                            throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok: " . $barang->formatStok($barang->stok) . " (Dibutuhkan tambahan: " . $barang->formatStok($diff) . ")");
+                if (!$isCanvas) {
+                    foreach ($allBarangCodes as $kodeBarang) {
+                        $barang = Barang::lockForUpdate()->findOrFail($kodeBarang);
+                        $oldQty = $oldDetailGrouped[$kodeBarang] ?? 0;
+                        $newQty = $newItemGrouped[$kodeBarang] ?? 0;
+                        $diff = $newQty - $oldQty;
+
+                        if ($diff > 0) {
+                            // Additional stock is sold
+                            if ($barang->stok < $diff) {
+                                throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok: " . $barang->formatStok($barang->stok) . " (Dibutuhkan tambahan: " . $barang->formatStok($diff) . ")");
+                            }
+
+                            $keterangan = $oldQty == 0 
+                                ? 'Tambah item baru ke penjualan. Keluar ' . $barang->formatStok($diff)
+                                : 'Edit Qty: ' . $barang->formatStok($oldQty) . ' -> ' . $barang->formatStok($newQty) . ' (Keluar ' . $barang->formatStok($diff) . ')';
+
+                            \App\Models\StokMutasi::log($kodeBarang, $request->tanggal, 'Penjualan', $penjualan->no_faktur, 0, $diff, null, $keterangan);
+                        } elseif ($diff < 0) {
+                            // Stock is returned
+                            $returnedQty = abs($diff);
+
+                            $keterangan = $newQty == 0
+                                ? 'Item dihapus dari penjualan. Kembali ' . $barang->formatStok($returnedQty)
+                                : 'Edit Qty: ' . $barang->formatStok($oldQty) . ' -> ' . $barang->formatStok($newQty) . ' (Kembali ' . $barang->formatStok($returnedQty) . ')';
+
+                            \App\Models\StokMutasi::log($kodeBarang, $request->tanggal, 'Batal Penjualan (Edit)', $penjualan->no_faktur, $returnedQty, 0, null, $keterangan);
                         }
-
-                        $keterangan = $oldQty == 0 
-                            ? 'Tambah item baru ke penjualan. Keluar ' . $barang->formatStok($diff)
-                            : 'Edit Qty: ' . $barang->formatStok($oldQty) . ' -> ' . $barang->formatStok($newQty) . ' (Keluar ' . $barang->formatStok($diff) . ')';
-
-                        \App\Models\StokMutasi::log($kodeBarang, $request->tanggal, 'Penjualan', $penjualan->no_faktur, 0, $diff, null, $keterangan);
-                    } elseif ($diff < 0) {
-                        // Stock is returned
-                        $returnedQty = abs($diff);
-
-                        $keterangan = $newQty == 0
-                            ? 'Item dihapus dari penjualan. Kembali ' . $barang->formatStok($returnedQty)
-                            : 'Edit Qty: ' . $barang->formatStok($oldQty) . ' -> ' . $barang->formatStok($newQty) . ' (Kembali ' . $barang->formatStok($returnedQty) . ')';
-
-                        \App\Models\StokMutasi::log($kodeBarang, $request->tanggal, 'Batal Penjualan (Edit)', $penjualan->no_faktur, $returnedQty, 0, null, $keterangan);
                     }
                 }
 
@@ -666,8 +677,17 @@ class PenjualanController extends Controller
                     'keterangan' => $request->keterangan,
                 ]);
 
+                $isCanvas = \App\Services\CanvasService::isCanvasSalesman($penjualan->kode_sales);
+                if ($isCanvas) {
+                    \App\Services\CanvasService::untrackSale($penjualan);
+                }
+
                 $penjualan->details()->delete();
                 $penjualan->details()->saveMany($details);
+
+                if ($isCanvas) {
+                    \App\Services\CanvasService::trackSale($penjualan->fresh());
+                }
 
                 ActivityLog::create([
                     'user_id' => Auth::id() ?? 1,
@@ -689,11 +709,17 @@ class PenjualanController extends Controller
         $penjualan = Penjualan::with('details')->findOrFail($no_faktur);
 
         DB::transaction(function () use ($penjualan) {
-            // Revert stock
-            foreach ($penjualan->details as $detail) {
-                $satuan = BarangSatuan::find($detail->satuan_id);
-                $qty = $detail->qty * ($satuan->isi ?? 1);
-                \App\Models\StokMutasi::log($detail->kode_barang, now()->toDateString(), 'Batal Penjualan (Hapus)', $penjualan->no_faktur, $qty, 0);
+            $isCanvas = \App\Services\CanvasService::isCanvasSalesman($penjualan->kode_sales);
+
+            if ($isCanvas) {
+                \App\Services\CanvasService::untrackSale($penjualan);
+            } else {
+                // Revert stock
+                foreach ($penjualan->details as $detail) {
+                    $satuan = BarangSatuan::find($detail->satuan_id);
+                    $qty = $detail->qty * ($satuan->isi ?? 1);
+                    \App\Models\StokMutasi::log($detail->kode_barang, now()->toDateString(), 'Batal Penjualan (Hapus)', $penjualan->no_faktur, $qty, 0);
+                }
             }
             $penjualan->delete();
 
@@ -723,11 +749,17 @@ class PenjualanController extends Controller
 
         try {
             DB::transaction(function () use ($penjualan, $request) {
-                // Revert stock
-                foreach ($penjualan->details as $detail) {
-                    $satuan = BarangSatuan::find($detail->satuan_id);
-                    $qty = $detail->qty * ($satuan->isi ?? 1);
-                    \App\Models\StokMutasi::log($detail->kode_barang, now()->toDateString(), 'Batal Penjualan', $penjualan->no_faktur, $qty, 0, null, 'Pembatalan: ' . $request->alasan_batal);
+                $isCanvas = \App\Services\CanvasService::isCanvasSalesman($penjualan->kode_sales);
+
+                if ($isCanvas) {
+                    \App\Services\CanvasService::untrackSale($penjualan);
+                } else {
+                    // Revert stock
+                    foreach ($penjualan->details as $detail) {
+                        $satuan = BarangSatuan::find($detail->satuan_id);
+                        $qty = $detail->qty * ($satuan->isi ?? 1);
+                        \App\Models\StokMutasi::log($detail->kode_barang, now()->toDateString(), 'Batal Penjualan', $penjualan->no_faktur, $qty, 0, null, 'Pembatalan: ' . $request->alasan_batal);
+                    }
                 }
 
                 // Update penjualan status to canceled
@@ -781,32 +813,38 @@ class PenjualanController extends Controller
 
         try {
             DB::transaction(function () use ($penjualan, $request) {
-                // 1. Validate stock level first
-                foreach ($penjualan->details as $detail) {
-                    $satuan = BarangSatuan::findOrFail($detail->satuan_id);
-                    $qtySmallest = $detail->qty * ($satuan->isi ?? 1);
+                $isCanvas = \App\Services\CanvasService::isCanvasSalesman($penjualan->kode_sales);
 
-                    $barang = Barang::lockForUpdate()->findOrFail($detail->kode_barang);
-                    if ($barang->stok < $qtySmallest) {
-                        throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok: " . $barang->formatStok($barang->stok));
+                if ($isCanvas) {
+                    \App\Services\CanvasService::trackSale($penjualan);
+                } else {
+                    // 1. Validate stock level first
+                    foreach ($penjualan->details as $detail) {
+                        $satuan = BarangSatuan::findOrFail($detail->satuan_id);
+                        $qtySmallest = $detail->qty * ($satuan->isi ?? 1);
+
+                        $barang = Barang::lockForUpdate()->findOrFail($detail->kode_barang);
+                        if ($barang->stok < $qtySmallest) {
+                            throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok: " . $barang->formatStok($barang->stok));
+                        }
                     }
-                }
 
-                // 2. Decrement stock & Log mutation
-                foreach ($penjualan->details as $detail) {
-                    $satuan = BarangSatuan::findOrFail($detail->satuan_id);
-                    $qtySmallest = $detail->qty * ($satuan->isi ?? 1);
+                    // 2. Decrement stock & Log mutation
+                    foreach ($penjualan->details as $detail) {
+                        $satuan = BarangSatuan::findOrFail($detail->satuan_id);
+                        $qtySmallest = $detail->qty * ($satuan->isi ?? 1);
 
-                    \App\Models\StokMutasi::log(
-                        $detail->kode_barang,
-                        now()->toDateString(),
-                        'Pulihkan Penjualan',
-                        $penjualan->no_faktur,
-                        0,
-                        $qtySmallest,
-                        null,
-                        'Pemulihan dari pembatalan'
-                    );
+                        \App\Models\StokMutasi::log(
+                            $detail->kode_barang,
+                            now()->toDateString(),
+                            'Pulihkan Penjualan',
+                            $penjualan->no_faktur,
+                            0,
+                            $qtySmallest,
+                            null,
+                            'Pemulihan dari pembatalan'
+                        );
+                    }
                 }
 
                 // 3. Revert penjualan header
