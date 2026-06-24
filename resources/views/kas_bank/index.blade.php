@@ -51,8 +51,8 @@
                 </h5>
                 <small class="text-white-50">Catatan transaksi penerimaan dan pengeluaran kas / rekening bank</small>
             </div>
-            <a href="{{ route('kas-bank.create') }}" class="btn btn-light btn-sm fw-bold hover-scale">
-                <i class="fa-solid fa-plus me-1 text-primary"></i> Tambah Transaksi
+            <a href="{{ route('kas-bank.create') }}" class="btn btn-primary btn-sm fw-bold hover-scale">
+                <i class="fa-solid fa-plus me-1 text-white"></i> Tambah Transaksi
             </a>
         </div>
 
@@ -132,7 +132,8 @@
                                     @if ($item->tipe === 'debet')
                                         <span
                                             class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 fs-8">DEBET
-                                            (Masuk)</span>
+                                            (Masuk)
+                                        </span>
                                     @else
                                         <span
                                             class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 fs-8">KREDIT

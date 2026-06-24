@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cetak Laporan Buku Kas & Bank</title>
     <!-- Bootstrap CSS -->
-    @if(!isset($isExcel))
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    @if (!isset($isExcel))
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     @endif
     <!-- Google Fonts Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,23 +20,29 @@
             font-size: 11px;
             color: #000;
         }
-        .table-sm th, .table-sm td {
+
+        .table-sm th,
+        .table-sm td {
             font-size: 11px !important;
             padding: 5px 8px !important;
             border: 1px solid #000 !important;
         }
+
         .table-light th {
             background-color: #f2f2f2 !important;
             color: #000 !important;
         }
+
         hr {
             border-top: 1px dashed #000;
             opacity: 1;
         }
+
         @media print {
             .no-print {
                 display: none !important;
             }
+
             body {
                 margin: 0;
                 padding: 10px;
@@ -43,20 +50,23 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container-fluid py-3">
         {{-- HEADER --}}
         <div class="text-center mb-4">
             <h4 class="fw-bold mb-1">LAPORAN BUKU KAS & BANK</h4>
             <div class="small">
-                Periode: {{ \Carbon\Carbon::parse($tanggal_mulai)->format('d/m/Y') }} s/d {{ \Carbon\Carbon::parse($tanggal_akhir)->format('d/m/Y') }}
+                Periode: {{ \Carbon\Carbon::parse($tanggal_mulai)->format('d/m/Y') }} s/d
+                {{ \Carbon\Carbon::parse($tanggal_akhir)->format('d/m/Y') }}
             </div>
-            @if($kode_bank)
-                @php 
-                    $selectedBank = $banks->firstWhere('id', $kode_bank); 
+            @if ($kode_bank)
+                @php
+                    $selectedBank = $banks->firstWhere('id', $kode_bank);
                 @endphp
-                @if($selectedBank)
-                    <div class="small">Rekening: <strong>{{ $selectedBank->nama_bank }} - {{ $selectedBank->no_rekening }} ({{ $selectedBank->atas_nama }})</strong></div>
+                @if ($selectedBank)
+                    <div class="small">Rekening: <strong>{{ $selectedBank->nama_bank }} -
+                            {{ $selectedBank->no_rekening }} ({{ $selectedBank->atas_nama }})</strong></div>
                 @endif
             @else
                 <div class="small">Rekening: <strong>Semua Rekening</strong></div>
@@ -100,7 +110,7 @@
                         <td class="text-center">{{ $num++ }}</td>
                         <td class="text-center">{{ \Carbon\Carbon::parse($item->tanggal)->format('d-m-Y') }}</td>
                         <td>
-                            @if($item->bank)
+                            @if ($item->bank)
                                 {{ $item->bank->nama_bank }}
                                 <div style="font-size: 9px; color: #555;">
                                     {{ $item->bank->no_rekening }} - {{ $item->bank->atas_nama }}
@@ -139,12 +149,6 @@
         </table>
     </div>
 
-    @if(!isset($isExcel))
-    <script>
-        window.onload = function() {
-            window.print();
-        }
-    </script>
-    @endif
 </body>
+
 </html>
