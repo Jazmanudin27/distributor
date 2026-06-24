@@ -55,147 +55,179 @@
     <form action="{{ route('mobile.pelanggan.store') }}" method="POST" enctype="multipart/form-data" class="pb-5">
         @csrf
 
-        <!-- Section: Informasi Toko -->
-        <div class="mobile-card">
-            <div class="form-section-title mt-0">Informasi Toko</div>
+        @if (Auth::user()->is_kanvas)
+            <!-- Section: Informasi Toko (Canvas Sales) -->
+            <div class="mobile-card">
+                <div class="form-section-title mt-0">Informasi Toko</div>
 
-            <div class="mb-3">
-                <label class="form-label text-secondary small fw-semibold mb-1">Nama Toko / Pelanggan *</label>
-                <input type="text" name="nama_pelanggan" class="form-control form-control-mobile"
-                    placeholder="Contoh: Toko Maju Jaya" value="{{ old('nama_pelanggan') }}" required>
-                @error('nama_pelanggan')
-                    <div class="text-danger small mt-1">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label text-secondary small fw-semibold mb-1">Alamat Lengkap Toko *</label>
-                <textarea name="alamat_pelanggan" class="form-control form-control-mobile" rows="2"
-                    placeholder="Nama jalan, nomor, RT/RW, kelurahan..." required>{{ old('alamat_pelanggan') }}</textarea>
-                @error('alamat_pelanggan')
-                    <div class="text-danger small mt-1">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label text-secondary small fw-semibold mb-1">Alamat Pengiriman (Toko) <small
-                        class="text-secondary-50">(Kosongkan jika sama)</small></label>
-                <textarea name="alamat_toko" class="form-control form-control-mobile" rows="2"
-                    placeholder="Alamat kirim barang jika berbeda...">{{ old('alamat_toko') }}</textarea>
-                @error('alamat_toko')
-                    <div class="text-danger small mt-1">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label text-secondary small fw-semibold mb-1">No. HP / Whatsapp *</label>
-                <input type="tel" name="no_hp_pelanggan" class="form-control form-control-mobile font-monospace"
-                    placeholder="Contoh: 08123456789" value="{{ old('no_hp_pelanggan') }}" required>
-                @error('no_hp_pelanggan')
-                    <div class="text-danger small mt-1">{{ $message }}</div>
-                @enderror
-            </div>
-        </div>
-
-        <!-- Section: Wilayah & Pembayaran -->
-        <div class="mobile-card">
-            <div class="form-section-title mt-0">Wilayah & Pembayaran</div>
-
-            <div class="mb-3">
-                <label class="form-label text-secondary small fw-semibold mb-1">Wilayah *</label>
-                <select name="kode_wilayah" class="form-control form-control-mobile" required>
-                    <option value="">-- Pilih Wilayah --</option>
-                    @foreach ($wilayahs as $w)
-                        <option value="{{ $w->kode_wilayah }}"
-                            {{ old('kode_wilayah') == $w->kode_wilayah ? 'selected' : '' }}>
-                            {{ $w->nama_wilayah }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('kode_wilayah')
-                    <div class="text-danger small mt-1">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label text-secondary small fw-semibold mb-1">Sub Wilayah *</label>
-                <select name="sub_wilayah" class="form-control form-control-mobile" required>
-                    <option value="">-- Pilih Sub Wilayah --</option>
-                    @foreach ($subWilayahs as $sw)
-                        <option value="{{ $sw->kode_wilayah }}"
-                            {{ old('sub_wilayah') == $sw->kode_wilayah ? 'selected' : '' }}>
-                            {{ $sw->nama_wilayah }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('sub_wilayah')
-                    <div class="text-danger small mt-1">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label text-secondary small fw-semibold mb-1">Metode Pembayaran *</label>
-                <select name="metode_bayar" class="form-control form-control-mobile" required>
-                    <option value="Cash" {{ old('metode_bayar') == 'Cash' ? 'selected' : '' }}>Cash</option>
-                    <option value="Kredit" {{ old('metode_bayar') == 'Kredit' ? 'selected' : '' }}>Kredit</option>
-                    <option value="Transfer" {{ old('metode_bayar') == 'Transfer' ? 'selected' : '' }}>Transfer</option>
-                </select>
-                @error('metode_bayar')
-                    <div class="text-danger small mt-1">{{ $message }}</div>
-                @enderror
-            </div>
-        </div>
-
-        <!-- Section: GPS & Berkas -->
-        <div class="mobile-card">
-            <div class="form-section-title mt-0">Lokasi & Berkas Pendukung</div>
-
-            <!-- GPS Coordinates -->
-            <div class="mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="text-secondary small fw-semibold">GPS Geolokasi</span>
-                    <span id="gps-status" class="badge bg-secondary">Mendeteksi...</span>
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold mb-1">Nama Toko / Pelanggan *</label>
+                    <input type="text" name="nama_pelanggan" class="form-control form-control-mobile"
+                        placeholder="Contoh: Toko Maju Jaya" value="{{ old('nama_pelanggan') }}" required>
+                    @error('nama_pelanggan')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
-                <div class="row g-2">
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold mb-1">Alamat Lengkap Toko *</label>
+                    <textarea name="alamat_pelanggan" class="form-control form-control-mobile" rows="3"
+                        placeholder="Nama jalan, nomor, RT/RW, kelurahan..." required>{{ old('alamat_pelanggan') }}</textarea>
+                    @error('alamat_pelanggan')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <input type="hidden" name="no_hp_pelanggan" value="-">
+                <input type="hidden" name="kode_wilayah" value="93">
+                <input type="hidden" name="sub_wilayah" value="93">
+                <input type="hidden" name="metode_bayar" value="Cash">
+                <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">
+                <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude') }}">
+            </div>
+        @else
+            <!-- Section: Informasi Toko (Regular Sales) -->
+            <div class="mobile-card">
+                <div class="form-section-title mt-0">Informasi Toko</div>
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold mb-1">Nama Toko / Pelanggan *</label>
+                    <input type="text" name="nama_pelanggan" class="form-control form-control-mobile"
+                        placeholder="Contoh: Toko Maju Jaya" value="{{ old('nama_pelanggan') }}" required>
+                    @error('nama_pelanggan')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold mb-1">Alamat Lengkap Toko *</label>
+                    <textarea name="alamat_pelanggan" class="form-control form-control-mobile" rows="2"
+                        placeholder="Nama jalan, nomor, RT/RW, kelurahan..." required>{{ old('alamat_pelanggan') }}</textarea>
+                    @error('alamat_pelanggan')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold mb-1">Alamat Pengiriman (Toko) <small
+                            class="text-secondary-50">(Kosongkan jika sama)</small></label>
+                    <textarea name="alamat_toko" class="form-control form-control-mobile" rows="2"
+                        placeholder="Alamat kirim barang jika berbeda...">{{ old('alamat_toko') }}</textarea>
+                    @error('alamat_toko')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold mb-1">No. HP / Whatsapp *</label>
+                    <input type="tel" name="no_hp_pelanggan" class="form-control form-control-mobile font-monospace"
+                        placeholder="Contoh: 08123456789" value="{{ old('no_hp_pelanggan') }}" required>
+                    @error('no_hp_pelanggan')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <!-- Section: Wilayah & Pembayaran -->
+            <div class="mobile-card">
+                <div class="form-section-title mt-0">Wilayah & Pembayaran</div>
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold mb-1">Wilayah *</label>
+                    <select name="kode_wilayah" class="form-control form-control-mobile" required>
+                        <option value="">-- Pilih Wilayah --</option>
+                        @foreach ($wilayahs as $w)
+                            <option value="{{ $w->kode_wilayah }}"
+                                {{ old('kode_wilayah') == $w->kode_wilayah ? 'selected' : '' }}>
+                                {{ $w->nama_wilayah }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('kode_wilayah')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold mb-1">Sub Wilayah *</label>
+                    <select name="sub_wilayah" class="form-control form-control-mobile" required>
+                        <option value="">-- Pilih Sub Wilayah --</option>
+                        @foreach ($subWilayahs as $sw)
+                            <option value="{{ $sw->kode_wilayah }}"
+                                {{ old('sub_wilayah') == $sw->kode_wilayah ? 'selected' : '' }}>
+                                {{ $sw->nama_wilayah }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('sub_wilayah')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold mb-1">Metode Pembayaran *</label>
+                    <select name="metode_bayar" class="form-control form-control-mobile" required>
+                        <option value="Cash" {{ old('metode_bayar') == 'Cash' ? 'selected' : '' }}>Cash</option>
+                        <option value="Kredit" {{ old('metode_bayar') == 'Kredit' ? 'selected' : '' }}>Kredit</option>
+                        <option value="Transfer" {{ old('metode_bayar') == 'Transfer' ? 'selected' : '' }}>Transfer</option>
+                    </select>
+                    @error('metode_bayar')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <!-- Section: GPS & Berkas -->
+            <div class="mobile-card">
+                <div class="form-section-title mt-0">Lokasi & Berkas Pendukung</div>
+
+                <!-- GPS Coordinates -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-secondary small fw-semibold">GPS Geolokasi</span>
+                        <span id="gps-status" class="badge bg-secondary">Mendeteksi...</span>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <input type="text" name="latitude" id="latitude" readonly
+                                class="form-control form-control-mobile font-monospace py-2" placeholder="Latitude"
+                                value="{{ old('latitude') }}" style="background-color: rgba(255,255,255,0.02) !important;">
+                        </div>
+                        <div class="col-6">
+                            <input type="text" name="longitude" id="longitude" readonly
+                                class="form-control form-control-mobile font-monospace py-2" placeholder="Longitude"
+                                value="{{ old('longitude') }}" style="background-color: rgba(255,255,255,0.02) !important;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Uploads -->
+                <div class="row g-3 mb-2">
                     <div class="col-6">
-                        <input type="text" name="latitude" id="latitude" readonly
-                            class="form-control form-control-mobile font-monospace py-2" placeholder="Latitude"
-                            value="{{ old('latitude') }}" style="background-color: rgba(255,255,255,0.02) !important;">
+                        <label class="form-label text-secondary small fw-semibold mb-1">Foto Toko</label>
+                        <div class="upload-card" onclick="document.getElementById('input-foto').click()">
+                            <i class="fa-solid fa-store text-secondary mb-1" style="font-size: 1.3rem;"></i>
+                            <span class="d-block text-secondary-50" style="font-size: 0.65rem;" id="lbl-foto">Pilih
+                                Foto</span>
+                            <input type="file" name="foto" id="input-foto" accept="image/*" class="d-none"
+                                onchange="previewFile(this, 'preview-foto', 'lbl-foto')">
+                        </div>
+                        <img id="preview-foto" class="preview-img">
                     </div>
                     <div class="col-6">
-                        <input type="text" name="longitude" id="longitude" readonly
-                            class="form-control form-control-mobile font-monospace py-2" placeholder="Longitude"
-                            value="{{ old('longitude') }}" style="background-color: rgba(255,255,255,0.02) !important;">
+                        <label class="form-label text-secondary small fw-semibold mb-1">Foto KTP Pemilik</label>
+                        <div class="upload-card" onclick="document.getElementById('input-ktp').click()">
+                            <i class="fa-solid fa-id-card text-secondary mb-1" style="font-size: 1.3rem;"></i>
+                            <span class="d-block text-secondary-50" style="font-size: 0.65rem;" id="lbl-ktp">Pilih
+                                Foto</span>
+                            <input type="file" name="foto_ktp" id="input-ktp" accept="image/*" class="d-none"
+                                onchange="previewFile(this, 'preview-ktp', 'lbl-ktp')">
+                        </div>
+                        <img id="preview-ktp" class="preview-img">
                     </div>
                 </div>
             </div>
-
-            <!-- File Uploads -->
-            <div class="row g-3 mb-2">
-                <div class="col-6">
-                    <label class="form-label text-secondary small fw-semibold mb-1">Foto Toko</label>
-                    <div class="upload-card" onclick="document.getElementById('input-foto').click()">
-                        <i class="fa-solid fa-store text-secondary mb-1" style="font-size: 1.3rem;"></i>
-                        <span class="d-block text-secondary-50" style="font-size: 0.65rem;" id="lbl-foto">Pilih
-                            Foto</span>
-                        <input type="file" name="foto" id="input-foto" accept="image/*" class="d-none"
-                            onchange="previewFile(this, 'preview-foto', 'lbl-foto')">
-                    </div>
-                    <img id="preview-foto" class="preview-img">
-                </div>
-                <div class="col-6">
-                    <label class="form-label text-secondary small fw-semibold mb-1">Foto KTP Pemilik</label>
-                    <div class="upload-card" onclick="document.getElementById('input-ktp').click()">
-                        <i class="fa-solid fa-id-card text-secondary mb-1" style="font-size: 1.3rem;"></i>
-                        <span class="d-block text-secondary-50" style="font-size: 0.65rem;" id="lbl-ktp">Pilih
-                            Foto</span>
-                        <input type="file" name="foto_ktp" id="input-ktp" accept="image/*" class="d-none"
-                            onchange="previewFile(this, 'preview-ktp', 'lbl-ktp')">
-                    </div>
-                    <img id="preview-ktp" class="preview-img">
-                </div>
-            </div>
-        </div>
+        @endif
 
         <button type="submit" id="btn-submit" class="btn btn-mobile btn-mobile-primary w-100 py-3 mt-2 fw-bold">
             <i class="fa-solid fa-floppy-disk me-2"></i> Daftarkan Pelanggan
@@ -223,17 +255,23 @@
             // Geolocation Capturing
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
-                    document.getElementById('latitude').value = position.coords.latitude;
-                    document.getElementById('longitude').value = position.coords.longitude;
+                    const latEl = document.getElementById('latitude');
+                    const lngEl = document.getElementById('longitude');
+                    if (latEl) latEl.value = position.coords.latitude;
+                    if (lngEl) lngEl.value = position.coords.longitude;
 
                     const statusEl = document.getElementById('gps-status');
-                    statusEl.innerText = 'Lokasi Terkunci';
-                    statusEl.className = 'badge bg-success';
+                    if (statusEl) {
+                        statusEl.innerText = 'Lokasi Terkunci';
+                        statusEl.className = 'badge bg-success';
+                    }
                 }, function(error) {
                     console.error('GPS Error:', error);
                     const statusEl = document.getElementById('gps-status');
-                    statusEl.innerText = 'GPS Dinonaktifkan';
-                    statusEl.className = 'badge bg-danger';
+                    if (statusEl) {
+                        statusEl.innerText = 'GPS Dinonaktifkan';
+                        statusEl.className = 'badge bg-danger';
+                    }
                 }, {
                     enableHighAccuracy: true,
                     timeout: 8000,
@@ -241,8 +279,10 @@
                 });
             } else {
                 const statusEl = document.getElementById('gps-status');
-                statusEl.innerText = 'Tidak Didukung';
-                statusEl.className = 'badge bg-warning';
+                if (statusEl) {
+                    statusEl.innerText = 'Tidak Didukung';
+                    statusEl.className = 'badge bg-warning';
+                }
             }
         });
 
