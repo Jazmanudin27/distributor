@@ -166,14 +166,14 @@
                     <div class="d-flex justify-content-between align-items-center mt-1" style="font-size: 0.75rem;">
                         <div class="d-flex gap-3 text-secondary" style="font-size: 0.7rem;">
                             <div>Bawa: <strong class="text-primary font-monospace"
-                                    style="font-size: 0.8rem;">{{ $qtyAmbil }}</strong></div>
+                                    style="font-size: 0.8rem;">{{ $detail->barang ? $detail->barang->formatStok($qtyAmbil) : $qtyAmbil }}</strong></div>
                             <div>Jual: <strong class="text-info font-monospace"
-                                    style="font-size: 0.8rem;">{{ $qtyTerjual }}</strong></div>
+                                    style="font-size: 0.8rem;">{{ $detail->barang ? $detail->barang->formatStok($qtyTerjual) : $qtyTerjual }}</strong></div>
                         </div>
                         <div>
                             <span class="text-secondary" style="font-size: 0.65rem;">Sisa:</span>
                             <strong class="text-success font-monospace"
-                                style="font-size: 0.85rem;">{{ $sisaStok }}</strong>
+                                style="font-size: 0.85rem;">{{ $detail->barang ? $detail->barang->formatStok($sisaStok) : $sisaStok }}</strong>
                         </div>
                     </div>
                 </div>
@@ -285,20 +285,20 @@
                                             <span
                                                 class="badge bg-secondary bg-opacity-15 text-white-50 px-1.5 py-0.5 border-0 font-monospace"
                                                 style="font-size: 0.625rem; border-radius: 4px;">
-                                                Bawa: {{ $qtyAmbil }} {{ $det->barangSatuan->satuan ?? 'PCS' }}
+                                                Bawa: {{ $det->barang ? $det->barang->formatStok($qtyAmbil) : $qtyAmbil }}
                                             </span>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center text-secondary"
                                             style="font-size: 0.7rem;">
                                             <div class="d-flex gap-3">
                                                 <span>Jual: <strong
-                                                        class="text-info font-monospace">{{ $qtyTerjual }}</strong></span>
+                                                        class="text-info font-monospace">{{ $det->barang ? $det->barang->formatStok($qtyTerjual) : $qtyTerjual }}</strong></span>
                                                 <span>Kembali: <strong
-                                                        class="text-warning font-monospace">{{ $qtyKembali }}</strong></span>
+                                                        class="text-warning font-monospace">{{ $det->barang ? $det->barang->formatStok($qtyKembali) : $qtyKembali }}</strong></span>
                                             </div>
                                             <div>
                                                 <span>Sisa: <strong
-                                                        class="{{ $sisaStok > 0 ? 'text-success' : 'text-white-50' }} font-monospace">{{ $sisaStok }}</strong></span>
+                                                        class="{{ $sisaStok > 0 ? 'text-success' : 'text-white-50' }} font-monospace">{{ $det->barang ? $det->barang->formatStok($sisaStok) : $sisaStok }}</strong></span>
                                             </div>
                                         </div>
                                     </div>
