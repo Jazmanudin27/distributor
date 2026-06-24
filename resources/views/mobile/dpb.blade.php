@@ -235,10 +235,8 @@
                             aria-controls="collapse-{{ $hs->id }}">
                             <div class="d-flex justify-content-between align-items-center w-100 me-3">
                                 <div>
-                                    <span class="text-secondary d-block font-monospace mb-0.5"
-                                        style="font-size: 0.65rem;">{{ $hs->no_canvas }}</span>
-                                    <span class="fw-bold text-white-50"
-                                        style="font-size: 0.8rem;">{{ \Carbon\Carbon::parse($hs->tanggal)->format('d M Y') }}</span>
+                                    <span class="fw-bold text-white"
+                                        style="font-size: 0.85rem;">{{ \Carbon\Carbon::parse($hs->tanggal)->format('d M Y') }}</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="badge bg-secondary bg-opacity-25 text-white-50 border-0 px-2 py-0.5"
@@ -257,16 +255,18 @@
                     <div id="collapse-{{ $hs->id }}" class="accordion-collapse collapse"
                         aria-labelledby="heading-{{ $hs->id }}" data-bs-parent="#historyAccordion">
                         <div class="accordion-body bg-black bg-opacity-15 p-3">
-                            @if ($hs->keterangan)
-                                <div
-                                    class="mb-3 p-2.5 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10">
-                                    <span class="text-secondary d-block mb-1"
-                                        style="font-size: 0.6rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Catatan
-                                        DPB:</span>
-                                    <span class="text-white-50"
-                                        style="font-size: 0.72rem; font-style: italic;">"{{ $hs->keterangan }}"</span>
+                            <div class="mb-3 d-flex flex-column gap-1.5 p-2.5 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10" style="font-size: 0.72rem;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-secondary">No. DPB:</span>
+                                    <strong class="text-white font-monospace" style="font-size: 0.75rem;">{{ $hs->no_canvas }}</strong>
                                 </div>
-                            @endif
+                                @if ($hs->keterangan)
+                                    <div class="border-top border-secondary border-opacity-10 pt-1.5 mt-1">
+                                        <span class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; text-transform: uppercase; font-weight: 600;">Catatan:</span>
+                                        <span class="text-white-50 italic">"{{ $hs->keterangan }}"</span>
+                                    </div>
+                                @endif
+                            </div>
 
                             <div class="d-flex flex-column gap-1" style="font-size: 0.75rem;">
                                 @foreach ($hs->details as $detIndex => $det)
