@@ -4,44 +4,82 @@
 
 @push('styles')
     <style>
-        .accordion-button::after {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23f8fafc'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+        /* Filter Segmented Control */
+        .filter-segmented-control {
+            display: flex;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 3px;
+            border-radius: 30px;
+            width: 100%;
         }
 
-        .accordion-button:not(.collapsed)::after {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236366f1'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+        .filter-segmented-control .segment-item {
+            flex: 1;
+            text-align: center;
+            padding: 7px 10px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .accordion-button:focus {
-            box-shadow: none !important;
-            border-color: rgba(99, 102, 241, 0.4) !important;
+        .filter-segmented-control .segment-item:hover {
+            color: #f8fafc;
         }
 
-        .accordion-button:not(.collapsed) {
-            background-color: rgba(99, 102, 241, 0.12) !important;
-            color: #6366f1 !important;
-            border-color: rgba(99, 102, 241, 0.3) !important;
+        .filter-segmented-control .segment-item.active {
+            background: var(--accent-gradient);
+            color: #ffffff;
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
         }
 
-        .btn-outline-secondary {
-            border-color: rgba(255, 255, 255, 0.12) !important;
-            color: #94a3b8 !important;
-            background-color: rgba(255, 255, 255, 0.02) !important;
+        /* Modernized Accordion styling */
+        .custom-accordion .accordion-item {
+            background: rgba(30, 41, 59, 0.3) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            border-radius: 14px !important;
+            overflow: hidden;
+            margin-bottom: 10px;
             transition: all 0.2s ease;
         }
 
-        .btn-outline-secondary:hover,
-        .btn-outline-secondary:active,
-        .btn-outline-secondary:focus {
-            border-color: rgba(255, 255, 255, 0.25) !important;
-            background-color: rgba(255, 255, 255, 0.08) !important;
+        .custom-accordion .accordion-item:hover {
+            border-color: rgba(255, 255, 255, 0.12) !important;
+            background: rgba(30, 41, 59, 0.4) !important;
+        }
+
+        .custom-accordion .accordion-button {
+            background: transparent !important;
             color: #f8fafc !important;
             box-shadow: none !important;
+            padding: 12px 16px !important;
+            border: none !important;
+        }
+
+        .custom-accordion .accordion-button:not(.collapsed) {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+            color: #f8fafc !important;
+        }
+
+        .custom-accordion .accordion-button::after {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%2394a3b8'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+            background-size: 10px !important;
+            width: 10px !important;
+            height: 10px !important;
+            transition: transform 0.2s ease !important;
+        }
+
+        .custom-accordion .accordion-button:not(.collapsed)::after {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236366f1'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
         }
     </style>
 @endpush
 
 @section('content')
+    <!-- Top Header Title & Actions -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div class="d-flex align-items-center">
             <div class="avatar-glow rounded-circle d-flex align-items-center justify-content-center me-3"
@@ -67,38 +105,31 @@
     </div>
 
     @if ($session)
-        <!-- DPB Aktif Anda -->
+        <!-- DPB Aktif Hari Ini -->
         <h5 class="fw-bold mb-3 text-info" style="font-size: 0.95rem; letter-spacing: 0.5px;">
             <i class="fa-solid fa-circle-play me-1"></i> DPB Aktif Hari Ini
         </h5>
 
         <div class="mobile-card p-3 mb-4"
-            style="background: rgba(30, 41, 59, 0.45); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);">
-            <div class="row g-3">
-                <div class="col-6">
-                    <span class="text-secondary d-block"
-                        style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">No. DPB</span>
-                    <strong class="text-info" style="font-size: 0.9rem;">{{ $session->no_canvas }}</strong>
+            style="background: rgba(30, 41, 59, 0.45); border-left: 3px solid #06b6d4; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <span class="text-secondary font-monospace" style="font-size: 0.65rem;">{{ $session->no_canvas }}</span>
+                    <h6 class="fw-bold text-white mb-0" style="font-size: 0.85rem;">Status Bawaan Hari Ini</h6>
                 </div>
-                <div class="col-6 text-end">
-                    <span class="text-secondary d-block"
-                        style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Tanggal Bawa</span>
-                    <strong class="text-white-50"
-                        style="font-size: 0.85rem;">{{ \Carbon\Carbon::parse($session->tanggal)->format('d M Y') }}</strong>
-                </div>
-                <div
-                    class="col-12 mt-2 pt-2 border-top border-secondary border-opacity-10 d-flex justify-content-between align-items-center">
-                    <div>
-                        <span class="text-secondary" style="font-size: 0.75rem;">Status:</span>
-                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle ms-1"
-                            style="font-size: 0.65rem; font-weight: 600;">
-                            <i class="fa-solid fa-truck-moving me-1"></i> Aktif (Di Jalan)
-                        </span>
-                    </div>
-                    @if ($session->keterangan)
-                        <small class="text-secondary italic" style="font-size: 0.7rem;">"{{ $session->keterangan }}"</small>
-                    @endif
-                </div>
+                <span class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-20 px-2 py-1"
+                    style="font-size: 0.625rem; font-weight: 600; border-radius: 6px;">
+                    <i class="fa-solid fa-truck-moving me-1"></i> Di Jalan
+                </span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top border-secondary border-opacity-10"
+                style="font-size: 0.75rem;">
+                <span class="text-secondary" style="font-size: 0.7rem;">Tanggal: <strong
+                        class="text-white-50">{{ \Carbon\Carbon::parse($session->tanggal)->format('d M Y') }}</strong></span>
+                @if ($session->keterangan)
+                    <span class="text-secondary italic" style="font-size: 0.7rem;">"{{ $session->keterangan }}"</span>
+                @endif
             </div>
         </div>
 
@@ -119,25 +150,30 @@
                 <div class="p-3 {{ $index > 0 ? 'border-top border-secondary border-opacity-10' : '' }}">
                     <div class="d-flex justify-content-between align-items-start mb-1.5">
                         <div style="flex: 1; min-width: 0; padding-right: 8px;">
-                            <h6 class="fw-bold text-white mb-0 text-truncate" style="font-size: 0.85rem;" title="{{ $detail->barang->nama_barang }}">
+                            <h6 class="fw-bold text-white mb-0 text-truncate" style="font-size: 0.85rem;"
+                                title="{{ $detail->barang->nama_barang }}">
                                 {{ $detail->barang->nama_barang }}
                             </h6>
                             <span class="text-secondary font-monospace" style="font-size: 0.6rem; opacity: 0.75;">
                                 {{ $detail->kode_barang }}
                             </span>
                         </div>
-                        <span class="badge bg-secondary bg-opacity-35 text-white-50 border-0 px-2 py-0.5" style="font-size: 0.65rem; border-radius: 6px;">
+                        <span class="badge bg-secondary bg-opacity-35 text-white-50 border-0 px-2 py-0.5"
+                            style="font-size: 0.65rem; border-radius: 6px;">
                             {{ $detail->barangSatuan->satuan ?? 'PCS' }}
                         </span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-1" style="font-size: 0.75rem;">
                         <div class="d-flex gap-3 text-secondary" style="font-size: 0.7rem;">
-                            <div>Bawa: <strong class="text-primary font-monospace" style="font-size: 0.8rem;">{{ $qtyAmbil }}</strong></div>
-                            <div>Jual: <strong class="text-info font-monospace" style="font-size: 0.8rem;">{{ $qtyTerjual }}</strong></div>
+                            <div>Bawa: <strong class="text-primary font-monospace"
+                                    style="font-size: 0.8rem;">{{ $qtyAmbil }}</strong></div>
+                            <div>Jual: <strong class="text-info font-monospace"
+                                    style="font-size: 0.8rem;">{{ $qtyTerjual }}</strong></div>
                         </div>
                         <div>
                             <span class="text-secondary" style="font-size: 0.65rem;">Sisa:</span>
-                            <strong class="text-success font-monospace" style="font-size: 0.85rem;">{{ $sisaStok }}</strong>
+                            <strong class="text-success font-monospace"
+                                style="font-size: 0.85rem;">{{ $sisaStok }}</strong>
                         </div>
                     </div>
                 </div>
@@ -166,18 +202,18 @@
         </h5>
     </div>
 
-    <!-- Filter Buttons -->
-    <div class="d-flex gap-1.5 mb-3 flex-wrap">
-        <a href="{{ route('mobile.order.canvas.dpb', ['filter' => 'all']) }}" 
-           class="btn btn-sm rounded-pill px-3 py-1.5 fw-semibold {{ ($filter ?? 'all') === 'all' ? 'btn-mobile-primary text-white' : 'btn-outline-secondary' }}" style="font-size: 0.72rem;">
+    <!-- Filter Buttons (Segmented Switch Style) -->
+    <div class="filter-segmented-control mb-3">
+        <a href="{{ route('mobile.order.canvas.dpb', ['filter' => 'all']) }}"
+            class="segment-item {{ ($filter ?? 'all') === 'all' ? 'active' : '' }}">
             Semua
         </a>
-        <a href="{{ route('mobile.order.canvas.dpb', ['filter' => 'today']) }}" 
-           class="btn btn-sm rounded-pill px-3 py-1.5 fw-semibold {{ ($filter ?? 'all') === 'today' ? 'btn-mobile-primary text-white' : 'btn-outline-secondary' }}" style="font-size: 0.72rem;">
+        <a href="{{ route('mobile.order.canvas.dpb', ['filter' => 'today']) }}"
+            class="segment-item {{ ($filter ?? 'all') === 'today' ? 'active' : '' }}">
             Hari Ini
         </a>
-        <a href="{{ route('mobile.order.canvas.dpb', ['filter' => 'yesterday']) }}" 
-           class="btn btn-sm rounded-pill px-3 py-1.5 fw-semibold {{ ($filter ?? 'all') === 'yesterday' ? 'btn-mobile-primary text-white' : 'btn-outline-secondary' }}" style="font-size: 0.72rem;">
+        <a href="{{ route('mobile.order.canvas.dpb', ['filter' => 'yesterday']) }}"
+            class="segment-item {{ ($filter ?? 'all') === 'yesterday' ? 'active' : '' }}">
             Kemarin
         </a>
     </div>
@@ -187,52 +223,82 @@
             <p class="text-secondary mb-0" style="font-size: 0.75rem;">Tidak ada riwayat DPB.</p>
         </div>
     @else
-        <div class="accordion accordion-flush mb-4" id="historyAccordion">
+        <!-- History Accordion -->
+        <div class="accordion accordion-flush custom-accordion mb-4" id="historyAccordion">
             @foreach ($historySessions as $hs)
-                <div class="accordion-item bg-transparent border-bottom border-secondary border-opacity-10 mb-2">
+                <div class="accordion-item">
                     <h2 class="accordion-header" id="heading-{{ $hs->id }}">
-                        <button
-                            class="accordion-button collapsed bg-dark bg-opacity-40 text-white border border-secondary border-opacity-10 rounded-3 px-3 py-2.5 small"
-                            type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ $hs->id }}"
-                            aria-expanded="false" aria-controls="collapse-{{ $hs->id }}">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#collapse-{{ $hs->id }}" aria-expanded="false"
+                            aria-controls="collapse-{{ $hs->id }}">
                             <div class="d-flex justify-content-between align-items-center w-100 me-3">
                                 <div>
-                                    <span class="text-secondary d-block font-monospace"
+                                    <span class="text-secondary d-block font-monospace mb-0.5"
                                         style="font-size: 0.65rem;">{{ $hs->no_canvas }}</span>
                                     <span class="fw-bold text-white-50"
                                         style="font-size: 0.8rem;">{{ \Carbon\Carbon::parse($hs->tanggal)->format('d M Y') }}</span>
                                 </div>
-                                <span
-                                    class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1"
-                                    style="font-size: 0.6rem;">
-                                    Selesai
-                                </span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-secondary bg-opacity-25 text-white-50 border-0 px-2 py-0.5"
+                                        style="font-size: 0.65rem; border-radius: 6px;">
+                                        {{ $hs->details->count() }} Item
+                                    </span>
+                                    <span
+                                        class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-20 px-2 py-0.5"
+                                        style="font-size: 0.6rem; border-radius: 6px;">
+                                        Selesai
+                                    </span>
+                                </div>
                             </div>
                         </button>
                     </h2>
                     <div id="collapse-{{ $hs->id }}" class="accordion-collapse collapse"
                         aria-labelledby="heading-{{ $hs->id }}" data-bs-parent="#historyAccordion">
-                        <div
-                            class="accordion-body bg-dark bg-opacity-25 rounded-3 p-3 mt-1 border border-secondary border-opacity-10">
+                        <div class="accordion-body bg-black bg-opacity-15 p-3">
                             @if ($hs->keterangan)
-                                <p class="text-secondary italic mb-3" style="font-size: 0.75rem;">
-                                    <strong>Catatan:</strong> "{{ $hs->keterangan }}"
-                                </p>
+                                <div
+                                    class="mb-3 p-2.5 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10">
+                                    <span class="text-secondary d-block mb-1"
+                                        style="font-size: 0.6rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Catatan
+                                        DPB:</span>
+                                    <span class="text-white-50"
+                                        style="font-size: 0.72rem; font-style: italic;">"{{ $hs->keterangan }}"</span>
+                                </div>
                             @endif
 
-                            <div class="d-flex flex-column gap-2" style="font-size: 0.75rem;">
-                                @foreach ($hs->details as $det)
-                                    <div class="p-2.5 rounded-3 bg-black bg-opacity-25 border border-secondary border-opacity-10">
-                                        <div class="fw-semibold text-white-50 mb-1 text-truncate" style="font-size: 0.8rem;">
-                                            {{ $det->barang->nama_barang ?? 'Barang Terhapus' }}
-                                        </div>
-                                        <div class="d-flex justify-content-between align-items-center text-secondary" style="font-size: 0.7rem;">
-                                            <div>
-                                                Ambil: <strong class="text-primary font-monospace">{{ (float) $det->qty_ambil }} {{ $det->barangSatuan->satuan ?? 'PCS' }}</strong>
+                            <div class="d-flex flex-column gap-1" style="font-size: 0.75rem;">
+                                @foreach ($hs->details as $detIndex => $det)
+                                    @php
+                                        $qtyAmbil = (float) $det->qty_ambil;
+                                        $qtyTerjual = (float) $det->qty_terjual;
+                                        $qtyKembali = (float) $det->qty_kembali;
+                                        $sisaStok = $qtyAmbil - $qtyTerjual - $qtyKembali;
+                                    @endphp
+                                    <div
+                                        class="py-2.5 {{ $detIndex > 0 ? 'border-top border-secondary border-opacity-10' : '' }}">
+                                        <div class="d-flex justify-content-between align-items-start mb-1.5">
+                                            <div class="fw-semibold text-white text-truncate"
+                                                style="font-size: 0.8rem; max-width: 70%;"
+                                                title="{{ $det->barang->nama_barang ?? 'Barang Terhapus' }}">
+                                                {{ $det->barang->nama_barang ?? 'Barang Terhapus' }}
                                             </div>
-                                            <div class="d-flex gap-2.5">
-                                                <span>Jual: <strong class="text-info font-monospace">{{ (float) $det->qty_terjual }}</strong></span>
-                                                <span>Kembali: <strong class="text-success font-monospace">{{ (float) $det->qty_kembali }}</strong></span>
+                                            <span
+                                                class="badge bg-secondary bg-opacity-15 text-white-50 px-1.5 py-0.5 border-0 font-monospace"
+                                                style="font-size: 0.625rem; border-radius: 4px;">
+                                                Bawa: {{ $qtyAmbil }} {{ $det->barangSatuan->satuan ?? 'PCS' }}
+                                            </span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center text-secondary"
+                                            style="font-size: 0.7rem;">
+                                            <div class="d-flex gap-3">
+                                                <span>Jual: <strong
+                                                        class="text-info font-monospace">{{ $qtyTerjual }}</strong></span>
+                                                <span>Kembali: <strong
+                                                        class="text-warning font-monospace">{{ $qtyKembali }}</strong></span>
+                                            </div>
+                                            <div>
+                                                <span>Sisa: <strong
+                                                        class="{{ $sisaStok > 0 ? 'text-success' : 'text-white-50' }} font-monospace">{{ $sisaStok }}</strong></span>
                                             </div>
                                         </div>
                                     </div>
