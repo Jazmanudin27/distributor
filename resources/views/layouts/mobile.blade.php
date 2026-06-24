@@ -742,6 +742,7 @@
         <script>
             if (window.localStorage && '{{ Auth::user() ? Auth::user()->nik : "" }}') {
                 localStorage.removeItem('mobile_order_cart_' + '{{ Auth::user() ? Auth::user()->nik : "" }}');
+                localStorage.removeItem('mobile_order_canvas_cart_' + '{{ Auth::user() ? Auth::user()->nik : "" }}');
             }
         </script>
     @endif

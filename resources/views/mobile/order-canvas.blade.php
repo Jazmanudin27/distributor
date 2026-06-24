@@ -775,6 +775,7 @@
                 document.getElementById('summary-grandtotal').innerText = 'Rp ' + grandTotal.toLocaleString(
                     'id-ID');
                 btnSubmitOrder.setAttribute('data-grand-total', grandTotal);
+                saveCartToStorage();
             }
 
             function validateFormState() {
@@ -829,6 +830,93 @@
                     return false;
                 }
             });
+
+            // --- LocalStorage Cart Persistence ---
+            let isRestoringCart = false;
+
+            function saveCartToStorage() {
+                if (isRestoringCart) return;
+
+                const items = [];
+                cartContainer.querySelectorAll('.cart-item-card').forEach(card => {
+                    const code = card.getAttribute('data-code');
+                    const qty = card.querySelector('.input-qty').value;
+                    const satuanId = card.querySelector('.select-satuan').value;
+                    const harga = card.querySelector('.input-harga').value;
+                    const diskon1 = card.querySelector('.input-diskon1').value;
+                    const diskon2 = card.querySelector('.input-diskon2').value;
+                    const diskon3 = card.querySelector('.input-diskon3').value;
+                    const product = barangsCache[code];
+
+                    items.push({
+                        code: code,
+                        qty: qty,
+                        satuan_id: satuanId,
+                        harga: harga,
+                        diskon1: diskon1,
+                        diskon2: diskon2,
+                        diskon3: diskon3,
+                        product: product
+                    });
+                });
+
+                const cartData = {
+                    kode_pelanggan: hiddenKodePelanggan.value,
+                    jenis_transaksi: jenisTransaksiEl.value,
+                    keterangan: document.querySelector('input[name="keterangan"]')?.value || '',
+                    items: items
+                };
+
+                localStorage.setItem('mobile_order_canvas_cart_' + '{{ Auth::user()->nik }}', JSON.stringify(cartData));
+            }
+
+            function loadCartFromStorage() {
+                try {
+                    const dataStr = localStorage.getItem('mobile_order_canvas_cart_' + '{{ Auth::user()->nik }}');
+                    if (!dataStr) return;
+                    const data = JSON.parse(dataStr);
+                    if (!data || !data.items || data.items.length === 0) return;
+
+                    const lockedKode = "{{ $pelanggan ? $pelanggan->kode_pelanggan : '' }}";
+                    if (lockedKode && data.kode_pelanggan !== lockedKode) {
+                        // Locked customer changed (different check-in), discard cart
+                        localStorage.removeItem('mobile_order_canvas_cart_' + '{{ Auth::user()->nik }}');
+                        return;
+                    }
+
+                    isRestoringCart = true;
+
+                    data.items.forEach(item => {
+                        if (item.product) {
+                            addProductToCart(item.product, item);
+                        }
+                    });
+
+                    if (jenisTransaksiEl) {
+                        jenisTransaksiEl.value = data.jenis_transaksi || 'Tunai';
+                    }
+                    const keteranganEl = document.querySelector('input[name="keterangan"]');
+                    if (keteranganEl) {
+                        keteranganEl.value = data.keterangan || '';
+                    }
+
+                    isRestoringCart = false;
+
+                    calculateTotals();
+                    validateFormState();
+                } catch (e) {
+                    console.error("Failed to load cart from storage", e);
+                    isRestoringCart = false;
+                }
+            }
+
+            const keteranganEl = document.querySelector('input[name="keterangan"]');
+            if (keteranganEl) {
+                keteranganEl.addEventListener('input', saveCartToStorage);
+            }
+
+            // Load saved cart from localStorage if present
+            loadCartFromStorage();
 
             calculateTotals();
             validateFormState();
