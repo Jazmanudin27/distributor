@@ -79,6 +79,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/order/canvas', [MobileOrderController::class, 'createCanvas'])->name('order.canvas.create');
         Route::post('/order/canvas', [MobileOrderController::class, 'storeCanvas'])->name('order.canvas.store');
         Route::get('/order/canvas/dpb', [MobileOrderController::class, 'canvasDpb'])->name('order.canvas.dpb');
+        Route::get('/order/canvas/dpb/create', [MobileOrderController::class, 'createCanvasDpb'])->name('order.canvas.dpb.create');
         Route::post('/order/canvas/dpb', [MobileOrderController::class, 'storeCanvasDpb'])->name('order.canvas.dpb.store');
 
         // Ajuan Limit Kredit

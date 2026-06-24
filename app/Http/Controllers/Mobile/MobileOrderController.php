@@ -653,9 +653,6 @@ class MobileOrderController extends Controller
         return view('mobile.order-canvas', compact('noFaktur', 'pelanggan', 'diskonStrata'));
     }
 
-    /**
-     * View active DPB details for Sales Canvas (goods carried today).
-     */
     public function canvasDpb(Request $request)
     {
         $user = Auth::user();
@@ -672,7 +669,36 @@ class MobileOrderController extends Controller
             $session->load(['details.barang', 'details.barangSatuan']);
         }
 
-        return view('mobile.dpb', compact('session'));
+        // Fetch historical canvas sessions
+        $historySessions = \App\Models\CanvasSession::where('kode_sales', $user->nik)
+            ->when($session, function ($q) use ($session) {
+                $q->where('id', '!=', $session->id);
+            })
+            ->with(['details.barang', 'details.barangSatuan'])
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('id', 'desc')
+            ->paginate(10);
+
+        return view('mobile.dpb', compact('session', 'historySessions'));
+    }
+
+    /**
+     * Show form to create a new canvas DPB session.
+     */
+    public function createCanvasDpb(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user->is_kanvas) {
+            return redirect()->route('mobile.dashboard')->with('error', 'Fitur ini hanya tersedia untuk Sales Canvas.');
+        }
+
+        $session = \App\Services\CanvasService::getActiveSession($user->nik);
+        if ($session) {
+            return redirect()->route('mobile.order.canvas.dpb')->with('error', 'Anda sudah memiliki sesi DPB yang aktif.');
+        }
+
+        return view('mobile.dpb-create');
     }
 
     /**
