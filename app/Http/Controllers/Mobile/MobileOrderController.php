@@ -687,6 +687,10 @@ class MobileOrderController extends Controller
             $historyQuery->whereDate('tanggal', now()->toDateString());
         } elseif ($filter === 'yesterday') {
             $historyQuery->whereDate('tanggal', now()->subDay()->toDateString());
+        } elseif ($filter && $filter !== 'all') {
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $filter)) {
+                $historyQuery->whereDate('tanggal', $filter);
+            }
         }
 
         $historySessions = $historyQuery->with(['details.barang', 'details.barangSatuan'])

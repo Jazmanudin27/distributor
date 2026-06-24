@@ -4,36 +4,18 @@
 
 @push('styles')
     <style>
-        /* Filter Segmented Control */
-        .filter-segmented-control {
-            display: flex;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 3px;
-            border-radius: 30px;
-            width: 100%;
-        }
-
-        .filter-segmented-control .segment-item {
-            flex: 1;
-            text-align: center;
-            padding: 7px 10px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            color: #94a3b8;
-            text-decoration: none;
-            border-radius: 25px;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .filter-segmented-control .segment-item:hover {
-            color: #f8fafc;
-        }
-
-        .filter-segmented-control .segment-item.active {
-            background: var(--accent-gradient);
-            color: #ffffff;
-            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+        /* Date picker custom styling */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            background: transparent;
+            bottom: 0;
+            color: transparent;
+            cursor: pointer;
+            height: auto;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: auto;
         }
 
         /* Modernized Accordion styling */
@@ -204,20 +186,24 @@
         </h5>
     </div>
 
-    <!-- Filter Buttons (Segmented Switch Style) -->
-    <div class="filter-segmented-control mb-3">
-        <a href="{{ route('mobile.order.canvas.dpb', ['filter' => 'all']) }}"
-            class="segment-item {{ ($filter ?? 'all') === 'all' ? 'active' : '' }}">
-            Semua
-        </a>
-        <a href="{{ route('mobile.order.canvas.dpb', ['filter' => 'today']) }}"
-            class="segment-item {{ ($filter ?? 'all') === 'today' ? 'active' : '' }}">
-            Hari Ini
-        </a>
-        <a href="{{ route('mobile.order.canvas.dpb', ['filter' => 'yesterday']) }}"
-            class="segment-item {{ ($filter ?? 'all') === 'yesterday' ? 'active' : '' }}">
-            Kemarin
-        </a>
+    <!-- Filter Date Picker -->
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="flex-grow-1 position-relative">
+            <span class="position-absolute top-50 start-0 translate-middle-y ps-3 text-secondary" style="pointer-events: none; font-size: 0.8rem;">
+                <i class="fa-solid fa-calendar-day"></i>
+            </span>
+            <input type="date" id="filterDateInput" class="form-control form-control-sm text-white ps-5" 
+                   style="background: rgba(30, 41, 59, 0.45); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 30px; font-size: 0.78rem; padding-top: 8px; padding-bottom: 8px; color-scheme: dark; font-weight: 500;"
+                   value="{{ ($filter && $filter !== 'all' && $filter !== 'today' && $filter !== 'yesterday') ? $filter : '' }}"
+                   placeholder="Pilih Tanggal...">
+        </div>
+        @if ($filter && $filter !== 'all')
+            <a href="{{ route('mobile.order.canvas.dpb', ['filter' => 'all']) }}" 
+               class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center px-3" 
+               style="height: 38px; border-radius: 30px; font-size: 0.72rem; font-weight: 600;">
+                <i class="fa-solid fa-xmark me-1"></i> Semua
+            </a>
+        @endif
     </div>
 
     @if ($historySessions->isEmpty())
@@ -321,3 +307,16 @@
         </div>
     @endif
 @endsection
+
+@push('scripts')
+    <script>
+        document.getElementById('filterDateInput').addEventListener('change', function() {
+            const val = this.value;
+            if (val) {
+                window.location.href = "{{ route('mobile.order.canvas.dpb') }}?filter=" + val;
+            } else {
+                window.location.href = "{{ route('mobile.order.canvas.dpb') }}?filter=all";
+            }
+        });
+    </script>
+@endpush
