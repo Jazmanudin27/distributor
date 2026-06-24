@@ -159,7 +159,7 @@
                                             data-wilayah="{{ $p->wilayah?->nama_wilayah ?? '-' }}"
                                             data-metode="{{ $p->metode_bayar }}" data-limit="{{ $p->limit_pelanggan }}"
                                             data-sisa-limit="{{ $sisaLimit }}"
-                                            data-has-overdue="{{ $hasOverdue ? 1 : 0 }}"
+                                            data-has-overdue="{{ $hasOverdue ? 1 : 0 }}" data-ljt="{{ $p->ljt ?? 30 }}"
                                             {{ old('kode_pelanggan', $item->kode_pelanggan) == $p->kode_pelanggan ? 'selected' : '' }}>
                                             {{ $p->nama_pelanggan }}
                                         </option>
@@ -648,9 +648,31 @@
                 opt.attr('data-limit', data.limit);
                 opt.attr('data-sisa-limit', data.sisa_limit);
                 opt.attr('data-has-overdue', data.has_overdue);
+                opt.attr('data-ljt', data.ljt || 30);
 
                 updatePelangganInfo(opt);
             });
+
+            // Recalculate jatuh tempo on date or transaction type changes
+            $('#tanggal, #jenis_transaksi').on('change', function() {
+                const opt = $('#kode_pelanggan').find(':selected');
+                if (opt.val()) {
+                    updateJatuhTempo(opt);
+                }
+            });
+
+            function updateJatuhTempo(opt) {
+                const ljt = parseInt(opt.attr('data-ljt') || opt.data('ljt')) || 30;
+                const tglVal = $('#tanggal').val();
+                if (tglVal) {
+                    const date = new Date(tglVal);
+                    date.setDate(date.getDate() + ljt);
+                    const yyyy = date.getFullYear();
+                    const mm = String(date.getMonth() + 1).padStart(2, '0');
+                    const dd = String(date.getDate()).padStart(2, '0');
+                    $('#tanggal_kirim').val(`${yyyy}-${mm}-${dd}`); // tanggal_kirim behaves as jatuh_tempo field
+                }
+            }
 
             function updatePelangganInfo(opt) {
                 $('#pelanggan_kode').val(opt.attr('data-kode') || opt.data('kode') || '');
@@ -658,6 +680,8 @@
                 $('#pelanggan_alamat').val(opt.attr('data-alamat') || opt.data('alamat') || '-');
                 $('#pelanggan_wilayah').val(opt.attr('data-wilayah') || opt.data('wilayah') || '-');
                 $('#pelanggan_metode').val(opt.attr('data-metode') || opt.data('metode') || '-');
+
+                updateJatuhTempo(opt);
 
                 // Display credit limits
                 const limit = parseFloat(opt.attr('data-limit') || opt.data('limit')) || 0;
