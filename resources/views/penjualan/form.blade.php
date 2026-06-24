@@ -517,7 +517,9 @@
                     delay: 250,
                     data: function(params) {
                         return {
-                            q: params.term
+                            q: params.term,
+                            kode_sales: $('#kode_sales').val(),
+                            tanggal: $('#tanggal').val()
                         };
                     },
                     processResults: function(data) {

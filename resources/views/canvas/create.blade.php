@@ -21,14 +21,6 @@
                     </a>
                 </div>
                 <div class="card-body p-4">
-                    {{-- Error display --}}
-                    @if (session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fa-solid fa-circle-exclamation me-2"></i> {{ session('error') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    @endif
-
                     <form action="{{ route('canvas.store') }}" method="POST">
                         @csrf
 
@@ -128,8 +120,7 @@
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 pt-3 border-top mt-4">
-                            <a href="{{ route('canvas.index') }}"
-                                class="btn btn-light px-4 fw-semibold border hover-scale">
+                            <a href="{{ route('canvas.index') }}" class="btn btn-light px-4 fw-semibold border hover-scale">
                                 <i class="fa-solid fa-arrow-left me-1"></i> Batal
                             </a>
                             <button type="submit" class="btn btn-primary px-4 fw-semibold hover-scale">

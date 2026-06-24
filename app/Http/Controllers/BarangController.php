@@ -146,11 +146,13 @@ class BarangController extends Controller
 
         // Apply sales product restriction
         $user = auth()->user();
+        $salesmanNik = $request->input('kode_sales') ?: ($user ? $user->nik : null);
+        $tanggal = $request->input('tanggal');
         $isCanvas = false;
         $activeCanvasDetails = collect();
-        if ($user && \App\Services\CanvasService::isCanvasSalesman($user->nik)) {
+        if ($salesmanNik && \App\Services\CanvasService::isCanvasSalesman($salesmanNik)) {
             $isCanvas = true;
-            $session = \App\Services\CanvasService::getActiveSession($user->nik);
+            $session = \App\Services\CanvasService::getActiveSession($salesmanNik, $tanggal);
             if ($session) {
                 $activeCanvasDetails = $session->details->keyBy('kode_barang');
                 $query->whereIn('kode_barang', $activeCanvasDetails->keys()->toArray());
