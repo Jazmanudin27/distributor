@@ -218,6 +218,18 @@
                 </a>
             </div>
         </div>
+        @if (Auth::user()->is_kanvas)
+        <div class="row g-3 mb-3">
+            <div class="col-12">
+                <a href="{{ route('mobile.order.canvas.create') }}"
+                    class="btn btn-mobile w-100 py-3 d-flex align-items-center justify-content-center"
+                    style="background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15)); border: 1px solid rgba(99,102,241,0.35); color: #a5b4fc;">
+                    <i class="fa-solid fa-truck-moving me-2" style="font-size: 1.3rem;"></i>
+                    <span style="font-size: 0.85rem; font-weight: 600;">Order Canvas (Langsung)</span>
+                </a>
+            </div>
+        </div>
+        @endif
         <div class="row g-3 mb-4">
             <div class="col-6">
                 <a href="{{ route('mobile.order.index') }}"
@@ -274,13 +286,25 @@
             </div>
         </div>
 
+        @if (Auth::user()->is_kanvas)
+        <div class="row g-3 mb-3">
+            <div class="col-12">
+                <a href="{{ route('mobile.order.canvas.create') }}"
+                    class="btn btn-mobile w-100 py-3 d-flex align-items-center justify-content-center"
+                    style="background: linear-gradient(135deg, rgba(99,102,241,0.18), rgba(139,92,246,0.18)); border: 1px solid rgba(99,102,241,0.4); color: #a5b4fc;">
+                    <i class="fa-solid fa-truck-moving me-2" style="font-size: 1.4rem;"></i>
+                    <span style="font-size: 0.9rem; font-weight: 600;">Order Canvas (Tanpa Check-in)</span>
+                </a>
+            </div>
+        </div>
+        @else
         <div class="alert alert-warning rounded-4 mb-4 d-flex align-items-center"
             style="background-color: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; margin-top: -8px;">
             <i class="fa-solid fa-triangle-exclamation me-3" style="font-size: 1.25rem;"></i>
-            <span style="font-size: 0.80rem; font-weight: 500;">Anda belum check-in. Silakan pilih pelanggan terlebih
-                dahulu
+            <span style="font-size: 0.80rem; font-weight: 500;">Anda belum check-in. Silakan pilih pelanggan terlebih dahulu
                 untuk melakukan penjualan.</span>
         </div>
+        @endif
     @endif
 
     <!-- Recent Orders Section -->

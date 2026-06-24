@@ -20,8 +20,9 @@
                         <label class="form-label form-label-sm mb-1 text-secondary fw-semibold">Sales</label>
                         <select name="kode_sales" class="form-select form-select-sm">
                             <option value="">— Semua Sales —</option>
-                            @foreach($salesmen as $s)
-                                <option value="{{ $s->nik }}" {{ request('kode_sales') == $s->nik ? 'selected' : '' }}>
+                            @foreach ($salesmen as $s)
+                                <option value="{{ $s->nik }}"
+                                    {{ request('kode_sales') == $s->nik ? 'selected' : '' }}>
                                     {{ $s->name }}
                                 </option>
                             @endforeach
@@ -41,8 +42,10 @@
                         <label class="form-label form-label-sm mb-1 text-secondary fw-semibold">Status</label>
                         <select name="status" class="form-select form-select-sm">
                             <option value="">— Semua Status —</option>
-                            <option value="loading"  {{ request('status') == 'loading'   ? 'selected' : '' }}>Aktif (Di Jalan)</option>
-                            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Selesai</option>
+                            <option value="loading" {{ request('status') == 'loading' ? 'selected' : '' }}>Aktif (Di
+                                Jalan)</option>
+                            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Selesai
+                            </option>
                         </select>
                     </div>
                     <div class="col-sm-auto d-flex gap-1">
@@ -99,10 +102,18 @@
                                             class="btn btn-sm btn-outline-info rounded" title="Detail / Rekonsiliasi">
                                             <i class="fa-solid fa-eye"></i>
                                         </a>
-                                        <a href="{{ route('canvas.print', $item->id) }}" target="_blank"
-                                            class="btn btn-sm btn-outline-primary rounded" title="Cetak Laporan Penjualan">
-                                            <i class="fa-solid fa-print"></i>
-                                        </a>
+                                        @if ($item->status === 'completed')
+                                            <a href="{{ route('canvas.print', $item->id) }}" target="_blank"
+                                                class="btn btn-sm btn-outline-primary rounded"
+                                                title="Cetak Laporan Penjualan">
+                                                <i class="fa-solid fa-print"></i>
+                                            </a>
+                                        @else
+                                            <button type="button" class="btn btn-sm btn-outline-secondary rounded"
+                                                title="Cetak hanya tersedia setelah DPB diselesaikan" disabled>
+                                                <i class="fa-solid fa-print"></i>
+                                            </button>
+                                        @endif
                                         @if ($item->status === 'loading')
                                             <a href="{{ route('canvas.edit', $item->id) }}"
                                                 class="btn btn-sm btn-outline-warning rounded"

@@ -111,8 +111,21 @@
                     </div>
 
                     <div class="mb-3 form-check ms-1">
-                        <input type="checkbox" name="is_kanvas" id="is_kanvas" class="form-check-input" value="1" {{ old('is_kanvas', $row->is_kanvas) ? 'checked' : '' }}>
+                        <input type="checkbox" name="is_kanvas" id="is_kanvas" class="form-check-input" value="1" {{ old('is_kanvas', $row->is_kanvas) ? 'checked' : '' }} onchange="toggleKanvasFields()">
                         <label for="is_kanvas" class="form-check-label fs-7 fw-bold text-secondary">Sales Kanvas (Gunakan sistem kanvas barang)</label>
+                    </div>
+
+                    <div class="mb-3" id="kode-pelanggan-container" style="{{ old('is_kanvas', $row->is_kanvas) ? '' : 'display:none;' }}">
+                        <label for="kode_pelanggan" class="form-label fs-7 fw-bold text-secondary">Pelanggan Terhubung (untuk Order Canvas)</label>
+                        <select name="kode_pelanggan" id="kode_pelanggan" class="form-select form-select-sm">
+                            <option value="">— Pilih Pelanggan —</option>
+                            @foreach($pelangganList as $p)
+                                <option value="{{ $p->kode_pelanggan }}" {{ old('kode_pelanggan', $row->kode_pelanggan) == $p->kode_pelanggan ? 'selected' : '' }}>
+                                    {{ $p->nama_pelanggan }} ({{ $p->kode_pelanggan }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">Pelanggan ini otomatis digunakan saat sales canvas membuat order via mobile.</small>
                     </div>
 
                     <div class="mb-4">
@@ -161,8 +174,18 @@
         }
     }
 
+    function toggleKanvasFields() {
+        const isKanvas = document.getElementById('is_kanvas').checked;
+        const container = document.getElementById('kode-pelanggan-container');
+        container.style.display = isKanvas ? '' : 'none';
+        if (!isKanvas) {
+            document.getElementById('kode_pelanggan').value = '';
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         toggleRestrictionFields();
+        toggleKanvasFields();
     });
 </script>
 @endsection

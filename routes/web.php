@@ -69,11 +69,15 @@ Route::middleware('auth')->group(function () {
         Route::post('/kunjungan/checkin', [MobileKunjunganController::class, 'checkin'])->name('kunjungan.checkin');
         Route::post('/kunjungan/checkout', [MobileKunjunganController::class, 'checkout'])->name('kunjungan.checkout');
 
-        // Orders
+        // Orders (Sales Regular)
         Route::get('/order', [MobileOrderController::class, 'index'])->name('order.index');
         Route::get('/order/create', [MobileOrderController::class, 'create'])->name('order.create');
         Route::post('/order/store', [MobileOrderController::class, 'store'])->name('order.store');
         Route::post('/order/{no_faktur}/payment', [MobileOrderController::class, 'storePayment'])->name('order.payment');
+
+        // Orders (Sales Canvas) — tanpa check-in, pelanggan otomatis dari user
+        Route::get('/order/canvas', [MobileOrderController::class, 'createCanvas'])->name('order.canvas.create');
+        Route::post('/order/canvas', [MobileOrderController::class, 'storeCanvas'])->name('order.canvas.store');
 
         // Ajuan Limit Kredit
         Route::get('/limit-kredit', [MobileAjuanLimitController::class, 'index'])->name('limit-kredit.index');

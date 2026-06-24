@@ -20,7 +20,8 @@ class UserController extends Controller
         $roles = Role::orderBy('name')->get();
         $kategoris = \App\Models\Kategori::orderBy('nama_kategori')->get();
         $merks = \App\Models\Merk::orderBy('nama_merk')->get();
-        return view('users.create', compact('roles', 'kategoris', 'merks'));
+        $pelangganList = \App\Models\Pelanggan::orderBy('nama_pelanggan')->get(['kode_pelanggan', 'nama_pelanggan']);
+        return view('users.create', compact('roles', 'kategoris', 'merks', 'pelangganList'));
     }
 
     public function store(Request $request)
@@ -35,6 +36,7 @@ class UserController extends Controller
             'jenis_sales' => 'nullable|string|in:kategori,merk,semua',
             'jenis_barang' => 'nullable|array',
             'is_kanvas' => 'nullable|boolean',
+            'kode_pelanggan' => 'nullable|string|exists:pelanggan,kode_pelanggan',
         ]);
         
         if (isset($data['jenis_barang']) && is_array($data['jenis_barang'])) {
@@ -44,6 +46,9 @@ class UserController extends Controller
         }
 
         $data['is_kanvas'] = $request->has('is_kanvas');
+        if (!$data['is_kanvas']) {
+            $data['kode_pelanggan'] = null;
+        }
         $data['password'] = bcrypt($data['password'] ?? 'password');
         $user = \App\Models\User::create($data);
 
@@ -61,8 +66,9 @@ class UserController extends Controller
         $roles = Role::orderBy('name')->get();
         $kategoris = \App\Models\Kategori::orderBy('nama_kategori')->get();
         $merks = \App\Models\Merk::orderBy('nama_merk')->get();
+        $pelangganList = \App\Models\Pelanggan::orderBy('nama_pelanggan')->get(['kode_pelanggan', 'nama_pelanggan']);
 
-        return view('users.edit', compact('row', 'roles', 'kategoris', 'merks'));
+        return view('users.edit', compact('row', 'roles', 'kategoris', 'merks', 'pelangganList'));
     }
 
     public function update(Request $request, $id)
@@ -78,6 +84,7 @@ class UserController extends Controller
             'jenis_sales' => 'nullable|string|in:kategori,merk,semua',
             'jenis_barang' => 'nullable|array',
             'is_kanvas' => 'nullable|boolean',
+            'kode_pelanggan' => 'nullable|string|exists:pelanggan,kode_pelanggan',
         ]);
 
         if (isset($data['jenis_barang']) && is_array($data['jenis_barang'])) {
@@ -87,6 +94,9 @@ class UserController extends Controller
         }
 
         $data['is_kanvas'] = $request->has('is_kanvas');
+        if (!$data['is_kanvas']) {
+            $data['kode_pelanggan'] = null;
+        }
 
         if (empty($data['password'])) {
             unset($data['password']);

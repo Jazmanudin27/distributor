@@ -29,6 +29,7 @@ class User extends Authenticatable
         'jenis_sales',
         'jenis_barang',
         'is_kanvas',
+        'kode_pelanggan',
     ];
 
     /**
@@ -52,5 +53,10 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function pelanggan()
+    {
+        return $this->belongsTo(\App\Models\Pelanggan::class, 'kode_pelanggan', 'kode_pelanggan');
     }
 }
