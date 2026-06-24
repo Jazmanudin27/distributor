@@ -699,84 +699,67 @@
                 const initialD3 = savedValues ? savedValues.diskon3 : 0;
 
                 card.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-start mb-2 border-bottom border-secondary border-opacity-20 pb-2">
-                        <div>
-                            <h6 class="fw-bold text-white mb-0" style="font-size: 0.9rem; line-height: 1.3;">${product.nama_barang}</h6>
-                            <div class="d-flex gap-2 align-items-center mt-1">
-                                <span class="badge bg-secondary" style="font-size: 0.6rem; opacity: 0.8;">${product.kode_barang}</span>
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div style="flex: 1; min-width: 0; padding-right: 8px;">
+                            <h6 class="fw-bold text-white mb-0 text-truncate" style="font-size: 0.85rem;" title="${product.nama_barang}">${product.nama_barang}</h6>
+                            <div class="d-flex gap-1.5 align-items-center mt-1 flex-wrap">
+                                <span class="badge bg-secondary bg-opacity-35 text-white-50" style="font-size: 0.6rem; letter-spacing: 0.3px;">${product.kode_barang}</span>
                                 ${product.merk ? `<span class="badge bg-dark text-secondary border border-secondary" style="font-size: 0.6rem; border-color: rgba(255,255,255,0.15) !important;">${product.merk}</span>` : ''}
                             </div>
                             <input type="hidden" name="items[${rowIndex}][kode_barang]" value="${product.kode_barang}">
                         </div>
-                        <button type="button" class="btn btn-sm rounded-circle d-flex align-items-center justify-content-center btn-remove-item" style="width: 28px; height: 28px; background: rgba(239, 68, 68, 0.15); color: #f87171; border: none; transition: background 0.2s;">
-                            <i class="fa-solid fa-trash-can" style="font-size: 0.8rem;"></i>
+                        <button type="button" class="btn btn-sm rounded-circle d-flex align-items-center justify-content-center btn-remove-item" style="width: 26px; height: 26px; background: rgba(239, 68, 68, 0.15); color: #f87171; border: none; transition: all 0.2s;">
+                            <i class="fa-solid fa-trash-can" style="font-size: 0.75rem;"></i>
                         </button>
                     </div>
 
-                    <div class="row g-2 mb-2 align-items-end">
-                        <div class="col-6">
-                            <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Satuan</label>
-                            <select name="items[${rowIndex}][satuan_id]" class="form-select form-select-sm bg-dark text-white border-secondary select-satuan" style="font-size: 0.75rem; border-radius: 8px; height: 34px;">
+                    <div class="row g-2 align-items-center mb-2">
+                        <div class="col-4">
+                            <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Satuan</label>
+                            <select name="items[${rowIndex}][satuan_id]" class="form-select form-select-sm bg-dark text-white border-secondary select-satuan" style="font-size: 0.75rem; border-radius: 8px; height: 32px; padding: 2px 8px;">
                                 ${unitOptions}
                             </select>
                             <input type="hidden" name="items[${rowIndex}][satuan]" class="hidden-satuan-name" value="${product.satuans.length > 0 ? product.satuans[0].satuan : ''}">
                         </div>
-                        <div class="col-6">
-                            <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Jumlah (Qty)</label>
-                            <div class="input-group input-group-sm">
-                                <button type="button" class="btn btn-outline-secondary btn-qty-minus text-white px-2" style="border-radius: 8px 0 0 8px; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">-</button>
-                                <input type="number" name="items[${rowIndex}][qty]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-qty px-1" min="0.01" step="any" value="${initialQty}" required style="font-size: 0.8rem; border-color: rgba(255,255,255,0.15); height: 34px;">
-                                <button type="button" class="btn btn-outline-secondary btn-qty-plus text-white px-2" style="border-radius: 0 8px 8px 0; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">+</button>
+                        <div class="col-4">
+                            <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Qty</label>
+                            <div class="input-group input-group-sm" style="height: 32px;">
+                                <button type="button" class="btn btn-outline-secondary btn-qty-minus text-white px-2 d-flex align-items-center justify-content-center" style="border-radius: 8px 0 0 8px; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); width: 28px; height: 100%;">-</button>
+                                <input type="number" name="items[${rowIndex}][qty]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-qty px-1" min="0.01" step="any" value="${initialQty}" required style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 100%;">
+                                <button type="button" class="btn btn-outline-secondary btn-qty-plus text-white px-2 d-flex align-items-center justify-content-center" style="border-radius: 0 8px 8px 0; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); width: 28px; height: 100%;">+</button>
                             </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Harga</label>
+                            <div class="fw-semibold text-white-50 price-display" style="font-size: 0.75rem; line-height: 32px;">
+                                Rp ${parseFloat(defaultPrice).toLocaleString('id-ID')}
+                            </div>
+                            <input type="hidden" name="items[${rowIndex}][harga]" class="input-harga" value="${defaultPrice}">
                         </div>
                     </div>
 
-                    <div class="row g-2 mb-2">
-                        <div class="col-12">
-                            <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Harga Jual</label>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-dark text-secondary border-secondary" style="font-size: 0.75rem; border-radius: 8px 0 0 8px;">Rp</span>
-                                <input type="text" name="items[${rowIndex}][harga]" class="form-control form-control-sm bg-dark text-white border-secondary text-end input-harga rupiah-input" value="${defaultPrice}" required style="font-size: 0.8rem; border-radius: 0 8px 8px 0;">
-                            </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-15">
+                        <div class="diskon-tags-display d-flex align-items-center flex-wrap" style="gap: 4px;">
+                            <!-- populated by JS -->
+                        </div>
+                        <div class="text-end">
+                            <span class="text-secondary me-1" style="font-size: 0.65rem;">Nett:</span>
+                            <span class="fw-bold text-info row-subtotal-display" style="font-size: 0.85rem;">Rp 0</span>
                         </div>
                     </div>
 
-                    <div class="p-2 rounded-3 mb-2 bg-black bg-opacity-20 border border-secondary border-opacity-10">
-                        <div class="d-flex align-items-center justify-content-between mb-1" style="font-size: 0.65rem;">
-                            <span class="text-secondary fw-semibold">Diskon Strata (D1 & D2)</span>
-                            <span class="text-secondary fw-semibold">Diskon Manual (D3)</span>
-                        </div>
-                        <div class="row g-1">
-                            <div class="col-4">
-                                <div class="input-group input-group-sm">
-                                    <input type="number" name="items[${rowIndex}][diskon1_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon1" min="0" max="100" step="any" value="${initialD1}" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px; background-color: rgba(255, 255, 255, 0.05);" placeholder="D1" readonly>
-                                    <span class="input-group-text bg-transparent text-secondary border-0 px-1" style="font-size: 0.7rem;">%</span>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="input-group input-group-sm">
-                                    <input type="number" name="items[${rowIndex}][diskon2_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon2" min="0" max="100" step="any" value="${initialD2}" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px; background-color: rgba(255, 255, 255, 0.05);" placeholder="D2" readonly>
-                                    <span class="input-group-text bg-transparent text-secondary border-0 px-1" style="font-size: 0.7rem;">%</span>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="input-group input-group-sm">
-                                    <input type="number" name="items[${rowIndex}][diskon3_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon3" min="0" max="100" step="any" value="${initialD3}" style="font-size: 0.75rem; border-radius: 6px; padding: 2px 4px; background-color: rgba(255, 255, 255, 0.05);" placeholder="D3" readonly>
-                                    <span class="input-group-text bg-transparent text-secondary border-0 px-1" style="font-size: 0.7rem;">%</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-10">
-                        <span class="text-secondary" style="font-size: 0.7rem; font-weight: 500;">Nett Subtotal:</span>
-                        <span class="fw-bold text-info row-subtotal-display" style="font-size: 0.9rem;">Rp 0</span>
-                    </div>
+                    <input type="hidden" name="items[${rowIndex}][diskon1_persen]" class="input-diskon1" value="${initialD1}">
+                    <input type="hidden" name="items[${rowIndex}][diskon2_persen]" class="input-diskon2" value="${initialD2}">
+                    <input type="hidden" name="items[${rowIndex}][diskon3_persen]" class="input-diskon3" value="${initialD3}">
                 `;
 
                 // Hide empty cart msg
                 emptyCartMessage.classList.add('d-none');
-                cartContainer.appendChild(card);
+                if (savedValues) {
+                    cartContainer.appendChild(card);
+                } else {
+                    cartContainer.prepend(card);
+                }
 
                 // Bind Event Listeners on inputs
                 const selectSatuan = card.querySelector('.select-satuan');
@@ -800,7 +783,12 @@
                     const opt = this.options[this.selectedIndex];
                     hiddenSatuanName.value = opt.getAttribute('data-name');
                     inputHarga.value = opt.getAttribute('data-harga');
-                    inputHarga.dispatchEvent(new Event('input')); // Trigger formatting!
+                    
+                    const priceDisplay = card.querySelector('.price-display');
+                    if (priceDisplay) {
+                        priceDisplay.innerText = 'Rp ' + parseFloat(opt.getAttribute('data-harga') || 0).toLocaleString('id-ID');
+                    }
+                    
                     checkStockLimit(card);
                     calculateTotals();
                 });
@@ -1052,6 +1040,21 @@
                     const nett = sub - diskon;
                     card.querySelector('.row-subtotal-display').innerText = 'Rp ' + nett.toLocaleString(
                         'id-ID');
+                    
+                    const diskonDisplay = card.querySelector('.diskon-tags-display');
+                    if (diskonDisplay) {
+                        let badgesHTML = '';
+                        if (d1_pct > 0) {
+                            badgesHTML += `<span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30" style="font-size: 0.6rem; font-weight: 600; padding: 2px 6px; border-radius: 4px;">D1: ${d1_pct.toFixed(1)}%</span>`;
+                        }
+                        if (d2_pct > 0) {
+                            badgesHTML += `<span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 ms-1" style="font-size: 0.6rem; font-weight: 600; padding: 2px 6px; border-radius: 4px;">D2: ${d2_pct.toFixed(1)}%</span>`;
+                        }
+                        if (d3_pct > 0) {
+                            badgesHTML += `<span class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-30 ms-1" style="font-size: 0.6rem; font-weight: 600; padding: 2px 6px; border-radius: 4px;">D3: ${d3_pct.toFixed(1)}%</span>`;
+                        }
+                        diskonDisplay.innerHTML = badgesHTML || '<span class="text-secondary" style="font-size: 0.6rem;">Tanpa Diskon</span>';
+                    }
                 });
 
                 const diskonGlobal = parseCleanNumber(diskonGlobalEl.value) || 0;
