@@ -129,6 +129,52 @@
                     </div>
                 </div>
 
+                <!-- SELECTED PRODUCT DETAILS INPUT (Show when product is selected) -->
+                <div id="selected-product-panel" class="mobile-card p-3 mb-3 d-none" 
+                    style="background: rgba(99, 102, 241, 0.08) !important; border: 1px solid rgba(99, 102, 241, 0.25) !important;">
+                    <div class="d-flex justify-content-between align-items-start mb-2 pb-2 border-bottom border-secondary border-opacity-20">
+                        <div>
+                            <span class="badge bg-primary mb-1" style="font-size: 0.6rem;">Barang Terpilih</span>
+                            <h6 class="fw-bold text-white mb-0" id="selected-product-name" style="font-size: 0.85rem; line-height: 1.3;">-</h6>
+                            <span class="text-secondary font-monospace" id="selected-product-code" style="font-size: 0.65rem;">Kode: -</span>
+                        </div>
+                        <button type="button" id="btn-cancel-select" class="btn btn-sm text-secondary border-0 p-1" style="font-size: 0.9rem;">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Pilih Satuan</label>
+                            <select id="select-temp-satuan" class="form-select form-select-sm bg-dark text-white border-secondary" style="font-size: 0.75rem; border-radius: 8px; height: 34px;">
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Jumlah (Qty)</label>
+                            <div class="input-group input-group-sm">
+                                <button type="button" id="btn-temp-minus" class="btn btn-outline-secondary btn-qty-minus text-white px-2" style="border-radius: 8px 0 0 8px; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">-</button>
+                                <input type="number" id="input-temp-qty" class="form-control form-control-sm bg-dark text-white border-secondary text-center px-1" min="0.01" step="any" value="1" style="font-size: 0.8rem; border-color: rgba(255,255,255,0.15); height: 34px;">
+                                <button type="button" id="btn-temp-plus" class="btn btn-outline-secondary btn-qty-plus text-white px-2" style="border-radius: 0 8px 8px 0; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center bg-dark bg-opacity-40 p-2 rounded-3 mb-3 border border-secondary border-opacity-10">
+                        <div class="small">
+                            <span class="text-secondary d-block" style="font-size: 0.65rem;">Stok Gudang</span>
+                            <span class="text-info fw-bold font-monospace" id="selected-product-stock-info" style="font-size: 0.75rem;">-</span>
+                        </div>
+                        <div class="small text-end">
+                            <span class="text-secondary d-block" style="font-size: 0.65rem;">Muat Diminta</span>
+                            <span class="text-warning fw-bold font-monospace" id="selected-product-req-info" style="font-size: 0.75rem;">0 PCS</span>
+                        </div>
+                    </div>
+
+                    <button type="button" id="btn-add-to-cart" class="btn btn-sm btn-primary w-100 py-2 fw-semibold" style="font-size: 0.75rem; border-radius: 8px;">
+                        <i class="fa-solid fa-plus me-1"></i> Masukkan ke Keranjang
+                    </button>
+                </div>
+
                 <!-- Item Cart -->
                 <h6 class="fw-bold mb-2 small" style="letter-spacing: 0.5px;">Daftar Barang Muat</h6>
                 <div id="cart-container" class="mb-3">
@@ -282,6 +328,21 @@
                 const emptyCartMessage = document.getElementById('empty-cart-message');
                 const btnSubmitDpb = document.getElementById('btn-submit-dpb');
 
+                // Elements for Selected Product Detail Panel
+                const selectedProductPanel = document.getElementById('selected-product-panel');
+                const selectedProductName = document.getElementById('selected-product-name');
+                const selectedProductCode = document.getElementById('selected-product-code');
+                const selectedProductStockInfo = document.getElementById('selected-product-stock-info');
+                const selectedProductReqInfo = document.getElementById('selected-product-req-info');
+                const selectTempSatuan = document.getElementById('select-temp-satuan');
+                const inputTempQty = document.getElementById('input-temp-qty');
+                const btnTempMinus = document.getElementById('btn-temp-minus');
+                const btnTempPlus = document.getElementById('btn-temp-plus');
+                const btnCancelSelect = document.getElementById('btn-cancel-select');
+                const btnAddToCart = document.getElementById('btn-add-to-cart');
+
+                let currentSelectedProduct = null;
+
                 // Autocomplete Search
                 productSearchInput.addEventListener('input', debounce(function() {
                     const q = this.value.trim();
@@ -314,7 +375,7 @@
                                     <span class="text-secondary mt-1" style="font-size: 0.7rem;">Kode: ${item.kode_barang} | Stok: ${formatStokJS(item.stok, item.satuans)}</span>
                                 `;
                                 btn.addEventListener('click', () => {
-                                    addProductToCart(item);
+                                    selectProduct(item);
                                 });
                                 productSearchResults.appendChild(btn);
                             });
@@ -328,43 +389,8 @@
                     }
                 });
 
-                function checkStockLimit(card) {
-                    const code = card.getAttribute('data-code');
-                    const product = barangsCache[code];
-                    if (!product) return true;
-
-                    const qtyInput = card.querySelector('.input-qty');
-                    const selectSatuan = card.querySelector('.select-satuan');
-                    const selectedOpt = selectSatuan.options[selectSatuan.selectedIndex];
-
-                    const qty = parseFloat(qtyInput.value) || 0;
-                    const isi = parseFloat(selectedOpt.getAttribute('data-isi')) || 1;
-                    const qtySmallest = qty * isi;
-
-                    if (qtySmallest > product.stok) {
-                        const formattedStok = formatStokJS(product.stok, product.satuans);
-                        Swal.fire({
-                            title: 'Stok Gudang Tidak Cukup',
-                            html: `Stok gudang barang <b>${product.nama_barang}</b> tidak mencukupi!<br><br>` +
-                                `Tersedia: <b>${formattedStok}</b><br>` +
-                                `Loading diminta: <b>${qty} ${selectedOpt.getAttribute('data-name')}</b> (Setara ${qtySmallest} PCS)`,
-                            icon: 'error',
-                            background: '#161e31',
-                            color: '#f8fafc',
-                            confirmButtonColor: '#6366f1'
-                        });
-
-                        const maxQtyInUnit = Math.floor(product.stok / isi);
-                        qtyInput.value = maxQtyInUnit;
-                        return false;
-                    }
-                    return true;
-                }
-
-                function addProductToCart(product) {
-                    productSearchResults.classList.add('d-none');
-                    productSearchInput.value = '';
-
+                // Function to select product and open configuration details
+                function selectProduct(product) {
                     if (product.stok <= 0) {
                         Swal.fire({
                             title: 'Stok Kosong',
@@ -377,74 +403,151 @@
                         return;
                     }
 
-                    barangsCache[product.kode_barang] = {
-                        kode_barang: product.kode_barang,
-                        nama_barang: product.nama_barang,
-                        stok: product.stok,
-                        satuans: product.satuans
-                    };
+                    currentSelectedProduct = product;
+                    barangsCache[product.kode_barang] = product;
 
-                    const existingCard = document.querySelector(`.cart-item-card[data-code="${product.kode_barang}"]`);
-                    if (existingCard) {
-                        const qtyInput = existingCard.querySelector('.input-qty');
-                        qtyInput.value = (parseFloat(qtyInput.value) || 0) + 1;
-                        checkStockLimit(existingCard);
+                    // Show selected panel
+                    selectedProductName.textContent = product.nama_barang;
+                    selectedProductCode.textContent = `Kode: ${product.kode_barang}`;
+                    selectedProductStockInfo.textContent = formatStokJS(product.stok, product.satuans);
+                    
+                    // Populate satuan options
+                    selectTempSatuan.innerHTML = '';
+                    product.satuans.forEach((sat, i) => {
+                        const opt = document.createElement('option');
+                        opt.value = sat.id;
+                        opt.textContent = `${sat.satuan} (Isi ${sat.isi})`;
+                        opt.setAttribute('data-name', sat.satuan);
+                        opt.setAttribute('data-isi', sat.isi);
+                        if (i === 0) opt.selected = true;
+                        selectTempSatuan.appendChild(opt);
+                    });
+
+                    inputTempQty.value = 1;
+                    updateRequestedQtyInfo();
+                    
+                    // Hide search results, clear search input
+                    productSearchResults.classList.add('d-none');
+                    productSearchInput.value = '';
+                    
+                    // Show panel
+                    selectedProductPanel.classList.remove('d-none');
+                    inputTempQty.focus();
+                }
+
+                function updateRequestedQtyInfo() {
+                    if (!currentSelectedProduct) return;
+                    const qty = parseFloat(inputTempQty.value) || 0;
+                    const selectedOpt = selectTempSatuan.options[selectTempSatuan.selectedIndex];
+                    if (!selectedOpt) return;
+                    const isi = parseFloat(selectedOpt.getAttribute('data-isi')) || 1;
+                    const name = selectedOpt.getAttribute('data-name');
+                    const totalPcs = qty * isi;
+                    selectedProductReqInfo.textContent = `${qty} ${name} (Setara ${totalPcs} PCS)`;
+                }
+
+                selectTempSatuan.addEventListener('change', updateRequestedQtyInfo);
+                inputTempQty.addEventListener('input', updateRequestedQtyInfo);
+                inputTempQty.addEventListener('change', updateRequestedQtyInfo);
+
+                btnTempMinus.addEventListener('click', function() {
+                    let val = parseFloat(inputTempQty.value) || 0;
+                    if (val > 1) {
+                        inputTempQty.value = val - 1;
+                        updateRequestedQtyInfo();
+                    }
+                });
+
+                btnTempPlus.addEventListener('click', function() {
+                    let val = parseFloat(inputTempQty.value) || 0;
+                    inputTempQty.value = val + 1;
+                    updateRequestedQtyInfo();
+                });
+
+                btnCancelSelect.addEventListener('click', function() {
+                    clearSelection();
+                });
+
+                function clearSelection() {
+                    currentSelectedProduct = null;
+                    selectedProductPanel.classList.add('d-none');
+                    productSearchInput.value = '';
+                }
+
+                // Add configured product to cart
+                btnAddToCart.addEventListener('click', function() {
+                    if (!currentSelectedProduct) return;
+
+                    const qty = parseFloat(inputTempQty.value) || 0;
+                    if (qty <= 0) {
+                        Swal.fire({
+                            title: 'Jumlah Tidak Valid',
+                            text: 'Masukkan jumlah muat yang valid (lebih dari 0).',
+                            icon: 'warning',
+                            background: '#161e31',
+                            color: '#f8fafc',
+                            confirmButtonColor: '#6366f1'
+                        });
                         return;
                     }
 
+                    const selectedOpt = selectTempSatuan.options[selectTempSatuan.selectedIndex];
+                    const satuanId = selectTempSatuan.value;
+                    const satuanName = selectedOpt.getAttribute('data-name');
+                    const isi = parseFloat(selectedOpt.getAttribute('data-isi')) || 1;
+                    const qtySmallest = qty * isi;
+
+                    // Validate Warehouse Stock
+                    if (qtySmallest > currentSelectedProduct.stok) {
+                        const formattedStok = formatStokJS(currentSelectedProduct.stok, currentSelectedProduct.satuans);
+                        Swal.fire({
+                            title: 'Stok Gudang Tidak Cukup',
+                            html: `Stok gudang barang <b>${currentSelectedProduct.nama_barang}</b> tidak mencukupi!<br><br>` +
+                                `Tersedia: <b>${formattedStok}</b><br>` +
+                                `Loading diminta: <b>${qty} ${satuanName}</b> (Setara ${qtySmallest} PCS)`,
+                            icon: 'error',
+                            background: '#161e31',
+                            color: '#f8fafc',
+                            confirmButtonColor: '#6366f1'
+                        });
+                        return;
+                    }
+
+                    // Check if already in cart (duplicate check)
+                    const existingCard = document.querySelector(`.cart-item-card[data-code="${currentSelectedProduct.kode_barang}"]`);
+                    if (existingCard) {
+                        existingCard.remove();
+                    }
+
+                    // Add to cart list
                     const card = document.createElement('div');
                     card.className =
                         'card-item bg-dark bg-opacity-40 border border-secondary border-opacity-30 rounded-4 p-3 mb-2 cart-item-card';
-                    card.setAttribute('data-code', product.kode_barang);
-
-                    let unitOptions = '';
-                    product.satuans.forEach((sat, i) => {
-                        unitOptions +=
-                            `<option value="${sat.id}" data-name="${sat.satuan}" data-isi="${sat.isi}" ${i === 0 ? 'selected' : ''}>${sat.satuan} (Isi ${sat.isi})</option>`;
-                    });
+                    card.setAttribute('data-code', currentSelectedProduct.kode_barang);
 
                     card.innerHTML = `
-                        <div class="d-flex justify-content-between align-items-start mb-2 border-bottom border-secondary border-opacity-20 pb-2">
+                        <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="fw-bold text-white mb-0" style="font-size: 0.85rem; line-height: 1.3;">${product.nama_barang}</h6>
-                                <span class="badge bg-secondary mt-1" style="font-size: 0.6rem; opacity: 0.8;">${product.kode_barang}</span>
-                                <input type="hidden" name="items[${rowIndex}][kode_barang]" value="${product.kode_barang}">
+                                <h6 class="fw-bold text-white mb-0" style="font-size: 0.85rem; line-height: 1.3;">${currentSelectedProduct.nama_barang}</h6>
+                                <div class="d-flex align-items-center gap-2 mt-1">
+                                    <span class="badge bg-secondary" style="font-size: 0.6rem; opacity: 0.8;">${currentSelectedProduct.kode_barang}</span>
+                                    <span class="text-warning fw-semibold font-monospace" style="font-size: 0.75rem;">${qty} ${satuanName}</span>
+                                    <span class="text-secondary" style="font-size: 0.65rem;">(Setara ${qtySmallest} PCS)</span>
+                                </div>
+                                <input type="hidden" name="items[${rowIndex}][kode_barang]" value="${currentSelectedProduct.kode_barang}">
+                                <input type="hidden" name="items[${rowIndex}][satuan_id]" value="${satuanId}">
+                                <input type="hidden" name="items[${rowIndex}][qty_ambil]" value="${qty}">
                             </div>
                             <button type="button" class="btn btn-sm rounded-circle d-flex align-items-center justify-content-center btn-remove-item" style="width: 28px; height: 28px; background: rgba(239, 68, 68, 0.15); color: #f87171; border: none;">
                                 <i class="fa-solid fa-trash-can" style="font-size: 0.8rem;"></i>
                             </button>
-                        </div>
-                        <div class="row g-2 align-items-end">
-                            <div class="col-6">
-                                <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Satuan</label>
-                                <select name="items[${rowIndex}][satuan_id]" class="form-select form-select-sm bg-dark text-white border-secondary select-satuan" style="font-size: 0.75rem; border-radius: 8px; height: 34px;">
-                                    ${unitOptions}
-                                </select>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Qty Muat</label>
-                                <div class="input-group input-group-sm">
-                                    <button type="button" class="btn btn-outline-secondary btn-qty-minus text-white px-2" style="border-radius: 8px 0 0 8px; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">-</button>
-                                    <input type="number" name="items[${rowIndex}][qty_ambil]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-qty px-1" min="0.01" step="any" value="1" required style="font-size: 0.8rem; border-color: rgba(255,255,255,0.15); height: 34px;">
-                                    <button type="button" class="btn btn-outline-secondary btn-qty-plus text-white px-2" style="border-radius: 0 8px 8px 0; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">+</button>
-                                </div>
-                            </div>
                         </div>
                     `;
 
                     emptyCartMessage.classList.add('d-none');
                     cartContainer.appendChild(card);
 
-                    const selectSatuan = card.querySelector('.select-satuan');
                     const btnRemove = card.querySelector('.btn-remove-item');
-                    const inputQty = card.querySelector('.input-qty');
-                    const btnQtyMinus = card.querySelector('.btn-qty-minus');
-                    const btnQtyPlus = card.querySelector('.btn-qty-plus');
-
-                    selectSatuan.addEventListener('change', function() {
-                        checkStockLimit(card);
-                    });
-
                     btnRemove.addEventListener('click', function() {
                         card.remove();
                         if (cartContainer.querySelectorAll('.cart-item-card').length === 0) {
@@ -453,44 +556,18 @@
                         validateFormState();
                     });
 
-                    inputQty.addEventListener('change', function() {
-                        checkStockLimit(card);
-                    });
-
-                    btnQtyMinus.addEventListener('click', function() {
-                        let val = parseFloat(inputQty.value) || 0;
-                        if (val > 1) {
-                            inputQty.value = val - 1;
-                            inputQty.dispatchEvent(new Event('change'));
-                        }
-                    });
-
-                    btnQtyPlus.addEventListener('click', function() {
-                        let val = parseFloat(inputQty.value) || 0;
-                        inputQty.value = val + 1;
-                        inputQty.dispatchEvent(new Event('change'));
-                    });
-
                     rowIndex++;
+                    clearSelection();
                     validateFormState();
-                    checkStockLimit(card);
-                }
+
+                    // Scroll down to cart
+                    cartContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                });
 
                 function validateFormState() {
                     const hasItems = cartContainer.querySelectorAll('.cart-item-card').length > 0;
                     hasItems ? btnSubmitDpb.removeAttribute('disabled') : btnSubmitDpb.setAttribute('disabled', 'true');
                 }
-
-                document.getElementById('dpb-form').addEventListener('submit', function(e) {
-                    let stockOk = true;
-                    cartContainer.querySelectorAll('.cart-item-card').forEach(card => {
-                        if (!checkStockLimit(card)) stockOk = false;
-                    });
-                    if (!stockOk) {
-                        e.preventDefault();
-                        return false;
-                    }
-                });
 
                 validateFormState();
             });
