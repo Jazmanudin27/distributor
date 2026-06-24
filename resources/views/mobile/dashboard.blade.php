@@ -249,8 +249,10 @@
             style="background-color: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #818cf8; margin-top: -8px;">
             <i class="fa-solid fa-circle-info me-3" style="font-size: 1.25rem;"></i>
             <div>
-                <span style="font-size: 0.75rem; font-weight: 500; opacity: 0.8;" class="d-block">Kunjungan Aktif:</span>
-                <strong style="font-size: 0.85rem;">{{ $activeCheckin->pelanggan->nama_pelanggan }}</strong>
+                <span style="font-size: 0.75rem; font-weight: 500; opacity: 0.8;" class="d-block">
+                    {{ Auth::user()->is_kanvas ? 'Sesi Canvas Aktif:' : 'Kunjungan Aktif:' }}
+                </span>
+                <strong style="font-size: 0.85rem;">{{ Auth::user()->is_kanvas ? (Auth::user()->pelanggan->nama_pelanggan ?? 'Sesi Truk Canvas') : $activeCheckin->pelanggan->nama_pelanggan }}</strong>
             </div>
         </div>
     @else
@@ -285,8 +287,13 @@
         <div class="alert alert-warning rounded-4 mb-4 d-flex align-items-center"
             style="background-color: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; margin-top: -8px;">
             <i class="fa-solid fa-triangle-exclamation me-3" style="font-size: 1.25rem;"></i>
-            <span style="font-size: 0.80rem; font-weight: 500;">Anda belum check-in. Silakan pilih pelanggan terlebih dahulu
-                untuk melakukan penjualan.</span>
+            <span style="font-size: 0.80rem; font-weight: 500;">
+                @if (Auth::user()->is_kanvas)
+                    Anda belum check-in. Silakan mulai sesi canvas terlebih dahulu untuk melakukan penjualan.
+                @else
+                    Anda belum check-in. Silakan pilih pelanggan terlebih dahulu untuk melakukan penjualan.
+                @endif
+            </span>
         </div>
     @endif
 

@@ -120,11 +120,14 @@
             <div class="mb-3">
                 <label class="form-label text-secondary small mb-1">Tipe Pelanggan</label>
                 <div class="d-flex gap-2">
-                    <input type="radio" class="btn-check" name="is_new_pelanggan" id="cust-type-existing" value="0" checked>
-                    <label class="btn btn-sm btn-outline-secondary flex-fill text-white" for="cust-type-existing" style="border-radius: 8px; font-size: 0.75rem;">Pelanggan Terdaftar</label>
+                    <input type="radio" class="btn-check" name="is_new_pelanggan" id="cust-type-existing" value="0"
+                        checked>
+                    <label class="btn btn-sm btn-outline-secondary flex-fill text-white" for="cust-type-existing"
+                        style="border-radius: 8px; font-size: 0.75rem;">Pelanggan Terdaftar</label>
 
                     <input type="radio" class="btn-check" name="is_new_pelanggan" id="cust-type-new" value="1">
-                    <label class="btn btn-sm btn-outline-secondary flex-fill text-white" for="cust-type-new" style="border-radius: 8px; font-size: 0.75rem;">Pelanggan Baru (Canvas)</label>
+                    <label class="btn btn-sm btn-outline-secondary flex-fill text-white" for="cust-type-new"
+                        style="border-radius: 8px; font-size: 0.75rem;">Pelanggan Baru (Canvas)</label>
                 </div>
             </div>
 
@@ -136,7 +139,9 @@
                         <span class="input-group-text bg-dark text-secondary border-secondary">
                             <i class="fa-solid fa-store"></i>
                         </span>
-                        <input type="text" id="customer-search-input" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Ketik nama atau kode pelanggan..." value="{{ $pelanggan->nama_pelanggan }}">
+                        <input type="text" id="customer-search-input"
+                            class="form-control form-control-sm bg-dark text-white border-secondary"
+                            placeholder="Ketik nama atau kode pelanggan..." value="{{ $pelanggan->nama_pelanggan }}">
                     </div>
                     <div id="customer-search-results" class="list-group position-absolute w-100 shadow-lg mt-1 d-none"
                         style="z-index: 1050; max-height: 220px; overflow-y: auto; background-color: #161e31; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px;">
@@ -147,12 +152,18 @@
             <!-- New Customer Details input fields -->
             <div id="new-customer-section" class="mb-3 d-none">
                 <div class="mb-2">
-                    <label class="form-label text-secondary small mb-1">Nama Pelanggan / Toko <span class="text-danger">*</span></label>
-                    <input type="text" name="new_nama_pelanggan" id="new_nama_pelanggan" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Masukkan nama pelanggan baru...">
+                    <label class="form-label text-secondary small mb-1">Nama Pelanggan / Toko <span
+                            class="text-danger">*</span></label>
+                    <input type="text" name="new_nama_pelanggan" id="new_nama_pelanggan"
+                        class="form-control form-control-sm bg-dark text-white border-secondary"
+                        placeholder="Masukkan nama pelanggan baru...">
                 </div>
                 <div class="mb-2">
-                    <label class="form-label text-secondary small mb-1">Alamat Pelanggan <span class="text-danger">*</span></label>
-                    <textarea name="new_alamat_pelanggan" id="new_alamat_pelanggan" class="form-control form-control-sm bg-dark text-white border-secondary" rows="2" placeholder="Masukkan alamat lengkap pelanggan baru..."></textarea>
+                    <label class="form-label text-secondary small mb-1">Alamat Pelanggan <span
+                            class="text-danger">*</span></label>
+                    <textarea name="new_alamat_pelanggan" id="new_alamat_pelanggan"
+                        class="form-control form-control-sm bg-dark text-white border-secondary" rows="2"
+                        placeholder="Masukkan alamat lengkap pelanggan baru..."></textarea>
                 </div>
             </div>
 
@@ -168,7 +179,8 @@
                         Pelanggan</span>
                     <h6 class="fw-bold text-white mb-0" id="info-nama-pelanggan">{{ $pelanggan->nama_pelanggan }}</h6>
                     <div class="text-secondary small mt-1">
-                        <i class="fa-solid fa-phone me-1 fs-8"></i><span id="info-hp-pelanggan">{{ $pelanggan->no_hp_pelanggan ?? '-' }}</span>
+                        <i class="fa-solid fa-phone me-1 fs-8"></i><span
+                            id="info-hp-pelanggan">{{ $pelanggan->no_hp_pelanggan ?? '-' }}</span>
                     </div>
                 </div>
                 <div class="row g-2 mb-1">
@@ -188,14 +200,16 @@
                 </div>
                 <div class="row g-2">
                     <div class="col-5 text-secondary">Metode Bayar:</div>
-                    <div class="col-7 text-end fw-semibold text-info" id="info-metode-bayar">{{ $pelanggan->metode_bayar ?? '-' }}</div>
+                    <div class="col-7 text-end fw-semibold text-info" id="info-metode-bayar">
+                        {{ $pelanggan->metode_bayar ?? '-' }}</div>
                 </div>
 
                 <div id="info-overdue-container">
                     @if ($pelanggan->hasOverdueInvoices())
                         <div class="alert alert-danger p-3 mb-0 mt-2 rounded-4 info-overdue-box"
                             style="font-size: 0.75rem; background-color: rgba(220, 38, 38, 0.2); border: 1.5px solid rgba(220, 38, 38, 0.4); color: #fecaca; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);">
-                            <div class="d-flex align-items-center mb-2 text-danger fw-bold" style="color: #fca5a5 !important;">
+                            <div class="d-flex align-items-center mb-2 text-danger fw-bold"
+                                style="color: #fca5a5 !important;">
                                 <i class="fa-solid fa-triangle-exclamation me-1.5 fs-6"></i>
                                 <span class="fw-bold" style="font-size: 0.8rem; letter-spacing: 0.3px;">TOKO DIBLOKIR
                                     (OVERDUE)!</span>
@@ -207,13 +221,16 @@
                                 @foreach ($pelanggan->getOverdueInvoices() as $inv)
                                     @php
                                         $sisa =
-                                            $inv->grand_total - $inv->getApprovedPembayaranTotal() - $inv->getTotalRetur();
+                                            $inv->grand_total -
+                                            $inv->getApprovedPembayaranTotal() -
+                                            $inv->getTotalRetur();
                                         $dueDate = \Carbon\Carbon::parse($inv->tanggal)->addDays($pelanggan->ljt ?? 30);
                                     @endphp
                                     <li class="mb-2">
                                         Faktur <strong class="text-white font-monospace"
                                             style="background: rgba(255,255,255,0.08); padding: 1px 4px; border-radius: 4px;">{{ $inv->no_faktur }}</strong>
-                                        <div class="text-white-50 ps-1 mt-0.5" style="font-size: 0.65rem; line-height: 1.4;">
+                                        <div class="text-white-50 ps-1 mt-0.5"
+                                            style="font-size: 0.65rem; line-height: 1.4;">
                                             JT: <span class="text-danger fw-bold"
                                                 style="color: #fca5a5 !important;">{{ $dueDate->format('d/m/Y') }}</span>
                                             &bull;
@@ -385,13 +402,17 @@
                 sisa_limit: @json($pelanggan->getSisaLimitKredit()),
                 metode: @json($pelanggan->metode_bayar ?? '-'),
                 has_overdue: @json($pelanggan->hasOverdueInvoices() ? 1 : 0),
-                overdue_invoices: @json($pelanggan->hasOverdueInvoices() ? $pelanggan->getOverdueInvoices()->map(function($inv) use ($pelanggan) {
-                    return [
-                        'no_faktur' => $inv->no_faktur,
-                        'due_date' => \Carbon\Carbon::parse($inv->tanggal)->addDays($pelanggan->ljt ?? 30)->format('d/m/Y'),
-                        'sisa' => $inv->grand_total - $inv->getApprovedPembayaranTotal() - $inv->getTotalRetur()
-                    ];
-                }) : [])
+                overdue_invoices: @json(
+                    $pelanggan->hasOverdueInvoices()
+                        ? $pelanggan->getOverdueInvoices()->map(function ($inv) use ($pelanggan) {
+                            return [
+                                'no_faktur' => $inv->no_faktur,
+                                'due_date' => \Carbon\Carbon::parse($inv->tanggal)->addDays($pelanggan->ljt ?? 30)->format('d/m/Y'),
+                                'sisa' => $inv->grand_total - $inv->getApprovedPembayaranTotal() - $inv->getTotalRetur(),
+                            ];
+                        })
+                        : []
+                )
             };
 
             const defaultNewCustomer = {
@@ -424,7 +445,8 @@
                 if (cust.has_overdue === 1 && cust.overdue_invoices && cust.overdue_invoices.length > 0) {
                     const box = document.createElement('div');
                     box.className = 'alert alert-danger p-3 mb-0 mt-2 rounded-4 info-overdue-box';
-                    box.style.cssText = 'font-size: 0.75rem; background-color: rgba(220, 38, 38, 0.2); border: 1.5px solid rgba(220, 38, 38, 0.4); color: #fecaca; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);';
+                    box.style.cssText =
+                        'font-size: 0.75rem; background-color: rgba(220, 38, 38, 0.2); border: 1.5px solid rgba(220, 38, 38, 0.4); color: #fecaca; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);';
                     box.innerHTML = `
                         <div class="d-flex align-items-center mb-2 text-danger fw-bold" style="color: #fca5a5 !important;">
                             <i class="fa-solid fa-triangle-exclamation me-1.5 fs-6"></i>
@@ -524,13 +546,14 @@
                                     sisa_limit: item.sisa_limit,
                                     metode: item.metode,
                                     has_overdue: item.has_overdue,
-                                    overdue_invoices: item.overdue_invoices.map(inv => {
-                                        return {
-                                            no_faktur: inv.no_faktur,
-                                            due_date: inv.due_date,
-                                            sisa: inv.sisa
-                                        };
-                                    })
+                                    overdue_invoices: item.overdue_invoices.map(
+                                        inv => {
+                                            return {
+                                                no_faktur: inv.no_faktur,
+                                                due_date: inv.due_date,
+                                                sisa: inv.sisa
+                                            };
+                                        })
                                 };
                                 updateCustomerDetails(selectedExistingCustomer);
                                 customerSearchInput.value = item.nama;
@@ -983,7 +1006,8 @@
                     e.preventDefault();
                     Swal.fire({
                         title: 'Transaksi Ditolak',
-                        html: `Pelanggan <strong>` + infoNama.innerText + `</strong> memiliki tagihan jatuh tempo (Overdue)!<br>Selesaikan pembayaran terlebih dahulu.`,
+                        html: `Pelanggan <strong>` + infoNama.innerText +
+                            `</strong> memiliki tagihan jatuh tempo (Overdue)!<br>Selesaikan pembayaran terlebih dahulu.`,
                         icon: 'error',
                         background: '#161e31',
                         color: '#f8fafc',

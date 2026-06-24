@@ -73,7 +73,7 @@ class MobileKunjunganController extends Controller
         }
 
         $wilayahs = \App\Models\Wilayah::orderBy('nama_wilayah')->get();
-        return view('mobile.kunjungan', compact('activeCheckin', 'todayVisits', 'lastOrders', 'unpaidInvoices', 'wilayahs'));
+        return view('mobile.kunjungan', compact('activeCheckin', 'todayVisits', 'lastOrders', 'unpaidInvoices', 'wilayahs', 'todayOrders'));
     }
 
     public function checkin(Request $request)
@@ -82,7 +82,8 @@ class MobileKunjunganController extends Controller
             'kode_pelanggan' => 'required|exists:pelanggan,kode_pelanggan',
         ]);
 
-        $nik = Auth::user()->nik;
+        $user = Auth::user();
+        $nik = $user->nik;
 
         // Check if there is already an active check-in
         $hasActive = PenjualanCheckin::where('kode_sales', $nik)
@@ -91,6 +92,17 @@ class MobileKunjunganController extends Controller
 
         if ($hasActive) {
             return redirect()->back()->with('error', 'Anda masih memiliki kunjungan aktif. Harap check-out terlebih dahulu.');
+        }
+
+        // Differentiate check-in for canvas vs regular sales
+        if ($user->is_kanvas) {
+            if ($request->kode_pelanggan !== $user->kode_pelanggan) {
+                return redirect()->back()->with('error', 'Sales Canvas hanya dapat check-in ke sesi truck canvas Anda.');
+            }
+        } else {
+            if ($user->kode_pelanggan && $request->kode_pelanggan === $user->kode_pelanggan) {
+                return redirect()->back()->with('error', 'Sales reguler tidak dapat check-in ke sesi canvas.');
+            }
         }
 
         // Create check-in log
