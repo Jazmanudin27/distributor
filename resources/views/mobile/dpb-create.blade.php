@@ -237,7 +237,7 @@
             } else {
                 breakdowns.push(`${remaining} PCS`);
             }
-            let formatted = breakdowns.join(', ') || '0 PCS';
+            let formatted = breakdowns.join(' ') || '0 PCS';
             return isNegative ? '-' + formatted : formatted;
         }
 

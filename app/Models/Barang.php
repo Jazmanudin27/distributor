@@ -58,7 +58,7 @@ class Barang extends Model
         } else {
             $breakdowns[] = (float)$absQty . ' PCS';
         }
-        $formatted = implode(', ', $breakdowns) ?: '0 PCS';
+        $formatted = implode(' ', $breakdowns) ?: '0 PCS';
         return $isNegative ? '-' . $formatted : $formatted;
     }
 
