@@ -425,7 +425,7 @@ class PenjualanController extends Controller
 
     public function edit($no_faktur)
     {
-        $item = Penjualan::with(['details.barang', 'details.barangSatuan'])->findOrFail($no_faktur);
+        $item = Penjualan::with(['details.barang.satuans', 'details.barangSatuan'])->findOrFail($no_faktur);
 
         $excludeNoFaktur = $item->no_faktur;
         $today = now()->toDateString();
@@ -565,11 +565,52 @@ class PenjualanController extends Controller
 
         try {
             DB::transaction(function () use ($request, $penjualan, $isKredit) {
-                // Revert old stock
+                // Group old details by kode_barang
+                $oldDetailGrouped = [];
                 foreach ($penjualan->details as $oldDetail) {
                     $oldSatuan = BarangSatuan::find($oldDetail->satuan_id);
-                    $oldQty = $oldDetail->qty * ($oldSatuan->isi ?? 1);
-                    \App\Models\StokMutasi::log($oldDetail->kode_barang, $request->tanggal, 'Batal Penjualan (Edit)', $penjualan->no_faktur, $oldQty, 0);
+                    $oldQtySmallest = $oldDetail->qty * ($oldSatuan->isi ?? 1);
+                    $oldDetailGrouped[$oldDetail->kode_barang] = ($oldDetailGrouped[$oldDetail->kode_barang] ?? 0) + $oldQtySmallest;
+                }
+
+                // Group new items by kode_barang
+                $newItemGrouped = [];
+                foreach ($request->items as $row) {
+                    $satuan = BarangSatuan::findOrFail($row['satuan_id']);
+                    $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
+                    $newItemGrouped[$row['kode_barang']] = ($newItemGrouped[$row['kode_barang']] ?? 0) + $qtySmallest;
+                }
+
+                // Collect all unique product codes from both old and new lists
+                $allBarangCodes = array_unique(array_merge(array_keys($oldDetailGrouped), array_keys($newItemGrouped)));
+
+                foreach ($allBarangCodes as $kodeBarang) {
+                    $barang = Barang::lockForUpdate()->findOrFail($kodeBarang);
+                    $oldQty = $oldDetailGrouped[$kodeBarang] ?? 0;
+                    $newQty = $newItemGrouped[$kodeBarang] ?? 0;
+                    $diff = $newQty - $oldQty;
+
+                    if ($diff > 0) {
+                        // Additional stock is sold
+                        if ($barang->stok < $diff) {
+                            throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok: " . $barang->formatStok($barang->stok) . " (Dibutuhkan tambahan: " . $barang->formatStok($diff) . ")");
+                        }
+
+                        $keterangan = $oldQty == 0 
+                            ? 'Tambah item baru ke penjualan. Keluar ' . $barang->formatStok($diff)
+                            : 'Edit Qty: ' . $barang->formatStok($oldQty) . ' -> ' . $barang->formatStok($newQty) . ' (Keluar ' . $barang->formatStok($diff) . ')';
+
+                        \App\Models\StokMutasi::log($kodeBarang, $request->tanggal, 'Penjualan', $penjualan->no_faktur, 0, $diff, null, $keterangan);
+                    } elseif ($diff < 0) {
+                        // Stock is returned
+                        $returnedQty = abs($diff);
+
+                        $keterangan = $newQty == 0
+                            ? 'Item dihapus dari penjualan. Kembali ' . $barang->formatStok($returnedQty)
+                            : 'Edit Qty: ' . $barang->formatStok($oldQty) . ' -> ' . $barang->formatStok($newQty) . ' (Kembali ' . $barang->formatStok($returnedQty) . ')';
+
+                        \App\Models\StokMutasi::log($kodeBarang, $request->tanggal, 'Batal Penjualan (Edit)', $penjualan->no_faktur, $returnedQty, 0, null, $keterangan);
+                    }
                 }
 
                 $subtotalSum = 0;
@@ -578,14 +619,6 @@ class PenjualanController extends Controller
 
                 foreach ($request->items as $row) {
                     $satuan = BarangSatuan::findOrFail($row['satuan_id']);
-                    $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
-
-                    // Validate stock level
-                    $barang = Barang::lockForUpdate()->findOrFail($row['kode_barang']);
-                    if ($barang->stok < $qtySmallest) {
-                        throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok: " . $barang->formatStok($barang->stok));
-                    }
-                    \App\Models\StokMutasi::log($row['kode_barang'], $request->tanggal, 'Penjualan (Edit)', $penjualan->no_faktur, 0, $qtySmallest);
 
                     $subtotal = $row['qty'] * $row['harga'];
                     $d1_pct = floatval($row['diskon1_persen'] ?? 0);

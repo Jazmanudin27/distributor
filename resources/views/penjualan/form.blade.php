@@ -240,7 +240,11 @@
                     </h6>
                     <div class="row g-2 align-items-end">
                         <div class="col-lg-3 col-md-6">
-                            <label class="form-label fs-8 fw-bold text-secondary mb-1">Pilih Barang</label>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label fs-8 fw-bold text-secondary mb-0">Pilih Barang</label>
+                                <span id="quick_stock_display" class="badge bg-info-subtle text-info d-none"
+                                    style="font-size: 10px; font-weight: 600;"></span>
+                            </div>
                             <select id="quick_barang" class="form-select form-select-sm" style="width: 100%;">
                                 <option value="">-- Cari / Pilih Barang --</option>
                             </select>
@@ -475,6 +479,35 @@
                 theme: 'bootstrap-5',
                 width: '100%'
             });
+
+            function formatBarangResult(barang) {
+                if (barang.loading) {
+                    return barang.text;
+                }
+                const formattedStok = formatStokJS(barang.stok, barang.satuans);
+                const $container = $(
+                    `<div class="d-flex justify-content-between align-items-center py-1">
+                        <div>
+                            <div class="fw-bold text-dark fs-7">${barang.nama_barang}</div>
+                            <div class="text-muted font-monospace fs-8">${barang.kode_barang}</div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1" style="font-size: 11px;">
+                                <i class="fa-solid fa-box me-1"></i> ${formattedStok}
+                            </span>
+                        </div>
+                    </div>`
+                );
+                return $container;
+            }
+
+            function formatBarangSelection(barang) {
+                if (!barang.id) {
+                    return barang.text;
+                }
+                return `${barang.nama_barang || barang.text} (${barang.kode_barang || barang.id})`;
+            }
+
             $('#quick_barang').select2({
                 theme: 'bootstrap-5',
                 width: '100%',
@@ -494,13 +527,18 @@
                     },
                     cache: true
                 },
-                minimumInputLength: 0
+                minimumInputLength: 0,
+                templateResult: formatBarangResult,
+                templateSelection: formatBarangSelection
             });
 
             $('#quick_barang').on('select2:select', function(e) {
                 const data = e.params.data;
                 barangsCache[data.kode_barang] = data;
                 updateSatuanDropdown(data);
+                const formattedStok = formatStokJS(data.stok, data.satuans);
+                $('#quick_stock_display').html(
+                    `<i class="fa-solid fa-box me-1"></i> Stok: ${formattedStok}`).removeClass('d-none');
             });
 
             // Number format helpers
@@ -653,11 +691,16 @@
                 const code = $(this).val();
                 if (!code) {
                     $('#quick_satuan').empty().append('<option value="">-- Pilih Satuan --</option>');
+                    $('#quick_stock_display').addClass('d-none').text('');
                     return;
                 }
                 const barang = barangsCache[code];
                 if (barang) {
                     updateSatuanDropdown(barang);
+                    const formattedStok = formatStokJS(barang.stok, barang.satuans);
+                    $('#quick_stock_display').html(
+                        `<i class="fa-solid fa-box me-1"></i> Stok: ${formattedStok}`).removeClass(
+                        'd-none');
                 }
             });
 
@@ -856,9 +899,9 @@
                         return Swal.fire({
                             title: 'Stok Tidak Mencukupi',
                             html: `Stok barang <b>${barang.nama_barang}</b> tidak mencukupi!<br><br>` +
-                                `Stok tersedia: <b>${formatStokJS(barang.stok, barang.satuans)}</b><br>` +
+                                `Stok tersedia (termasuk faktur ini): <b>${formatStokJS(availableStock, barang.satuans)}</b><br>` +
                                 `Jumlah diminta: <b>${qty} ${selectedSatuanOpt.data('name')}</b> (Setara ${newQtySmallest} PCS)<br>` +
-                                `Sudah di keranjang: <b>${currentCartQtySmallest} PCS</b>`,
+                                `Sudah di keranjang: <b>${formatStokJS(currentCartQtySmallest, barang.satuans)}</b>`,
                             icon: 'error'
                         });
                     }
@@ -1102,11 +1145,13 @@
                 const newQtySmallest = qty * isi;
 
                 if (otherCartQtySmallest + newQtySmallest > availableStock) {
+                    const satuanName = row.find('input[name*="[satuan]"]').val() || '';
                     Swal.fire({
                         title: 'Stok Tidak Mencukupi',
                         html: `Stok barang <b>${barang.nama_barang}</b> tidak mencukupi!<br><br>` +
-                            `Stok tersedia: <b>${formatStokJS(barang.stok, barang.satuans)}</b><br>` +
-                            `Jumlah diinput: <b>${qty}</b> (Setara ${newQtySmallest} PCS)`,
+                            `Stok tersedia (termasuk faktur ini): <b>${formatStokJS(availableStock, barang.satuans)}</b><br>` +
+                            `Jumlah diinput: <b>${qty} ${satuanName}</b> (Setara ${newQtySmallest} PCS)<br>` +
+                            `Sudah di keranjang (baris lain): <b>${formatStokJS(otherCartQtySmallest, barang.satuans)}</b>`,
                         icon: 'error'
                     });
 
@@ -1721,7 +1766,7 @@
                             Swal.fire({
                                 title: 'Stok Tidak Mencukupi',
                                 html: `Stok barang <b>${barang.nama_barang}</b> tidak mencukupi!<br><br>` +
-                                    `Stok tersedia: <b>${formatStokJS(barang.stok, barang.satuans)}</b>`,
+                                    `Stok tersedia (termasuk faktur ini): <b>${formatStokJS(availableStock, barang.satuans)}</b>`,
                                 icon: 'error'
                             });
                             // Clamp

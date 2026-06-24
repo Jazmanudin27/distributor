@@ -100,20 +100,6 @@
                         @endif
                     </div>
 
-                    {{-- SESSION MESSAGES --}}
-                    @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="fa-solid fa-circle-check me-2"></i>{{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    @endif
-                    @if (session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fa-solid fa-triangle-exclamation me-2"></i>{{ session('error') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    @endif
-
                     @if (isset($totalPending) && $totalPending > 0)
                         <div class="alert alert-warning d-flex gap-2 align-items-center mb-4 py-2 border-warning">
                             <i class="fa-solid fa-circle-info mt-1 flex-shrink-0 text-warning"></i>
