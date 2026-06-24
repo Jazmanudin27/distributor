@@ -1,6 +1,6 @@
 @extends('layouts.mobile')
 
-@section('title', 'Histori DPB (Barang Bawaan Hari Ini)')
+@section('title', 'Histori DPB (Barang Bawaan)')
 
 @push('styles')
     <style>
@@ -22,6 +22,22 @@
             color: #6366f1 !important;
             border-color: rgba(99, 102, 241, 0.3) !important;
         }
+
+        .btn-outline-secondary {
+            border-color: rgba(255, 255, 255, 0.12) !important;
+            color: #94a3b8 !important;
+            background-color: rgba(255, 255, 255, 0.02) !important;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-secondary:hover,
+        .btn-outline-secondary:active,
+        .btn-outline-secondary:focus {
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            color: #f8fafc !important;
+            box-shadow: none !important;
+        }
     </style>
 @endpush
 
@@ -35,7 +51,7 @@
             <div>
                 <h4 class="mb-0 fw-bold" style="font-size: 1.15rem; letter-spacing: 0.5px;">DPB Anda</h4>
                 <span class="text-secondary" style="font-size: 0.8rem; font-weight: 500;">
-                    Barang yang dibawa sales canvas
+                    Barang bawaan sales canvas
                 </span>
             </div>
         </div>
@@ -45,12 +61,6 @@
                     class="btn btn-sm btn-mobile-primary d-flex align-items-center gap-1 px-2.5 py-1.5 fw-semibold"
                     style="font-size: 0.75rem; border-radius: 8px;">
                     <i class="fa-solid fa-plus"></i> Input DPB
-                </a>
-            @else
-                <a href="{{ route('mobile.order.canvas.create') }}"
-                    class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 px-2.5 py-1.5 fw-semibold"
-                    style="font-size: 0.7rem; border-radius: 8px;">
-                    <i class="fa-solid fa-arrow-left"></i> Input Order
                 </a>
             @endif
         </div>
@@ -67,14 +77,12 @@
             <div class="row g-3">
                 <div class="col-6">
                     <span class="text-secondary d-block"
-                        style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">No.
-                        DPB</span>
+                        style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">No. DPB</span>
                     <strong class="text-info" style="font-size: 0.9rem;">{{ $session->no_canvas }}</strong>
                 </div>
                 <div class="col-6 text-end">
                     <span class="text-secondary d-block"
-                        style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Tanggal
-                        Loading</span>
+                        style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Tanggal Bawa</span>
                     <strong class="text-white-50"
                         style="font-size: 0.85rem;">{{ \Carbon\Carbon::parse($session->tanggal)->format('d M Y') }}</strong>
                 </div>
@@ -99,47 +107,37 @@
             Daftar Barang Bawaan ({{ $session->details->count() }} Item)
         </h5>
 
-        <div class="dpb-items mb-5">
-            @foreach ($session->details as $detail)
+        <div class="mobile-card p-0 overflow-hidden mb-5"
+            style="background: rgba(30, 41, 59, 0.35); border: 1px solid rgba(255, 255, 255, 0.08);">
+            @foreach ($session->details as $index => $detail)
                 @php
                     $qtyAmbil = (float) $detail->qty_ambil;
                     $qtyTerjual = (float) $detail->qty_terjual;
                     $qtyKembali = (float) $detail->qty_kembali;
                     $sisaStok = $qtyAmbil - $qtyTerjual - $qtyKembali;
                 @endphp
-                <div class="mobile-card p-3 mb-2"
-                    style="background: rgba(30, 41, 59, 0.45); border: 1px solid rgba(255, 255, 255, 0.08);">
-                    <div
-                        class="d-flex justify-content-between align-items-start mb-2 pb-2 border-bottom border-secondary border-opacity-10">
-                        <div>
-                            <h6 class="fw-bold text-white mb-0" style="font-size: 0.85rem;">
+                <div class="p-3 {{ $index > 0 ? 'border-top border-secondary border-opacity-10' : '' }}">
+                    <div class="d-flex justify-content-between align-items-start mb-1.5">
+                        <div style="flex: 1; min-width: 0; padding-right: 8px;">
+                            <h6 class="fw-bold text-white mb-0 text-truncate" style="font-size: 0.85rem;" title="{{ $detail->barang->nama_barang }}">
                                 {{ $detail->barang->nama_barang }}
                             </h6>
-                            <span class="text-secondary font-monospace" style="font-size: 0.65rem;">
-                                Kode: {{ $detail->kode_barang }}
+                            <span class="text-secondary font-monospace" style="font-size: 0.6rem; opacity: 0.75;">
+                                {{ $detail->kode_barang }}
                             </span>
                         </div>
-                        <span class="badge bg-light text-secondary border fw-semibold"
-                            style="font-size: 0.65rem; padding: 2px 8px;">
+                        <span class="badge bg-secondary bg-opacity-35 text-white-50 border-0 px-2 py-0.5" style="font-size: 0.65rem; border-radius: 6px;">
                             {{ $detail->barangSatuan->satuan ?? 'PCS' }}
                         </span>
                     </div>
-
-                    <div class="row g-2 text-center" style="font-size: 0.75rem;">
-                        <div class="col-4">
-                            <span class="text-secondary d-block" style="font-size: 0.65rem;">Ambil</span>
-                            <strong class="text-primary font-monospace"
-                                style="font-size: 0.9rem;">{{ $qtyAmbil }}</strong>
+                    <div class="d-flex justify-content-between align-items-center mt-1" style="font-size: 0.75rem;">
+                        <div class="d-flex gap-3 text-secondary" style="font-size: 0.7rem;">
+                            <div>Bawa: <strong class="text-primary font-monospace" style="font-size: 0.8rem;">{{ $qtyAmbil }}</strong></div>
+                            <div>Jual: <strong class="text-info font-monospace" style="font-size: 0.8rem;">{{ $qtyTerjual }}</strong></div>
                         </div>
-                        <div class="col-4 border-start border-end border-secondary border-opacity-10">
-                            <span class="text-secondary d-block" style="font-size: 0.65rem;">Terjual</span>
-                            <strong class="text-info font-monospace"
-                                style="font-size: 0.9rem;">{{ $qtyTerjual }}</strong>
-                        </div>
-                        <div class="col-4">
-                            <span class="text-secondary d-block" style="font-size: 0.65rem;">Sisa Bawaan</span>
-                            <strong class="text-success font-monospace"
-                                style="font-size: 0.9rem;">{{ $sisaStok }}</strong>
+                        <div>
+                            <span class="text-secondary" style="font-size: 0.65rem;">Sisa:</span>
+                            <strong class="text-success font-monospace" style="font-size: 0.85rem;">{{ $sisaStok }}</strong>
                         </div>
                     </div>
                 </div>
@@ -161,14 +159,32 @@
         </div>
     @endif
 
-    <!-- History / Past DPBs -->
-    <h5 class="fw-bold mb-3" style="font-size: 0.95rem; letter-spacing: 0.5px;">
-        <i class="fa-solid fa-clock-rotate-left me-1 text-secondary"></i> Riwayat DPB Sebelumnya
-    </h5>
+    <!-- History / Past DPBs Header -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="fw-bold mb-0" style="font-size: 0.95rem; letter-spacing: 0.5px;">
+            <i class="fa-solid fa-clock-rotate-left me-1 text-secondary"></i> Riwayat DPB
+        </h5>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="d-flex gap-1.5 mb-3 flex-wrap">
+        <a href="{{ route('mobile.order.canvas.dpb', ['filter' => 'all']) }}" 
+           class="btn btn-sm rounded-pill px-3 py-1.5 fw-semibold {{ ($filter ?? 'all') === 'all' ? 'btn-mobile-primary text-white' : 'btn-outline-secondary' }}" style="font-size: 0.72rem;">
+            Semua
+        </a>
+        <a href="{{ route('mobile.order.canvas.dpb', ['filter' => 'today']) }}" 
+           class="btn btn-sm rounded-pill px-3 py-1.5 fw-semibold {{ ($filter ?? 'all') === 'today' ? 'btn-mobile-primary text-white' : 'btn-outline-secondary' }}" style="font-size: 0.72rem;">
+            Hari Ini
+        </a>
+        <a href="{{ route('mobile.order.canvas.dpb', ['filter' => 'yesterday']) }}" 
+           class="btn btn-sm rounded-pill px-3 py-1.5 fw-semibold {{ ($filter ?? 'all') === 'yesterday' ? 'btn-mobile-primary text-white' : 'btn-outline-secondary' }}" style="font-size: 0.72rem;">
+            Kemarin
+        </a>
+    </div>
 
     @if ($historySessions->isEmpty())
         <div class="text-center py-4 px-3 border border-secondary border-opacity-10 rounded-4 bg-dark bg-opacity-10">
-            <p class="text-secondary mb-0" style="font-size: 0.75rem;">Tidak ada riwayat DPB sebelumnya.</p>
+            <p class="text-secondary mb-0" style="font-size: 0.75rem;">Tidak ada riwayat DPB.</p>
         </div>
     @else
         <div class="accordion accordion-flush mb-4" id="historyAccordion">
@@ -204,34 +220,23 @@
                                 </p>
                             @endif
 
-                            <div class="table-responsive">
-                                <table class="table table-sm table-dark table-borderless mb-0"
-                                    style="font-size: 0.75rem;">
-                                    <thead>
-                                        <tr class="text-secondary border-bottom border-secondary border-opacity-15">
-                                            <th>Barang</th>
-                                            <th class="text-end">Ambil</th>
-                                            <th class="text-end">Terjual</th>
-                                            <th class="text-end">Kembali</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($hs->details as $det)
-                                            <tr>
-                                                <td class="text-white-50 py-2">
-                                                    {{ $det->barang->nama_barang ?? 'Barang Terhapus' }}</td>
-                                                <td class="text-end font-monospace text-primary py-2">
-                                                    {{ (float) $det->qty_ambil }}
-                                                    {{ $det->barangSatuan->satuan ?? 'PCS' }}
-                                                </td>
-                                                <td class="text-end font-monospace text-info py-2">
-                                                    {{ (float) $det->qty_terjual }}</td>
-                                                <td class="text-end font-monospace text-success py-2">
-                                                    {{ (float) $det->qty_kembali }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                            <div class="d-flex flex-column gap-2" style="font-size: 0.75rem;">
+                                @foreach ($hs->details as $det)
+                                    <div class="p-2.5 rounded-3 bg-black bg-opacity-25 border border-secondary border-opacity-10">
+                                        <div class="fw-semibold text-white-50 mb-1 text-truncate" style="font-size: 0.8rem;">
+                                            {{ $det->barang->nama_barang ?? 'Barang Terhapus' }}
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center text-secondary" style="font-size: 0.7rem;">
+                                            <div>
+                                                Ambil: <strong class="text-primary font-monospace">{{ (float) $det->qty_ambil }} {{ $det->barangSatuan->satuan ?? 'PCS' }}</strong>
+                                            </div>
+                                            <div class="d-flex gap-2.5">
+                                                <span>Jual: <strong class="text-info font-monospace">{{ (float) $det->qty_terjual }}</strong></span>
+                                                <span>Kembali: <strong class="text-success font-monospace">{{ (float) $det->qty_kembali }}</strong></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
                     </div>

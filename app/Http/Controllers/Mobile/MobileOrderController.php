@@ -675,17 +675,27 @@ class MobileOrderController extends Controller
             $session->load(['details.barang', 'details.barangSatuan']);
         }
 
+        $filter = $request->input('filter', 'all');
+
         // Fetch historical canvas sessions
-        $historySessions = \App\Models\CanvasSession::where('kode_sales', $user->nik)
+        $historyQuery = \App\Models\CanvasSession::where('kode_sales', $user->nik)
             ->when($session, function ($q) use ($session) {
                 $q->where('id', '!=', $session->id);
-            })
-            ->with(['details.barang', 'details.barangSatuan'])
+            });
+
+        if ($filter === 'today') {
+            $historyQuery->whereDate('tanggal', now()->toDateString());
+        } elseif ($filter === 'yesterday') {
+            $historyQuery->whereDate('tanggal', now()->subDay()->toDateString());
+        }
+
+        $historySessions = $historyQuery->with(['details.barang', 'details.barangSatuan'])
             ->orderBy('tanggal', 'desc')
             ->orderBy('id', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('mobile.dpb', compact('session', 'historySessions'));
+        return view('mobile.dpb', compact('session', 'historySessions', 'filter'));
     }
 
     /**
