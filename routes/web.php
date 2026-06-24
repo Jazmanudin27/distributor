@@ -153,6 +153,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/retur-penjualan/{no_retur}/print', [ReturPenjualanController::class, 'print'])->name('retur-penjualan.print');
         Route::resource('penjualan', PenjualanController::class);
         Route::resource('retur-penjualan', ReturPenjualanController::class);
+        Route::get('/canvas/{canvas}/print', [CanvasController::class, 'print'])->name('canvas.print');
         Route::resource('canvas', CanvasController::class);
 
         // Kiriman Penjualan Routes

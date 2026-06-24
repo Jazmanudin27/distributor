@@ -56,6 +56,10 @@
                                             class="btn btn-sm btn-outline-info rounded" title="Detail / Rekonsiliasi">
                                             <i class="fa-solid fa-eye"></i>
                                         </a>
+                                        <a href="{{ route('canvas.print', $item->id) }}" target="_blank"
+                                            class="btn btn-sm btn-outline-primary rounded" title="Cetak Laporan Penjualan">
+                                            <i class="fa-solid fa-print"></i>
+                                        </a>
                                         @if ($item->status === 'loading')
                                             <a href="{{ route('canvas.edit', $item->id) }}"
                                                 class="btn btn-sm btn-outline-warning rounded"

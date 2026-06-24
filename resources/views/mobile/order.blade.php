@@ -201,10 +201,10 @@
                 <div id="overdue-warning"
                     class="{{ $pelanggan && $pelanggan->hasOverdueInvoices() ? '' : 'd-none' }} mt-2">
                     <div class="alert alert-danger p-2 mb-0 rounded-3"
-                        style="font-size: 0.7rem; background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171;">
-                        <div class="d-flex align-items-center mb-1">
+                        style="font-size: 0.7rem; background-color: rgba(219, 0, 0, 0.795); border: 1px solid rgba(214, 0, 0, 0.836); color: #ff0000;">
+                        <div class="d-flex align-items-center mb-1 text-white">
                             <i class="fa-solid fa-triangle-exclamation me-1"></i>
-                            <span class="fw-bold">Toko diblokir (Overdue)! Faktur overdue:</span>
+                            <span class="fw-bold ">Toko diblokir (Overdue)! Faktur overdue:</span>
                         </div>
                         <ul class="mb-0 ps-3 mt-1" id="overdue-invoices-list"
                             style="font-size: 0.68rem; list-style-type: disc;">
@@ -222,12 +222,13 @@
                                     <li>
                                         Faktur <strong class="text-white font-monospace">{{ $inv->no_faktur }}</strong>
                                         <div class="text-white-50 ps-1" style="font-size: 0.65rem;">
-                                            Tgl: {{ \Carbon\Carbon::parse($inv->tanggal)->format('d/m/Y') }} &bull; 
-                                            LJT: {{ $inv->pelanggan->ljt ?? 30 }} hari &bull; 
+                                            Tgl: {{ \Carbon\Carbon::parse($inv->tanggal)->format('d/m/Y') }} &bull;
+                                            LJT: {{ $inv->pelanggan->ljt ?? 30 }} hari &bull;
                                             JT: <span class="text-danger fw-bold">{{ $dueDate->format('d/m/Y') }}</span>
                                             <br>
-                                            Sales: {{ $inv->sales->name ?? $inv->kode_sales }} &bull; 
-                                            Sisa: <strong class="text-white">Rp {{ number_format($sisa, 0, ',', '.') }}</strong>
+                                            Sales: {{ $inv->sales->name ?? $inv->kode_sales }} &bull;
+                                            Sisa: <strong class="text-white">Rp
+                                                {{ number_format($sisa, 0, ',', '.') }}</strong>
                                         </div>
                                     </li>
                                 @endforeach
@@ -498,7 +499,8 @@
 
                 // Set data attributes on input for validation checks
                 hiddenKodePelanggan.setAttribute('data-overdue', customer.has_overdue);
-                const overdueInvoiceNums = (customer.overdue_invoices || []).map(inv => typeof inv === 'object' ? inv.no_faktur : inv);
+                const overdueInvoiceNums = (customer.overdue_invoices || []).map(inv => typeof inv === 'object' ?
+                    inv.no_faktur : inv);
                 hiddenKodePelanggan.setAttribute('data-overdue-invoices', JSON.stringify(overdueInvoiceNums));
                 hiddenKodePelanggan.setAttribute('data-sisa-limit', customer.sisa_limit);
 
@@ -1148,7 +1150,7 @@
                                 'ljt' => $pelanggan->ljt ?? 30,
                                 'due_date' => $dueDate->format('d/m/Y'),
                                 'sales_name' => $inv->sales->name ?? $inv->kode_sales,
-                                'sisa' => $sisa
+                                'sisa' => $sisa,
                             ];
                         }
                     }
@@ -1163,7 +1165,8 @@
                 };
                 hiddenKodePelanggan.value = mockCustomer.id;
                 hiddenKodePelanggan.setAttribute('data-overdue', mockCustomer.has_overdue);
-                const overdueInvoiceNums = (mockCustomer.overdue_invoices || []).map(inv => typeof inv === 'object' ? inv.no_faktur : inv);
+                const overdueInvoiceNums = (mockCustomer.overdue_invoices || []).map(inv => typeof inv ===
+                    'object' ? inv.no_faktur : inv);
                 hiddenKodePelanggan.setAttribute('data-overdue-invoices', JSON.stringify(overdueInvoiceNums));
                 hiddenKodePelanggan.setAttribute('data-sisa-limit', mockCustomer.sisa_limit);
 

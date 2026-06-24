@@ -24,6 +24,10 @@
                                 <i class="fa-solid fa-box-open"></i> Selesaikan & Bongkar
                             </a>
                         @endif
+                        <a href="{{ route('canvas.print', $canvasSession->id) }}" target="_blank"
+                            class="btn btn-light btn-sm fw-bold hover-scale me-1 text-primary shadow-sm" style="background-color: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.35); color: white;">
+                            <i class="fa-solid fa-print me-1"></i> Cetak Laporan
+                        </a>
                         <a href="{{ route('canvas.index') }}"
                             class="btn btn-light btn-sm fw-bold hover-scale text-primary shadow-sm">
                             <i class="fa-solid fa-arrow-left me-1"></i> Kembali

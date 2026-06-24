@@ -282,4 +282,21 @@ class CanvasController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
+
+    /**
+     * Print the canvas session report (Rekap Terjual & Mutasi).
+     */
+    public function print($id)
+    {
+        $canvasSession = CanvasSession::with(['sales', 'details.barang', 'details.barangSatuan'])
+            ->findOrFail($id);
+
+        $invoices = \App\Models\Penjualan::where('kode_sales', $canvasSession->kode_sales)
+            ->where('tanggal', $canvasSession->tanggal)
+            ->where('batal', 0)
+            ->with(['pelanggan', 'details.barang', 'details.barangSatuan'])
+            ->get();
+
+        return view('canvas.print', compact('canvasSession', 'invoices'));
+    }
 }
