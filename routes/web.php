@@ -20,7 +20,10 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\ReturPembelianController;
 use App\Http\Controllers\StokOpnameController;
 use App\Http\Controllers\SalesTrackingController;
-use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\LaporanPembelianController;
+use App\Http\Controllers\LaporanStokController;
+use App\Http\Controllers\LaporanPenjualanController;
+use App\Http\Controllers\LaporanKeuanganController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\KeuanganMutasiController;
 use App\Http\Controllers\ProfileController;
@@ -180,37 +183,40 @@ Route::middleware('auth')->group(function () {
         Route::get('/sales-tracking', [SalesTrackingController::class, 'index'])->name('sales-tracking.index');
 
         // Laporan Routes
-        Route::get('/laporan/pembelian', [LaporanController::class, 'laporanPembelian'])->name('laporan.pembelian');
-        Route::get('/laporan/pembelian/cetak', [LaporanController::class, 'laporanPembelian'])->name('laporan.pembelian.cetak');
-        Route::get('/laporan/pembelian/excel', [LaporanController::class, 'laporanPembelian'])->name('laporan.pembelian.excel');
-        Route::get('/laporan/retur-pembelian', [LaporanController::class, 'laporanReturPembelian'])->name('laporan.retur-pembelian');
-        Route::get('/laporan/retur-pembelian/cetak', [LaporanController::class, 'laporanReturPembelian'])->name('laporan.retur-pembelian.cetak');
-        Route::get('/laporan/retur-pembelian/excel', [LaporanController::class, 'laporanReturPembelian'])->name('laporan.retur-pembelian.excel');
-        Route::get('/laporan/stok', [LaporanController::class, 'laporanStok'])->name('laporan.stok');
-        Route::get('/laporan/stok/cetak', [LaporanController::class, 'laporanStok'])->name('laporan.stok.cetak');
-        Route::get('/laporan/stok/excel', [LaporanController::class, 'laporanStok'])->name('laporan.stok.excel');
-        Route::get('/laporan/penjualan', [LaporanController::class, 'laporanPenjualan'])->name('laporan.penjualan');
-        Route::get('/laporan/penjualan/cetak', [LaporanController::class, 'laporanPenjualan'])->name('laporan.penjualan.cetak');
-        Route::get('/laporan/penjualan/excel', [LaporanController::class, 'laporanPenjualan'])->name('laporan.penjualan.excel');
-        Route::get('/laporan/retur-penjualan', [LaporanController::class, 'laporanReturPenjualan'])->name('laporan.retur-penjualan');
-        Route::get('/laporan/retur-penjualan/cetak', [LaporanController::class, 'laporanReturPenjualan'])->name('laporan.retur-penjualan.cetak');
-        Route::get('/laporan/retur-penjualan/excel', [LaporanController::class, 'laporanReturPenjualan'])->name('laporan.retur-penjualan.excel');
-        Route::get('/laporan/piutang', [LaporanController::class, 'laporanPiutang'])->name('laporan.piutang');
-        Route::get('/laporan/piutang/cetak', [LaporanController::class, 'laporanPiutang'])->name('laporan.piutang.cetak');
-        Route::get('/laporan/piutang/excel', [LaporanController::class, 'laporanPiutang'])->name('laporan.piutang.excel');
-        Route::get('/laporan/rekap-sisa-piutang', [LaporanController::class, 'laporanRekapSisaPiutang'])->name('laporan.rekap-sisa-piutang');
-        Route::get('/laporan/rekap-sisa-piutang/cetak', [LaporanController::class, 'laporanRekapSisaPiutang'])->name('laporan.rekap-sisa-piutang.cetak');
-        Route::get('/laporan/rekap-sisa-piutang/excel', [LaporanController::class, 'laporanRekapSisaPiutang'])->name('laporan.rekap-sisa-piutang.excel');
-        Route::get('/laporan/pembayaran-piutang', [LaporanController::class, 'laporanPembayaranPiutang'])->name('laporan.pembayaran_piutang');
-        Route::get('/laporan/pembayaran-piutang/cetak', [LaporanController::class, 'laporanPembayaranPiutang'])->name('laporan.pembayaran_piutang.cetak');
-        Route::get('/laporan/pembayaran-piutang/excel', [LaporanController::class, 'laporanPembayaranPiutang'])->name('laporan.pembayaran_piutang.excel');
-        Route::get('/laporan/setoran', [LaporanController::class, 'laporanSetoran'])->name('laporan.setoran');
-        Route::get('/laporan/setoran/cetak', [LaporanController::class, 'laporanSetoran'])->name('laporan.setoran.cetak');
-        Route::get('/laporan/setoran/excel', [LaporanController::class, 'laporanSetoran'])->name('laporan.setoran.excel');
-
-        Route::get('/laporan/laba-rugi', [LaporanController::class, 'laporanLabaRugi'])->name('laporan.laba-rugi');
-        Route::get('/laporan/laba-rugi/cetak', [LaporanController::class, 'laporanLabaRugi'])->name('laporan.laba-rugi.cetak');
-        Route::get('/laporan/laba-rugi/excel', [LaporanController::class, 'laporanLabaRugi'])->name('laporan.laba-rugi.excel');
+        Route::get('/laporan/pembelian', [LaporanPembelianController::class, 'laporanPembelian'])->name('laporan.pembelian');
+        Route::get('/laporan/pembelian/cetak', [LaporanPembelianController::class, 'laporanPembelian'])->name('laporan.pembelian.cetak');
+        Route::get('/laporan/pembelian/excel', [LaporanPembelianController::class, 'laporanPembelian'])->name('laporan.pembelian.excel');
+        Route::get('/laporan/retur-pembelian', [LaporanPembelianController::class, 'laporanReturPembelian'])->name('laporan.retur-pembelian');
+        Route::get('/laporan/retur-pembelian/cetak', [LaporanPembelianController::class, 'laporanReturPembelian'])->name('laporan.retur-pembelian.cetak');
+        Route::get('/laporan/retur-pembelian/excel', [LaporanPembelianController::class, 'laporanReturPembelian'])->name('laporan.retur-pembelian.excel');
+        
+        Route::get('/laporan/stok', [LaporanStokController::class, 'laporanStok'])->name('laporan.stok');
+        Route::get('/laporan/stok/cetak', [LaporanStokController::class, 'laporanStok'])->name('laporan.stok.cetak');
+        Route::get('/laporan/stok/excel', [LaporanStokController::class, 'laporanStok'])->name('laporan.stok.excel');
+        
+        Route::get('/laporan/penjualan', [LaporanPenjualanController::class, 'laporanPenjualan'])->name('laporan.penjualan');
+        Route::get('/laporan/penjualan/cetak', [LaporanPenjualanController::class, 'laporanPenjualan'])->name('laporan.penjualan.cetak');
+        Route::get('/laporan/penjualan/excel', [LaporanPenjualanController::class, 'laporanPenjualan'])->name('laporan.penjualan.excel');
+        Route::get('/laporan/retur-penjualan', [LaporanPenjualanController::class, 'laporanReturPenjualan'])->name('laporan.retur-penjualan');
+        Route::get('/laporan/retur-penjualan/cetak', [LaporanPenjualanController::class, 'laporanReturPenjualan'])->name('laporan.retur-penjualan.cetak');
+        Route::get('/laporan/retur-penjualan/excel', [LaporanPenjualanController::class, 'laporanReturPenjualan'])->name('laporan.retur-penjualan.excel');
+        
+        Route::get('/laporan/piutang', [LaporanKeuanganController::class, 'laporanPiutang'])->name('laporan.piutang');
+        Route::get('/laporan/piutang/cetak', [LaporanKeuanganController::class, 'laporanPiutang'])->name('laporan.piutang.cetak');
+        Route::get('/laporan/piutang/excel', [LaporanKeuanganController::class, 'laporanPiutang'])->name('laporan.piutang.excel');
+        Route::get('/laporan/rekap-sisa-piutang', [LaporanKeuanganController::class, 'laporanRekapSisaPiutang'])->name('laporan.rekap-sisa-piutang');
+        Route::get('/laporan/rekap-sisa-piutang/cetak', [LaporanKeuanganController::class, 'laporanRekapSisaPiutang'])->name('laporan.rekap-sisa-piutang.cetak');
+        Route::get('/laporan/rekap-sisa-piutang/excel', [LaporanKeuanganController::class, 'laporanRekapSisaPiutang'])->name('laporan.rekap-sisa-piutang.excel');
+        Route::get('/laporan/pembayaran-piutang', [LaporanKeuanganController::class, 'laporanPembayaranPiutang'])->name('laporan.pembayaran_piutang');
+        Route::get('/laporan/pembayaran-piutang/cetak', [LaporanKeuanganController::class, 'laporanPembayaranPiutang'])->name('laporan.pembayaran_piutang.cetak');
+        Route::get('/laporan/pembayaran-piutang/excel', [LaporanKeuanganController::class, 'laporanPembayaranPiutang'])->name('laporan.pembayaran_piutang.excel');
+        Route::get('/laporan/setoran', [LaporanKeuanganController::class, 'laporanSetoran'])->name('laporan.setoran');
+        Route::get('/laporan/setoran/cetak', [LaporanKeuanganController::class, 'laporanSetoran'])->name('laporan.setoran.cetak');
+        Route::get('/laporan/setoran/excel', [LaporanKeuanganController::class, 'laporanSetoran'])->name('laporan.setoran.excel');
+        
+        Route::get('/laporan/laba-rugi', [LaporanKeuanganController::class, 'laporanLabaRugi'])->name('laporan.laba-rugi');
+        Route::get('/laporan/laba-rugi/cetak', [LaporanKeuanganController::class, 'laporanLabaRugi'])->name('laporan.laba-rugi.cetak');
+        Route::get('/laporan/laba-rugi/excel', [LaporanKeuanganController::class, 'laporanLabaRugi'])->name('laporan.laba-rugi.excel');
 
         // Roles & Permissions
         Route::get('/roles', [RolePermissionController::class, 'index'])->name('roles.index');

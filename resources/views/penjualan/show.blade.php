@@ -120,7 +120,7 @@
                                 <tr>
                                     <td class="text-secondary fw-semibold py-1" width="160">No Faktur</td>
                                     <td class="py-1">: <span
-                                            class="badge bg-secondary font-monospace px-2 py-1 ms-2">{{ $item->no_faktur }}</span>
+                                            class="text-dark ms-2 fw-semibold">{{ $item->no_faktur }}</span>
                                     </td>
                                 </tr>
                                 <tr>
