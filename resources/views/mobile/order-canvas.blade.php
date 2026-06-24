@@ -402,17 +402,17 @@
                 sisa_limit: @json($pelanggan->getSisaLimitKredit()),
                 metode: @json($pelanggan->metode_bayar ?? '-'),
                 has_overdue: @json($pelanggan->hasOverdueInvoices() ? 1 : 0),
-                overdue_invoices: @json(
+                overdue_invoices: {!! json_encode(
                     $pelanggan->hasOverdueInvoices()
                         ? $pelanggan->getOverdueInvoices()->map(function ($inv) use ($pelanggan) {
-                            return [
-                                'no_faktur' => $inv->no_faktur,
-                                'due_date' => \Carbon\Carbon::parse($inv->tanggal)->addDays($pelanggan->ljt ?? 30)->format('d/m/Y'),
-                                'sisa' => $inv->grand_total - $inv->getApprovedPembayaranTotal() - $inv->getTotalRetur(),
-                            ];
-                        })
-                        : []
-                )
+                                return [
+                                    'no_faktur' => $inv->no_faktur,
+                                    'due_date' => \Carbon\Carbon::parse($inv->tanggal)->addDays($pelanggan->ljt ?? 30)->format('d/m/Y'),
+                                    'sisa' => $inv->grand_total - $inv->getApprovedPembayaranTotal() - $inv->getTotalRetur(),
+                                ];
+                            })->toArray()
+                        : [],
+                ) !!}
             };
 
             const defaultNewCustomer = {
