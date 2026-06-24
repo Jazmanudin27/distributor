@@ -129,6 +129,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/barang-search', [BarangController::class, 'search'])->name('barang.search');
     Route::get('/pelanggan-search', [PelangganController::class, 'search'])->name('pelanggan.search');
     Route::get('/penjualan-by-pelanggan', [PenjualanController::class, 'getByPelanggan'])->name('penjualan.by-pelanggan');
+    Route::get('/penjualan/history-barang', [PenjualanController::class, 'historyBarang'])->name('penjualan.history-barang');
 
     // Profile Settings (Accessible by any desktop authenticated user)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

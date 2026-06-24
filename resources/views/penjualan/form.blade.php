@@ -11,6 +11,19 @@
         .promo-row input {
             color: #d97706 !important;
         }
+
+        .btn-show-history {
+            color: #0d6efd;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            transition: color 0.15s ease-in-out;
+        }
+
+        .btn-show-history:hover {
+            color: #0a58ca;
+            text-decoration: underline;
+        }
     </style>
 @endpush
 @section('content')
@@ -386,6 +399,55 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal Histori Penjualan Barang -->
+    <div class="modal fade" id="historyBarangModal" tabindex="-1" aria-labelledby="historyBarangModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content border-0 rounded-3 shadow">
+                <div class="modal-header bg-primary text-white py-3">
+                    <h5 class="modal-title fw-bold" id="historyBarangModalLabel">
+                        <i class="fa-solid fa-clock-rotate-left me-2"></i> Detail Penjualan Barang
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-white">
+                    <div class="mb-3 p-3 bg-light rounded border">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <span class="fw-bold text-secondary">Pelanggan:</span> <span id="history-pelanggan-name" class="fw-bold text-dark">-</span>
+                            </div>
+                            <div class="col-md-6">
+                                <span class="fw-bold text-secondary">Barang:</span> <span id="history-barang-name" class="fw-bold text-dark">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-sm align-middle" id="historyTable">
+                            <thead class="table-light text-secondary text-uppercase fs-8 tracking-wider">
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>No Faktur</th>
+                                    <th class="text-end">Qty</th>
+                                    <th class="text-center">Satuan</th>
+                                    <th class="text-end">Harga</th>
+                                    <th class="text-end">D1%</th>
+                                    <th class="text-end">D2%</th>
+                                    <th class="text-end">D3%</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Loaded dynamically via AJAX -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 bg-light pt-0">
+                    <button type="button" class="btn btn-secondary px-4 fw-semibold" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
@@ -1029,7 +1091,7 @@
                             ${barangCode}
                             <input type="hidden" name="items[${rowIndex}][kode_barang]" value="${barangCode}">
                         </td>
-                        <td class="fw-bold text-dark">${barangName}</td>
+                        <td class="fw-bold text-dark"><span class="btn-show-history" data-kode="${barangCode}" data-nama="${barangName}">${barangName}</span></td>
                         <td class="text-center">${satuanName}
                             <input type="hidden" name="items[${rowIndex}][satuan_id]" value="${satuanId}">
                             <input type="hidden" name="items[${rowIndex}][satuan]" value="${satuanName}">
@@ -1817,6 +1879,79 @@
                 // Strip formatting
                 $('.input-number-format').each(function() {
                     $(this).val(cleanNumber($(this).val()));
+                });
+            });
+
+            // Click on product name to show transaction detail history
+            $(document).on('click', '.btn-show-history', function() {
+                const kodePelanggan = $('#kode_pelanggan').val();
+                if (!kodePelanggan) {
+                    return Swal.fire('Peringatan', 'Pilih pelanggan terlebih dahulu!', 'warning');
+                }
+
+                const kodeBarang = $(this).attr('data-kode');
+                const namaBarang = $(this).attr('data-nama');
+                const namaPelanggan = $('#kode_pelanggan').find(':selected').text().trim();
+
+                // Set metadata in modal
+                $('#history-pelanggan-name').text(namaPelanggan);
+                $('#history-barang-name').text(`${namaBarang} (${kodeBarang})`);
+
+                // Clear history table tbody
+                const tbody = $('#historyTable tbody');
+                tbody.html('<tr><td colspan="9" class="text-center"><i class="fa-solid fa-spinner fa-spin me-1"></i> Memuat data histori...</td></tr>');
+
+                // Open modal
+                const myModal = new bootstrap.Modal(document.getElementById('historyBarangModal'));
+                myModal.show();
+
+                // Fetch history data
+                $.ajax({
+                    url: '{{ route('penjualan.history-barang') }}',
+                    method: 'GET',
+                    data: {
+                        kode_pelanggan: kodePelanggan,
+                        kode_barang: kodeBarang
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        tbody.empty();
+                        if (response.length === 0) {
+                            tbody.append('<tr><td colspan="9" class="text-center text-muted py-3">Tidak ada riwayat transaksi untuk barang ini dengan pelanggan tersebut.</td></tr>');
+                            return;
+                        }
+
+                        response.forEach(function(row) {
+                            const d1 = parseFloat(row.diskon1_persen) || 0;
+                            const d2 = parseFloat(row.diskon2_persen) || 0;
+                            const d3 = parseFloat(row.diskon3_persen) || 0;
+
+                            const d1Str = d1 > 0 ? d1.toFixed(2) + '%' : '';
+                            const d2Str = d2 > 0 ? d2.toFixed(2) + '%' : '';
+                            const d3Str = d3 > 0 ? d3.toFixed(2) + '%' : '';
+
+                            const formattedHarga = formatCurrency(row.harga).replace('Rp ', 'Rp');
+                            const formattedTotal = formatCurrency(row.total).replace('Rp ', 'Rp');
+
+                            const tr = `
+                                <tr>
+                                    <td>${row.tanggal}</td>
+                                    <td class="font-monospace">${row.no_faktur}</td>
+                                    <td class="text-end">${parseFloat(row.qty).toFixed(2)}</td>
+                                    <td class="text-center">${row.satuan}</td>
+                                    <td class="text-end">${formattedHarga}</td>
+                                    <td class="text-end text-danger">${d1Str}</td>
+                                    <td class="text-end text-danger">${d2Str}</td>
+                                    <td class="text-end text-danger">${d3Str}</td>
+                                    <td class="text-end fw-bold">${formattedTotal}</td>
+                                </tr>
+                            `;
+                            tbody.append(tr);
+                        });
+                    },
+                    error: function(xhr) {
+                        tbody.html('<tr><td colspan="9" class="text-center text-danger py-3"><i class="fa-solid fa-triangle-exclamation me-1"></i> Gagal memuat data histori transaksi.</td></tr>');
+                    }
                 });
             });
 

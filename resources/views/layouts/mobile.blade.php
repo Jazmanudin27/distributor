@@ -508,7 +508,7 @@
                 @if ($isKanvas)
                 {{-- DPB (hanya sales canvas) --}}
                 <a href="{{ route('mobile.order.canvas.dpb') }}"
-                    class="nav-item-mobile {{ Request::routeIs('mobile.order.canvas.dpb') ? 'active' : '' }}">
+                    class="nav-item-mobile {{ Request::routeIs('mobile.order.canvas.dpb*') ? 'active' : '' }}">
                     <i class="fa-solid fa-truck-ramp-box"></i>
                     <span>DPB</span>
                 </a>
@@ -532,7 +532,7 @@
 
                 {{-- Penjualan (selalu ada, aktif juga saat canvas order) --}}
                 <a href="{{ route('mobile.order.index') }}"
-                    class="nav-item-mobile {{ Request::routeIs('mobile.order.index') || Request::routeIs('mobile.order.canvas.*') ? 'active' : '' }}">
+                    class="nav-item-mobile {{ (Request::routeIs('mobile.order.index') || (Request::routeIs('mobile.order.canvas.*') && !Request::routeIs('mobile.order.canvas.dpb*'))) ? 'active' : '' }}">
                     <i class="fa-solid fa-receipt"></i>
                     <span>Penjualan</span>
                 </a>

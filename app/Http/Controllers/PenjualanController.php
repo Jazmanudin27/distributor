@@ -1339,6 +1339,41 @@ class PenjualanController extends Controller
         return response()->json($result);
     }
 
+    public function historyBarang(Request $request)
+    {
+        $kodePelanggan = $request->query('kode_pelanggan');
+        $kodeBarang = $request->query('kode_barang');
+        if (!$kodePelanggan || !$kodeBarang) {
+            return response()->json([]);
+        }
+
+        $details = PenjualanDetail::whereHas('penjualan', function ($query) use ($kodePelanggan) {
+                $query->where('kode_pelanggan', $kodePelanggan)->where('batal', 0);
+            })
+            ->where('kode_barang', $kodeBarang)
+            ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
+            ->orderBy('penjualan.tanggal', 'desc')
+            ->select('penjualan_detail.*')
+            ->with(['penjualan', 'barangSatuan'])
+            ->get();
+
+        $result = $details->map(function ($d) {
+            return [
+                'tanggal' => $d->penjualan && $d->penjualan->tanggal ? $d->penjualan->tanggal->format('Y-m-d') : '-',
+                'no_faktur' => $d->no_faktur,
+                'qty' => (float)$d->qty,
+                'satuan' => $d->barangSatuan ? $d->barangSatuan->satuan : ($d->satuan ?? '-'),
+                'harga' => (float)$d->harga,
+                'diskon1_persen' => (float)($d->diskon1_persen ?? 0),
+                'diskon2_persen' => (float)($d->diskon2_persen ?? 0),
+                'diskon3_persen' => (float)($d->diskon3_persen ?? 0),
+                'total' => (float)$d->total,
+            ];
+        });
+
+        return response()->json($result);
+    }
+
     public function destroyPayment(Request $request, $id)
     {
         if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasRole('Admin')) {
