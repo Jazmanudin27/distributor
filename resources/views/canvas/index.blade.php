@@ -13,6 +13,49 @@
             </a>
         </div>
         <div class="card-body p-4">
+            {{-- Filter Form --}}
+            <form method="GET" action="{{ route('canvas.index') }}" class="mb-3">
+                <div class="row g-2 align-items-end">
+                    <div class="col-sm-3">
+                        <label class="form-label form-label-sm mb-1 text-secondary fw-semibold">Sales</label>
+                        <select name="kode_sales" class="form-select form-select-sm">
+                            <option value="">— Semua Sales —</option>
+                            @foreach($salesmen as $s)
+                                <option value="{{ $s->nik }}" {{ request('kode_sales') == $s->nik ? 'selected' : '' }}>
+                                    {{ $s->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-sm-2">
+                        <label class="form-label form-label-sm mb-1 text-secondary fw-semibold">Dari Tanggal</label>
+                        <input type="date" name="tanggal_mulai" class="form-control form-control-sm"
+                            value="{{ request('tanggal_mulai') }}">
+                    </div>
+                    <div class="col-sm-2">
+                        <label class="form-label form-label-sm mb-1 text-secondary fw-semibold">S/D Tanggal</label>
+                        <input type="date" name="tanggal_akhir" class="form-control form-control-sm"
+                            value="{{ request('tanggal_akhir') }}">
+                    </div>
+                    <div class="col-sm-2">
+                        <label class="form-label form-label-sm mb-1 text-secondary fw-semibold">Status</label>
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="">— Semua Status —</option>
+                            <option value="loading"  {{ request('status') == 'loading'   ? 'selected' : '' }}>Aktif (Di Jalan)</option>
+                            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Selesai</option>
+                        </select>
+                    </div>
+                    <div class="col-sm-auto d-flex gap-1">
+                        <button type="submit" class="btn btn-primary btn-sm px-3">
+                            <i class="fa-solid fa-filter me-1"></i> Filter
+                        </button>
+                        <a href="{{ route('canvas.index') }}" class="btn btn-outline-secondary btn-sm px-3">
+                            <i class="fa-solid fa-rotate-left me-1"></i> Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+
             <div class="table-responsive">
                 <table class="table table-sm table-hover align-middle">
                     <thead class="table-light text-secondary text-uppercase fs-7">

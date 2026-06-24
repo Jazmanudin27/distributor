@@ -17,14 +17,38 @@ class CanvasController extends Controller
     /**
      * Display a listing of canvas sessions.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $canvasSessions = CanvasSession::with(['sales', 'details'])
+        $query = CanvasSession::with(['sales', 'details'])
             ->orderBy('tanggal', 'desc')
-            ->orderBy('id', 'desc')
-            ->paginate(15);
+            ->orderBy('id', 'desc');
 
-        return view('canvas.index', compact('canvasSessions'));
+        if ($request->filled('kode_sales')) {
+            $query->where('kode_sales', $request->kode_sales);
+        }
+
+        if ($request->filled('tanggal_mulai')) {
+            $query->whereDate('tanggal', '>=', $request->tanggal_mulai);
+        }
+
+        if ($request->filled('tanggal_akhir')) {
+            $query->whereDate('tanggal', '<=', $request->tanggal_akhir);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $canvasSessions = $query->paginate(15)->withQueryString();
+
+        $salesmen = User::where(function ($q) {
+            $q->where('role', 'sales')->orWhere('role', 'Salesman')->orWhere('role', 'Admin');
+        })->where('status', '1')
+          ->where('is_kanvas', 1)
+          ->orderBy('name')
+          ->get();
+
+        return view('canvas.index', compact('canvasSessions', 'salesmen'));
     }
 
     /**
