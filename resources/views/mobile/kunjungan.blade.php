@@ -246,11 +246,19 @@
                         </button>
                     </div>
                 </div>
-                <div id="overdue-warning-badge" class="mt-2 d-none">
-                    <div class="alert alert-danger p-2 mb-0 d-flex align-items-center rounded-3"
-                        style="font-size: 0.75rem; background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(255, 255, 255, 0.3)3);">
-                        <i class="fa-solid fa-circle-exclamation me-2"></i>
-                        <span>Toko ini memiliki faktur jatuh tempo (Overdue)!</span>
+                <div id="overdue-warning-badge" class="mt-3 d-none">
+                    <div class="alert alert-danger p-3 mb-0 rounded-4"
+                        style="font-size: 0.75rem; background-color: rgba(220, 38, 38, 0.2); border: 1.5px solid rgba(220, 38, 38, 0.4); color: #fecaca; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);">
+                        <div class="d-flex align-items-center mb-2 text-danger fw-bold" style="color: #fca5a5 !important;">
+                            <i class="fa-solid fa-triangle-exclamation me-1.5 fs-6"></i>
+                            <span class="fw-bold" style="font-size: 0.8rem; letter-spacing: 0.3px;">TOKO DIBLOKIR (OVERDUE)!</span>
+                        </div>
+                        <p class="text-white-50 mb-2" style="font-size: 0.7rem; line-height: 1.3;">
+                            Toko ini memiliki faktur jatuh tempo yang belum diselesaikan. Detail tagihan:
+                        </p>
+                        <ul class="mb-0 ps-3" id="overdue-list-ul" style="font-size: 0.7rem; list-style-type: disc; color: #f8fafc;">
+                            <!-- Will be populated dynamically by JS selectCustomer -->
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -876,12 +884,30 @@
 
                 // Show overdue warning badge
                 const warningBadge = document.getElementById('overdue-warning-badge');
+                const overdueListUl = document.getElementById('overdue-list-ul');
                 if (customer.has_overdue === 1) {
+                    if (overdueListUl) {
+                        overdueListUl.innerHTML = '';
+                        if (customer.overdue_invoices && customer.overdue_invoices.length > 0) {
+                            customer.overdue_invoices.forEach(inv => {
+                                const li = document.createElement('li');
+                                li.className = 'mb-2';
+                                const formattedSisa = Number(inv.sisa).toLocaleString('id-ID');
+                                li.innerHTML = `
+                                    Faktur <strong class="text-white font-monospace" style="background: rgba(255,255,255,0.08); padding: 1px 4px; border-radius: 4px;">${inv.no_faktur}</strong>
+                                    <div class="text-white-50 ps-1 mt-0.5" style="font-size: 0.65rem; line-height: 1.4;">
+                                        Tgl: ${inv.tanggal} &bull; 
+                                        LJT: ${inv.ljt} hari <br>
+                                        JT: <span class="text-danger fw-bold" style="color: #fca5a5 !important;">${inv.due_date}</span> &bull;
+                                        Sales: ${inv.sales_name || '-'} <br>
+                                        Sisa: <strong class="text-white" style="color: #f8fafc !important;">Rp ${formattedSisa}</strong>
+                                    </div>
+                                `;
+                                overdueListUl.appendChild(li);
+                            });
+                        }
+                    }
                     warningBadge.classList.remove('d-none');
-                    const overdueListStr = customer.overdue_invoices && customer.overdue_invoices.length > 0 ?
-                        customer.overdue_invoices.join(', ') : '-';
-                    warningBadge.querySelector('span').innerHTML =
-                        `Toko ini memiliki faktur jatuh tempo (Overdue): <strong class="text-white">${overdueListStr}</strong>`;
                 } else {
                     warningBadge.classList.add('d-none');
                 }
