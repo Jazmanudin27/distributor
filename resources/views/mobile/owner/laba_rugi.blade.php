@@ -64,14 +64,19 @@
     </div>
 
     <!-- Tabs Navigation -->
-    <ul class="nav nav-pills nav-fill gap-2 mb-3 bg-dark p-1 rounded-4 border border-secondary border-opacity-10" id="labaRugiTabs" role="tablist" style="background-color: #121824 !important;">
+    <ul class="nav nav-pills nav-fill gap-2 mb-3 bg-dark p-1 rounded-4 border border-secondary border-opacity-10"
+        id="labaRugiTabs" role="tablist" style="background-color: #121824 !important;">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active rounded-3 py-2 fw-semibold" id="rekap-tab" data-bs-toggle="pill" data-bs-target="#rekap-content" type="button" role="tab" aria-controls="rekap-content" aria-selected="true">
+            <button class="nav-link active rounded-3 py-2 fw-semibold" id="rekap-tab" data-bs-toggle="pill"
+                data-bs-target="#rekap-content" type="button" role="tab" aria-controls="rekap-content"
+                aria-selected="true">
                 <i class="fa-solid fa-chart-line me-1.5"></i>Rekap Semua
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link rounded-3 py-2 fw-semibold" id="supplier-tab" data-bs-toggle="pill" data-bs-target="#supplier-content" type="button" role="tab" aria-controls="supplier-content" aria-selected="false">
+            <button class="nav-link rounded-3 py-2 fw-semibold" id="supplier-tab" data-bs-toggle="pill"
+                data-bs-target="#supplier-content" type="button" role="tab" aria-controls="supplier-content"
+                aria-selected="false">
                 <i class="fa-solid fa-truck-field me-1.5"></i>Per Supplier
             </button>
         </li>
@@ -79,17 +84,19 @@
 
     <!-- Tabs Content -->
     <div class="tab-content" id="labaRugiTabsContent">
-        
+
         <!-- Tab 1: Rekap Semua & Breakdown -->
         <div class="tab-pane fade show active" id="rekap-content" role="tabpanel" aria-labelledby="rekap-tab">
             <!-- P&L Table Summary Cards -->
             <div class="mobile-card p-3 mb-4">
                 <div class="pb-2 mb-3 border-bottom border-secondary border-opacity-10 text-center">
-                    <span class="text-secondary uppercase" style="font-size: 0.65rem; letter-spacing: 1.5px; font-weight: 600;">Laba Rugi Kotor Semua</span>
+                    <span class="text-secondary uppercase"
+                        style="font-size: 0.65rem; letter-spacing: 1.5px; font-weight: 600;">Laba Rugi Kotor Semua</span>
                     <h2 class="fw-bold text-white mb-0" style="font-size: 1.6rem; color: #818cf8 !important;">
                         Rp {{ number_format($profit, 0, ',', '.') }}
                     </h2>
-                    <span class="badge rounded-pill bg-purple bg-opacity-20 text-purple border border-purple border-opacity-30 px-2.5 py-1 mt-1.5"
+                    <span
+                        class="badge rounded-pill bg-purple bg-opacity-20 text-purple border border-purple border-opacity-30 px-2.5 py-1 mt-1.5"
                         style="font-size: 0.72rem; color: #c084fc !important; border-color: rgba(192, 132, 252, 0.3) !important;">
                         Margin: {{ number_format($marginPercent, 2, ',', '.') }}%
                     </span>
@@ -136,36 +143,48 @@
             </h6>
             <div class="accordion mb-4" id="accordionTanggal">
                 @forelse ($dailyBreakdown as $date => $data)
-                    <div class="accordion-item bg-dark border-secondary border-opacity-25 mb-2 rounded overflow-hidden" style="background-color: rgba(26, 36, 57, 0.4) !important;">
+                    <div class="accordion-item bg-dark border-secondary border-opacity-25 mb-2 rounded overflow-hidden"
+                        style="background-color: rgba(26, 36, 57, 0.4) !important;">
                         <h2 class="accordion-header" id="headingDate-{{ $loop->index }}">
-                            <button class="accordion-button collapsed bg-transparent text-white shadow-none py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDate-{{ $loop->index }}" aria-expanded="false" aria-controls="collapseDate-{{ $loop->index }}">
+                            <button class="accordion-button collapsed bg-transparent text-white shadow-none py-2 px-3"
+                                type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseDate-{{ $loop->index }}" aria-expanded="false"
+                                aria-controls="collapseDate-{{ $loop->index }}">
                                 <div class="d-flex justify-content-between w-100 align-items-center me-2">
-                                    <span class="fw-semibold" style="font-size: 0.85rem;">{{ \Carbon\Carbon::parse($date)->format('d M Y') }}</span>
-                                    <span class="fw-bold {{ $data['profit'] >= 0 ? 'text-success' : 'text-danger' }}" style="font-size: 0.85rem;">
+                                    <span class="fw-semibold"
+                                        style="font-size: 0.85rem;">{{ \Carbon\Carbon::parse($date)->format('d M Y') }}</span>
+                                    <span class="fw-bold {{ $data['profit'] >= 0 ? 'text-success' : 'text-danger' }}"
+                                        style="font-size: 0.85rem;">
                                         Rp {{ number_format($data['profit'], 0, ',', '.') }}
                                     </span>
                                 </div>
                             </button>
                         </h2>
-                        <div id="collapseDate-{{ $loop->index }}" class="accordion-collapse collapse" aria-labelledby="headingDate-{{ $loop->index }}" data-bs-parent="#accordionTanggal">
+                        <div id="collapseDate-{{ $loop->index }}" class="accordion-collapse collapse"
+                            aria-labelledby="headingDate-{{ $loop->index }}" data-bs-parent="#accordionTanggal">
                             <div class="accordion-body pt-0 pb-3 px-3" style="font-size: 0.8rem;">
                                 <div class="d-flex justify-content-between mb-1">
                                     <span class="text-white-50">Penjualan Bersih</span>
-                                    <span class="text-white font-monospace">Rp {{ number_format($data['netSales'], 0, ',', '.') }}</span>
+                                    <span class="text-white font-monospace">Rp
+                                        {{ number_format($data['netSales'], 0, ',', '.') }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-1">
                                     <span class="text-white-50">HPP Bersih</span>
-                                    <span class="text-white font-monospace">Rp {{ number_format($data['netHpp'], 0, ',', '.') }}</span>
+                                    <span class="text-white font-monospace">Rp
+                                        {{ number_format($data['netHpp'], 0, ',', '.') }}</span>
                                 </div>
-                                <div class="d-flex justify-content-between mt-2 pt-2 border-top border-secondary border-opacity-25">
+                                <div
+                                    class="d-flex justify-content-between mt-2 pt-2 border-top border-secondary border-opacity-25">
                                     <span class="text-white-50">Margin</span>
-                                    <span class="text-info font-monospace">{{ number_format($data['margin'], 2, ',', '.') }}%</span>
+                                    <span
+                                        class="text-info font-monospace">{{ number_format($data['margin'], 2, ',', '.') }}%</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 @empty
-                    <div class="text-center text-white-50 py-3" style="font-size: 0.8rem;">Tidak ada data per tanggal</div>
+                    <div class="text-center text-white-50 py-3" style="font-size: 0.8rem;">Tidak ada data per tanggal
+                    </div>
                 @endforelse
             </div>
 
@@ -175,30 +194,40 @@
             </h6>
             <div class="accordion mb-4" id="accordionSales">
                 @forelse ($salesBreakdown as $sales => $data)
-                    <div class="accordion-item bg-dark border-secondary border-opacity-25 mb-2 rounded overflow-hidden" style="background-color: rgba(26, 36, 57, 0.4) !important;">
+                    <div class="accordion-item bg-dark border-secondary border-opacity-25 mb-2 rounded overflow-hidden"
+                        style="background-color: rgba(26, 36, 57, 0.4) !important;">
                         <h2 class="accordion-header" id="headingSales-{{ $loop->index }}">
-                            <button class="accordion-button collapsed bg-transparent text-white shadow-none py-2 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSales-{{ $loop->index }}" aria-expanded="false" aria-controls="collapseSales-{{ $loop->index }}">
+                            <button class="accordion-button collapsed bg-transparent text-white shadow-none py-2 px-3"
+                                type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseSales-{{ $loop->index }}" aria-expanded="false"
+                                aria-controls="collapseSales-{{ $loop->index }}">
                                 <div class="d-flex justify-content-between w-100 align-items-center me-2">
                                     <span class="fw-semibold" style="font-size: 0.85rem;">{{ $sales }}</span>
-                                    <span class="fw-bold {{ $data['profit'] >= 0 ? 'text-success' : 'text-danger' }}" style="font-size: 0.85rem;">
+                                    <span class="fw-bold {{ $data['profit'] >= 0 ? 'text-success' : 'text-danger' }}"
+                                        style="font-size: 0.85rem;">
                                         Rp {{ number_format($data['profit'], 0, ',', '.') }}
                                     </span>
                                 </div>
                             </button>
                         </h2>
-                        <div id="collapseSales-{{ $loop->index }}" class="accordion-collapse collapse" aria-labelledby="headingSales-{{ $loop->index }}" data-bs-parent="#accordionSales">
+                        <div id="collapseSales-{{ $loop->index }}" class="accordion-collapse collapse"
+                            aria-labelledby="headingSales-{{ $loop->index }}" data-bs-parent="#accordionSales">
                             <div class="accordion-body pt-0 pb-3 px-3" style="font-size: 0.8rem;">
                                 <div class="d-flex justify-content-between mb-1">
                                     <span class="text-white-50">Penjualan Bersih</span>
-                                    <span class="text-white font-monospace">Rp {{ number_format($data['netSales'], 0, ',', '.') }}</span>
+                                    <span class="text-white font-monospace">Rp
+                                        {{ number_format($data['netSales'], 0, ',', '.') }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-1">
                                     <span class="text-white-50">HPP Bersih</span>
-                                    <span class="text-white font-monospace">Rp {{ number_format($data['netHpp'], 0, ',', '.') }}</span>
+                                    <span class="text-white font-monospace">Rp
+                                        {{ number_format($data['netHpp'], 0, ',', '.') }}</span>
                                 </div>
-                                <div class="d-flex justify-content-between mt-2 pt-2 border-top border-secondary border-opacity-25">
+                                <div
+                                    class="d-flex justify-content-between mt-2 pt-2 border-top border-secondary border-opacity-25">
                                     <span class="text-white-50">Margin</span>
-                                    <span class="text-info font-monospace">{{ number_format($data['margin'], 2, ',', '.') }}%</span>
+                                    <span
+                                        class="text-info font-monospace">{{ number_format($data['margin'], 2, ',', '.') }}%</span>
                                 </div>
                             </div>
                         </div>
@@ -220,40 +249,51 @@
                     @php
                         $supId = 'sup-' . str_replace([' ', '_', '/'], '-', $code);
                     @endphp
-                    <div class="accordion-item bg-dark border-secondary border-opacity-25 mb-2 rounded overflow-hidden" style="background-color: rgba(26, 36, 57, 0.4) !important;">
+                    <div class="accordion-item bg-dark border-secondary border-opacity-25 mb-2 rounded overflow-hidden"
+                        style="background-color: rgba(26, 36, 57, 0.4) !important;">
                         <h2 class="accordion-header" id="heading-{{ $supId }}">
-                            <button class="accordion-button collapsed bg-transparent text-white shadow-none py-2.5 px-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ $supId }}" aria-expanded="false" aria-controls="collapse-{{ $supId }}">
+                            <button class="accordion-button collapsed bg-transparent text-white shadow-none py-2.5 px-3"
+                                type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ $supId }}"
+                                aria-expanded="false" aria-controls="collapse-{{ $supId }}">
                                 <div class="d-flex justify-content-between w-100 align-items-center me-2">
                                     <div>
-                                        <div class="fw-semibold text-white" style="font-size: 0.85rem;">{{ $data['name'] }}</div>
+                                        <div class="fw-semibold text-white" style="font-size: 0.85rem;">
+                                            {{ $data['name'] }}</div>
                                         <span class="text-secondary" style="font-size: 0.65rem;">
                                             Margin: {{ number_format($data['margin'], 1, ',', '.') }}%
                                         </span>
                                     </div>
-                                    <span class="fw-bold {{ $data['profit'] >= 0 ? 'text-success' : 'text-danger' }}" style="font-size: 0.85rem;">
+                                    <span class="fw-bold {{ $data['profit'] >= 0 ? 'text-success' : 'text-danger' }}"
+                                        style="font-size: 0.85rem;">
                                         Rp {{ number_format($data['profit'], 0, ',', '.') }}
                                     </span>
                                 </div>
                             </button>
                         </h2>
-                        <div id="collapse-{{ $supId }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ $supId }}" data-bs-parent="#accordionSupplier">
+                        <div id="collapse-{{ $supId }}" class="accordion-collapse collapse"
+                            aria-labelledby="heading-{{ $supId }}" data-bs-parent="#accordionSupplier">
                             <div class="accordion-body pt-0 pb-3 px-3" style="font-size: 0.8rem;">
-                                
+
                                 <!-- Supplier Summary Details (Rekap per Supplier) -->
-                                <div class="p-2.5 rounded-3 mb-3 border border-secondary border-opacity-10" style="background-color: rgba(15, 23, 42, 0.35);">
+                                <div class="p-2.5 rounded-3 mb-3 border border-secondary border-opacity-10"
+                                    style="background-color: rgba(15, 23, 42, 0.35);">
                                     <div class="d-flex justify-content-between mb-1">
                                         <span class="text-white-50" style="font-size: 0.72rem;">Penjualan Bersih:</span>
-                                        <span class="text-white font-monospace" style="font-size: 0.72rem;">Rp {{ number_format($data['netSales'], 0, ',', '.') }}</span>
+                                        <span class="text-white font-monospace" style="font-size: 0.72rem;">Rp
+                                            {{ number_format($data['netSales'], 0, ',', '.') }}</span>
                                     </div>
                                     <div class="d-flex justify-content-between">
                                         <span class="text-white-50" style="font-size: 0.72rem;">HPP Bersih:</span>
-                                        <span class="text-white font-monospace" style="font-size: 0.72rem;">Rp {{ number_format($data['netHpp'], 0, ',', '.') }}</span>
+                                        <span class="text-white font-monospace" style="font-size: 0.72rem;">Rp
+                                            {{ number_format($data['netHpp'], 0, ',', '.') }}</span>
                                     </div>
                                 </div>
 
                                 <!-- Supplier Product Details (Detail per Supplier) -->
                                 @if (count($data['items']) > 0)
-                                    <span class="text-secondary d-block mb-1.5 font-monospace" style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Rincian Produk Terjual</span>
+                                    <span class="text-secondary d-block mb-1.5 font-monospace"
+                                        style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Rincian
+                                        Produk Terjual</span>
                                     <div class="table-responsive">
                                         <table class="table table-bordered table-sm table-supplier-detail mb-0">
                                             <thead>
@@ -268,26 +308,37 @@
                                                 @foreach ($data['items'] as $item)
                                                     <tr>
                                                         <td>
-                                                            <span class="d-block fw-semibold text-white" style="font-size: 0.72rem;">{{ $item['nama_barang'] }}</span>
-                                                            <small class="text-secondary font-monospace" style="font-size: 0.6rem;">{{ $item['kode_barang'] }}</small>
+                                                            <span class="d-block fw-semibold text-white"
+                                                                style="font-size: 0.72rem;">{{ $item['nama_barang'] }}</span>
+                                                            <small class="text-secondary font-monospace"
+                                                                style="font-size: 0.6rem;">{{ $item['kode_barang'] }}</small>
                                                         </td>
-                                                        <td class="text-center align-middle font-monospace">{{ $item['qty_sales'] - $item['qty_return'] }} <small class="text-secondary" style="font-size: 0.6rem;">{{ $item['satuan'] }}</small></td>
-                                                        <td class="text-end align-middle font-monospace">Rp {{ number_format($item['netSales'], 0, ',', '.') }}</td>
-                                                        <td class="text-end align-middle font-monospace {{ $item['profit'] >= 0 ? 'text-success' : 'text-danger' }}">Rp {{ number_format($item['profit'], 0, ',', '.') }}</td>
+                                                        <td class="text-center align-middle font-monospace">
+                                                            {{ $item['qty_sales'] - $item['qty_return'] }} <small
+                                                                class="text-secondary"
+                                                                style="font-size: 0.6rem;">{{ $item['satuan'] }}</small>
+                                                        </td>
+                                                        <td class="text-end align-middle font-monospace">Rp
+                                                            {{ number_format($item['netSales'], 0, ',', '.') }}</td>
+                                                        <td
+                                                            class="text-end align-middle font-monospace {{ $item['profit'] >= 0 ? 'text-success' : 'text-danger' }}">
+                                                            Rp {{ number_format($item['profit'], 0, ',', '.') }}</td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>
                                         </table>
                                     </div>
                                 @else
-                                    <div class="text-center text-white-50 py-2 small" style="font-size: 0.72rem;">Hanya memiliki data retur/tanpa penjualan produk baru</div>
+                                    <div class="text-center text-white-50 py-2 small" style="font-size: 0.72rem;">Hanya
+                                        memiliki data retur/tanpa penjualan produk baru</div>
                                 @endif
 
                             </div>
                         </div>
                     </div>
                 @empty
-                    <div class="text-center text-white-50 py-3" style="font-size: 0.8rem;">Tidak ada data per supplier</div>
+                    <div class="text-center text-white-50 py-3" style="font-size: 0.8rem;">Tidak ada data per supplier
+                    </div>
                 @endforelse
             </div>
         </div>

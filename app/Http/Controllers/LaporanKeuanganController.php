@@ -618,6 +618,10 @@ class LaporanKeuanganController extends Controller
                         ->where('penjualan.batal', 0)
                         ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
                         ->where('barang.kode_supplier', $kode_supplier)
+                        ->where(function($q) {
+                            $q->whereNull('penjualan_detail.is_promo')
+                              ->orWhere('penjualan_detail.is_promo', '!=', 1);
+                        })
                         ->sum('penjualan_detail.total');
 
                     $salesReturn = (float) DB::table('retur_penjualan_detail')
@@ -633,6 +637,10 @@ class LaporanKeuanganController extends Controller
                         ->where('penjualan.batal', 0)
                         ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
                         ->where('barang.kode_supplier', $kode_supplier)
+                        ->where(function($q) {
+                            $q->whereNull('penjualan_detail.is_promo')
+                              ->orWhere('penjualan_detail.is_promo', '!=', 1);
+                        })
                         ->sum(DB::raw('penjualan_detail.qty * penjualan_detail.harga_pokok'));
 
                     $hppReturn = (float) DB::table('retur_penjualan_detail')
@@ -654,6 +662,10 @@ class LaporanKeuanganController extends Controller
                         ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
                         ->where('penjualan.batal', 0)
                         ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
+                        ->where(function($q) {
+                            $q->whereNull('penjualan_detail.is_promo')
+                              ->orWhere('penjualan_detail.is_promo', '!=', 1);
+                        })
                         ->sum('penjualan_detail.total');
 
                     $salesReturn = (float) DB::table('retur_penjualan_detail')
@@ -667,6 +679,10 @@ class LaporanKeuanganController extends Controller
                         ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
                         ->where('penjualan.batal', 0)
                         ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
+                        ->where(function($q) {
+                            $q->whereNull('penjualan_detail.is_promo')
+                              ->orWhere('penjualan_detail.is_promo', '!=', 1);
+                        })
                         ->sum(DB::raw('penjualan_detail.qty * penjualan_detail.harga_pokok'));
 
                     $hppReturn = (float) DB::table('retur_penjualan_detail')
@@ -692,6 +708,10 @@ class LaporanKeuanganController extends Controller
                     ->where('penjualan.batal', 0)
                     ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
                     ->when($kode_supplier, fn($q) => $q->where('barang.kode_supplier', $kode_supplier))
+                    ->where(function($q) {
+                        $q->whereNull('penjualan_detail.is_promo')
+                          ->orWhere('penjualan_detail.is_promo', '!=', 1);
+                    })
                     ->select('barang.kode_supplier', DB::raw('SUM(penjualan_detail.total) as total_sales'))
                     ->groupBy('barang.kode_supplier')
                     ->get()
@@ -713,6 +733,10 @@ class LaporanKeuanganController extends Controller
                     ->where('penjualan.batal', 0)
                     ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
                     ->when($kode_supplier, fn($q) => $q->where('barang.kode_supplier', $kode_supplier))
+                    ->where(function($q) {
+                        $q->whereNull('penjualan_detail.is_promo')
+                          ->orWhere('penjualan_detail.is_promo', '!=', 1);
+                    })
                     ->select('barang.kode_supplier', DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp'))
                     ->groupBy('barang.kode_supplier')
                     ->get()
@@ -771,6 +795,10 @@ class LaporanKeuanganController extends Controller
                     ->where('penjualan.batal', 0)
                     ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
                     ->when($kode_supplier, fn($q) => $q->where('barang.kode_supplier', $kode_supplier))
+                    ->where(function($q) {
+                        $q->whereNull('penjualan_detail.is_promo')
+                          ->orWhere('penjualan_detail.is_promo', '!=', 1);
+                    })
                     ->select('penjualan.tanggal', 'barang.kode_supplier', DB::raw('SUM(penjualan_detail.total) as total_sales'))
                     ->groupBy('penjualan.tanggal', 'barang.kode_supplier')
                     ->get();
@@ -790,6 +818,10 @@ class LaporanKeuanganController extends Controller
                     ->where('penjualan.batal', 0)
                     ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
                     ->when($kode_supplier, fn($q) => $q->where('barang.kode_supplier', $kode_supplier))
+                    ->where(function($q) {
+                        $q->whereNull('penjualan_detail.is_promo')
+                          ->orWhere('penjualan_detail.is_promo', '!=', 1);
+                    })
                     ->select('penjualan.tanggal', 'barang.kode_supplier', DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp'))
                     ->groupBy('penjualan.tanggal', 'barang.kode_supplier')
                     ->get()
@@ -889,6 +921,10 @@ class LaporanKeuanganController extends Controller
                     ->where('penjualan.batal', 0)
                     ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
                     ->when($kode_supplier, fn($q) => $q->where('barang.kode_supplier', $kode_supplier))
+                    ->where(function($q) {
+                        $q->whereNull('penjualan_detail.is_promo')
+                          ->orWhere('penjualan_detail.is_promo', '!=', 1);
+                    })
                     ->select(
                         DB::raw("'Penjualan' as tipe"),
                         'penjualan.tanggal',

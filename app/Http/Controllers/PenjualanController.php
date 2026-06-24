@@ -195,6 +195,7 @@ class PenjualanController extends Controller
             'items.*.diskon1_persen' => 'nullable|numeric|min:0|max:100',
             'items.*.diskon2_persen' => 'nullable|numeric|min:0|max:100',
             'items.*.diskon3_persen' => 'nullable|numeric|min:0|max:100',
+            'items.*.is_promo' => 'nullable',
         ]);
 
         // Calculate grand total and validate credit limit
@@ -299,6 +300,7 @@ class PenjualanController extends Controller
                         'total_diskon' => $rowDiskon,
                         'total' => $rowTotal,
                         'harga_pokok' => $satuan->harga_pokok ?? 0,
+                        'is_promo' => isset($row['is_promo']) && $row['is_promo'] == '1' ? 1 : 0,
                     ]);
                 }
 
@@ -528,6 +530,7 @@ class PenjualanController extends Controller
             'items.*.diskon1_persen' => 'nullable|numeric|min:0|max:100',
             'items.*.diskon2_persen' => 'nullable|numeric|min:0|max:100',
             'items.*.diskon3_persen' => 'nullable|numeric|min:0|max:100',
+            'items.*.is_promo' => 'nullable',
         ]);
 
         // Calculate grand total and validate credit limit
@@ -658,6 +661,7 @@ class PenjualanController extends Controller
                         'total_diskon' => $rowDiskon,
                         'total' => $rowTotal,
                         'harga_pokok' => $satuan->harga_pokok ?? 0,
+                        'is_promo' => isset($row['is_promo']) && $row['is_promo'] == '1' ? 1 : 0,
                     ]);
                 }
 
