@@ -189,18 +189,19 @@
     <!-- Filter Date Picker -->
     <div class="d-flex align-items-center gap-2 mb-3">
         <div class="flex-grow-1 position-relative">
-            <span class="position-absolute top-50 start-0 translate-middle-y ps-3 text-secondary" style="pointer-events: none; font-size: 0.8rem;">
+            <span class="position-absolute top-50 start-0 translate-middle-y ps-3 text-secondary"
+                style="pointer-events: none; font-size: 0.8rem;">
                 <i class="fa-solid fa-calendar-day"></i>
             </span>
-            <input type="date" id="filterDateInput" class="form-control form-control-sm text-white ps-5" 
-                   style="background: rgba(30, 41, 59, 0.45); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 30px; font-size: 0.78rem; padding-top: 8px; padding-bottom: 8px; color-scheme: dark; font-weight: 500;"
-                   value="{{ ($filter && $filter !== 'all' && $filter !== 'today' && $filter !== 'yesterday') ? $filter : '' }}"
-                   placeholder="Pilih Tanggal...">
+            <input type="date" id="filterDateInput" class="form-control form-control-sm text-white ps-5"
+                style="background: rgba(30, 41, 59, 0.45); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 30px; font-size: 0.78rem; padding-top: 8px; padding-bottom: 8px; color-scheme: dark; font-weight: 500;"
+                value="{{ $filter && $filter !== 'all' && $filter !== 'today' && $filter !== 'yesterday' ? $filter : '' }}"
+                placeholder="Pilih Tanggal...">
         </div>
         @if ($filter && $filter !== 'all')
-            <a href="{{ route('mobile.order.canvas.dpb', ['filter' => 'all']) }}" 
-               class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center px-3" 
-               style="height: 38px; border-radius: 30px; font-size: 0.72rem; font-weight: 600;">
+            <a href="{{ route('mobile.order.canvas.dpb', ['filter' => 'all']) }}"
+                class="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center px-3"
+                style="height: 38px; border-radius: 30px; font-size: 0.72rem; font-weight: 600;">
                 <i class="fa-solid fa-xmark me-1"></i> Semua
             </a>
         @endif
