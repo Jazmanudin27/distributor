@@ -96,8 +96,8 @@ class MobileKunjunganController extends Controller
 
         // Differentiate check-in for canvas vs regular sales
         if ($user->is_kanvas) {
-            if ($request->kode_pelanggan !== $user->kode_pelanggan) {
-                return redirect()->back()->with('error', 'Sales Canvas hanya dapat check-in ke sesi truck canvas Anda.');
+            if ($user->kode_pelanggan && $request->kode_pelanggan === $user->kode_pelanggan) {
+                return redirect()->back()->with('error', 'Sales Canvas tidak dapat check-in ke sesi truck canvas Anda sebagai kunjungan toko.');
             }
         } else {
             if ($user->kode_pelanggan && $request->kode_pelanggan === $user->kode_pelanggan) {

@@ -443,7 +443,8 @@
                                     '1px solid rgba(255,255,255,0.05) !important';
                                 btn.innerHTML = `
                                 <span class="fw-semibold text-white" style="font-size: 0.8rem;">${item.text}</span>
-                                <span class="text-secondary mt-1" style="font-size: 0.7rem;">${item.alamat}</span>
+                                <span class="text-secondary mt-1" style="font-size: 0.7rem;">Wilayah: ${item.wilayah || '-'}</span>
+                                <span class="text-secondary" style="font-size: 0.7rem;">Alamat: ${item.alamat}</span>
                             `;
                                 btn.addEventListener('click', () => {
                                     selectCustomer(item);

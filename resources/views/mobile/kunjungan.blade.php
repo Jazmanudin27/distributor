@@ -12,7 +12,7 @@
                 <span class="badge bg-indigo-subtle text-indigo px-3 py-1"
                     style="background-color: rgba(99, 102, 241, 0.15); color: #818cf8; font-weight: 600; font-size: 0.75rem;">
                     @if (Auth::user()->is_kanvas)
-                        <i class="fa-solid fa-truck-moving me-1"></i> Sesi Canvas Aktif
+                        <i class="fa-solid fa-truck-moving me-1"></i> Sedang Berkunjung (Canvas)
                     @else
                         <i class="fa-solid fa-location-dot me-1"></i> Sedang Berkunjung
                     @endif
@@ -24,21 +24,18 @@
             </div>
 
             @if (Auth::user()->is_kanvas)
-                <h4 class="fw-bold text-white mb-1" style="font-size: 1.15rem;">
-                    {{ Auth::user()->pelanggan->nama_pelanggan ?? 'Truk Canvas' }}
-                </h4>
+                <h4 class="fw-bold text-white mb-1" style="font-size: 1.15rem;">{{ $activeCheckin->pelanggan->nama_pelanggan }}</h4>
                 <p class="text-secondary mb-2" style="font-size: 0.8rem;">
-                    <i class="fa-solid fa-barcode me-1"></i> Kode Truk: {{ Auth::user()->kode_pelanggan }}
+                    <i class="fa-solid fa-map-pin me-1 text-danger"></i> {{ $activeCheckin->pelanggan->alamat_pelanggan }}
                 </p>
             @else
-                <h4 class="fw-bold text-white mb-1" style="font-size: 1.15rem;">{{ $activeCheckin->pelanggan->nama_pelanggan }}
-            </h4>
-            <p class="text-secondary mb-2" style="font-size: 0.8rem;">
-                <i class="fa-solid fa-map-pin me-1 text-danger"></i> {{ $activeCheckin->pelanggan->alamat_pelanggan }}
-            </p>
+                <h4 class="fw-bold text-white mb-1" style="font-size: 1.15rem;">{{ $activeCheckin->pelanggan->nama_pelanggan }}</h4>
+                <p class="text-secondary mb-2" style="font-size: 0.8rem;">
+                    <i class="fa-solid fa-map-pin me-1 text-danger"></i> {{ $activeCheckin->pelanggan->alamat_pelanggan }}
+                </p>
             @endif
 
-            @if (!Auth::user()->is_kanvas)
+            {{-- Unified Customer Details --}}
             <!-- Collapsible Customer Info Card -->
             <div class="mb-3">
                 <button
@@ -180,7 +177,7 @@
                     </div>
                 </div>
             </div>
-            @endif
+            {{-- Unified Customer Details End --}}
 
             <!-- Timer counter -->
             <div class="p-3 rounded-4 mb-4 text-center"
@@ -188,7 +185,7 @@
                 <div class="text-secondary mb-1"
                     style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">
                     @if (Auth::user()->is_kanvas)
-                        Durasi Sesi Canvas
+                        Durasi Kunjungan (Canvas)
                     @else
                         Durasi Kunjungan
                     @endif</div>
@@ -201,7 +198,7 @@
                 @if (Auth::user()->is_kanvas)
                     <a href="{{ route('mobile.order.canvas.create') }}"
                         class="btn btn-sm btn-mobile btn-mobile-primary py-2">
-                        <i class="fa-solid fa-cart-plus me-2"></i> Input Penjualan Canvas (Multi-Pelanggan)
+                        <i class="fa-solid fa-cart-plus me-2"></i> Input Penjualan Canvas Toko Ini
                     </a>
                 @else
                     <a href="{{ route('mobile.order.create', ['kode_pelanggan' => $activeCheckin->kode_pelanggan]) }}"
@@ -216,7 +213,7 @@
                         <i class="fa-solid fa-hand-holding-dollar me-2 text-white"></i> Catat Pembayaran Piutang
                     </button>
                 @endif --}}
-                @if (!Auth::user()->is_kanvas)
+                {{-- Unified Ajukan Limit --}}
                 <button type="button"
                     class="btn btn-sm btn-mobile btn-outline-light py-2 text-white border-secondary border-opacity-50"
                     style="font-size: 0.85rem;" data-bs-toggle="modal" data-bs-target="#modal-ajuan-limit"
@@ -226,7 +223,7 @@
                     <i class="fa-solid fa-file-invoice-dollar me-2 text-purple" style="color: #a855f7 !important;"></i>
                     Ajukan Limit Kredit Toko Ini
                 </button>
-                @endif
+                {{-- Unified Ajukan Limit End --}}
             </div>
 
             <!-- Checkout Form -->
@@ -236,7 +233,7 @@
                     <label for="catatan" class="form-label text-secondary"
                         style="font-size: 0.85rem; font-weight: 500;">
                         @if (Auth::user()->is_kanvas)
-                            Laporan Hasil Sesi Canvas
+                            Catatan Hasil Kunjungan & Sesi Canvas
                         @else
                             Catatan Hasil Kunjungan
                         @endif
@@ -249,7 +246,7 @@
                     style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border: none; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
                     <i class="fa-solid fa-right-from-bracket me-2"></i>
                     @if (Auth::user()->is_kanvas)
-                        Selesai Sesi Canvas (Check-out)
+                        Selesai Kunjungan & Sesi Canvas (Check-out)
                     @else
                         Selesai Kunjungan (Check-out)
                     @endif
@@ -259,34 +256,6 @@
     @else
         <!-- Start New Visit Screen -->
         <div class="mobile-card" style="position: relative; z-index: 10;">
-            @if (Auth::user()->is_kanvas)
-                @if (Auth::user()->kode_pelanggan)
-                    <div class="text-center py-4">
-                        <div class="pulse-active mb-3 mx-auto d-flex align-items-center justify-content-center rounded-circle"
-                             style="width: 70px; height: 70px; background: rgba(99, 102, 241, 0.15); border: 2px solid rgba(99, 102, 241, 0.4);">
-                            <i class="fa-solid fa-truck-moving text-indigo fs-2" style="color: #818cf8 !important;"></i>
-                        </div>
-                        <h6 class="fw-bold text-white mb-2" style="font-size: 1.05rem;">Sesi Canvas Belum Dimulai</h6>
-                        <p class="text-secondary small mb-4 px-2" style="font-size: 0.78rem;">Silakan check-in ke truk Anda untuk memulai sesi canvas hari ini. Anda dapat membuat transaksi penjualan multi-pelanggan setelah sesi dimulai.</p>
-                        
-                        <form action="{{ route('mobile.kunjungan.checkin') }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="kode_pelanggan" value="{{ Auth::user()->kode_pelanggan }}">
-                            <button type="submit" class="btn btn-mobile btn-mobile-primary w-100 py-3 text-white">
-                                <i class="fa-solid fa-location-dot me-2"></i> Mulai Sesi Canvas (Check-in)
-                            </button>
-                        </form>
-                    </div>
-                @else
-                    <div class="alert alert-warning p-3 rounded-4 mb-0" style="font-size: 0.78rem; background-color: rgba(245, 158, 11, 0.1); border: 1.5px solid rgba(245, 158, 11, 0.25); color: #fef3c7;">
-                        <div class="d-flex align-items-center mb-1 fw-semibold text-warning">
-                            <i class="fa-solid fa-triangle-exclamation me-2 fs-6"></i> Konfigurasi Tidak Lengkap
-                        </div>
-                        Kode truk / pelanggan canvas belum di-set pada akun Anda. Silakan hubungi admin untuk mendaftarkan kode truk Anda.
-                    </div>
-                @endif
-            @else
-
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="fw-bold mb-0" style="font-size: 0.9rem;">Mulai Kunjungan Baru</h6>
                 <a href="{{ route('mobile.pelanggan.create') }}"
@@ -382,167 +351,10 @@
                     <i class="fa-solid fa-location-dot me-2"></i> Check-in Kunjungan
                 </button>
             </form>
-            @endif
         </div>
     @endif
 
     @if ($activeCheckin)
-        @if (Auth::user()->is_kanvas)
-            <!-- Histori Penjualan Sesi Canvas Hari Ini -->
-            <h5 class="fw-bold mb-3 mt-4" style="font-size: 0.95rem; letter-spacing: 0.5px;">Daftar Transaksi Canvas Hari Ini</h5>
-            @if ($todayOrders->isEmpty())
-                <div class="mobile-card text-center py-4">
-                    <i class="fa-solid fa-box-open text-secondary mb-2" style="font-size: 2rem; opacity: 0.5;"></i>
-                    <p class="text-secondary mb-0" style="font-size: 0.8rem;">Belum ada transaksi canvas untuk sesi hari ini.</p>
-                </div>
-            @else
-                @foreach ($todayOrders as $order)
-                    @php
-                        $totalBayar = $order->getApprovedPembayaranTotal();
-                        $totalRetur = $order->getTotalRetur();
-                        $sisaBayar = $order->grand_total - $totalBayar - $totalRetur;
-                        $dueDate = \Carbon\Carbon::parse($order->tanggal)->addDays($order->pelanggan->ljt ?? 30);
-                        $isOverdue =
-                            $sisaBayar >= 1 &&
-                            in_array($order->jenis_transaksi, ['K', 'Kredit']) &&
-                            $dueDate->lt(\Carbon\Carbon::today());
-                        $allPembayarans = $order->getAllPembayarans();
-                    @endphp
-                    <!-- Collapsible Card Header -->
-                    <div class="mobile-card p-3 mb-2"
-                        style="cursor: pointer; position: relative; background: rgba(30, 41, 59, 0.45); border: 1px solid rgba(255, 255, 255, 0.08);"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#kunj-details-{{ str_replace('-', '_', $order->no_faktur) }}" aria-expanded="false"
-                        aria-controls="kunj-details-{{ str_replace('-', '_', $order->no_faktur) }}">
-                        <div
-                            class="d-flex justify-content-between align-items-start mb-2 border-bottom border-secondary border-opacity-10 pb-2">
-                            <div>
-                                <span class="text-white-50 font-monospace" style="font-size: 0.75rem;">
-                                    <i class="fa-solid fa-file-invoice me-1 text-indigo"
-                                        style="color: #818cf8 !important;"></i>{{ $order->no_faktur }}
-                                </span>
-                                <div class="text-white fw-semibold mt-1" style="font-size: 0.85rem;">
-                                    {{ $order->pelanggan->nama_pelanggan }}
-                                </div>
-                                <div class="text-secondary mt-1" style="font-size: 0.65rem;">
-                                    Tgl: {{ $order->tanggal->format('d/m/Y') }}
-                                    @if (in_array($order->jenis_transaksi, ['K', 'Kredit']))
-                                        &bull; <span class="{{ $isOverdue ? 'text-danger fw-bold' : '' }}">JT:
-                                            {{ $dueDate->format('d/m/Y') }}</span>
-                                    @endif
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                <div class="mb-1 d-flex justify-content-end gap-1 flex-wrap">
-                                    <span
-                                        class="badge {{ $order->jenis_transaksi === 'Tunai' ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} px-2 py-1"
-                                        style="font-size: 0.65rem; font-weight: 600;">
-                                        {{ $order->jenis_transaksi }}
-                                    </span>
-                                    @if ($sisaBayar < 1)
-                                        <span class="badge bg-success-subtle text-success px-2 py-1"
-                                            style="font-size: 0.65rem; font-weight: 600;">
-                                            Lunas
-                                        </span>
-                                    @else
-                                        <span class="badge bg-warning-subtle text-warning px-2 py-1"
-                                            style="font-size: 0.65rem; font-weight: 600;">
-                                            Belum Lunas
-                                        </span>
-                                    @endif
-                                </div>
-                                <div class="fw-bold text-info mt-1" style="font-size: 0.8rem;">
-                                    Rp {{ number_format($order->grand_total, 0, ',', '.') }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-between align-items-center mt-1" style="font-size: 0.7rem;">
-                            <span class="text-secondary"><i class="fa-solid fa-angles-down me-1"
-                                    style="font-size: 0.65rem;"></i> Ketuk untuk rincian ({{ $order->details->count() }}
-                                item)</span>
-                        </div>
-                    </div>
-
-                    <!-- Collapsible detail drawer -->
-                    <div class="collapse" id="kunj-details-{{ str_replace('-', '_', $order->no_faktur) }}">
-                        <div class="p-3 rounded-4 mb-3"
-                            style="background-color: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); margin-top: -8px;">
-                            <span class="text-secondary d-block mb-2 font-monospace"
-                                style="font-size: 0.65rem; text-transform: uppercase;">Rincian Barang</span>
-                            @foreach ($order->details as $detail)
-                                <div class="d-flex justify-content-between align-items-start py-2 border-bottom border-secondary border-opacity-10"
-                                    style="font-size: 0.75rem;">
-                                    <div style="max-width: 70%;">
-                                        <div class="fw-semibold text-white">{{ $detail->barang->nama_barang }}</div>
-                                        <div class="text-secondary font-monospace mt-1" style="font-size: 0.65rem;">
-                                            {{ $detail->qty }} {{ $detail->barangSatuan->satuan }} x Rp
-                                            {{ number_format($detail->harga, 0, ',', '.') }}
-                                        </div>
-                                    </div>
-                                    <div class="text-end fw-semibold text-white">
-                                        Rp {{ number_format($detail->total, 0, ',', '.') }}
-                                    </div>
-                                </div>
-                            @endforeach
-
-                            <div class="pt-2 mt-1" style="font-size: 0.75rem;">
-                                <div class="d-flex justify-content-between text-secondary mb-1">
-                                    <span>Subtotal:</span>
-                                    <span class="text-white">Rp {{ number_format($order->total, 0, ',', '.') }}</span>
-                                </div>
-                                @if ($order->diskon > 0)
-                                    <div class="d-flex justify-content-between text-secondary mb-1">
-                                        <span>Total Potongan:</span>
-                                        <span class="text-danger">- Rp {{ number_format($order->diskon, 0, ',', '.') }}</span>
-                                    </div>
-                                @endif
-
-                                <div
-                                    class="d-flex justify-content-between text-secondary mb-1 pt-1 border-top border-secondary border-opacity-10 mt-1">
-                                    <span>Total Tagihan:</span>
-                                    <span class="text-white fw-bold">Rp
-                                        {{ number_format($order->grand_total, 0, ',', '.') }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between text-secondary mb-1">
-                                    <span>Total Terbayar:</span>
-                                    <span class="text-success">Rp {{ number_format($totalBayar, 0, ',', '.') }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between text-secondary mb-1">
-                                    <span>Sisa Piutang:</span>
-                                    <span class="{{ $sisaBayar >= 1 ? 'text-warning fw-bold' : 'text-secondary' }}">
-                                        Rp {{ number_format($sisaBayar >= 1 ? $sisaBayar : 0, 0, ',', '.') }}
-                                    </span>
-                                </div>
-                                <div class="d-flex justify-content-between text-secondary mb-1">
-                                    <span>Status Bayar:</span>
-                                    <span
-                                        class="{{ $sisaBayar < 1 ? 'text-success fw-semibold' : 'text-warning fw-semibold' }}">
-                                        {{ $sisaBayar < 1 ? 'Lunas' : 'Belum Lunas' }}
-                                    </span>
-                                </div>
-                                @if (in_array($order->jenis_transaksi, ['K', 'Kredit']))
-                                    <div class="d-flex justify-content-between text-secondary mb-1">
-                                        <span>Jatuh Tempo:</span>
-                                        <span class="{{ $isOverdue ? 'text-danger fw-semibold' : 'text-info fw-semibold' }}">
-                                            {{ $dueDate->format('d/m/Y') }}
-                                        </span>
-                                    </div>
-                                @endif
-
-                                @if ($order->keterangan)
-                                    <div class="text-secondary mt-2 pt-2 border-top border-secondary border-opacity-10 mb-2"
-                                        style="font-size: 0.7rem;">
-                                        <i class="fa-solid fa-comment-dots me-1"></i> Catatan Order: <span
-                                            class="text-white-50 italic">"{{ $order->keterangan }}"</span>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            @endif
-        @else
             <!-- Histori Penjualan Pelanggan Check-in (5 Orderan Terakhir) -->
             <h5 class="fw-bold mb-3 mt-4" style="font-size: 0.95rem; letter-spacing: 0.5px;">5 Orderan Terakhir Toko Ini</h5>
         @if ($lastOrders->isEmpty())
@@ -776,7 +588,6 @@
             @endforeach
         @endif
         @endif
-    @endif
 
     <!-- Today's Visits Log -->
     <h5 class="fw-bold mb-3 mt-4" style="font-size: 0.95rem; letter-spacing: 0.5px;">Kunjungan Hari Ini</h5>
@@ -1095,7 +906,8 @@
                                         '1px solid rgba(255,255,255,0.05) !important';
                                     btn.innerHTML = `
                                     <span class="fw-semibold text-white" style="font-size: 0.85rem;">${item.text}</span>
-                                    <span class="text-secondary mt-1" style="font-size: 0.75rem;">${item.alamat}</span>
+                                    <span class="text-secondary mt-1" style="font-size: 0.75rem;">Wilayah: ${item.wilayah || '-'}</span>
+                                    <span class="text-secondary" style="font-size: 0.75rem;">Alamat: ${item.alamat}</span>
                                 `;
                                     btn.addEventListener('click', () => {
                                         selectCustomer(item);

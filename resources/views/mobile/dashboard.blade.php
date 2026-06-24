@@ -200,13 +200,72 @@
     <!-- Quick Action Panel -->
     <h5 class="fw-bold mb-3" style="font-size: 0.95rem; letter-spacing: 0.5px;">
         {{ $isSpv ? 'Menu Operasional Saya' : 'Menu Utama' }}</h5>
-    @if (Auth::user()->is_kanvas)
+    @if ($activeCheckin)
+        <div class="row g-3 mb-3">
+            <div class="col-6">
+                <a href="{{ route('mobile.kunjungan.index') }}"
+                    class="btn btn-mobile w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100"
+                    style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">
+                    <i class="fa-solid fa-store mb-2 text-success" style="font-size: 1.6rem;"></i>
+                    <span style="font-size: 0.85rem;">Menu Pelanggan</span>
+                </a>
+            </div>
+            <div class="col-6">
+                @if (Auth::user()->is_kanvas)
+                    <a href="{{ route('mobile.order.canvas.create') }}"
+                        class="btn btn-mobile btn-mobile-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100">
+                        <i class="fa-solid fa-cart-plus mb-2" style="font-size: 1.6rem;"></i>
+                        <span style="font-size: 0.85rem;">Input Penjualan Canvas</span>
+                    </a>
+                @else
+                    <a href="{{ route('mobile.order.create') }}"
+                        class="btn btn-mobile btn-mobile-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100">
+                        <i class="fa-solid fa-cart-plus mb-2" style="font-size: 1.6rem;"></i>
+                        <span style="font-size: 0.85rem;">Input Penjualan</span>
+                    </a>
+                @endif
+            </div>
+        </div>
+        <div class="row g-3 mb-4">
+            <div class="col-6">
+                <a href="{{ route('mobile.order.index') }}"
+                    class="btn btn-mobile w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100"
+                    style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">
+                    <i class="fa-solid fa-clock-rotate-left mb-2 text-info" style="font-size: 1.6rem;"></i>
+                    <span style="font-size: 0.85rem;">Histori Penjualan</span>
+                </a>
+            </div>
+            <div class="col-6">
+                <a href="{{ route('mobile.pelanggan.create') }}"
+                    class="btn btn-mobile w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100"
+                    style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">
+                    <i class="fa-solid fa-user-plus mb-2 text-warning" style="font-size: 1.6rem;"></i>
+                    <span style="font-size: 0.85rem;">Pelanggan Baru</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="alert alert-info rounded-4 mb-4 d-flex align-items-center"
+            style="background-color: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #818cf8; margin-top: -8px;">
+            <i class="fa-solid fa-circle-info me-3" style="font-size: 1.25rem;"></i>
+            <div>
+                <span style="font-size: 0.75rem; font-weight: 500; opacity: 0.8;" class="d-block">
+                    @if (Auth::user()->is_kanvas)
+                        Kunjungan & Sesi Canvas Aktif:
+                    @else
+                        Kunjungan Aktif:
+                    @endif
+                </span>
+                <strong style="font-size: 0.85rem;">{{ $activeCheckin->pelanggan->nama_pelanggan }}</strong>
+            </div>
+        </div>
+    @else
         <div class="row g-3 mb-3">
             <div class="col-6">
                 <a href="{{ route('mobile.kunjungan.index') }}"
                     class="btn btn-mobile btn-mobile-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100">
                     <i class="fa-solid fa-store mb-2" style="font-size: 1.6rem;"></i>
-                    <span style="font-size: 0.85rem;">Kunjungan</span>
+                    <span style="font-size: 0.85rem;">Menu Pelanggan</span>
                 </a>
             </div>
             <div class="col-6">
@@ -218,113 +277,24 @@
                 </a>
             </div>
         </div>
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <a href="{{ route('mobile.pelanggan.create') }}"
+                    class="btn btn-mobile w-100 py-2.5 d-flex align-items-center justify-content-center"
+                    style="background-color: rgba(0, 191, 255, 0.05); border: 1px solid rgba(0, 191, 255, 0.2); color: var(--text-primary);">
+                    <i class="fa-solid fa-user-plus me-2 text-warning" style="font-size: 1.2rem;"></i>
+                    <span style="font-size: 0.85rem;">Pendaftaran Pelanggan Baru</span>
+                </a>
+            </div>
+        </div>
 
-        @if ($activeCheckin)
-            <div class="alert alert-info rounded-4 mb-4 d-flex align-items-center"
-                style="background-color: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #818cf8; margin-top: -8px;">
-                <i class="fa-solid fa-circle-info me-3" style="font-size: 1.25rem;"></i>
-                <div>
-                    <span style="font-size: 0.75rem; font-weight: 500; opacity: 0.8;" class="d-block">
-                        Sesi Canvas Aktif:
-                    </span>
-                    <strong
-                        style="font-size: 0.85rem;">{{ Auth::user()->pelanggan->nama_pelanggan ?? 'Sesi Truk Canvas' }}</strong>
-                </div>
-            </div>
-        @else
-            <div class="alert alert-warning rounded-4 mb-4 d-flex align-items-center"
-                style="background-color: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; margin-top: -8px;">
-                <i class="fa-solid fa-triangle-exclamation me-3" style="font-size: 1.25rem;"></i>
-                <span style="font-size: 0.80rem; font-weight: 500;">
-                    Anda belum check-in. Silakan mulai sesi canvas terlebih dahulu untuk melakukan penjualan.
-                </span>
-            </div>
-        @endif
-    @else
-        @if ($activeCheckin)
-            <div class="row g-3 mb-3">
-                <div class="col-6">
-                    <a href="{{ route('mobile.kunjungan.index') }}"
-                        class="btn btn-mobile w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100"
-                        style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">
-                        <i class="fa-solid fa-store mb-2 text-success" style="font-size: 1.6rem;"></i>
-                        <span style="font-size: 0.85rem;">Menu Pelanggan</span>
-                    </a>
-                </div>
-                <div class="col-6">
-                    <a href="{{ route('mobile.order.create') }}"
-                        class="btn btn-mobile btn-mobile-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100">
-                        <i class="fa-solid fa-cart-plus mb-2" style="font-size: 1.6rem;"></i>
-                        <span style="font-size: 0.85rem;">Input Penjualan</span>
-                    </a>
-                </div>
-            </div>
-            <div class="row g-3 mb-4">
-                <div class="col-6">
-                    <a href="{{ route('mobile.order.index') }}"
-                        class="btn btn-mobile w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100"
-                        style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">
-                        <i class="fa-solid fa-clock-rotate-left mb-2 text-info" style="font-size: 1.6rem;"></i>
-                        <span style="font-size: 0.85rem;">Histori Penjualan</span>
-                    </a>
-                </div>
-                <div class="col-6">
-                    <a href="{{ route('mobile.pelanggan.create') }}"
-                        class="btn btn-mobile w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100"
-                        style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">
-                        <i class="fa-solid fa-user-plus mb-2 text-warning" style="font-size: 1.6rem;"></i>
-                        <span style="font-size: 0.85rem;">Pelanggan Baru</span>
-                    </a>
-                </div>
-            </div>
-
-            <div class="alert alert-info rounded-4 mb-4 d-flex align-items-center"
-                style="background-color: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #818cf8; margin-top: -8px;">
-                <i class="fa-solid fa-circle-info me-3" style="font-size: 1.25rem;"></i>
-                <div>
-                    <span style="font-size: 0.75rem; font-weight: 500; opacity: 0.8;" class="d-block">
-                        Kunjungan Aktif:
-                    </span>
-                    <strong style="font-size: 0.85rem;">{{ $activeCheckin->pelanggan->nama_pelanggan }}</strong>
-                </div>
-            </div>
-        @else
-            <div class="row g-3 mb-3">
-                <div class="col-6">
-                    <a href="{{ route('mobile.kunjungan.index') }}"
-                        class="btn btn-mobile btn-mobile-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100">
-                        <i class="fa-solid fa-store mb-2" style="font-size: 1.6rem;"></i>
-                        <span style="font-size: 0.85rem;">Menu Pelanggan</span>
-                    </a>
-                </div>
-                <div class="col-6">
-                    <a href="{{ route('mobile.order.index') }}"
-                        class="btn btn-mobile w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100"
-                        style="background-color: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);">
-                        <i class="fa-solid fa-clock-rotate-left mb-2 text-info" style="font-size: 1.6rem;"></i>
-                        <span style="font-size: 0.85rem;">Histori Penjualan</span>
-                    </a>
-                </div>
-            </div>
-            <div class="row g-3 mb-4">
-                <div class="col-12">
-                    <a href="{{ route('mobile.pelanggan.create') }}"
-                        class="btn btn-mobile w-100 py-2.5 d-flex align-items-center justify-content-center"
-                        style="background-color: rgba(0, 191, 255, 0.05); border: 1px solid rgba(0, 191, 255, 0.2); color: var(--text-primary);">
-                        <i class="fa-solid fa-user-plus me-2 text-warning" style="font-size: 1.2rem;"></i>
-                        <span style="font-size: 0.85rem;">Pendaftaran Pelanggan Baru</span>
-                    </a>
-                </div>
-            </div>
-
-            <div class="alert alert-warning rounded-4 mb-4 d-flex align-items-center"
-                style="background-color: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; margin-top: -8px;">
-                <i class="fa-solid fa-triangle-exclamation me-3" style="font-size: 1.25rem;"></i>
-                <span style="font-size: 0.80rem; font-weight: 500;">
-                    Anda belum check-in. Silakan pilih pelanggan terlebih dahulu untuk melakukan penjualan.
-                </span>
-            </div>
-        @endif
+        <div class="alert alert-warning rounded-4 mb-4 d-flex align-items-center"
+            style="background-color: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; margin-top: -8px;">
+            <i class="fa-solid fa-triangle-exclamation me-3" style="font-size: 1.25rem;"></i>
+            <span style="font-size: 0.80rem; font-weight: 500;">
+                Anda belum check-in. Silakan pilih pelanggan terlebih dahulu untuk melakukan penjualan.
+            </span>
+        </div>
     @endif
 
     <!-- Recent Orders Section -->

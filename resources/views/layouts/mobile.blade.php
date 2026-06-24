@@ -514,21 +514,19 @@
                 </a>
                 @endif
 
-                @if (!$isKanvas)
-                {{-- Pelanggan / Kunjungan — hanya sales regular --}}
+                {{-- Pelanggan / Kunjungan — untuk semua sales --}}
                 <a href="{{ route('mobile.kunjungan.index') }}"
-                    class="nav-item-mobile {{ Request::routeIs('mobile.kunjungan.*') || Request::routeIs('mobile.order.create') || Request::routeIs('mobile.order.store') || Request::routeIs('mobile.pelanggan.*') ? 'active' : '' }}">
+                    class="nav-item-mobile {{ Request::routeIs('mobile.kunjungan.*') || Request::routeIs('mobile.order.create') || Request::routeIs('mobile.order.store') || Request::routeIs('mobile.pelanggan.*') || Request::routeIs('mobile.order.canvas.create') ? 'active' : '' }}">
                     <i class="fa-solid fa-store"></i>
                     <span>Pelanggan</span>
                 </a>
 
-                {{-- Barang — hanya sales regular --}}
+                {{-- Barang — untuk semua sales --}}
                 <a href="{{ route('mobile.barang.index') }}"
                     class="nav-item-mobile {{ Request::routeIs('mobile.barang.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-box-open"></i>
                     <span>Barang</span>
                 </a>
-                @endif
 
                 {{-- Penjualan (selalu ada, aktif juga saat canvas order) --}}
                 <a href="{{ route('mobile.order.index') }}"
@@ -537,14 +535,12 @@
                     <span>Penjualan</span>
                 </a>
 
-                @if (!$isKanvas)
-                {{-- Ajuan Limit — hanya sales regular --}}
+                {{-- Ajuan Limit — untuk semua sales --}}
                 <a href="{{ route('mobile.limit-kredit.index') }}"
                     class="nav-item-mobile {{ Request::routeIs('mobile.limit-kredit.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-file-invoice-dollar"></i>
                     <span>Ajuan Limit</span>
                 </a>
-                @endif
             @endif
             @if ($isOwner)
                 <form id="logout-form" action="{{ route('mobile.owner.logout') }}" method="POST" class="d-none">
