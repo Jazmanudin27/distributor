@@ -255,14 +255,17 @@
                     <div id="collapse-{{ $hs->id }}" class="accordion-collapse collapse"
                         aria-labelledby="heading-{{ $hs->id }}" data-bs-parent="#historyAccordion">
                         <div class="accordion-body bg-black bg-opacity-15 p-3">
-                            <div class="mb-3 d-flex flex-column gap-1.5 p-2.5 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10" style="font-size: 0.72rem;">
+                            <div class="mb-3 d-flex flex-column gap-1.5 p-2.5 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-10"
+                                style="font-size: 0.72rem;">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="text-secondary">No. DPB:</span>
-                                    <strong class="text-white font-monospace" style="font-size: 0.75rem;">{{ $hs->no_canvas }}</strong>
+                                    <strong class="text-white font-monospace"
+                                        style="font-size: 0.75rem;">{{ $hs->no_canvas }}</strong>
                                 </div>
                                 @if ($hs->keterangan)
                                     <div class="border-top border-secondary border-opacity-10 pt-1.5 mt-1">
-                                        <span class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; text-transform: uppercase; font-weight: 600;">Catatan:</span>
+                                        <span class="text-secondary d-block mb-0.5"
+                                            style="font-size: 0.6rem; text-transform: uppercase; font-weight: 600;">Catatan:</span>
                                         <span class="text-white-50 italic">"{{ $hs->keterangan }}"</span>
                                     </div>
                                 @endif
