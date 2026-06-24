@@ -201,8 +201,8 @@
                 <div id="overdue-warning"
                     class="{{ $pelanggan && $pelanggan->hasOverdueInvoices() ? '' : 'd-none' }} mt-2">
                     <div class="alert alert-danger p-2 mb-0 rounded-3"
-                        style="font-size: 0.7rem; background-color: rgba(219, 0, 0, 0.795); border: 1px solid rgba(214, 0, 0, 0.836); color: #ff0000;">
-                        <div class="d-flex align-items-center mb-1 text-white">
+                        style="font-size: 0.7rem; background-color: rgba(180, 0, 0, 0.795); border: 1px solid rgba(180, 0, 0, 0.836); color: #ffffff;">
+                        <div class="d-flex align-items-center mb-1">
                             <i class="fa-solid fa-triangle-exclamation me-1"></i>
                             <span class="fw-bold ">Toko diblokir (Overdue)! Faktur overdue:</span>
                         </div>
