@@ -75,12 +75,21 @@
 @endpush
 
 @section('content')
-    <div class="d-flex align-items-center gap-2 mb-3">
-        <h5 class="fw-bold mb-0" style="font-size: 1.1rem; letter-spacing: 0.5px;">Order Penjualan Canvas</h5>
-        <span class="canvas-badge">
-            <i class="fa-solid fa-truck-moving me-1" style="color: #6366f1; font-size: 0.7rem;"></i>
-            <span style="color: #a5b4fc; font-size: 0.7rem; font-weight: 600;">KANVAS</span>
-        </span>
+    <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <h5 class="fw-bold mb-0" style="font-size: 1.1rem; letter-spacing: 0.5px;">Order Penjualan Canvas</h5>
+            <span class="canvas-badge">
+                <i class="fa-solid fa-truck-moving me-1" style="color: #6366f1; font-size: 0.7rem;"></i>
+                <span style="color: #a5b4fc; font-size: 0.7rem; font-weight: 600;">KANVAS</span>
+            </span>
+        </div>
+        <div class="d-flex gap-1.5">
+            <a href="{{ route('mobile.order.canvas.dpb') }}"
+                class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 text-info px-2.5 py-1.5 fw-semibold"
+                style="font-size: 0.7rem; border-radius: 8px;">
+                <i class="fa-solid fa-truck-ramp-box"></i> Lihat DPB
+            </a>
+        </div>
     </div>
 
     @if ($errors->any())
@@ -164,25 +173,27 @@
                 </div>
 
                 @if ($pelanggan->hasOverdueInvoices())
-                    <div class="alert alert-danger p-2 mb-0 mt-2 rounded-3"
-                        style="font-size: 0.7rem; background-color: rgba(180,0,0,0.795); border: 1px solid rgba(180,0,0,0.836); color: #fff;">
-                        <div class="d-flex align-items-center mb-1">
-                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
-                            <span class="fw-bold">Toko diblokir (Overdue)!</span>
+                    <div class="alert alert-danger p-3 mb-0 mt-2 rounded-4"
+                        style="font-size: 0.75rem; background-color: rgba(220, 38, 38, 0.2); border: 1.5px solid rgba(220, 38, 38, 0.4); color: #fecaca; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);">
+                        <div class="d-flex align-items-center mb-2 text-danger fw-bold" style="color: #fca5a5 !important;">
+                            <i class="fa-solid fa-triangle-exclamation me-1.5 fs-6"></i>
+                            <span class="fw-bold" style="font-size: 0.8rem; letter-spacing: 0.3px;">TOKO DIBLOKIR (OVERDUE)!</span>
                         </div>
-                        <ul class="mb-0 ps-3 mt-1" style="font-size: 0.68rem; list-style-type: disc;">
+                        <p class="text-white-50 mb-2" style="font-size: 0.7rem; line-height: 1.3;">
+                            Pelanggan memiliki tagihan jatuh tempo yang belum diselesaikan. Detail faktur:
+                        </p>
+                        <ul class="mb-0 ps-3" style="font-size: 0.7rem; list-style-type: disc; color: #f8fafc;">
                             @foreach ($pelanggan->getOverdueInvoices() as $inv)
                                 @php
                                     $sisa =
                                         $inv->grand_total - $inv->getApprovedPembayaranTotal() - $inv->getTotalRetur();
                                     $dueDate = \Carbon\Carbon::parse($inv->tanggal)->addDays($pelanggan->ljt ?? 30);
                                 @endphp
-                                <li>
-                                    Faktur <strong class="text-white font-monospace">{{ $inv->no_faktur }}</strong>
-                                    <div class="text-white-50 ps-1" style="font-size: 0.65rem;">
-                                        JT: <span class="text-danger fw-bold">{{ $dueDate->format('d/m/Y') }}</span>
-                                        &bull; Sisa: <strong class="text-white">Rp
-                                            {{ number_format($sisa, 0, ',', '.') }}</strong>
+                                <li class="mb-2">
+                                    Faktur <strong class="text-white font-monospace" style="background: rgba(255,255,255,0.08); padding: 1px 4px; border-radius: 4px;">{{ $inv->no_faktur }}</strong>
+                                    <div class="text-white-50 ps-1 mt-0.5" style="font-size: 0.65rem; line-height: 1.4;">
+                                        JT: <span class="text-danger fw-bold" style="color: #fca5a5 !important;">{{ $dueDate->format('d/m/Y') }}</span> &bull;
+                                        Sisa: <strong class="text-white" style="color: #f8fafc !important;">Rp {{ number_format($sisa, 0, ',', '.') }}</strong>
                                     </div>
                                 </li>
                             @endforeach

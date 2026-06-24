@@ -3,16 +3,23 @@
 @section('title', 'DPB (Barang Bawaan Hari Ini)')
 
 @section('content')
-    <div class="d-flex align-items-center mb-4">
-        <div class="avatar-glow rounded-circle d-flex align-items-center justify-content-center me-3"
-            style="width: 50px; height: 50px; background: var(--accent-gradient); box-shadow: var(--accent-glow);">
-            <i class="fa-solid fa-truck text-white" style="font-size: 1.4rem;"></i>
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="d-flex align-items-center">
+            <div class="avatar-glow rounded-circle d-flex align-items-center justify-content-center me-3"
+                style="width: 50px; height: 50px; background: var(--accent-gradient); box-shadow: var(--accent-glow);">
+                <i class="fa-solid fa-truck text-white" style="font-size: 1.4rem;"></i>
+            </div>
+            <div>
+                <h4 class="mb-0 fw-bold" style="font-size: 1.15rem; letter-spacing: 0.5px;">DPB Aktif Anda</h4>
+                <span class="text-secondary" style="font-size: 0.8rem; font-weight: 500;">
+                    Barang yang dibawa hari ini
+                </span>
+            </div>
         </div>
         <div>
-            <h4 class="mb-0 fw-bold" style="font-size: 1.15rem; letter-spacing: 0.5px;">DPB Aktif Anda</h4>
-            <span class="text-secondary" style="font-size: 0.8rem; font-weight: 500;">
-                Barang yang dibawa hari ini
-            </span>
+            <a href="{{ route('mobile.order.canvas.create') }}" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 px-2.5 py-1.5 fw-semibold" style="font-size: 0.7rem; border-radius: 8px;">
+                <i class="fa-solid fa-arrow-left"></i> Input Order
+            </a>
         </div>
     </div>
 

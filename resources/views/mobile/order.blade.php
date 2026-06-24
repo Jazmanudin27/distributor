@@ -200,14 +200,17 @@
 
                 <div id="overdue-warning"
                     class="{{ $pelanggan && $pelanggan->hasOverdueInvoices() ? '' : 'd-none' }} mt-2">
-                    <div class="alert alert-danger p-2 mb-0 rounded-3"
-                        style="font-size: 0.7rem; background-color: rgba(180, 0, 0, 0.795); border: 1px solid rgba(180, 0, 0, 0.836); color: #ffffff;">
-                        <div class="d-flex align-items-center mb-1">
-                            <i class="fa-solid fa-triangle-exclamation me-1"></i>
-                            <span class="fw-bold ">Toko diblokir (Overdue)! Faktur overdue:</span>
+                    <div class="alert alert-danger p-3 mb-0 rounded-4"
+                        style="font-size: 0.75rem; background-color: rgba(220, 38, 38, 0.2); border: 1.5px solid rgba(220, 38, 38, 0.4); color: #fecaca; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);">
+                        <div class="d-flex align-items-center mb-2 text-danger fw-bold" style="color: #fca5a5 !important;">
+                            <i class="fa-solid fa-triangle-exclamation me-1.5 fs-6"></i>
+                            <span class="fw-bold" style="font-size: 0.8rem; letter-spacing: 0.3px;">TOKO DIBLOKIR (OVERDUE)!</span>
                         </div>
-                        <ul class="mb-0 ps-3 mt-1" id="overdue-invoices-list"
-                            style="font-size: 0.68rem; list-style-type: disc;">
+                        <p class="text-white-50 mb-2" style="font-size: 0.7rem; line-height: 1.3;">
+                            Pelanggan memiliki tagihan jatuh tempo yang belum diselesaikan. Detail faktur:
+                        </p>
+                        <ul class="mb-0 ps-3" id="overdue-invoices-list"
+                            style="font-size: 0.7rem; list-style-type: disc; color: #f8fafc;">
                             @if ($pelanggan && $pelanggan->hasOverdueInvoices())
                                 @foreach ($pelanggan->getOverdueInvoices() as $inv)
                                     @php
@@ -219,16 +222,13 @@
                                             $inv->pelanggan->ljt ?? 30,
                                         );
                                     @endphp
-                                    <li>
-                                        Faktur <strong class="text-white font-monospace">{{ $inv->no_faktur }}</strong>
-                                        <div class="text-white-50 ps-1" style="font-size: 0.65rem;">
+                                    <li class="mb-2">
+                                        Faktur <strong class="text-white font-monospace" style="background: rgba(255,255,255,0.08); padding: 1px 4px; border-radius: 4px;">{{ $inv->no_faktur }}</strong>
+                                        <div class="text-white-50 ps-1 mt-0.5" style="font-size: 0.65rem; line-height: 1.4;">
                                             Tgl: {{ \Carbon\Carbon::parse($inv->tanggal)->format('d/m/Y') }} &bull;
-                                            LJT: {{ $inv->pelanggan->ljt ?? 30 }} hari &bull;
-                                            JT: <span class="text-danger fw-bold">{{ $dueDate->format('d/m/Y') }}</span>
-                                            <br>
-                                            Sales: {{ $inv->sales->name ?? $inv->kode_sales }} &bull;
-                                            Sisa: <strong class="text-white">Rp
-                                                {{ number_format($sisa, 0, ',', '.') }}</strong>
+                                            LJT: {{ $inv->pelanggan->ljt ?? 30 }} hari <br>
+                                            JT: <span class="text-danger fw-bold" style="color: #fca5a5 !important;">{{ $dueDate->format('d/m/Y') }}</span> &bull;
+                                            Sisa: <strong class="text-white" style="color: #f8fafc !important;">Rp {{ number_format($sisa, 0, ',', '.') }}</strong>
                                         </div>
                                     </li>
                                 @endforeach
