@@ -699,6 +699,7 @@ class MobileOrderController extends Controller
         }
 
         $products = \App\Models\Barang::where('status', 1)
+            ->where('stok', '>', 0)
             ->with('satuans')
             ->orderBy('nama_barang', 'asc')
             ->get();

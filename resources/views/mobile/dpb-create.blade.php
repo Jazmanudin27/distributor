@@ -269,6 +269,9 @@
                 const query = filterText.toLowerCase().trim();
 
                 const filtered = allProducts.filter(item => {
+                    const hasStock = parseFloat(item.stok) > 0;
+                    if (!hasStock) return false;
+
                     return item.nama_barang.toLowerCase().includes(query) ||
                         item.kode_barang.toLowerCase().includes(query) ||
                         (item.kode_item && item.kode_item.toLowerCase().includes(query));
