@@ -166,9 +166,11 @@
                     <div class="d-flex justify-content-between align-items-center mt-1" style="font-size: 0.75rem;">
                         <div class="d-flex gap-3 text-secondary" style="font-size: 0.7rem;">
                             <div>Bawa: <strong class="text-primary font-monospace"
-                                    style="font-size: 0.8rem;">{{ $detail->barang ? $detail->barang->formatStok($qtyAmbil) : $qtyAmbil }}</strong></div>
+                                    style="font-size: 0.8rem;">{{ $detail->barang ? $detail->barang->formatStok($qtyAmbil) : $qtyAmbil }}</strong>
+                            </div>
                             <div>Jual: <strong class="text-info font-monospace"
-                                    style="font-size: 0.8rem;">{{ $detail->barang ? $detail->barang->formatStok($qtyTerjual) : $qtyTerjual }}</strong></div>
+                                    style="font-size: 0.8rem;">{{ $detail->barang ? $detail->barang->formatStok($qtyTerjual) : $qtyTerjual }}</strong>
+                            </div>
                         </div>
                         <div>
                             <span class="text-secondary" style="font-size: 0.65rem;">Sisa:</span>
