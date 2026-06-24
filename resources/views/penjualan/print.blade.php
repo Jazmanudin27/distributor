@@ -174,7 +174,7 @@
                     <tr>
                         <td width="120">Tgl. Jatuh Tempo</td>
                         <td>:
-                            {{ $item->tanggal? \Carbon\Carbon::parse($item->tanggal)->addDays($item->pelanggan->ljt ?? 30)->format('d/m/Y'): '-' }}
+                            {{ $item->tanggal ? \Carbon\Carbon::parse($item->tanggal)->addDays(14)->format('d/m/Y') : '-' }}
                         </td>
                     </tr>
                     <tr>
