@@ -25,7 +25,8 @@
                             </a>
                         @endif
                         <a href="{{ route('canvas.print', $canvasSession->id) }}" target="_blank"
-                            class="btn btn-light btn-sm fw-bold hover-scale me-1 text-primary shadow-sm" style="background-color: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.35); color: white;">
+                            class="btn btn-light btn-sm fw-bold hover-scale me-1 text-primary shadow-sm"
+                            style="background-color: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.35); color: white;">
                             <i class="fa-solid fa-print me-1"></i> Cetak Laporan
                         </a>
                         <a href="{{ route('canvas.index') }}"
@@ -73,42 +74,6 @@
                             <span class="text-dark small d-block mt-1">{{ $canvasSession->keterangan ?? '-' }}</span>
                         </div>
                     </div>
-
-                    {{-- Status Alerts --}}
-                    @if ($canvasSession->status === 'loading')
-                        <div class="alert alert-info border border-info-subtle mb-4 shadow-sm" role="alert"
-                            style="background-color: rgba(13, 202, 240, 0.05);">
-                            <div class="d-flex">
-                                <div class="me-3 fs-4 text-info"><i class="fa-solid fa-rotate"></i></div>
-                                <div>
-                                    <h6 class="alert-heading fw-bold mb-1 text-info-emphasis">Informasi Sinkronisasi
-                                        Penjualan</h6>
-                                    <p class="mb-0 small text-secondary-d">
-                                        Setiap transaksi penjualan (Desktop & Mobile) yang dibuat oleh salesman
-                                        **{{ $canvasSession->sales->name ?? $canvasSession->kode_sales }}** pada tanggal
-                                        **{{ \Carbon\Carbon::parse($canvasSession->tanggal)->format('d/m/Y') }}** akan
-                                        otomatis disinkronkan ke kolom **Qty Terjual** di bawah ini. Gudang stock untuk
-                                        penjualan tersebut **tidak** akan didebit kembali.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    @else
-                        <div class="alert alert-success border border-success-subtle mb-4 shadow-sm" role="alert"
-                            style="background-color: rgba(25, 135, 84, 0.05);">
-                            <div class="d-flex">
-                                <div class="me-3 fs-4 text-success"><i class="fa-solid fa-circle-check"></i></div>
-                                <div>
-                                    <h6 class="alert-heading fw-bold mb-1 text-success-emphasis">Rekonsiliasi Selesai</h6>
-                                    <p class="mb-0 small text-secondary-d">
-                                        DPB ini telah selesai dan ditutup. Sisa barang (**Qty Kembali**) telah dimasukkan
-                                        kembali ke stock gudang fisik dan tercatat pada buku mutasi barang pada tanggal
-                                        **{{ \Carbon\Carbon::parse($canvasSession->updated_at)->format('d/m/Y H:i') }}**.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
 
                     {{-- ITEMS TABLE --}}
                     <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-box-open me-2 text-primary"></i> Rincian Barang
