@@ -78,6 +78,7 @@ Route::middleware('auth')->group(function () {
         // Orders (Sales Canvas) — tanpa check-in, pelanggan otomatis dari user
         Route::get('/order/canvas', [MobileOrderController::class, 'createCanvas'])->name('order.canvas.create');
         Route::post('/order/canvas', [MobileOrderController::class, 'storeCanvas'])->name('order.canvas.store');
+        Route::get('/order/canvas/dpb', [MobileOrderController::class, 'canvasDpb'])->name('order.canvas.dpb');
 
         // Ajuan Limit Kredit
         Route::get('/limit-kredit', [MobileAjuanLimitController::class, 'index'])->name('limit-kredit.index');

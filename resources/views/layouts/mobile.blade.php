@@ -505,6 +505,15 @@
                     <span>Dashboard</span>
                 </a>
 
+                @if ($isKanvas)
+                {{-- DPB (hanya sales canvas) --}}
+                <a href="{{ route('mobile.order.canvas.dpb') }}"
+                    class="nav-item-mobile {{ Request::routeIs('mobile.order.canvas.dpb') ? 'active' : '' }}">
+                    <i class="fa-solid fa-truck-ramp-box"></i>
+                    <span>DPB</span>
+                </a>
+                @endif
+
                 @if (!$isKanvas)
                 {{-- Pelanggan / Kunjungan — hanya sales regular --}}
                 <a href="{{ route('mobile.kunjungan.index') }}"

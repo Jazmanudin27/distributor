@@ -115,7 +115,6 @@
                     required>
             </div>
 
-            <!-- Customer — Auto-locked from user profile -->
             <div class="mb-2">
                 <label class="form-label text-secondary small mb-1">Pelanggan</label>
                 <div class="p-2 rounded border border-primary bg-dark bg-opacity-50">

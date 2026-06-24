@@ -654,6 +654,28 @@ class MobileOrderController extends Controller
     }
 
     /**
+     * View active DPB details for Sales Canvas (goods carried today).
+     */
+    public function canvasDpb(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user->is_kanvas) {
+            return redirect()->route('mobile.dashboard')->with('error', 'Fitur ini hanya tersedia untuk Sales Canvas.');
+        }
+
+        // Fetch active canvas session (loading status)
+        $session = \App\Services\CanvasService::getActiveSession($user->nik);
+
+        if ($session) {
+            // Load details with barang and satuan
+            $session->load(['details.barang', 'details.barangSatuan']);
+        }
+
+        return view('mobile.dpb', compact('session'));
+    }
+
+    /**
      * Store a new canvas order (no check-in required, customer auto from user profile).
      */
     public function storeCanvas(Request $request)
