@@ -3,7 +3,8 @@
 @section('title', 'Kunjungan Sales')
 
 @section('content')
-    <h5 class="fw-bold mb-3" style="font-size: 1.1rem; letter-spacing: 0.5px;">Pelanggan & Kunjungan</h5>
+    <h5 class="fw-bold mb-3" style="font-size: 1.1rem; letter-spacing: 0.5px;">
+        Pelanggan & Kunjungan</h5>
 
     @if ($activeCheckin)
         <!-- Active Check-in Screen -->
@@ -24,12 +25,14 @@
             </div>
 
             @if (Auth::user()->is_kanvas)
-                <h4 class="fw-bold text-white mb-1" style="font-size: 1.15rem;">{{ $activeCheckin->pelanggan->nama_pelanggan }}</h4>
+                <h4 class="fw-bold text-white mb-1" style="font-size: 1.15rem;">
+                    {{ $activeCheckin->pelanggan->nama_pelanggan }}</h4>
                 <p class="text-secondary mb-2" style="font-size: 0.8rem;">
                     <i class="fa-solid fa-map-pin me-1 text-danger"></i> {{ $activeCheckin->pelanggan->alamat_pelanggan }}
                 </p>
             @else
-                <h4 class="fw-bold text-white mb-1" style="font-size: 1.15rem;">{{ $activeCheckin->pelanggan->nama_pelanggan }}</h4>
+                <h4 class="fw-bold text-white mb-1" style="font-size: 1.15rem;">
+                    {{ $activeCheckin->pelanggan->nama_pelanggan }}</h4>
                 <p class="text-secondary mb-2" style="font-size: 0.8rem;">
                     <i class="fa-solid fa-map-pin me-1 text-danger"></i> {{ $activeCheckin->pelanggan->alamat_pelanggan }}
                 </p>
@@ -188,7 +191,8 @@
                         Durasi Kunjungan (Canvas)
                     @else
                         Durasi Kunjungan
-                    @endif</div>
+                    @endif
+                </div>
                 <div class="fw-bold text-indigo" id="duration-counter"
                     style="font-size: 1.5rem; color: #818cf8; font-family: monospace;">00:00:00</div>
             </div>
@@ -239,7 +243,8 @@
                         @endif
                     </label>
                     <textarea class="form-control form-control-mobile" id="catatan" name="catatan" rows="3"
-                        placeholder="{{ Auth::user()->is_kanvas ? 'Tulis laporan singkat sesi hari ini (faktur terjual, total cash/kredit, kendala)...' : 'Tulis catatan (misal: order berhasil, toko tutup, stok masih penuh...)' }}" required></textarea>
+                        placeholder="{{ Auth::user()->is_kanvas ? 'Tulis laporan singkat sesi hari ini (faktur terjual, total cash/kredit, kendala)...' : 'Tulis catatan (misal: order berhasil, toko tutup, stok masih penuh...)' }}"
+                        required></textarea>
                 </div>
 
                 <button type="submit" class="btn btn-mobile w-100 py-3 text-white"
@@ -355,8 +360,8 @@
     @endif
 
     @if ($activeCheckin)
-            <!-- Histori Penjualan Pelanggan Check-in (5 Orderan Terakhir) -->
-            <h5 class="fw-bold mb-3 mt-4" style="font-size: 0.95rem; letter-spacing: 0.5px;">5 Orderan Terakhir Toko Ini</h5>
+        <!-- Histori Penjualan Pelanggan Check-in (5 Orderan Terakhir) -->
+        <h5 class="fw-bold mb-3 mt-4" style="font-size: 0.95rem; letter-spacing: 0.5px;">5 Orderan Terakhir Toko Ini</h5>
         @if ($lastOrders->isEmpty())
             <div class="mobile-card text-center py-4">
                 <i class="fa-solid fa-box-open text-secondary mb-2" style="font-size: 2rem; opacity: 0.5;"></i>
@@ -587,7 +592,7 @@
                 </div>
             @endforeach
         @endif
-        @endif
+    @endif
 
     <!-- Today's Visits Log -->
     <h5 class="fw-bold mb-3 mt-4" style="font-size: 0.95rem; letter-spacing: 0.5px;">Kunjungan Hari Ini</h5>

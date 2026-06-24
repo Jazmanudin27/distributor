@@ -867,7 +867,8 @@
                     items: items
                 };
 
-                localStorage.setItem('mobile_order_canvas_cart_' + '{{ Auth::user()->nik }}', JSON.stringify(cartData));
+                localStorage.setItem('mobile_order_canvas_cart_' + '{{ Auth::user()->nik }}', JSON.stringify(
+                    cartData));
             }
 
             function loadCartFromStorage() {
