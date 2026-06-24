@@ -61,7 +61,8 @@
         request()->routeIs('laporan.piutang') ||
         request()->routeIs('laporan.rekap-sisa-piutang') ||
         request()->routeIs('laporan.pembayaran_piutang') ||
-        request()->routeIs('laporan.laba-rugi');
+        request()->routeIs('laporan.laba-rugi') ||
+        request()->routeIs('laporan.kas-bank');
 
     $isSettingActive = request()->routeIs('users.*') || request()->routeIs('roles.*');
 @endphp
@@ -437,7 +438,7 @@
             @endcan
 
             <!-- LAPORAN KEUANGAN -->
-            @if ($user->can('view-laporan_piutang') || $user->can('view-laporan_laba_rugi'))
+            @if ($user->can('view-laporan_piutang') || $user->can('view-laporan_laba_rugi') || $user->can('view-laporan_kas_bank'))
                 <div class="mb-2">
                     <div class="dropdown-trigger {{ $isLapKeuanganActive ? '' : 'collapsed' }}"
                         data-bs-toggle="collapse" data-bs-target="#collapseLapKeuangan" role="button"
@@ -449,6 +450,10 @@
                     </div>
                     <div class="collapse {{ $isLapKeuanganActive ? 'show' : '' }}" id="collapseLapKeuangan">
                         <div class="submenu-container">
+                            @can('view-laporan_kas_bank')
+                                <a href="{{ route('laporan.kas-bank') }}"
+                                    class="{{ request()->routeIs('laporan.kas-bank') ? 'active' : '' }}">Buku Kas & Bank</a>
+                            @endcan
                             @can('view-laporan_piutang')
                                 <a href="{{ route('laporan.piutang') }}"
                                     class="{{ request()->routeIs('laporan.piutang') ? 'active' : '' }}">Piutang

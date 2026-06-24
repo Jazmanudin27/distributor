@@ -71,6 +71,7 @@ class RolePermissionSeeder extends Seeder
             'laporan_piutang' => ['view'],
             'laporan_setoran' => ['view'],
             'laporan_laba_rugi' => ['view'],
+            'laporan_kas_bank' => ['view'],
 
 
             // Settings

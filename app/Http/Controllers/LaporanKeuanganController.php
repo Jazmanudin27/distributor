@@ -1342,6 +1342,81 @@ class LaporanKeuanganController extends Controller
         ));
     }
 
+    public function laporanKasBank(Request $request)
+    {
+        $this->authorizeReport('kas_bank');
+
+        $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
+        $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
+        $kode_bank = $request->input('kode_bank');
+
+        $isCetak = $request->is('*/cetak');
+        $isExcel = $request->is('*/excel');
+        $isPrintOrExcel = $isCetak || $isExcel;
+
+        $banks = \App\Models\Bank::orderBy('nama_bank', 'asc')->get();
+
+        $items = collect();
+        $saldoAwal = 0;
+        $totalDebet = 0;
+        $totalKredit = 0;
+        $saldoAkhir = 0;
+
+        if ($isPrintOrExcel) {
+            // Calculate Saldo Awal (before start date)
+            $saldoAwal = (float) DB::table('keuangan_mutasi')
+                ->where('tanggal', '<', $tanggal_mulai)
+                ->when($kode_bank, function($q) use ($kode_bank) {
+                    return $q->where('kode_bank', $kode_bank);
+                })
+                ->selectRaw("SUM(CASE WHEN tipe = 'debet' THEN jumlah ELSE -jumlah END) as saldo")
+                ->value('saldo');
+
+            // Fetch transactions in period
+            $items = \App\Models\KeuanganMutasi::with(['bank', 'user'])
+                ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
+                ->when($kode_bank, function($q) use ($kode_bank) {
+                    return $q->where('kode_bank', $kode_bank);
+                })
+                ->orderBy('tanggal', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+
+            // Calculate running balances
+            $runningBalance = $saldoAwal;
+            foreach ($items as $item) {
+                if ($item->tipe === 'debet') {
+                    $runningBalance += (float)$item->jumlah;
+                    $totalDebet += (float)$item->jumlah;
+                } else {
+                    $runningBalance -= (float)$item->jumlah;
+                    $totalKredit += (float)$item->jumlah;
+                }
+                $item->saldo_berjalan = $runningBalance;
+            }
+            $saldoAkhir = $runningBalance;
+        }
+
+        $view = $isPrintOrExcel ? 'laporan.kas_bank.cetak' : 'laporan.kas_bank.index';
+
+        if ($isExcel) {
+            $filename = 'laporan_kas_bank_' . date('Ymd_His') . '.xls';
+            return response(view($view, compact(
+                'banks', 'items', 'tanggal_mulai', 'tanggal_akhir', 
+                'kode_bank', 'saldoAwal', 'totalDebet', 'totalKredit', 'saldoAkhir', 'isExcel'
+            )))
+            ->header('Content-Type', 'application/vnd-ms-excel')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
+        }
+
+        return view($view, compact(
+            'banks', 'items', 'tanggal_mulai', 'tanggal_akhir', 
+            'kode_bank', 'saldoAwal', 'totalDebet', 'totalKredit', 'saldoAkhir'
+        ));
+    }
+
     private function authorizeReport($type)
     {
         $permission = 'view-laporan_' . $type;

@@ -229,6 +229,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/laporan/laba-rugi/cetak', [LaporanKeuanganController::class, 'laporanLabaRugi'])->name('laporan.laba-rugi.cetak');
         Route::get('/laporan/laba-rugi/excel', [LaporanKeuanganController::class, 'laporanLabaRugi'])->name('laporan.laba-rugi.excel');
 
+        Route::get('/laporan/kas-bank', [LaporanKeuanganController::class, 'laporanKasBank'])->name('laporan.kas-bank');
+        Route::get('/laporan/kas-bank/cetak', [LaporanKeuanganController::class, 'laporanKasBank'])->name('laporan.kas-bank.cetak');
+        Route::get('/laporan/kas-bank/excel', [LaporanKeuanganController::class, 'laporanKasBank'])->name('laporan.kas-bank.excel');
+
         // Roles & Permissions
         Route::get('/roles', [RolePermissionController::class, 'index'])->name('roles.index');
         Route::post('/roles', [RolePermissionController::class, 'storeRole'])->name('roles.store');
