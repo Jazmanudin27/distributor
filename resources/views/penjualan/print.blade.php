@@ -174,11 +174,7 @@
                     <tr>
                         <td width="120">Tgl. Jatuh Tempo</td>
                         <td>:
-                            @if (strtolower($item->jenis_transaksi) === 'kredit')
-                                {{ $item->tanggal? \Carbon\Carbon::parse($item->tanggal)->addDays($item->pelanggan->ljt ?? 30)->format('d/m/Y'): '-' }}
-                            @else
-                                {{ $item->tanggal ? \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') : '-' }}
-                            @endif
+                            {{ $item->tanggal? \Carbon\Carbon::parse($item->tanggal)->addDays($item->pelanggan->ljt ?? 30)->format('d/m/Y'): '-' }}
                         </td>
                     </tr>
                     <tr>
