@@ -93,13 +93,18 @@
                                     $overdueInvoices = $activeCheckin->pelanggan->getOverdueInvoices();
                                 @endphp
                                 <div class="col-12 mt-2">
-                                    <div class="alert alert-danger p-2 mb-0 rounded-3 border-0"
-                                        style="font-size: 0.72rem; background-color: rgba(239, 68, 68, 0.15); color: #f87171;">
-                                        <div class="d-flex align-items-center mb-1">
-                                            <i class="fa-solid fa-triangle-exclamation me-2"></i>
-                                            <span class="fw-bold">Toko memiliki tagihan jatuh tempo (Overdue):</span>
+                                    <div class="alert alert-danger p-3 mb-0 rounded-4"
+                                        style="font-size: 0.75rem; background-color: rgba(220, 38, 38, 0.2); border: 1.5px solid rgba(220, 38, 38, 0.4); color: #fecaca; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);">
+                                        <div class="d-flex align-items-center mb-2 text-danger fw-bold"
+                                            style="color: #fca5a5 !important;">
+                                            <i class="fa-solid fa-triangle-exclamation me-1.5 fs-6"></i>
+                                            <span class="fw-bold" style="font-size: 0.8rem; letter-spacing: 0.3px;">TOKO
+                                                DIBLOKIR (OVERDUE)!</span>
                                         </div>
-                                        <ul class="mb-0 ps-3 mt-1" style="list-style-type: disc;">
+                                        <p class="text-white-50 mb-2" style="font-size: 0.7rem; line-height: 1.3;">
+                                            Pelanggan memiliki tagihan jatuh tempo yang belum diselesaikan:
+                                        </p>
+                                        <ul class="mb-0 ps-0" style="font-size: 0.7rem; color: #f8fafc;">
                                             @foreach ($overdueInvoices as $inv)
                                                 @php
                                                     $sisa =
@@ -110,12 +115,47 @@
                                                         $inv->pelanggan->ljt ?? 30,
                                                     );
                                                 @endphp
-                                                <li>
-                                                    Faktur <strong
-                                                        class="text-white font-monospace">{{ $inv->no_faktur }}</strong>
-                                                    (JT: {{ $dueDate->format('d/m/Y') }} &bull; Sisa: <strong
-                                                        class="text-white">Rp
-                                                        {{ number_format($sisa, 0, ',', '.') }}</strong>)
+                                                <li class="mb-2 p-2.5 rounded-3 border border-danger border-opacity-10"
+                                                    style="background: rgba(239, 68, 68, 0.08); list-style-type: none;">
+                                                    <div
+                                                        class="d-flex justify-content-between align-items-center mb-1.5 pb-1.5 border-bottom border-danger border-opacity-10">
+                                                        <span class="font-monospace fw-bold text-white small"
+                                                            style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 6px;">
+                                                            <i
+                                                                class="fa-solid fa-file-invoice me-1 text-danger"></i>{{ $inv->no_faktur }}
+                                                        </span>
+                                                        <span class="badge bg-danger-subtle text-danger"
+                                                            style="font-size: 0.6rem; font-weight: 600;">Overdue</span>
+                                                    </div>
+                                                    <div class="row g-2 text-white-50"
+                                                        style="font-size: 0.68rem; line-height: 1.4;">
+                                                        <div class="col-6">
+                                                            <i class="fa-regular fa-calendar me-1"></i>Tgl: <span
+                                                                class="text-white">{{ \Carbon\Carbon::parse($inv->tanggal)->format('d/m/Y') }}</span>
+                                                        </div>
+                                                        <div class="col-6 text-end">
+                                                            <i class="fa-solid fa-hourglass-half me-1"></i>LJT: <span
+                                                                class="text-white">{{ $inv->pelanggan->ljt ?? 30 }}
+                                                                Hari</span>
+                                                        </div>
+                                                        <div class="col-12 mt-1">
+                                                            <i class="fa-solid fa-calendar-xmark me-1 text-danger"></i>Jatuh
+                                                            Tempo: <span class="text-danger fw-bold"
+                                                                style="color: #fca5a5 !important;">{{ $dueDate->format('d/m/Y') }}</span>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <i class="fa-solid fa-user-tie me-1"></i>Sales: <span
+                                                                class="text-white">{{ $inv->sales->name ?? $inv->kode_sales }}</span>
+                                                        </div>
+                                                        <div
+                                                            class="col-12 mt-1.5 pt-1.5 border-top border-danger border-opacity-10 d-flex justify-content-between align-items-center">
+                                                            <span class="text-secondary" style="font-size: 0.65rem;">Sisa
+                                                                Tagihan:</span>
+                                                            <strong class="text-danger fs-7"
+                                                                style="color: #ef4444 !important;">Rp
+                                                                {{ number_format($sisa, 0, ',', '.') }}</strong>
+                                                        </div>
+                                                    </div>
                                                 </li>
                                             @endforeach
                                         </ul>
@@ -130,7 +170,8 @@
             <!-- Timer counter -->
             <div class="p-3 rounded-4 mb-4 text-center"
                 style="background-color: rgba(255,255,255,0.03); border: 1px solid var(--border-color);">
-                <div class="text-secondary mb-1" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">
+                <div class="text-secondary mb-1"
+                    style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">
                     Durasi Kunjungan</div>
                 <div class="fw-bold text-indigo" id="duration-counter"
                     style="font-size: 1.5rem; color: #818cf8; font-family: monospace;">00:00:00</div>
@@ -249,14 +290,17 @@
                 <div id="overdue-warning-badge" class="mt-3 d-none">
                     <div class="alert alert-danger p-3 mb-0 rounded-4"
                         style="font-size: 0.75rem; background-color: rgba(220, 38, 38, 0.2); border: 1.5px solid rgba(220, 38, 38, 0.4); color: #fecaca; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);">
-                        <div class="d-flex align-items-center mb-2 text-danger fw-bold" style="color: #fca5a5 !important;">
+                        <div class="d-flex align-items-center mb-2 text-danger fw-bold"
+                            style="color: #fca5a5 !important;">
                             <i class="fa-solid fa-triangle-exclamation me-1.5 fs-6"></i>
-                            <span class="fw-bold" style="font-size: 0.8rem; letter-spacing: 0.3px;">TOKO DIBLOKIR (OVERDUE)!</span>
+                            <span class="fw-bold" style="font-size: 0.8rem; letter-spacing: 0.3px;">TOKO DIBLOKIR
+                                (OVERDUE)!</span>
                         </div>
                         <p class="text-white-50 mb-2" style="font-size: 0.7rem; line-height: 1.3;">
                             Toko ini memiliki faktur jatuh tempo yang belum diselesaikan. Detail tagihan:
                         </p>
-                        <ul class="mb-0 ps-3" id="overdue-list-ul" style="font-size: 0.7rem; list-style-type: disc; color: #f8fafc;">
+                        <ul class="mb-0 ps-3" id="overdue-list-ul"
+                            style="font-size: 0.7rem; list-style-type: disc; color: #f8fafc;">
                             <!-- Will be populated dynamically by JS selectCustomer -->
                         </ul>
                     </div>
@@ -891,16 +935,35 @@
                         if (customer.overdue_invoices && customer.overdue_invoices.length > 0) {
                             customer.overdue_invoices.forEach(inv => {
                                 const li = document.createElement('li');
-                                li.className = 'mb-2';
+                                li.className =
+                                    'mb-2.5 p-2.5 rounded-3 border border-danger border-opacity-10';
+                                li.style.background = 'rgba(239, 68, 68, 0.08)';
+                                li.style.listStyleType = 'none';
                                 const formattedSisa = Number(inv.sisa).toLocaleString('id-ID');
                                 li.innerHTML = `
-                                    Faktur <strong class="text-white font-monospace" style="background: rgba(255,255,255,0.08); padding: 1px 4px; border-radius: 4px;">${inv.no_faktur}</strong>
-                                    <div class="text-white-50 ps-1 mt-0.5" style="font-size: 0.65rem; line-height: 1.4;">
-                                        Tgl: ${inv.tanggal} &bull; 
-                                        LJT: ${inv.ljt} hari <br>
-                                        JT: <span class="text-danger fw-bold" style="color: #fca5a5 !important;">${inv.due_date}</span> &bull;
-                                        Sales: ${inv.sales_name || '-'} <br>
-                                        Sisa: <strong class="text-white" style="color: #f8fafc !important;">Rp ${formattedSisa}</strong>
+                                    <div class="d-flex justify-content-between align-items-center mb-1.5 pb-1.5 border-bottom border-danger border-opacity-10">
+                                        <span class="font-monospace fw-bold text-white small" style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 6px;">
+                                            <i class="fa-solid fa-file-invoice me-1 text-danger"></i>${inv.no_faktur}
+                                        </span>
+                                        <span class="badge bg-danger-subtle text-danger" style="font-size: 0.6rem; font-weight: 600;">Overdue</span>
+                                    </div>
+                                    <div class="row g-2 text-white-50" style="font-size: 0.68rem; line-height: 1.4;">
+                                        <div class="col-6">
+                                            <i class="fa-regular fa-calendar me-1"></i>Tgl: <span class="text-white">${inv.tanggal}</span>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <i class="fa-solid fa-hourglass-half me-1"></i>LJT: <span class="text-white">${inv.ljt} Hari</span>
+                                        </div>
+                                        <div class="col-12 mt-1">
+                                            <i class="fa-solid fa-calendar-xmark me-1 text-danger"></i>Jatuh Tempo: <span class="text-danger fw-bold" style="color: #fca5a5 !important;">${inv.due_date}</span>
+                                        </div>
+                                        <div class="col-12">
+                                            <i class="fa-solid fa-user-tie me-1"></i>Sales: <span class="text-white">${inv.sales_name || '-'}</span>
+                                        </div>
+                                        <div class="col-12 mt-1.5 pt-1.5 border-top border-danger border-opacity-10 d-flex justify-content-between align-items-center">
+                                            <span class="text-secondary" style="font-size: 0.65rem;">Sisa Tagihan:</span>
+                                            <strong class="text-danger fs-7" style="color: #ef4444 !important;">Rp ${formattedSisa}</strong>
+                                        </div>
                                     </div>
                                 `;
                                 overdueListUl.appendChild(li);
