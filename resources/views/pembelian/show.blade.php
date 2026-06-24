@@ -144,14 +144,14 @@
                             <table class="table table-bordered table-sm align-middle mb-0">
                                 <thead class="table-light text-secondary text-uppercase fs-8 tracking-wider">
                                     <tr>
-                                        <th width="50" class="text-center py-2.5">No</th>
-                                        <th width="150" class="py-2.5">Kode</th>
-                                        <th class="py-2.5">Nama Barang</th>
-                                        <th width="120" class="text-center py-2.5">Satuan</th>
-                                        <th width="100" class="text-end py-2.5">Qty</th>
-                                        <th width="160" class="text-end py-2.5">Harga Pokok</th>
-                                        <th width="120" class="text-end py-2.5">Potongan (Rp)</th>
-                                        <th width="180" class="text-end py-2.5">Subtotal (Nett)</th>
+                                        <th width="50" class="text-center py-1.5">No</th>
+                                        <th width="150" class="py-1.5">Kode</th>
+                                        <th class="py-1.5">Nama Barang</th>
+                                        <th width="120" class="text-center py-1.5">Satuan</th>
+                                        <th width="100" class="text-end py-1.5">Qty</th>
+                                        <th width="160" class="text-end py-1.5">Harga Pokok</th>
+                                        <th width="120" class="text-end py-1.5">Potongan (Rp)</th>
+                                        <th width="180" class="text-end py-1.5">Subtotal (Nett)</th>
                                     </tr>
                                 </thead>
                                 <tbody>

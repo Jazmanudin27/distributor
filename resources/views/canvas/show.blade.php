@@ -20,17 +20,16 @@
                     <div>
                         @if ($canvasSession->status === 'loading')
                             <a href="{{ route('canvas.edit', $canvasSession->id) }}"
-                                class="btn btn-warning btn-sm fw-bold hover-scale me-1 text-dark shadow-sm">
+                                class="btn btn-primary btn-sm fw-bold hover-scale me-1 text-dark shadow-sm">
                                 <i class="fa-solid fa-box-open"></i> Selesaikan & Bongkar
                             </a>
                         @endif
                         <a href="{{ route('canvas.print', $canvasSession->id) }}" target="_blank"
-                            class="btn btn-light btn-sm fw-bold hover-scale me-1 text-primary shadow-sm"
-                            style="background-color: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.35); color: white;">
+                            class="btn btn-info btn-sm fw-bold hover-scale me-1 text-white shadow-sm">
                             <i class="fa-solid fa-print me-1"></i> Cetak Laporan
                         </a>
                         <a href="{{ route('canvas.index') }}"
-                            class="btn btn-light btn-sm fw-bold hover-scale text-primary shadow-sm">
+                            class="btn btn-secondary btn-sm fw-bold hover-scale text-white shadow-sm">
                             <i class="fa-solid fa-arrow-left me-1"></i> Kembali
                         </a>
                     </div>
@@ -56,7 +55,7 @@
                                 style="font-size: 10px; letter-spacing: 0.5px;">Status Session</span>
                             @if ($canvasSession->status === 'loading')
                                 <button type="button"
-                                    class="btn btn-sm btn-warning py-1 px-2.5 fw-bold text-dark shadow-sm mt-1" disabled
+                                    class="btn btn-sm btn-danger py-1 px-2.5 fw-bold text-dark shadow-sm mt-1" disabled
                                     style="opacity: 0.9; cursor: default; pointer-events: none; font-size: 11px;">
                                     <i class="fa-solid fa-truck-moving me-1"></i> Aktif di Lapangan
                                 </button>
@@ -82,16 +81,16 @@
                         <table class="table table-bordered table-sm align-middle shadow-sm">
                             <thead class="table-light text-secondary text-uppercase fs-7 font-11">
                                 <tr>
-                                    <th width="50" class="text-center py-2.5">No</th>
-                                    <th class="py-2.5">Nama Barang</th>
-                                    <th width="150" class="text-center py-2.5">Satuan</th>
-                                    <th width="120" class="text-end pe-3 bg-primary-subtle text-primary fw-bold py-2.5">
+                                    <th width="50" class="text-center py-1.5">No</th>
+                                    <th class="py-1.5">Nama Barang</th>
+                                    <th width="150" class="text-center py-1.5">Satuan</th>
+                                    <th width="120" class="text-end pe-3 bg-primary-subtle text-primary fw-bold py-1.5">
                                         Ambil (Loading)</th>
-                                    <th width="120" class="text-end pe-3 bg-info-subtle text-info fw-bold py-2.5">Terjual
+                                    <th width="120" class="text-end pe-3 bg-info-subtle text-info fw-bold py-1.5">Terjual
                                         (Sales)</th>
-                                    <th width="120" class="text-end pe-3 bg-success-subtle text-success fw-bold py-2.5">
+                                    <th width="120" class="text-end pe-3 bg-success-subtle text-success fw-bold py-1.5">
                                         Kembali (Unload)</th>
-                                    <th width="120" class="text-end pe-3 bg-danger-subtle text-danger fw-bold py-2.5">
+                                    <th width="120" class="text-end pe-3 bg-danger-subtle text-danger fw-bold py-1.5">
                                         Selisih</th>
                                 </tr>
                             </thead>
@@ -117,11 +116,11 @@
                                                 {{ $detail->kode_barang }}</span>
                                         </td>
                                         <td class="text-center">
-                                            <button type="button"
-                                                class="btn btn-sm btn-light border py-0.5 px-2.5 fw-semibold" disabled
-                                                style="opacity: 0.85; cursor: default; pointer-events: none; font-size: 11px;">
+                                            <span
+                                                class="badge bg-light text-secondary border fw-semibold font-11 py-1 px-2.5"
+                                                style="opacity: 0.85;">
                                                 {{ $detail->barangSatuan->satuan ?? 'PCS' }}
-                                            </button>
+                                            </span>
                                         </td>
                                         <td class="text-end pe-3 fw-bold bg-primary-subtle text-primary">
                                             {{ (float) $detail->qty_ambil }}
@@ -140,11 +139,13 @@
                             </tbody>
                             <tfoot class="table-light fw-bold">
                                 <tr>
-                                    <td colspan="3" class="text-end pe-3 py-2">TOTAL:</td>
-                                    <td class="text-end pe-3 text-primary bg-primary-subtle py-2">{{ $totalAmbil }}</td>
-                                    <td class="text-end pe-3 text-info bg-info-subtle py-2">{{ $totalTerjual }}</td>
-                                    <td class="text-end pe-3 text-success bg-success-subtle py-2">{{ $totalKembali }}</td>
-                                    <td class="text-end pe-3 text-danger bg-danger-subtle py-2">{{ $totalSelisih }}</td>
+                                    <td colspan="3" class="text-end pe-3 py-1.5">TOTAL:</td>
+                                    <td class="text-end pe-3 text-primary bg-primary-subtle py-1.5">{{ $totalAmbil }}
+                                    </td>
+                                    <td class="text-end pe-3 text-info bg-info-subtle py-1.5">{{ $totalTerjual }}</td>
+                                    <td class="text-end pe-3 text-success bg-success-subtle py-1.5">{{ $totalKembali }}
+                                    </td>
+                                    <td class="text-end pe-3 text-danger bg-danger-subtle py-1.5">{{ $totalSelisih }}</td>
                                 </tr>
                             </tfoot>
                         </table>

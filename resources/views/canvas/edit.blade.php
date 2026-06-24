@@ -76,9 +76,10 @@
                                             <span class="text-secondary small font-11">Kode: {{ $detail->kode_barang }}</span>
                                         </td>
                                         <td class="text-center">
-                                            <button type="button" class="btn btn-sm btn-light border py-0.5 px-2.5 fw-semibold" disabled style="opacity: 0.85; cursor: default; pointer-events: none; font-size: 11px;">
+                                            <span class="badge bg-light text-secondary border fw-semibold font-11 py-1 px-2.5"
+                                                style="opacity: 0.85;">
                                                 {{ $detail->barangSatuan->satuan ?? 'PCS' }}
-                                            </button>
+                                            </span>
                                         </td>
                                         <td class="text-end pe-3 bg-primary-subtle text-primary fw-bold">
                                             <div class="fs-7">{{ $detail->barang->formatStok($qtyAmbilSmallest) }}</div>
