@@ -676,6 +676,111 @@ class MobileOrderController extends Controller
     }
 
     /**
+     * Store a newly created canvas session from mobile (loading goods).
+     */
+    public function storeCanvasDpb(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user->is_kanvas) {
+            return redirect()->route('mobile.dashboard')->with('error', 'Fitur ini hanya tersedia untuk Sales Canvas.');
+        }
+
+        $request->validate([
+            'tanggal' => 'required|date',
+            'keterangan' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.kode_barang' => 'required|string|exists:barang,kode_barang',
+            'items.*.satuan_id' => 'required|integer|exists:barang_satuan,id',
+            'items.*.qty_ambil' => 'required|numeric|min:0.01',
+        ]);
+
+        // Pastikan tidak ada DPB aktif untuk sales ini
+        $existing = \App\Services\CanvasService::getActiveSession($user->nik);
+        if ($existing) {
+            return redirect()->back()->with('error', 'Anda sudah memiliki sesi DPB yang aktif.');
+        }
+
+        try {
+            $canvasSessionId = DB::transaction(function () use ($request, $user) {
+                // Generate atomic no_canvas
+                $prefix = 'KVS-' . date('Ymd');
+                $lastSession = \App\Models\CanvasSession::where('no_canvas', 'like', $prefix . '-%')
+                    ->lockForUpdate()
+                    ->orderBy('no_canvas', 'desc')
+                    ->first();
+
+                $nextNum = 1;
+                if ($lastSession) {
+                    $parts = explode('-', $lastSession->no_canvas);
+                    $nextNum = (int)end($parts) + 1;
+                }
+                $noCanvas = $prefix . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+
+                // Create Canvas Session
+                $session = \App\Models\CanvasSession::create([
+                    'no_canvas' => $noCanvas,
+                    'kode_sales' => $user->nik,
+                    'tanggal' => $request->tanggal,
+                    'status' => 'loading',
+                    'keterangan' => $request->keterangan,
+                ]);
+
+                // Create details and adjust warehouse stock
+                foreach ($request->items as $item) {
+                    $satuan = \App\Models\BarangSatuan::findOrFail($item['satuan_id']);
+                    $qtySmallest = (float)$item['qty_ambil'] * ($satuan->isi ?? 1);
+
+                    // Lock and check warehouse stock
+                    $barang = \App\Models\Barang::lockForUpdate()->findOrFail($item['kode_barang']);
+                    if ($barang->stok < $qtySmallest) {
+                        throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi untuk loading! Sisa stok gudang: " . $barang->formatStok($barang->stok));
+                    }
+
+                    // Deduct stock and log mutation
+                    \App\Models\StokMutasi::log(
+                        $item['kode_barang'],
+                        $request->tanggal,
+                        'Canvas Ambil',
+                        $noCanvas,
+                        0,
+                        $qtySmallest,
+                        Auth::id(),
+                        'Loading Canvas via Mobile: ' . $user->name
+                    );
+
+                    \App\Models\CanvasSessionDetail::create([
+                        'canvas_session_id' => $session->id,
+                        'kode_barang' => $item['kode_barang'],
+                        'satuan_id' => $item['satuan_id'],
+                        'qty_ambil' => $item['qty_ambil'],
+                        'qty_terjual' => 0,
+                        'qty_kembali' => 0,
+                        'selisih' => $item['qty_ambil'],
+                    ]);
+                }
+
+                // Sync any already recorded sales for this day and salesman
+                $invoices = \App\Models\Penjualan::where('kode_sales', $user->nik)
+                    ->where('tanggal', $request->tanggal)
+                    ->where('batal', 0)
+                    ->with('details')
+                    ->get();
+
+                foreach ($invoices as $invoice) {
+                    \App\Services\CanvasService::trackSale($invoice);
+                }
+
+                return $session->id;
+            });
+
+            return redirect()->route('mobile.order.canvas.dpb')->with('success', 'DPB berhasil dibuat dan barang telah dimuat.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
      * Store a new canvas order (no check-in required, customer auto from user profile).
      */
     public function storeCanvas(Request $request)

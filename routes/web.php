@@ -79,6 +79,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/order/canvas', [MobileOrderController::class, 'createCanvas'])->name('order.canvas.create');
         Route::post('/order/canvas', [MobileOrderController::class, 'storeCanvas'])->name('order.canvas.store');
         Route::get('/order/canvas/dpb', [MobileOrderController::class, 'canvasDpb'])->name('order.canvas.dpb');
+        Route::post('/order/canvas/dpb', [MobileOrderController::class, 'storeCanvasDpb'])->name('order.canvas.dpb.store');
 
         // Ajuan Limit Kredit
         Route::get('/limit-kredit', [MobileAjuanLimitController::class, 'index'])->name('limit-kredit.index');
