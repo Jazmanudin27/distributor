@@ -116,8 +116,7 @@
         </div>
     </div>
 
-    @if (!Auth::user()->is_kanvas)
-    {{-- Stats Grid: Kunjungan (hanya sales regular & SPV) --}}
+    {{-- Stats Grid: Kunjungan (hanya sales regular, canvas & SPV) --}}
     <div class="row g-3 mb-4">
         <div class="col-12">
             <div class="mobile-card m-0 p-3"
@@ -212,11 +211,19 @@
                 </a>
             </div>
             <div class="col-6">
-                <a href="{{ route('mobile.order.create') }}"
-                    class="btn btn-mobile btn-mobile-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100">
-                    <i class="fa-solid fa-cart-plus mb-2" style="font-size: 1.6rem;"></i>
-                    <span style="font-size: 0.85rem;">Input Penjualan</span>
-                </a>
+                @if (Auth::user()->is_kanvas)
+                    <a href="{{ route('mobile.order.canvas.create') }}"
+                        class="btn btn-mobile btn-mobile-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100">
+                        <i class="fa-solid fa-cart-plus mb-2" style="font-size: 1.6rem;"></i>
+                        <span style="font-size: 0.85rem;">Buat Order Canvas</span>
+                    </a>
+                @else
+                    <a href="{{ route('mobile.order.create') }}"
+                        class="btn btn-mobile btn-mobile-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100">
+                        <i class="fa-solid fa-cart-plus mb-2" style="font-size: 1.6rem;"></i>
+                        <span style="font-size: 0.85rem;">Input Penjualan</span>
+                    </a>
+                @endif
             </div>
         </div>
         <div class="row g-3 mb-4">
@@ -281,20 +288,6 @@
             <span style="font-size: 0.80rem; font-weight: 500;">Anda belum check-in. Silakan pilih pelanggan terlebih dahulu
                 untuk melakukan penjualan.</span>
         </div>
-    @endif
-
-    @else
-    {{-- ======== CANVAS USER: hanya tampilkan tombol Order Canvas ======== --}}
-    <div class="row g-3 mb-4 mt-1">
-        <div class="col-12">
-            <a href="{{ route('mobile.order.canvas.create') }}"
-                class="btn btn-mobile w-100 py-3 d-flex align-items-center justify-content-center"
-                style="background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2)); border: 1px solid rgba(99,102,241,0.4); color: #a5b4fc;">
-                <i class="fa-solid fa-truck-moving me-2" style="font-size: 1.4rem;"></i>
-                <span style="font-size: 0.95rem; font-weight: 700;">Buat Order Canvas</span>
-            </a>
-        </div>
-    </div>
     @endif
 
     <!-- Recent Orders Section -->

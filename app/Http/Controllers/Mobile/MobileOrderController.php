@@ -577,10 +577,16 @@ class MobileOrderController extends Controller
             return redirect()->route('mobile.kunjungan.index')->with('error', 'Fitur ini hanya tersedia untuk Sales Canvas.');
         }
 
-        // Ambil pelanggan dari profil user
-        if (!$user->kode_pelanggan) {
-            return redirect()->route('mobile.dashboard')->with('error', 'Akun Anda belum dikaitkan dengan pelanggan. Hubungi admin untuk mengatur pelanggan canvas Anda.');
+        // Enforce active check-in
+        $activeCheckin = PenjualanCheckin::where('kode_sales', $user->nik)
+            ->whereNull('checkout')
+            ->first();
+
+        if (!$activeCheckin) {
+            return redirect()->route('mobile.kunjungan.index')->with('error', 'Anda harus melakukan Check-in di toko pelanggan terlebih dahulu sebelum membuat order!');
         }
+
+        $selectedKode = $activeCheckin->kode_pelanggan;
 
         // Generate no_faktur
         $todayDate = date('my');
@@ -627,7 +633,7 @@ class MobileOrderController extends Controller
             ) >= 1");
 
         $pelanggan = Pelanggan::with(['wilayah', 'subWilayah'])
-            ->where('kode_pelanggan', $user->kode_pelanggan)
+            ->where('kode_pelanggan', $selectedKode)
             ->select('pelanggan.*')
             ->addSelect([
                 'outstanding_piutang' => $outstandingSubquery,
@@ -636,7 +642,7 @@ class MobileOrderController extends Controller
             ->first();
 
         if (!$pelanggan) {
-            return redirect()->route('mobile.dashboard')->with('error', 'Pelanggan yang terhubung ke akun Anda tidak ditemukan. Hubungi admin.');
+            return redirect()->route('mobile.dashboard')->with('error', 'Pelanggan aktif kunjungan Anda tidak ditemukan.');
         }
 
         // Fetch active diskon strata rules
@@ -823,16 +829,21 @@ class MobileOrderController extends Controller
             return redirect()->route('mobile.kunjungan.index')->with('error', 'Fitur ini hanya tersedia untuk Sales Canvas.');
         }
 
-        if (!$user->kode_pelanggan) {
-            return redirect()->route('mobile.dashboard')->with('error', 'Akun Anda belum dikaitkan dengan pelanggan canvas.');
-        }
+        // Enforce active check-in
+        $activeCheckin = PenjualanCheckin::where('kode_sales', $user->nik)
+            ->whereNull('checkout')
+            ->first();
 
-        // Override kode_pelanggan dari user, abaikan input request
-        $request->merge(['kode_pelanggan' => $user->kode_pelanggan]);
+        if (!$activeCheckin) {
+            return redirect()->route('mobile.kunjungan.index')->with('error', 'Anda harus melakukan Check-in terlebih dahulu sebelum membuat order!');
+        }
 
         $request->validate([
             'tanggal'              => 'required|date',
-            'kode_pelanggan'       => 'required|string|exists:pelanggan,kode_pelanggan',
+            'is_new_pelanggan'     => 'required|in:0,1',
+            'kode_pelanggan'       => 'required_if:is_new_pelanggan,0|nullable|string|exists:pelanggan,kode_pelanggan',
+            'new_nama_pelanggan'   => 'required_if:is_new_pelanggan,1|nullable|string|max:100',
+            'new_alamat_pelanggan' => 'required_if:is_new_pelanggan,1|nullable|string|max:150',
             'jenis_transaksi'      => [
                 'required',
                 'in:Tunai,Kredit',
@@ -854,12 +865,19 @@ class MobileOrderController extends Controller
             'items.*.diskon3_persen' => 'nullable|numeric|min:0|max:100',
         ]);
 
-        $pelanggan = Pelanggan::findOrFail($request->kode_pelanggan);
+        $isNewPelanggan = (int) $request->input('is_new_pelanggan') === 1;
+        $pelanggan = null;
+        $sisaLimit = 200000; // Default limit for new customer
 
-        // Verify Overdue Invoices
-        if ($pelanggan->hasOverdueInvoices()) {
-            $overdueInvoices = $pelanggan->getOverdueInvoices()->pluck('no_faktur')->implode(', ');
-            return redirect()->back()->withInput()->with('error', "Transaksi ditolak. Pelanggan {$pelanggan->nama_pelanggan} memiliki faktur overdue: {$overdueInvoices}!");
+        if (!$isNewPelanggan) {
+            $pelanggan = Pelanggan::findOrFail($request->kode_pelanggan);
+
+            // Verify Overdue Invoices
+            if ($pelanggan->hasOverdueInvoices()) {
+                $overdueInvoices = $pelanggan->getOverdueInvoices()->pluck('no_faktur')->implode(', ');
+                return redirect()->back()->withInput()->with('error', "Transaksi ditolak. Pelanggan {$pelanggan->nama_pelanggan} memiliki faktur overdue: {$overdueInvoices}!");
+            }
+            $sisaLimit = $pelanggan->getSisaLimitKredit();
         }
 
         // Fetch diskon strata
@@ -883,7 +901,7 @@ class MobileOrderController extends Controller
             }
         }
 
-        // Strata matching closure (same logic as store())
+        // Strata matching closure
         $calculateStrata = function ($barangCode, $qty, $sub, $barang) use ($diskonStrata, $supplierSubtotals, $request) {
             if (!$barang) return ['d1' => 0, 'd2' => 0];
             $bestRate = 0; $bestRule = null; $bestDetail = null;
@@ -973,15 +991,65 @@ class MobileOrderController extends Controller
 
         // Verify Credit Limit
         if ($request->jenis_transaksi === 'Kredit') {
-            $sisaLimit = $pelanggan->getSisaLimitKredit();
             if ($tempGrandTotal > $sisaLimit) {
                 return redirect()->back()->withInput()->with('error', "Limit kredit terlampaui! Sisa limit: Rp " . number_format($sisaLimit, 0, ',', '.'));
             }
         }
 
         try {
-            $savedNoFaktur = DB::transaction(function () use ($request, $pelanggan, $calculateStrata) {
-                // Atomic no_faktur generation (canvas variant KVS)
+            $savedNoFaktur = DB::transaction(function () use ($request, $user, $isNewPelanggan, $activeCheckin, $calculateStrata, $sisaLimit) {
+                // Generate/Load Pelanggan
+                if ($isNewPelanggan) {
+                    // Ensure region and sub-region 93 exist
+                    \App\Models\Wilayah::firstOrCreate(
+                        ['kode_wilayah' => 93],
+                        ['nama_wilayah' => 'Canvas Area']
+                    );
+                    \App\Models\SubWilayah::firstOrCreate(
+                        ['kode_wilayah' => 93],
+                        ['nama_wilayah' => 'Canvas Sub Area']
+                    );
+
+                    // Auto-generate kode_pelanggan: PLG{yy}{5-digit-sequence}
+                    $prefix = 'PLG' . date('y');
+                    $last = Pelanggan::where('kode_pelanggan', 'like', $prefix . '%')
+                        ->lockForUpdate()
+                        ->orderBy('kode_pelanggan', 'desc')
+                        ->first();
+
+                    $nextNum = 1;
+                    if ($last) {
+                        $lastNum = intval(substr($last->kode_pelanggan, 5));
+                        $nextNum = $lastNum + 1;
+                    }
+                    $kodePelanggan = $prefix . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
+
+                    $pelanggan = Pelanggan::create([
+                        'kode_pelanggan'   => $kodePelanggan,
+                        'nama_pelanggan'   => $request->new_nama_pelanggan,
+                        'alamat_pelanggan' => $request->new_alamat_pelanggan,
+                        'alamat_toko'      => $request->new_alamat_pelanggan,
+                        'tanggal_register' => now()->toDateString(),
+                        'no_hp_pelanggan'  => '-',
+                        'metode_bayar'     => 'Cash',
+                        'limit_pelanggan'  => 200000,
+                        'ljt'              => 30,
+                        'kode_wilayah'     => 93,
+                        'sub_wilayah'      => 93,
+                        'status'           => 1,
+                        'approve'          => 1, // Auto-approved!
+                        'jenis_pelanggan'  => '0',
+                    ]);
+                } else {
+                    $pelanggan = Pelanggan::findOrFail($request->kode_pelanggan);
+                }
+
+                // Sync check-in's customer with the final customer of the order
+                $activeCheckin->update([
+                    'kode_pelanggan' => $pelanggan->kode_pelanggan
+                ]);
+
+                // Atomic no_faktur generation (canvas KVS)
                 $todayDate = date('my');
                 $lastFaktur = Penjualan::where('no_faktur', 'like', '%-PJ-KVS-' . $todayDate)
                     ->lockForUpdate()->orderBy('no_faktur', 'desc')->first();
@@ -1048,6 +1116,11 @@ class MobileOrderController extends Controller
                 }
 
                 $grandTotal = $subtotalSum - $totalDiskon;
+
+                // Validate credit limit inside transaction
+                if ($request->jenis_transaksi === 'Kredit' && $grandTotal > $sisaLimit) {
+                    throw new \Exception("Limit kredit terlampaui! Sisa limit: Rp " . number_format($sisaLimit, 0, ',', '.'));
+                }
 
                 $penjualan = Penjualan::create([
                     'no_faktur'       => $noFaktur,

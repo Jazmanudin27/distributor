@@ -179,10 +179,17 @@
 
             <!-- Quick actions during check-in -->
             <div class="d-grid gap-2 mb-4">
-                <a href="{{ route('mobile.order.create', ['kode_pelanggan' => $activeCheckin->kode_pelanggan]) }}"
-                    class="btn btn-sm btn-mobile btn-mobile-primary py-2">
-                    <i class="fa-solid fa-cart-plus me-2"></i> Input Penjualan Untuk Toko Ini
-                </a>
+                @if (Auth::user()->is_kanvas)
+                    <a href="{{ route('mobile.order.canvas.create', ['kode_pelanggan' => $activeCheckin->kode_pelanggan]) }}"
+                        class="btn btn-sm btn-mobile btn-mobile-primary py-2">
+                        <i class="fa-solid fa-cart-plus me-2"></i> Input Penjualan Canvas Untuk Toko Ini
+                    </a>
+                @else
+                    <a href="{{ route('mobile.order.create', ['kode_pelanggan' => $activeCheckin->kode_pelanggan]) }}"
+                        class="btn btn-sm btn-mobile btn-mobile-primary py-2">
+                        <i class="fa-solid fa-cart-plus me-2"></i> Input Penjualan Untuk Toko Ini
+                    </a>
+                @endif
                 {{-- @if ($unpaidInvoices->isNotEmpty())
                     <button type="button" class="btn btn-sm btn-mobile btn-success py-2 text-white border-0"
                         style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);"
@@ -220,6 +227,16 @@
     @else
         <!-- Start New Visit Screen -->
         <div class="mobile-card" style="position: relative; z-index: 10;">
+            @if (Auth::user()->is_kanvas && Auth::user()->kode_pelanggan)
+                <form action="{{ route('mobile.kunjungan.checkin') }}" method="POST" class="mb-3">
+                    @csrf
+                    <input type="hidden" name="kode_pelanggan" value="{{ Auth::user()->kode_pelanggan }}">
+                    <button type="submit" class="btn btn-sm btn-mobile w-100 py-2.5 text-white" style="background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc; font-size: 0.75rem; border-radius: 8px;">
+                        <i class="fa-solid fa-truck-moving me-2" style="color: #6366f1;"></i> Check-in ke Sesi Canvas (Truk Anda)
+                    </button>
+                </form>
+            @endif
+
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="fw-bold mb-0" style="font-size: 0.9rem;">Mulai Kunjungan Baru</h6>
                 <a href="{{ route('mobile.pelanggan.create') }}"

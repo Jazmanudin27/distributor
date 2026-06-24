@@ -117,22 +117,48 @@
                     required>
             </div>
 
-            <div class="mb-2">
-                <label class="form-label text-secondary small mb-1">Pelanggan</label>
-                <div class="p-2 rounded border border-primary bg-dark bg-opacity-50">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="fw-bold text-white small">{{ $pelanggan->nama_pelanggan }}</span>
-                        <span class="badge"
-                            style="background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); font-size: 0.6rem;">
-                            <i class="fa-solid fa-lock me-1"></i>Canvas
-                        </span>
-                    </div>
-                    <div class="text-secondary mt-1" style="font-size: 0.7rem;">Kode: {{ $pelanggan->kode_pelanggan }}</div>
-                    <input type="hidden" name="kode_pelanggan" id="kode_pelanggan" value="{{ $pelanggan->kode_pelanggan }}"
-                        data-overdue="{{ $pelanggan->hasOverdueInvoices() ? 1 : 0 }}"
-                        data-sisa-limit="{{ $pelanggan->getSisaLimitKredit() }}">
+            <div class="mb-3">
+                <label class="form-label text-secondary small mb-1">Tipe Pelanggan</label>
+                <div class="d-flex gap-2">
+                    <input type="radio" class="btn-check" name="is_new_pelanggan" id="cust-type-existing" value="0" checked>
+                    <label class="btn btn-sm btn-outline-secondary flex-fill text-white" for="cust-type-existing" style="border-radius: 8px; font-size: 0.75rem;">Pelanggan Terdaftar</label>
+
+                    <input type="radio" class="btn-check" name="is_new_pelanggan" id="cust-type-new" value="1">
+                    <label class="btn btn-sm btn-outline-secondary flex-fill text-white" for="cust-type-new" style="border-radius: 8px; font-size: 0.75rem;">Pelanggan Baru (Canvas)</label>
                 </div>
             </div>
+
+            <!-- Existing Customer Search section -->
+            <div id="existing-customer-section" class="mb-3">
+                <label class="form-label text-secondary small mb-1">Cari Pelanggan</label>
+                <div class="position-relative">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-dark text-secondary border-secondary">
+                            <i class="fa-solid fa-store"></i>
+                        </span>
+                        <input type="text" id="customer-search-input" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Ketik nama atau kode pelanggan..." value="{{ $pelanggan->nama_pelanggan }}">
+                    </div>
+                    <div id="customer-search-results" class="list-group position-absolute w-100 shadow-lg mt-1 d-none"
+                        style="z-index: 1050; max-height: 220px; overflow-y: auto; background-color: #161e31; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Customer Details input fields -->
+            <div id="new-customer-section" class="mb-3 d-none">
+                <div class="mb-2">
+                    <label class="form-label text-secondary small mb-1">Nama Pelanggan / Toko <span class="text-danger">*</span></label>
+                    <input type="text" name="new_nama_pelanggan" id="new_nama_pelanggan" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Masukkan nama pelanggan baru...">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label text-secondary small mb-1">Alamat Pelanggan <span class="text-danger">*</span></label>
+                    <textarea name="new_alamat_pelanggan" id="new_alamat_pelanggan" class="form-control form-control-sm bg-dark text-white border-secondary" rows="2" placeholder="Masukkan alamat lengkap pelanggan baru..."></textarea>
+                </div>
+            </div>
+
+            <input type="hidden" name="kode_pelanggan" id="kode_pelanggan" value="{{ $pelanggan->kode_pelanggan }}"
+                data-overdue="{{ $pelanggan->hasOverdueInvoices() ? 1 : 0 }}"
+                data-sisa-limit="{{ $pelanggan->getSisaLimitKredit() }}">
 
             <!-- Customer Info Box -->
             <div class="p-2 rounded border border-secondary mt-2 bg-dark bg-opacity-20" style="font-size: 0.75rem;">
@@ -140,64 +166,66 @@
                     <span class="text-secondary d-block mb-1"
                         style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;">Detail
                         Pelanggan</span>
-                    <h6 class="fw-bold text-white mb-0" style="font-size: 0.8rem;">{{ $pelanggan->nama_pelanggan }}</h6>
+                    <h6 class="fw-bold text-white mb-0" id="info-nama-pelanggan">{{ $pelanggan->nama_pelanggan }}</h6>
                     <div class="text-secondary small mt-1">
-                        <i class="fa-solid fa-phone me-1 fs-8"></i>{{ $pelanggan->no_hp_pelanggan ?? '-' }}
+                        <i class="fa-solid fa-phone me-1 fs-8"></i><span id="info-hp-pelanggan">{{ $pelanggan->no_hp_pelanggan ?? '-' }}</span>
                     </div>
                 </div>
                 <div class="row g-2 mb-1">
                     <div class="col-4 text-secondary">Alamat:</div>
-                    <div class="col-8 text-end text-white" style="word-break: break-word;">
+                    <div class="col-8 text-end text-white" id="info-alamat-pelanggan" style="word-break: break-word;">
                         {{ $pelanggan->alamat_pelanggan ?? '-' }}</div>
                 </div>
                 <div class="row g-2 mb-1">
                     <div class="col-5 text-secondary">Limit Kredit:</div>
-                    <div class="col-7 text-end fw-semibold text-white">Rp
+                    <div class="col-7 text-end fw-semibold text-white" id="info-limit-pelanggan">Rp
                         {{ number_format($pelanggan->limit_pelanggan, 0, ',', '.') }}</div>
                 </div>
                 <div class="row g-2 mb-1">
                     <div class="col-5 text-secondary">Sisa Limit:</div>
-                    <div class="col-7 text-end fw-bold text-success">Rp
+                    <div class="col-7 text-end fw-bold text-success" id="info-sisa-limit-pelanggan">Rp
                         {{ number_format($pelanggan->getSisaLimitKredit(), 0, ',', '.') }}</div>
                 </div>
                 <div class="row g-2">
                     <div class="col-5 text-secondary">Metode Bayar:</div>
-                    <div class="col-7 text-end fw-semibold text-info">{{ $pelanggan->metode_bayar ?? '-' }}</div>
+                    <div class="col-7 text-end fw-semibold text-info" id="info-metode-bayar">{{ $pelanggan->metode_bayar ?? '-' }}</div>
                 </div>
 
-                @if ($pelanggan->hasOverdueInvoices())
-                    <div class="alert alert-danger p-3 mb-0 mt-2 rounded-4"
-                        style="font-size: 0.75rem; background-color: rgba(220, 38, 38, 0.2); border: 1.5px solid rgba(220, 38, 38, 0.4); color: #fecaca; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);">
-                        <div class="d-flex align-items-center mb-2 text-danger fw-bold" style="color: #fca5a5 !important;">
-                            <i class="fa-solid fa-triangle-exclamation me-1.5 fs-6"></i>
-                            <span class="fw-bold" style="font-size: 0.8rem; letter-spacing: 0.3px;">TOKO DIBLOKIR
-                                (OVERDUE)!</span>
+                <div id="info-overdue-container">
+                    @if ($pelanggan->hasOverdueInvoices())
+                        <div class="alert alert-danger p-3 mb-0 mt-2 rounded-4 info-overdue-box"
+                            style="font-size: 0.75rem; background-color: rgba(220, 38, 38, 0.2); border: 1.5px solid rgba(220, 38, 38, 0.4); color: #fecaca; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);">
+                            <div class="d-flex align-items-center mb-2 text-danger fw-bold" style="color: #fca5a5 !important;">
+                                <i class="fa-solid fa-triangle-exclamation me-1.5 fs-6"></i>
+                                <span class="fw-bold" style="font-size: 0.8rem; letter-spacing: 0.3px;">TOKO DIBLOKIR
+                                    (OVERDUE)!</span>
+                            </div>
+                            <p class="text-white-50 mb-2" style="font-size: 0.7rem; line-height: 1.3;">
+                                Pelanggan memiliki tagihan jatuh tempo yang belum diselesaikan. Detail faktur:
+                            </p>
+                            <ul class="mb-0 ps-3" style="font-size: 0.7rem; list-style-type: disc; color: #f8fafc;">
+                                @foreach ($pelanggan->getOverdueInvoices() as $inv)
+                                    @php
+                                        $sisa =
+                                            $inv->grand_total - $inv->getApprovedPembayaranTotal() - $inv->getTotalRetur();
+                                        $dueDate = \Carbon\Carbon::parse($inv->tanggal)->addDays($pelanggan->ljt ?? 30);
+                                    @endphp
+                                    <li class="mb-2">
+                                        Faktur <strong class="text-white font-monospace"
+                                            style="background: rgba(255,255,255,0.08); padding: 1px 4px; border-radius: 4px;">{{ $inv->no_faktur }}</strong>
+                                        <div class="text-white-50 ps-1 mt-0.5" style="font-size: 0.65rem; line-height: 1.4;">
+                                            JT: <span class="text-danger fw-bold"
+                                                style="color: #fca5a5 !important;">{{ $dueDate->format('d/m/Y') }}</span>
+                                            &bull;
+                                            Sisa: <strong class="text-white" style="color: #f8fafc !important;">Rp
+                                                {{ number_format($sisa, 0, ',', '.') }}</strong>
+                                        </div>
+                                    </li>
+                                @endforeach
+                            </ul>
                         </div>
-                        <p class="text-white-50 mb-2" style="font-size: 0.7rem; line-height: 1.3;">
-                            Pelanggan memiliki tagihan jatuh tempo yang belum diselesaikan. Detail faktur:
-                        </p>
-                        <ul class="mb-0 ps-3" style="font-size: 0.7rem; list-style-type: disc; color: #f8fafc;">
-                            @foreach ($pelanggan->getOverdueInvoices() as $inv)
-                                @php
-                                    $sisa =
-                                        $inv->grand_total - $inv->getApprovedPembayaranTotal() - $inv->getTotalRetur();
-                                    $dueDate = \Carbon\Carbon::parse($inv->tanggal)->addDays($pelanggan->ljt ?? 30);
-                                @endphp
-                                <li class="mb-2">
-                                    Faktur <strong class="text-white font-monospace"
-                                        style="background: rgba(255,255,255,0.08); padding: 1px 4px; border-radius: 4px;">{{ $inv->no_faktur }}</strong>
-                                    <div class="text-white-50 ps-1 mt-0.5" style="font-size: 0.65rem; line-height: 1.4;">
-                                        JT: <span class="text-danger fw-bold"
-                                            style="color: #fca5a5 !important;">{{ $dueDate->format('d/m/Y') }}</span>
-                                        &bull;
-                                        Sisa: <strong class="text-white" style="color: #f8fafc !important;">Rp
-                                            {{ number_format($sisa, 0, ',', '.') }}</strong>
-                                    </div>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -331,6 +359,196 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const hiddenKodePelanggan = document.getElementById('kode_pelanggan');
+            const infoNama = document.getElementById('info-nama-pelanggan');
+
+            // --- Customer Search & Toggle ---
+            const customerTypeEls = document.querySelectorAll('input[name="is_new_pelanggan"]');
+            const existingCustomerSection = document.getElementById('existing-customer-section');
+            const newCustomerSection = document.getElementById('new-customer-section');
+            const customerSearchInput = document.getElementById('customer-search-input');
+            const customerSearchResults = document.getElementById('customer-search-results');
+            const newNamaInput = document.getElementById('new_nama_pelanggan');
+            const newAlamatInput = document.getElementById('new_alamat_pelanggan');
+            const infoHp = document.getElementById('info-hp-pelanggan');
+            const infoAlamat = document.getElementById('info-alamat-pelanggan');
+            const infoLimit = document.getElementById('info-limit-pelanggan');
+            const infoSisaLimit = document.getElementById('info-sisa-limit-pelanggan');
+            const infoMetode = document.getElementById('info-metode-bayar');
+            const infoOverdueContainer = document.getElementById('info-overdue-container');
+
+            let selectedExistingCustomer = {
+                nama: @json($pelanggan->nama_pelanggan),
+                kode: @json($pelanggan->kode_pelanggan),
+                hp: @json($pelanggan->no_hp_pelanggan ?? '-'),
+                alamat: @json($pelanggan->alamat_pelanggan ?? '-'),
+                limit: @json($pelanggan->limit_pelanggan),
+                sisa_limit: @json($pelanggan->getSisaLimitKredit()),
+                metode: @json($pelanggan->metode_bayar ?? '-'),
+                has_overdue: @json($pelanggan->hasOverdueInvoices() ? 1 : 0),
+                overdue_invoices: @json($pelanggan->hasOverdueInvoices() ? $pelanggan->getOverdueInvoices()->map(function($inv) use ($pelanggan) {
+                    return [
+                        'no_faktur' => $inv->no_faktur,
+                        'due_date' => \Carbon\Carbon::parse($inv->tanggal)->addDays($pelanggan->ljt ?? 30)->format('d/m/Y'),
+                        'sisa' => $inv->grand_total - $inv->getApprovedPembayaranTotal() - $inv->getTotalRetur()
+                    ];
+                }) : [])
+            };
+
+            const defaultNewCustomer = {
+                nama: 'Pelanggan Baru',
+                kode: 'OTOMATIS',
+                hp: '-',
+                alamat: '-',
+                limit: 200000,
+                sisa_limit: 200000,
+                metode: 'Cash',
+                has_overdue: 0,
+                overdue_invoices: []
+            };
+
+            function updateCustomerDetails(cust) {
+                infoNama.innerText = cust.nama;
+                infoHp.innerText = cust.hp;
+                infoAlamat.innerText = cust.alamat;
+                infoLimit.innerText = 'Rp ' + Number(cust.limit).toLocaleString('id-ID');
+                infoSisaLimit.innerText = 'Rp ' + Number(cust.sisa_limit).toLocaleString('id-ID');
+                infoMetode.innerText = cust.metode;
+
+                // Sync data attributes for submit guards
+                hiddenKodePelanggan.value = cust.kode;
+                hiddenKodePelanggan.setAttribute('data-overdue', cust.has_overdue);
+                hiddenKodePelanggan.setAttribute('data-sisa-limit', cust.sisa_limit);
+
+                // Populate overdue invoices if any
+                infoOverdueContainer.innerHTML = '';
+                if (cust.has_overdue === 1 && cust.overdue_invoices && cust.overdue_invoices.length > 0) {
+                    const box = document.createElement('div');
+                    box.className = 'alert alert-danger p-3 mb-0 mt-2 rounded-4 info-overdue-box';
+                    box.style.cssText = 'font-size: 0.75rem; background-color: rgba(220, 38, 38, 0.2); border: 1.5px solid rgba(220, 38, 38, 0.4); color: #fecaca; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);';
+                    box.innerHTML = `
+                        <div class="d-flex align-items-center mb-2 text-danger fw-bold" style="color: #fca5a5 !important;">
+                            <i class="fa-solid fa-triangle-exclamation me-1.5 fs-6"></i>
+                            <span class="fw-bold" style="font-size: 0.8rem; letter-spacing: 0.3px;">TOKO DIBLOKIR (OVERDUE)!</span>
+                        </div>
+                        <p class="text-white-50 mb-2" style="font-size: 0.7rem; line-height: 1.3;">
+                            Pelanggan memiliki tagihan jatuh tempo yang belum diselesaikan. Detail faktur:
+                        </p>
+                        <ul class="mb-0 ps-3" style="font-size: 0.7rem; list-style-type: disc; color: #f8fafc;">
+                        </ul>
+                    `;
+                    const ul = box.querySelector('ul');
+                    cust.overdue_invoices.forEach(inv => {
+                        const li = document.createElement('li');
+                        li.className = 'mb-2';
+                        li.innerHTML = `
+                            Faktur <strong class="text-white font-monospace" style="background: rgba(255,255,255,0.08); padding: 1px 4px; border-radius: 4px;">${inv.no_faktur}</strong>
+                            <div class="text-white-50 ps-1 mt-0.5" style="font-size: 0.65rem; line-height: 1.4;">
+                                JT: <span class="text-danger fw-bold" style="color: #fca5a5 !important;">${inv.due_date}</span> &bull;
+                                Sisa: <strong class="text-white" style="color: #f8fafc !important;">Rp ${Number(inv.sisa).toLocaleString('id-ID')}</strong>
+                            </div>
+                        `;
+                        ul.appendChild(li);
+                    });
+                    infoOverdueContainer.appendChild(box);
+                }
+            }
+
+            customerTypeEls.forEach(el => {
+                el.addEventListener('change', function() {
+                    const isNew = this.value === '1';
+                    if (isNew) {
+                        existingCustomerSection.classList.add('d-none');
+                        newCustomerSection.classList.remove('d-none');
+                        newNamaInput.setAttribute('required', 'required');
+                        newAlamatInput.setAttribute('required', 'required');
+                        updateCustomerDetails(defaultNewCustomer);
+                    } else {
+                        existingCustomerSection.classList.remove('d-none');
+                        newCustomerSection.classList.add('d-none');
+                        newNamaInput.removeAttribute('required');
+                        newAlamatInput.removeAttribute('required');
+                        updateCustomerDetails(selectedExistingCustomer);
+                    }
+                });
+            });
+
+            // Sync typed new customer name/address to the detail box in real-time
+            newNamaInput.addEventListener('input', function() {
+                const checkedEl = document.querySelector('input[name="is_new_pelanggan"]:checked');
+                if (checkedEl && checkedEl.value === '1') {
+                    infoNama.innerText = this.value.trim() || 'Pelanggan Baru';
+                }
+            });
+            newAlamatInput.addEventListener('input', function() {
+                const checkedEl = document.querySelector('input[name="is_new_pelanggan"]:checked');
+                if (checkedEl && checkedEl.value === '1') {
+                    infoAlamat.innerText = this.value.trim() || '-';
+                }
+            });
+
+            customerSearchInput.addEventListener('input', debounce(function() {
+                const q = this.value.trim();
+                if (q.length < 2) {
+                    customerSearchResults.classList.add('d-none');
+                    return;
+                }
+                fetch(`{{ route('pelanggan.search') }}?q=${encodeURIComponent(q)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        customerSearchResults.innerHTML = '';
+                        if (data.length === 0) {
+                            customerSearchResults.innerHTML =
+                                '<div class="p-2 text-secondary text-center" style="font-size: 0.75rem;">Pelanggan tidak ditemukan.</div>';
+                            customerSearchResults.classList.remove('d-none');
+                            return;
+                        }
+                        data.forEach(item => {
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className =
+                                'list-group-item list-group-item-action text-white border-0 py-2 px-3 d-flex flex-column';
+                            btn.style.backgroundColor = 'transparent';
+                            btn.style.borderBottom =
+                                '1px solid rgba(255,255,255,0.05) !important';
+                            btn.innerHTML = `
+                                <span class="fw-semibold text-white" style="font-size: 0.8rem;">${item.nama} (${item.kode})</span>
+                                <span class="text-secondary mt-1" style="font-size: 0.7rem;">Alamat: ${item.alamat}</span>
+                            `;
+                            btn.addEventListener('click', () => {
+                                selectedExistingCustomer = {
+                                    nama: item.nama,
+                                    kode: item.kode,
+                                    hp: item.hp,
+                                    alamat: item.alamat,
+                                    limit: item.limit,
+                                    sisa_limit: item.sisa_limit,
+                                    metode: item.metode,
+                                    has_overdue: item.has_overdue,
+                                    overdue_invoices: item.overdue_invoices.map(inv => {
+                                        return {
+                                            no_faktur: inv.no_faktur,
+                                            due_date: inv.due_date,
+                                            sisa: inv.sisa
+                                        };
+                                    })
+                                };
+                                updateCustomerDetails(selectedExistingCustomer);
+                                customerSearchInput.value = item.nama;
+                                customerSearchResults.classList.add('d-none');
+                                calculateTotals();
+                            });
+                            customerSearchResults.appendChild(btn);
+                        });
+                        customerSearchResults.classList.remove('d-none');
+                    });
+            }, 300));
+
+            document.addEventListener('click', function(e) {
+                if (!customerSearchInput.contains(e.target) && !customerSearchResults.contains(e.target)) {
+                    customerSearchResults.classList.add('d-none');
+                }
+            });
+
             const productSearchInput = document.getElementById('product-search-input');
             const productSearchResults = document.getElementById('product-search-results');
             const cartContainer = document.getElementById('cart-container');
@@ -765,7 +983,7 @@
                     e.preventDefault();
                     Swal.fire({
                         title: 'Transaksi Ditolak',
-                        html: `Pelanggan <strong>{{ $pelanggan->nama_pelanggan }}</strong> memiliki tagihan jatuh tempo (Overdue)!<br>Selesaikan pembayaran terlebih dahulu.`,
+                        html: `Pelanggan <strong>` + infoNama.innerText + `</strong> memiliki tagihan jatuh tempo (Overdue)!<br>Selesaikan pembayaran terlebih dahulu.`,
                         icon: 'error',
                         background: '#161e31',
                         color: '#f8fafc',
