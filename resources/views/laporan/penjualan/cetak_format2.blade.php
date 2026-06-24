@@ -49,7 +49,7 @@
     $isExcel = isset($isExcel) ? $isExcel : false;
     $numFmt = function ($val, $decimals = 0) use ($isExcel) {
         if ($isExcel) {
-            return $val;
+            return $decimals === 0 ? (int) round((float) $val) : round((float) $val, $decimals);
         }
         return number_format((float) $val, $decimals, ',', '.');
     };

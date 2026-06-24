@@ -614,9 +614,9 @@
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text text-success"
                                         style="font-size: 0.75rem; background-color: rgba(18, 24, 36, 0.9); border: 1px solid rgba(255, 255, 255, 0.12); border-right: none; font-weight: 600; padding: 5px 8px; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">Rp</span>
-                                    <input type="number" name="jumlah" id="modal-jumlah"
-                                        class="form-control form-control-sm text-white rupiah-input" min="0.01"
-                                        step="0.01" placeholder="Masukkan jumlah bayar..." required
+                                    <input type="text" name="jumlah" id="modal-jumlah"
+                                        class="form-control form-control-sm text-white rupiah-input"
+                                        placeholder="Masukkan jumlah bayar..." required
                                         style="font-size: 0.75rem; padding: 5px 8px; border: 1px solid rgba(255, 255, 255, 0.12) !important; border-left: none !important; background-color: rgba(18, 24, 36, 0.8) !important; border-top-right-radius: 8px; border-bottom-right-radius: 8px;"
                                         disabled>
                                 </div>
@@ -695,8 +695,8 @@
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text text-purple"
                                     style="font-size: 0.75rem; background-color: rgba(18, 24, 36, 0.9); border: 1px solid rgba(255, 255, 255, 0.12); border-right: none; font-weight: 600; padding: 5px 8px; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">Rp</span>
-                                <input type="number" name="limit_baru" id="modal-limit-baru"
-                                    class="form-control form-control-sm text-white rupiah-input" min="0"
+                                <input type="text" name="limit_baru" id="modal-limit-baru"
+                                    class="form-control form-control-sm text-white rupiah-input"
                                     placeholder="Contoh: 15.000.000" required
                                     style="font-size: 0.75rem; padding: 5px 8px; border: 1px solid rgba(255, 255, 255, 0.12) !important; border-left: none !important; background-color: rgba(18, 24, 36, 0.8) !important; border-top-right-radius: 8px; border-bottom-right-radius: 8px;">
                             </div>

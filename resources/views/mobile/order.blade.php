@@ -285,7 +285,7 @@
                 </div>
                 <div class="col-6">
                     <label class="form-label text-secondary small mb-1">Potongan Global (Rp)</label>
-                    <input type="number" name="diskon_global" id="diskon_global"
+                    <input type="text" name="diskon_global" id="diskon_global"
                         class="form-control form-control-sm bg-dark text-white border-secondary text-end rupiah-input"
                         value="0" min="0" readonly
                         style="background-color: rgba(255, 255, 255, 0.05) !important;">
@@ -695,7 +695,7 @@
                             <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Harga Jual</label>
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-dark text-secondary border-secondary" style="font-size: 0.75rem; border-radius: 8px 0 0 8px;">Rp</span>
-                                <input type="number" name="items[${rowIndex}][harga]" class="form-control form-control-sm bg-dark text-white border-secondary text-end input-harga rupiah-input" value="${defaultPrice}" required style="font-size: 0.8rem; border-radius: 0 8px 8px 0;">
+                                <input type="text" name="items[${rowIndex}][harga]" class="form-control form-control-sm bg-dark text-white border-secondary text-end input-harga rupiah-input" value="${defaultPrice}" required style="font-size: 0.8rem; border-radius: 0 8px 8px 0;">
                             </div>
                         </div>
                     </div>

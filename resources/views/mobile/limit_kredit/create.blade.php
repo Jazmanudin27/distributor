@@ -87,7 +87,7 @@
                         style="background-color: #121824; border-color: rgba(255, 255, 255, 0.08); color: var(--text-secondary); border-top-left-radius: 12px; border-bottom-left-radius: 12px;">
                         Rp
                     </span>
-                    <input type="number" name="limit_baru" id="limit_baru"
+                    <input type="text" name="limit_baru" id="limit_baru"
                         class="form-control form-control-mobile rupiah-input @error('limit_baru') is-invalid @enderror"
                         value="{{ old('limit_baru') }}" placeholder="Contoh: 15.000.000" min="0" required
                         style="border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important;">
