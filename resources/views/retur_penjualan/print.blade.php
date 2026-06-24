@@ -120,13 +120,13 @@
 </head>
 
 <body>
-    
+
     <table class="header-table" style="margin: 10px 0; width: 100%;">
         <tr>
             {{-- Logo and Company Name --}}
             <td style="width: 35%; vertical-align: top;">
                 <div style="display: flex; align-items: center; gap: 5px; padding-bottom:8px;">
-                    <img src="http://mjap.aspartech.com/assets/img/MJAP.png" alt="Logo MJAP" style="height: 50px;">
+                    <img src="{{ asset('assets/img/MJAP.png') }}" alt="Logo MJAP" style="height: 50px;">
                     <div>
                         <div class="header-title">RETUR PENJUALAN</div>
                         <div class="header-subtitle">CV MITRA JAYA ABADI PERSADA</div>
@@ -155,7 +155,8 @@
                     </tr>
                     <tr>
                         <td style="vertical-align: top;">Alamat</td>
-                        <td class="alamat-pelanggan">: {{ $item->pelanggan->alamat_toko ?? $item->pelanggan->alamat_pelanggan ?? '-' }}</td>
+                        <td class="alamat-pelanggan">:
+                            {{ $item->pelanggan->alamat_toko ?? ($item->pelanggan->alamat_pelanggan ?? '-') }}</td>
                     </tr>
                     <tr>
                         <td>No. HP</td>
@@ -198,7 +199,7 @@
         </thead>
         <tbody>
             @php $subtotalRaw = 0; @endphp
-            @foreach($item->details as $index => $detail)
+            @foreach ($item->details as $index => $detail)
                 @php
                     $rowSub = $detail->qty * $detail->harga_retur;
                     $subtotalRaw += $rowSub;
