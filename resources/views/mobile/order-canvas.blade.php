@@ -152,61 +152,13 @@
                     <div class="col-8 text-end text-white" id="info-alamat-pelanggan" style="word-break: break-word;">
                         {{ $pelanggan->alamat_pelanggan ?? '-' }}</div>
                 </div>
-                <div class="row g-2 mb-1">
-                    <div class="col-5 text-secondary">Limit Kredit:</div>
-                    <div class="col-7 text-end fw-semibold text-white" id="info-limit-pelanggan">Rp
-                        {{ number_format($pelanggan->limit_pelanggan, 0, ',', '.') }}</div>
-                </div>
-                <div class="row g-2 mb-1">
-                    <div class="col-5 text-secondary">Sisa Limit:</div>
-                    <div class="col-7 text-end fw-bold text-success" id="info-sisa-limit-pelanggan">Rp
-                        {{ number_format($pelanggan->getSisaLimitKredit(), 0, ',', '.') }}</div>
-                </div>
                 <div class="row g-2">
                     <div class="col-5 text-secondary">Metode Bayar:</div>
                     <div class="col-7 text-end fw-semibold text-info" id="info-metode-bayar">
                         {{ $pelanggan->metode_bayar ?? '-' }}</div>
                 </div>
 
-                <div id="info-overdue-container">
-                    @if ($pelanggan->hasOverdueInvoices())
-                        <div class="alert alert-danger p-3 mb-0 mt-2 rounded-4 info-overdue-box"
-                            style="font-size: 0.75rem; background-color: rgba(220, 38, 38, 0.2); border: 1.5px solid rgba(220, 38, 38, 0.4); color: #fecaca; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);">
-                            <div class="d-flex align-items-center mb-2 text-danger fw-bold"
-                                style="color: #fca5a5 !important;">
-                                <i class="fa-solid fa-triangle-exclamation me-1.5 fs-6"></i>
-                                <span class="fw-bold" style="font-size: 0.8rem; letter-spacing: 0.3px;">TOKO DIBLOKIR
-                                    (OVERDUE)!</span>
-                            </div>
-                            <p class="text-white-50 mb-2" style="font-size: 0.7rem; line-height: 1.3;">
-                                Pelanggan memiliki tagihan jatuh tempo yang belum diselesaikan. Detail faktur:
-                            </p>
-                            <ul class="mb-0 ps-3" style="font-size: 0.7rem; list-style-type: disc; color: #f8fafc;">
-                                @foreach ($pelanggan->getOverdueInvoices() as $inv)
-                                    @php
-                                        $sisa =
-                                            $inv->grand_total -
-                                            $inv->getApprovedPembayaranTotal() -
-                                            $inv->getTotalRetur();
-                                        $dueDate = \Carbon\Carbon::parse($inv->tanggal)->addDays($pelanggan->ljt ?? 30);
-                                    @endphp
-                                    <li class="mb-2">
-                                        Faktur <strong class="text-white font-monospace"
-                                            style="background: rgba(255,255,255,0.08); padding: 1px 4px; border-radius: 4px;">{{ $inv->no_faktur }}</strong>
-                                        <div class="text-white-50 ps-1 mt-0.5"
-                                            style="font-size: 0.65rem; line-height: 1.4;">
-                                            JT: <span class="text-danger fw-bold"
-                                                style="color: #fca5a5 !important;">{{ $dueDate->format('d/m/Y') }}</span>
-                                            &bull;
-                                            Sisa: <strong class="text-white" style="color: #f8fafc !important;">Rp
-                                                {{ number_format($sisa, 0, ',', '.') }}</strong>
-                                        </div>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-                </div>
+                <div id="info-overdue-container"></div>
             </div>
         </div>
 
@@ -246,16 +198,7 @@
                     <label class="form-label text-secondary small mb-1">Metode Bayar</label>
                     <select name="jenis_transaksi" id="jenis_transaksi"
                         class="form-select form-select-sm bg-dark text-white border-secondary" required>
-                        @if (Auth::user()->jenis_sales != '1')
-                            <option value="Tunai"
-                                {{ in_array($pelanggan->metode_bayar, ['T', 'Tunai']) ? 'selected' : '' }}>Tunai (Cash)
-                            </option>
-                            <option value="Kredit"
-                                {{ in_array($pelanggan->metode_bayar, ['K', 'Kredit']) ? 'selected' : '' }}>Kredit (Tempo)
-                            </option>
-                        @else
-                            <option value="Tunai" selected>Tunai (Cash)</option>
-                        @endif
+                        <option value="Tunai" selected>Tunai (Cash)</option>
                     </select>
                 </div>
             </div>
@@ -786,40 +729,6 @@
 
             // --- Form Submit Guards ---
             document.getElementById('order-form').addEventListener('submit', function(e) {
-                // Overdue check
-                const overdueStatus = parseInt(hiddenKodePelanggan.getAttribute('data-overdue')) || 0;
-                if (overdueStatus === 1) {
-                    e.preventDefault();
-                    Swal.fire({
-                        title: 'Transaksi Ditolak',
-                        html: `Pelanggan <strong>` + infoNama.innerText +
-                            `</strong> memiliki tagihan jatuh tempo (Overdue)!<br>Selesaikan pembayaran terlebih dahulu.`,
-                        icon: 'error',
-                        background: '#161e31',
-                        color: '#f8fafc',
-                        confirmButtonColor: '#6366f1'
-                    });
-                    return false;
-                }
-
-                // Credit limit check
-                if (jenisTransaksiEl.value === 'Kredit') {
-                    const sisaLimit = parseFloat(hiddenKodePelanggan.getAttribute('data-sisa-limit')) || 0;
-                    const grandTotal = parseFloat(btnSubmitOrder.getAttribute('data-grand-total')) || 0;
-                    if (grandTotal > sisaLimit) {
-                        e.preventDefault();
-                        Swal.fire({
-                            title: 'Limit Kredit Terlampaui',
-                            text: `Total order (Rp ${grandTotal.toLocaleString('id-ID')}) melebihi sisa limit kredit (Rp ${sisaLimit.toLocaleString('id-ID')})!`,
-                            icon: 'error',
-                            background: '#161e31',
-                            color: '#f8fafc',
-                            confirmButtonColor: '#6366f1'
-                        });
-                        return false;
-                    }
-                }
-
                 // Stock check
                 let stockOk = true;
                 cartContainer.querySelectorAll('.cart-item-card').forEach(card => {

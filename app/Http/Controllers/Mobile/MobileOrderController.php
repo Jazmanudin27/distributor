@@ -858,15 +858,7 @@ class MobileOrderController extends Controller
             'kode_pelanggan'       => 'required_if:is_new_pelanggan,0|nullable|string|exists:pelanggan,kode_pelanggan',
             'new_nama_pelanggan'   => 'required_if:is_new_pelanggan,1|nullable|string|max:100',
             'new_alamat_pelanggan' => 'required_if:is_new_pelanggan,1|nullable|string|max:150',
-            'jenis_transaksi'      => [
-                'required',
-                'in:Tunai,Kredit',
-                function ($attribute, $value, $fail) {
-                    if (Auth::user()->jenis_sales == '1' && $value === 'Kredit') {
-                        $fail('Salesman dengan tipe ini tidak diizinkan untuk melakukan transaksi Kredit.');
-                    }
-                }
-            ],
+            'jenis_transaksi'      => 'required|in:Tunai',
             'keterangan'           => 'nullable|string',
             'items'                => 'required|array|min:1',
             'items.*.kode_barang'  => 'required|exists:barang,kode_barang',
@@ -885,12 +877,6 @@ class MobileOrderController extends Controller
 
         if (!$isNewPelanggan) {
             $pelanggan = Pelanggan::findOrFail($request->kode_pelanggan);
-
-            // Verify Overdue Invoices
-            if ($pelanggan->hasOverdueInvoices()) {
-                $overdueInvoices = $pelanggan->getOverdueInvoices()->pluck('no_faktur')->implode(', ');
-                return redirect()->back()->withInput()->with('error', "Transaksi ditolak. Pelanggan {$pelanggan->nama_pelanggan} memiliki faktur overdue: {$overdueInvoices}!");
-            }
             $sisaLimit = $pelanggan->getSisaLimitKredit();
         }
 

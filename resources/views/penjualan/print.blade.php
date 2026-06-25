@@ -218,6 +218,14 @@
             }
         }
         $colspanRight = 3 + ($showD1 ? 1 : 0) + ($showD2 ? 1 : 0) + ($showD3 ? 1 : 0);
+
+        $formatDisc = function ($val) {
+            $floatVal = floatval($val);
+            if ($floatVal == intval($floatVal)) {
+                return number_format($floatVal, 0, ',', '.');
+            }
+            return rtrim(rtrim(number_format($floatVal, 2, ',', '.'), '0'), ',');
+        };
     @endphp
     <table>
         <thead>
@@ -251,17 +259,17 @@
                     <td class="text-end">Rp {{ number_format((float) $detail->harga, 0, ',', '.') }}</td>
                     @if ($showD1)
                         <td class="text-center">
-                            {{ floatval($detail->diskon1_persen) > 0 ? number_format((float) $detail->diskon1_persen, 2, ',', '.') . '%' : '-' }}
+                            {{ floatval($detail->diskon1_persen) > 0 ? $formatDisc($detail->diskon1_persen) . '%' : '-' }}
                         </td>
                     @endif
                     @if ($showD2)
                         <td class="text-center">
-                            {{ floatval($detail->diskon2_persen) > 0 ? number_format((float) $detail->diskon2_persen, 2, ',', '.') . '%' : '-' }}
+                            {{ floatval($detail->diskon2_persen) > 0 ? $formatDisc($detail->diskon2_persen) . '%' : '-' }}
                         </td>
                     @endif
                     @if ($showD3)
                         <td class="text-center">
-                            {{ floatval($detail->diskon3_persen) > 0 ? number_format((float) $detail->diskon3_persen, 2, ',', '.') . '%' : '-' }}
+                            {{ floatval($detail->diskon3_persen) > 0 ? $formatDisc($detail->diskon3_persen) . '%' : '-' }}
                         </td>
                     @endif
                     <td class="text-end">Rp

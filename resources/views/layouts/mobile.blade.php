@@ -528,12 +528,7 @@
                     <span>Penjualan</span>
                 </a>
 
-                {{-- Ajuan Limit — untuk semua sales --}}
-                <a href="{{ route('mobile.limit-kredit.index') }}"
-                    class="nav-item-mobile {{ Request::routeIs('mobile.limit-kredit.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                    <span>Ajuan Limit</span>
-                </a>
+
             @endif
             @if ($isOwner)
                 <form id="logout-form" action="{{ route('mobile.owner.logout') }}" method="POST" class="d-none">

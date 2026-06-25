@@ -829,6 +829,12 @@
 
             $('#formPembayaran').on('submit', function() {
                 $('#payment_jumlah').val(cleanNumber($('#payment_jumlah').val()));
+                const modalInst = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+                if (modalInst) {
+                    modalInst.hide();
+                }
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css('overflow', '');
             });
 
             $(document).on('click', '.edit-payment-btn', function() {
@@ -888,6 +894,12 @@
 
             $('#formEditPembayaran').on('submit', function() {
                 $('#edit_payment_jumlah').val(cleanNumber($('#edit_payment_jumlah').val()));
+                const modalInst = bootstrap.Modal.getInstance(document.getElementById('editPaymentModal'));
+                if (modalInst) {
+                    modalInst.hide();
+                }
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css('overflow', '');
             });
 
             $(document).on('click', '.btn-batal-faktur', function(e) {
@@ -959,6 +971,20 @@
                         form.submit();
                     }
                 });
+            });
+
+            // Prevent lingering modals/backdrops when loading page from history/BFCache
+            $(window).on('pageshow', function() {
+                $('.modal').each(function() {
+                    const modalInst = bootstrap.Modal.getInstance(this);
+                    if (modalInst) {
+                        modalInst.hide();
+                    } else {
+                        $(this).removeClass('show').css('display', 'none').attr('aria-hidden', 'true');
+                    }
+                });
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css('overflow', '');
             });
         });
     </script>
