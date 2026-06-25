@@ -226,8 +226,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/laporan/setoran/excel', [LaporanKeuanganController::class, 'laporanSetoran'])->name('laporan.setoran.excel');
         
         Route::get('/laporan/laba-rugi', [LaporanKeuanganController::class, 'laporanLabaRugi'])->name('laporan.laba-rugi');
-        Route::get('/laporan/laba-rugi/cetak', [LaporanKeuanganController::class, 'laporanLabaRugi'])->name('laporan.laba-rugi.cetak');
-        Route::get('/laporan/laba-rugi/excel', [LaporanKeuanganController::class, 'laporanLabaRugi'])->name('laporan.laba-rugi.excel');
+        Route::post('/laporan/laba-rugi/cetak', [LaporanKeuanganController::class, 'cetakLabaRugi'])->name('cetakLabaRugi');
+        Route::get('/laporan/laba-rugi/cetak', [LaporanKeuanganController::class, 'cetakLabaRugi'])->name('laporan.laba-rugi.cetak');
+        Route::get('/laporan/laba-rugi/excel', [LaporanKeuanganController::class, 'cetakLabaRugi'])->name('laporan.laba-rugi.excel');
 
         Route::get('/laporan/kas-bank', [LaporanKeuanganController::class, 'laporanKasBank'])->name('laporan.kas-bank');
         Route::get('/laporan/kas-bank/cetak', [LaporanKeuanganController::class, 'laporanKasBank'])->name('laporan.kas-bank.cetak');

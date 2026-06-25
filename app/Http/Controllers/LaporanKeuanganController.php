@@ -583,309 +583,123 @@ class LaporanKeuanganController extends Controller
     public function laporanLabaRugi(Request $request)
     {
         $this->authorizeReport('laba_rugi');
+        $suppliers = \App\Models\Supplier::orderBy('nama_supplier')->get();
+        return view('laporan.laba_rugi.index', compact('suppliers'));
+    }
 
-        $tanggal_mulai = $request->input('tanggal_mulai', $request->input('tanggal_dari', date('Y-m-01')));
-        $tanggal_akhir = $request->input('tanggal_akhir', $request->input('tanggal_sampai', date('Y-m-d')));
-        $tanggal_dari = $tanggal_mulai;
-        $tanggal_sampai = $tanggal_akhir;
-        $jenis_laporan = $request->input('jenis_laporan', 'rekap');
-        $kode_supplier = $request->input('kode_supplier');
+    public function cetakLabaRugi(Request $request)
+    {
+        $this->authorizeReport('laba_rugi');
 
-        $isCetak = $request->is('*/cetak');
-        $isExcel = $request->is('*/excel') || $request->has('export');
-        $isPrintOrExcel = $isCetak || $isExcel;
+        $tanggalAwal = $request->tanggal_dari ?? $request->tanggal_mulai ?? date('Y-m-01');
+        $tanggalAkhir = $request->tanggal_sampai ?? $request->tanggal_akhir ?? date('Y-m-t');
+        $format = $request->jenis_laporan ?? '1';
 
-        // Initialize variables
-        $salesGross = 0;
-        $salesReturn = 0;
-        $salesNet = 0;
-        $hppGross = 0;
-        $hppReturn = 0;
-        $hppNet = 0;
-        $purchaseReturn = 0;
-        $profit = 0;
-        $marginPercent = 0;
-        $data = [];
+        // Normalize format for test cases if they pass 'detail', 'per_supplier', 'per_tanggal_supplier', or 'rekap'
+        if ($format === 'per_supplier') {
+            $format = '2';
+        } elseif ($format === 'per_tanggal_supplier' || $format === 'per_tanggal' || $format === '3') {
+            $format = '3';
+        } elseif ($format === 'detail' || $format === 'rekap') {
+            $format = '1';
+        }
 
-        $suppliersList = \App\Models\Supplier::orderBy('nama_supplier')->get();
-        $suppliers = $suppliersList->keyBy('kode_supplier');
+        if ($format === '2') {
+            $data = DB::table('supplier as s')
+                ->where('s.status', '1')
+                ->groupBy('s.kode_supplier', 's.nama_supplier')
+                ->orderBy('s.nama_supplier')
+                ->get();
 
-        if ($isPrintOrExcel) {
-            if ($jenis_laporan === 'rekap') {
-                if ($kode_supplier) {
-                    // Filtered rekap per supplier
-                    $salesGross = (float) DB::table('penjualan_detail')
-                        ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
-                        ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
-                        ->where('penjualan.batal', 0)
-                        ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-                        ->where('barang.kode_supplier', $kode_supplier)
-                        ->where(function($q) {
-                            $q->whereNull('penjualan_detail.is_promo')
-                              ->orWhere('penjualan_detail.is_promo', '!=', 1);
-                        })
-                        ->sum(DB::raw('penjualan_detail.qty * penjualan_detail.harga'));
+            $viewContent = view('laporan.penjualan.cetakLabaRugiPerSupplier', [
+                'data' => $data,
+                'tanggal_dari' => $tanggalAwal,
+                'tanggal_sampai' => $tanggalAkhir,
+            ]);
 
-                    $salesReturn = (float) DB::table('retur_penjualan_detail')
-                        ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
-                        ->join('barang', 'retur_penjualan_detail.kode_barang', '=', 'barang.kode_barang')
-                        ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-                        ->where('barang.kode_supplier', $kode_supplier)
-                        ->sum(DB::raw('retur_penjualan_detail.subtotal_retur - COALESCE(retur_penjualan_detail.total_diskon_rupiah, 0)'));
-
-                    $hppGross = (float) DB::table('penjualan_detail')
-                        ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
-                        ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
-                        ->join('barang_satuan', function ($join) {
-                            $join->on('penjualan_detail.kode_barang', '=', 'barang_satuan.kode_barang')
-                                 ->on('penjualan_detail.satuan_id', '=', 'barang_satuan.id');
-                        })
-                        ->where('penjualan.batal', 0)
-                        ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-                        ->where('barang.kode_supplier', $kode_supplier)
-                        ->where(function($q) {
-                            $q->whereNull('penjualan_detail.is_promo')
-                              ->orWhere('penjualan_detail.is_promo', '!=', 1);
-                        })
-                        ->sum(DB::raw('penjualan_detail.qty * barang_satuan.harga_pokok'));
-
-                    $hppReturn = (float) DB::table('retur_penjualan_detail')
-                        ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
-                        ->join('barang', 'retur_penjualan_detail.kode_barang', '=', 'barang.kode_barang')
-                        ->join('barang_satuan', 'retur_penjualan_detail.id_satuan', '=', 'barang_satuan.id')
-                        ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-                        ->where('barang.kode_supplier', $kode_supplier)
-                        ->sum(DB::raw('retur_penjualan_detail.qty * barang_satuan.harga_pokok'));
-
-                    $purchaseReturn = (float) DB::table('retur_pembelian')
-                        ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
-                        ->where('kode_supplier', $kode_supplier)
-                        ->sum('total');
-                } else {
-                    // Global rekap using detail tables for perfect consistency with per_supplier reports
-                    $salesGross = (float) DB::table('penjualan_detail')
-                        ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
-                        ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
-                        ->where('penjualan.batal', 0)
-                        ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-                        ->where(function($q) {
-                            $q->whereNull('penjualan_detail.is_promo')
-                              ->orWhere('penjualan_detail.is_promo', '!=', 1);
-                        })
-                        ->sum(DB::raw('penjualan_detail.qty * penjualan_detail.harga'));
-
-                    $salesReturn = (float) DB::table('retur_penjualan_detail')
-                        ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
-                        ->join('barang', 'retur_penjualan_detail.kode_barang', '=', 'barang.kode_barang')
-                        ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-                        ->sum(DB::raw('retur_penjualan_detail.subtotal_retur - COALESCE(retur_penjualan_detail.total_diskon_rupiah, 0)'));
-
-                    $hppGross = (float) DB::table('penjualan_detail')
-                        ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
-                        ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
-                        ->join('barang_satuan', function ($join) {
-                            $join->on('penjualan_detail.kode_barang', '=', 'barang_satuan.kode_barang')
-                                 ->on('penjualan_detail.satuan_id', '=', 'barang_satuan.id');
-                        })
-                        ->where('penjualan.batal', 0)
-                        ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-                        ->where(function($q) {
-                            $q->whereNull('penjualan_detail.is_promo')
-                              ->orWhere('penjualan_detail.is_promo', '!=', 1);
-                        })
-                        ->sum(DB::raw('penjualan_detail.qty * barang_satuan.harga_pokok'));
-
-                    $hppReturn = (float) DB::table('retur_penjualan_detail')
-                        ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
-                        ->join('barang', 'retur_penjualan_detail.kode_barang', '=', 'barang.kode_barang')
-                        ->join('barang_satuan', 'retur_penjualan_detail.id_satuan', '=', 'barang_satuan.id')
-                        ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-                        ->sum(DB::raw('retur_penjualan_detail.qty * barang_satuan.harga_pokok'));
-
-                    $purchaseReturn = (float) DB::table('retur_pembelian')
-                        ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
-                        ->sum('total');
-                }
-
-                $salesNet = $salesGross - $salesReturn;
-                $hppNet = $hppGross - $hppReturn;
-                $profit = $salesNet - $hppNet + $purchaseReturn;
-                $marginPercent = $salesNet > 0 ? ($profit / $salesNet) * 100 : 0;
-            } else {
-                // Normalize type to match format 1, 2, 3
-                $format = $jenis_laporan;
-                if ($format === 'per_supplier') {
-                    $format = '2';
-                } elseif ($format === 'per_tanggal_supplier') {
-                    $format = '3';
-                } elseif ($format === 'detail') {
-                    $format = '1';
-                }
-
-                if ($format === '2') {
-                    $data = DB::table('supplier as s')
-                        ->where('s.status', '1')
-                        ->groupBy('s.kode_supplier', 's.nama_supplier')
-                        ->orderBy('s.nama_supplier')
-                        ->get()
-                        ->map(function ($row) use ($tanggal_mulai, $tanggal_akhir) {
-                            $kode = $row->kode_supplier;
-
-                            $sSales = (float) DB::table('penjualan_detail')
-                                ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
-                                ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
-                                ->where('penjualan.batal', 0)
-                                ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-                                ->where('barang.kode_supplier', $kode)
-                                ->where(function($q) {
-                                    $q->whereNull('penjualan_detail.is_promo')
-                                      ->orWhere('penjualan_detail.is_promo', '!=', 1);
-                                })
-                                ->sum(DB::raw('penjualan_detail.qty * penjualan_detail.harga'));
-
-                            $sReturn = (float) DB::table('retur_penjualan_detail')
-                                ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
-                                ->join('barang', 'retur_penjualan_detail.kode_barang', '=', 'barang.kode_barang')
-                                ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-                                ->where('barang.kode_supplier', $kode)
-                                ->sum(DB::raw('retur_penjualan_detail.subtotal_retur - COALESCE(retur_penjualan_detail.total_diskon_rupiah, 0)'));
-
-                            $sHppGross = (float) DB::table('penjualan_detail')
-                                ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
-                                ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
-                                ->join('barang_satuan', function ($join) {
-                                    $join->on('penjualan_detail.kode_barang', '=', 'barang_satuan.kode_barang')
-                                         ->on('penjualan_detail.satuan_id', '=', 'barang_satuan.id');
-                                })
-                                ->where('penjualan.batal', 0)
-                                ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-                                ->where('barang.kode_supplier', $kode)
-                                ->where(function($q) {
-                                    $q->whereNull('penjualan_detail.is_promo')
-                                      ->orWhere('penjualan_detail.is_promo', '!=', 1);
-                                })
-                                ->sum(DB::raw('penjualan_detail.qty * barang_satuan.harga_pokok'));
-
-                            $sHppReturn = (float) DB::table('retur_penjualan_detail')
-                                ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
-                                ->join('barang', 'retur_penjualan_detail.kode_barang', '=', 'barang.kode_barang')
-                                ->join('barang_satuan', 'retur_penjualan_detail.id_satuan', '=', 'barang_satuan.id')
-                                ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-                                ->where('barang.kode_supplier', $kode)
-                                ->sum(DB::raw('retur_penjualan_detail.qty * barang_satuan.harga_pokok'));
-
-                            $sHppNet = $sHppGross - $sHppReturn;
-
-                            $sPurchaseReturn = (float) DB::table('retur_pembelian')
-                                ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
-                                ->where('kode_supplier', $kode)
-                                ->sum('total');
-
-                            $sProfit = ($sSales - $sReturn) - $sHppNet + $sPurchaseReturn;
-
-                            return [
-                                'kode_supplier' => $kode,
-                                'nama_supplier' => $row->nama_supplier,
-                                'jumlah_penjualan' => $sSales,
-                                'retur_penjualan' => $sReturn,
-                                'total_hpp' => $sHppNet,
-                                'retur_pembelian' => $sPurchaseReturn,
-                                'laba_kotor' => $sProfit
-                            ];
-                        })
-                        ->filter(function ($row) {
-                            return $row['jumlah_penjualan'] != 0 || $row['retur_penjualan'] != 0 || $row['total_hpp'] != 0 || $row['retur_pembelian'] != 0 || $row['laba_kotor'] != 0;
-                        })
-                        ->values()
-                        ->toArray();
-                } elseif ($format === '3') {
-                    $period = \Carbon\CarbonPeriod::create($tanggal_mulai, $tanggal_akhir);
-                    $data = collect();
-                    foreach ($period as $date) {
-                        $data->push([
-                            'tanggal' => $date->format('Y-m-d'),
-                        ]);
-                    }
-                } else {
-                    $data = DB::table('penjualan_detail as pd')
-                        ->join('penjualan as p', 'pd.no_faktur', '=', 'p.no_faktur')
-                        ->join('pelanggan as pl', 'p.kode_pelanggan', '=', 'pl.kode_pelanggan')
-                        ->join('barang as b', 'pd.kode_barang', '=', 'b.kode_barang')
-                        ->join('barang_satuan as bs', function ($join) {
-                            $join->on('pd.kode_barang', '=', 'bs.kode_barang')
-                                ->on('pd.satuan_id', '=', 'bs.id');
-                        })
-                        ->join('supplier as s', 'b.kode_supplier', '=', 's.kode_supplier')
-                        ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
-                        ->when($request->filled('kode_supplier'), fn($q) => $q->where('b.kode_supplier', $request->kode_supplier))
-                        ->where('p.batal', 0)
-                        ->selectRaw('
-                            p.tanggal,
-                            p.no_faktur,
-                            pl.nama_pelanggan,
-                            pd.kode_barang,
-                            b.nama_barang,
-                            bs.satuan,
-                            s.nama_supplier,
-                            SUM(pd.qty) as total_qty,
-                            SUM(pd.qty * pd.harga) as total_penjualan,
-                            SUM(pd.qty * bs.harga_pokok) as total_hpp
-                        ')
-                        ->groupBy(
-                            'p.tanggal',
-                            'p.no_faktur',
-                            'pl.nama_pelanggan',
-                            'pd.kode_barang',
-                            'b.nama_barang',
-                            'bs.satuan',
-                            's.nama_supplier'
-                        )
-                        ->orderBy('p.tanggal')
-                        ->orderBy('p.no_faktur')
-                        ->orderBy('b.nama_barang')
-                        ->get();
-
-                    $mappedData = [];
-                    foreach ($data as $item) {
-                        $mappedData[] = [
-                            'tipe' => 'Penjualan',
-                            'tanggal' => $item->tanggal,
-                            'no_transaksi' => $item->no_faktur,
-                            'kode_barang' => $item->kode_barang,
-                            'nama_barang' => $item->nama_barang,
-                            'nama_supplier' => $item->nama_supplier,
-                            'qty' => (float) $item->total_qty,
-                            'harga' => $item->total_qty > 0 ? (float) ($item->total_penjualan / $item->total_qty) : 0,
-                            'total_jual' => (float) $item->total_penjualan,
-                            'total_hpp' => (float) $item->total_hpp,
-                            'laba_kotor' => (float) ($item->total_penjualan - $item->total_hpp)
-                        ];
-                    }
-                    $data = $mappedData;
-                }
+            if ($request->has('export') || $request->has('export_excel') || $request->filled('export') || $request->is('*/excel')) {
+                $filename = 'Laba Rugi Per Supplier.xls';
+                return response($viewContent)
+                    ->header('Content-Type', 'application/vnd-ms-excel')
+                    ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                    ->header('Cache-Control', 'max-age=0');
             }
+            return $viewContent;
+        } else if ($format === '3') {
+            $period = \Carbon\CarbonPeriod::create($tanggalAwal, $tanggalAkhir);
+            $data = collect();
+            foreach ($period as $date) {
+                $data->push([
+                    'tanggal' => $date->format('Y-m-d'),
+                ]);
+            }
+            $viewContent = view('laporan.penjualan.cetakLabaRugiPerTanggal', [
+                'data' => $data,
+                'tanggal_dari' => $tanggalAwal,
+                'tanggal_sampai' => $tanggalAkhir,
+            ]);
+            if ($request->has('export') || $request->has('export_excel') || $request->filled('export') || $request->is('*/excel')) {
+                $filename = 'Laba Rugi Per Tanggal.xls';
+                return response($viewContent)
+                    ->header('Content-Type', 'application/vnd-ms-excel')
+                    ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                    ->header('Cache-Control', 'max-age=0');
+            }
+            return $viewContent;
+        } else {
+            $data = DB::table('penjualan_detail as pd')
+                ->join('penjualan as p', 'pd.no_faktur', '=', 'p.no_faktur')
+                ->join('pelanggan as pl', 'p.kode_pelanggan', '=', 'pl.kode_pelanggan')
+                ->join('barang as b', 'pd.kode_barang', '=', 'b.kode_barang')
+                ->join('barang_satuan as bs', function ($join) {
+                    $join->on('pd.kode_barang', '=', 'bs.kode_barang')
+                        ->on('pd.satuan_id', '=', 'bs.id');
+                })
+                ->join('supplier as s', 'b.kode_supplier', '=', 's.kode_supplier')
+                ->whereBetween('p.tanggal', [$tanggalAwal, $tanggalAkhir])
+                ->when($request->filled('kode_supplier') || $request->filled('supplier'), fn($q) => $q->where('b.kode_supplier', $request->kode_supplier ?? $request->supplier))
+                ->where('p.batal', 0)
+                ->selectRaw('
+                    p.tanggal,
+                    p.no_faktur,
+                    pl.nama_pelanggan,
+                    pd.kode_barang,
+                    b.nama_barang,
+                    bs.satuan,
+                    s.nama_supplier,
+                    SUM(pd.qty) as total_qty,
+                    SUM(pd.qty * pd.harga) as total_penjualan,
+                    SUM(pd.qty * bs.harga_pokok) as total_hpp
+                ')
+                ->groupBy(
+                    'p.tanggal',
+                    'p.no_faktur',
+                    'pl.nama_pelanggan',
+                    'pd.kode_barang',
+                    'b.nama_barang',
+                    'bs.satuan',
+                    's.nama_supplier'
+                )
+                ->orderBy('p.tanggal')
+                ->orderBy('p.no_faktur')
+                ->orderBy('b.nama_barang')
+                ->get();
+
+            $viewContent = view('laporan.penjualan.cetakLabaRugi', [
+                'data' => $data,
+                'tanggal_dari' => $tanggalAwal,
+                'tanggal_sampai' => $tanggalAkhir,
+            ]);
+
+            if ($request->has('export') || $request->has('export_excel') || $request->filled('export') || $request->is('*/excel')) {
+                $filename = 'Laba Rugi Detail.xls';
+                return response($viewContent)
+                    ->header('Content-Type', 'application/vnd-ms-excel')
+                    ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                    ->header('Cache-Control', 'max-age=0');
+            }
+            return $viewContent;
         }
-
-        $view = $isPrintOrExcel ? 'laporan.laba_rugi.cetak' : 'laporan.laba_rugi.index';
-
-        if ($isExcel) {
-            $filename = 'laporan_laba_rugi_' . date('Ymd_His') . '.xls';
-            return response(view($view, compact(
-                'tanggal_mulai', 'tanggal_akhir', 'tanggal_dari', 'tanggal_sampai', 'jenis_laporan', 'kode_supplier',
-                'salesGross', 'salesReturn', 'salesNet', 'hppGross', 'hppReturn', 'hppNet', 
-                'purchaseReturn', 'profit', 'marginPercent', 'data', 'suppliersList', 'isExcel'
-            )))
-            ->header('Content-Type', 'application/vnd-ms-excel')
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0');
-        }
-
-        return view($view, compact(
-            'tanggal_mulai', 'tanggal_akhir', 'tanggal_dari', 'tanggal_sampai', 'jenis_laporan', 'kode_supplier',
-            'salesGross', 'salesReturn', 'salesNet', 'hppGross', 'hppReturn', 'hppNet', 
-            'purchaseReturn', 'profit', 'marginPercent', 'data', 'suppliersList'
-        ));
     }
 
     public function laporanPembayaranPiutang(Request $request)
