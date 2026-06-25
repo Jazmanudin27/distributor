@@ -235,7 +235,7 @@ class PenjualanController extends Controller
             }
         }
 
-        if ($request->jenis_transaksi === 'Kredit') {
+        if ($request->jenis_transaksi === 'Kredit' && ($pelanggan->jenis_pelanggan == '0' || empty($pelanggan->jenis_pelanggan))) {
             $sisaLimit = $pelanggan->getSisaLimitKredit();
             if ($tempGrandTotal > $sisaLimit) {
                 return redirect()->back()->withInput()->with('error', "Gagal menyimpan transaksi. Batas limit kredit pelanggan terlampaui! Sisa limit kredit saat ini: Rp " . number_format($sisaLimit, 0, ',', '.'));
@@ -566,7 +566,7 @@ class PenjualanController extends Controller
             }
         }
 
-        if ($isKredit) {
+        if ($isKredit && ($pelanggan->jenis_pelanggan == '0' || empty($pelanggan->jenis_pelanggan))) {
             $sisaLimit = $pelanggan->getSisaLimitKredit($no_faktur);
             if ($tempGrandTotal > $sisaLimit) {
                 return redirect()->back()->withInput()->with('error', "Gagal memperbarui transaksi. Batas limit kredit pelanggan terlampaui! Sisa limit kredit saat ini: Rp " . number_format($sisaLimit, 0, ',', '.'));

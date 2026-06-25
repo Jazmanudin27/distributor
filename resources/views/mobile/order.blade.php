@@ -114,7 +114,8 @@
                             <span class="fw-bold text-white small" id="selected-customer-name"
                                 data-kode="{{ $pelanggan->kode_pelanggan }}"
                                 data-overdue="{{ $pelanggan->hasOverdueInvoices() ? 1 : 0 }}"
-                                data-sisa-limit="{{ $pelanggan->getSisaLimitKredit() }}">
+                                data-sisa-limit="{{ $pelanggan->getSisaLimitKredit() }}"
+                                data-jenis-pelanggan="{{ $pelanggan->jenis_pelanggan ?: '0' }}">
                                 {{ $pelanggan->nama_pelanggan }}
                             </span>
                             <span class="badge bg-secondary btn-sm" style="font-size: 0.65rem;">Terkunci</span>
@@ -510,6 +511,7 @@
                     inv.no_faktur : inv);
                 hiddenKodePelanggan.setAttribute('data-overdue-invoices', JSON.stringify(overdueInvoiceNums));
                 hiddenKodePelanggan.setAttribute('data-sisa-limit', customer.sisa_limit);
+                hiddenKodePelanggan.setAttribute('data-jenis-pelanggan', customer.jenis_pelanggan || '0');
 
                 if (customer.has_overdue === 1) {
                     overdueWarning.classList.remove('d-none');
@@ -783,12 +785,13 @@
                     const opt = this.options[this.selectedIndex];
                     hiddenSatuanName.value = opt.getAttribute('data-name');
                     inputHarga.value = opt.getAttribute('data-harga');
-                    
+
                     const priceDisplay = card.querySelector('.price-display');
                     if (priceDisplay) {
-                        priceDisplay.innerText = 'Rp ' + parseFloat(opt.getAttribute('data-harga') || 0).toLocaleString('id-ID');
+                        priceDisplay.innerText = 'Rp ' + parseFloat(opt.getAttribute('data-harga') || 0)
+                            .toLocaleString('id-ID');
                     }
-                    
+
                     checkStockLimit(card);
                     calculateTotals();
                 });
@@ -1040,20 +1043,24 @@
                     const nett = sub - diskon;
                     card.querySelector('.row-subtotal-display').innerText = 'Rp ' + nett.toLocaleString(
                         'id-ID');
-                    
+
                     const diskonDisplay = card.querySelector('.diskon-tags-display');
                     if (diskonDisplay) {
                         let badgesHTML = '';
                         if (d1_pct > 0) {
-                            badgesHTML += `<span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30" style="font-size: 0.6rem; font-weight: 600; padding: 2px 6px; border-radius: 4px;">D1: ${d1_pct.toFixed(1)}%</span>`;
+                            badgesHTML +=
+                                `<span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30" style="font-size: 0.6rem; font-weight: 600; padding: 2px 6px; border-radius: 4px;">D1: ${d1_pct.toFixed(1)}%</span>`;
                         }
                         if (d2_pct > 0) {
-                            badgesHTML += `<span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 ms-1" style="font-size: 0.6rem; font-weight: 600; padding: 2px 6px; border-radius: 4px;">D2: ${d2_pct.toFixed(1)}%</span>`;
+                            badgesHTML +=
+                                `<span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-30 ms-1" style="font-size: 0.6rem; font-weight: 600; padding: 2px 6px; border-radius: 4px;">D2: ${d2_pct.toFixed(1)}%</span>`;
                         }
                         if (d3_pct > 0) {
-                            badgesHTML += `<span class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-30 ms-1" style="font-size: 0.6rem; font-weight: 600; padding: 2px 6px; border-radius: 4px;">D3: ${d3_pct.toFixed(1)}%</span>`;
+                            badgesHTML +=
+                                `<span class="badge bg-info bg-opacity-20 text-info border border-info border-opacity-30 ms-1" style="font-size: 0.6rem; font-weight: 600; padding: 2px 6px; border-radius: 4px;">D3: ${d3_pct.toFixed(1)}%</span>`;
                         }
-                        diskonDisplay.innerHTML = badgesHTML || '<span class="text-secondary" style="font-size: 0.6rem;">Tanpa Diskon</span>';
+                        diskonDisplay.innerHTML = badgesHTML ||
+                            '<span class="text-secondary" style="font-size: 0.6rem;">Tanpa Diskon</span>';
                     }
                 });
 
@@ -1116,20 +1123,24 @@
                 // 2. Double check credit limit
                 const paymentMode = jenisTransaksiEl.value;
                 if (paymentMode === 'Kredit') {
-                    const sisaLimit = parseFloat(hiddenKodePelanggan.getAttribute('data-sisa-limit')) || 0;
-                    const grandTotal = parseFloat(btnSubmitOrder.getAttribute('data-grand-total')) || 0;
+                    const jenisPelanggan = hiddenKodePelanggan.getAttribute('data-jenis-pelanggan') || '0';
+                    if (jenisPelanggan === '0') {
+                        const sisaLimit = parseFloat(hiddenKodePelanggan.getAttribute('data-sisa-limit')) ||
+                            0;
+                        const grandTotal = parseFloat(btnSubmitOrder.getAttribute('data-grand-total')) || 0;
 
-                    if (grandTotal > sisaLimit) {
-                        e.preventDefault();
-                        Swal.fire({
-                            title: 'Limit Kredit Terlampaui',
-                            text: `Total order (Rp ${grandTotal.toLocaleString('id-ID')}) melebihi sisa limit kredit pelanggan (Rp ${sisaLimit.toLocaleString('id-ID')})!`,
-                            icon: 'error',
-                            background: '#161e31',
-                            color: '#f8fafc',
-                            confirmButtonColor: '#6366f1'
-                        });
-                        return false;
+                        if (grandTotal > sisaLimit) {
+                            e.preventDefault();
+                            Swal.fire({
+                                title: 'Limit Kredit Terlampaui',
+                                text: `Total order (Rp ${grandTotal.toLocaleString('id-ID')}) melebihi sisa limit kredit pelanggan (Rp ${sisaLimit.toLocaleString('id-ID')})!`,
+                                icon: 'error',
+                                background: '#161e31',
+                                color: '#f8fafc',
+                                confirmButtonColor: '#6366f1'
+                            });
+                            return false;
+                        }
                     }
                 }
 
@@ -1171,7 +1182,8 @@
                     has_overdue: {{ $pelanggan->hasOverdueInvoices() ? 1 : 0 }},
                     overdue_invoices: @json($overdueInvoicesData),
                     sisa_limit: {{ $pelanggan->getSisaLimitKredit() }},
-                    metode: "{{ $pelanggan->metode_bayar }}"
+                    metode: "{{ $pelanggan->metode_bayar }}",
+                    jenis_pelanggan: "{{ $pelanggan->jenis_pelanggan ?: '0' }}"
                 };
                 hiddenKodePelanggan.value = mockCustomer.id;
                 hiddenKodePelanggan.setAttribute('data-overdue', mockCustomer.has_overdue);
@@ -1179,6 +1191,7 @@
                     'object' ? inv.no_faktur : inv);
                 hiddenKodePelanggan.setAttribute('data-overdue-invoices', JSON.stringify(overdueInvoiceNums));
                 hiddenKodePelanggan.setAttribute('data-sisa-limit', mockCustomer.sisa_limit);
+                hiddenKodePelanggan.setAttribute('data-jenis-pelanggan', mockCustomer.jenis_pelanggan);
 
                 // Set default payment mode
                 const isRestrictedSales = @json(Auth::user()->jenis_sales == '1');

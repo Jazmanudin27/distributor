@@ -247,6 +247,7 @@ class PelangganController extends Controller
                 'limit' => $p->limit_pelanggan,
                 'sisa_limit' => $sisaLimit,
                 'has_overdue' => $hasOverdue ? 1 : 0,
+                'jenis_pelanggan' => $p->jenis_pelanggan ?: '0',
                 'overdue_invoices' => $overdueInvoices
             ];
         }
