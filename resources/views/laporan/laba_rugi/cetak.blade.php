@@ -286,40 +286,139 @@
                         $totalHpp = 0;
                         $totalPurchaseReturn = 0;
                         $totalProfit = 0;
+                        $displayNo = 1;
+                        $hasData = false;
                     @endphp
-                    @forelse($data as $index => $row)
+                    @forelse($data as $row)
                         @php
-                            $totalSales += $row['jumlah_penjualan'];
-                            $totalReturn += $row['retur_penjualan'];
-                            $totalHpp += $row['total_hpp'];
-                            $totalPurchaseReturn += $row['retur_pembelian'];
-                            $totalProfit += $row['laba_kotor'];
+                            $supplierCodes = collect();
+
+                            $salesSups = DB::table('penjualan_detail')
+                                ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
+                                ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                                ->where('penjualan.batal', 0)
+                                ->where('penjualan.tanggal', $row['tanggal'])
+                                ->when($kode_supplier, fn($q) => $q->where('barang.kode_supplier', $kode_supplier))
+                                ->pluck('barang.kode_supplier')
+                                ->unique();
+                            $supplierCodes = $supplierCodes->merge($salesSups);
+
+                            $returSups = DB::table('retur_penjualan_detail')
+                                ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
+                                ->join('barang', 'retur_penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                                ->where('retur_penjualan.tanggal', $row['tanggal'])
+                                ->when($kode_supplier, fn($q) => $q->where('barang.kode_supplier', $kode_supplier))
+                                ->pluck('barang.kode_supplier')
+                                ->unique();
+                            $supplierCodes = $supplierCodes->merge($returSups);
+
+                            $returBeliSups = DB::table('retur_pembelian')
+                                ->where('tanggal', $row['tanggal'])
+                                ->when($kode_supplier, fn($q) => $q->where('kode_supplier', $kode_supplier))
+                                ->pluck('kode_supplier')
+                                ->unique();
+                            $supplierCodes = $supplierCodes->merge($returBeliSups);
+
+                            $supplierCodes = $supplierCodes->unique();
+
+                            $dateSuppliers = DB::table('supplier')
+                                ->whereIn('kode_supplier', $supplierCodes)
+                                ->get();
                         @endphp
-                        <tr>
-                            <td class="text-center">{{ $index + 1 }}</td>
-                            <td class="text-center">{{ \Carbon\Carbon::parse($row['tanggal'])->format('d/m/Y') }}</td>
-                            <td class="text-center font-monospace">{{ $row['kode_supplier'] }}</td>
-                            <td>{{ $row['nama_supplier'] }}</td>
-                            <td class="text-end">{{ number_format($row['jumlah_penjualan'], 0, ',', '.') }}</td>
-                            <td class="text-end text-danger">
-                                {{ $row['retur_penjualan'] > 0 ? '(' . number_format($row['retur_penjualan'], 0, ',', '.') . ')' : '0' }}
-                            </td>
-                            <td class="text-end">{{ number_format($row['total_hpp'], 0, ',', '.') }}</td>
-                            <td class="text-end text-success">
-                                {{ number_format($row['retur_pembelian'], 0, ',', '.') }}</td>
-                            <td
-                                class="text-end fw-bold {{ $row['laba_kotor'] >= 0 ? 'text-primary' : 'text-danger' }}">
-                                {{ $row['laba_kotor'] < 0 ? '(' . number_format(abs($row['laba_kotor']), 0, ',', '.') . ')' : number_format($row['laba_kotor'], 0, ',', '.') }}
-                            </td>
-                        </tr>
+                        @foreach($dateSuppliers as $ds)
+                            @php
+                                $sSales = (float) DB::table('penjualan_detail')
+                                    ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
+                                    ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                                    ->where('penjualan.batal', 0)
+                                    ->where('penjualan.tanggal', $row['tanggal'])
+                                    ->where('barang.kode_supplier', $ds->kode_supplier)
+                                    ->where(function($q) {
+                                        $q->whereNull('penjualan_detail.is_promo')
+                                          ->orWhere('penjualan_detail.is_promo', '!=', 1);
+                                    })
+                                    ->sum(DB::raw('penjualan_detail.qty * penjualan_detail.harga'));
+
+                                $sReturn = (float) DB::table('retur_penjualan_detail')
+                                    ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
+                                    ->join('barang', 'retur_penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                                    ->where('retur_penjualan.tanggal', $row['tanggal'])
+                                    ->where('barang.kode_supplier', $ds->kode_supplier)
+                                    ->sum(DB::raw('retur_penjualan_detail.subtotal_retur - COALESCE(retur_penjualan_detail.total_diskon_rupiah, 0)'));
+
+                                $sHppGross = (float) DB::table('penjualan_detail')
+                                    ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
+                                    ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                                    ->join('barang_satuan', function ($join) {
+                                        $join->on('penjualan_detail.kode_barang', '=', 'barang_satuan.kode_barang')
+                                             ->on('penjualan_detail.satuan_id', '=', 'barang_satuan.id');
+                                    })
+                                    ->where('penjualan.batal', 0)
+                                    ->where('penjualan.tanggal', $row['tanggal'])
+                                    ->where('barang.kode_supplier', $ds->kode_supplier)
+                                    ->where(function($q) {
+                                        $q->whereNull('penjualan_detail.is_promo')
+                                          ->orWhere('penjualan_detail.is_promo', '!=', 1);
+                                    })
+                                    ->sum(DB::raw('penjualan_detail.qty * barang_satuan.harga_pokok'));
+
+                                $sHppReturn = (float) DB::table('retur_penjualan_detail')
+                                    ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
+                                    ->join('barang', 'retur_penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                                    ->join('barang_satuan', 'retur_penjualan_detail.id_satuan', '=', 'barang_satuan.id')
+                                    ->where('retur_penjualan.tanggal', $row['tanggal'])
+                                    ->where('barang.kode_supplier', $ds->kode_supplier)
+                                    ->sum(DB::raw('retur_penjualan_detail.qty * barang_satuan.harga_pokok'));
+
+                                $sHppNet = $sHppGross - $sHppReturn;
+
+                                $sPurchaseReturn = (float) DB::table('retur_pembelian')
+                                    ->where('tanggal', $row['tanggal'])
+                                    ->where('kode_supplier', $ds->kode_supplier)
+                                    ->sum('total');
+
+                                $sProfit = ($sSales - $sReturn) - $sHppNet + $sPurchaseReturn;
+
+                                if ($sSales == 0 && $sReturn == 0 && $sHppNet == 0 && $sPurchaseReturn == 0 && $sProfit == 0) {
+                                    continue;
+                                }
+
+                                $totalSales += $sSales;
+                                $totalReturn += $sReturn;
+                                $totalHpp += $sHppNet;
+                                $totalPurchaseReturn += $sPurchaseReturn;
+                                $totalProfit += $sProfit;
+                                $hasData = true;
+                            @endphp
+                            <tr>
+                                <td class="text-center">{{ $displayNo++ }}</td>
+                                <td class="text-center">{{ \Carbon\Carbon::parse($row['tanggal'])->format('d/m/Y') }}</td>
+                                <td class="text-center font-monospace">{{ $ds->kode_supplier }}</td>
+                                <td>{{ $ds->nama_supplier }}</td>
+                                <td class="text-end">{{ number_format($sSales, 0, ',', '.') }}</td>
+                                <td class="text-end text-danger">
+                                    {{ $sReturn > 0 ? '(' . number_format($sReturn, 0, ',', '.') . ')' : '0' }}
+                                </td>
+                                <td class="text-end">{{ number_format($sHppNet, 0, ',', '.') }}</td>
+                                <td class="text-end text-success">
+                                    {{ number_format($sPurchaseReturn, 0, ',', '.') }}</td>
+                                <td class="text-end fw-bold {{ $sProfit >= 0 ? 'text-primary' : 'text-danger' }}">
+                                    {{ $sProfit < 0 ? '(' . number_format(abs($sProfit), 0, ',', '.') . ')' : number_format($sProfit, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                        @endforeach
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center py-3 text-muted">Tidak ada data untuk periode ini
-                            </td>
+                            <td colspan="9" class="text-center py-3 text-muted">Tidak ada data untuk periode ini</td>
                         </tr>
                     @endforelse
+                    @if(!$hasData && count($data) > 0)
+                        <tr>
+                            <td colspan="9" class="text-center py-3 text-muted">Tidak ada data transaksi untuk periode ini</td>
+                        </tr>
+                    @endif
                 </tbody>
-                @if (count($data) > 0)
+                @if ($hasData)
                     <tfoot>
                         <tr class="fw-bold table-light text-end">
                             <td colspan="4" class="text-center">TOTAL</td>
