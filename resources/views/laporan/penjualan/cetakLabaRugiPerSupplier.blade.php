@@ -136,24 +136,21 @@ if (!function_exists('formatAngka')) {
                             ->where('p.batal', 0)
                             ->sum(DB::raw('d.harga_pokok * d.qty'));
 
-                        $returPembelian = DB::table('mutasi_barang_masuk_detail as mbmd')
-                            ->join('mutasi_barang_masuk as mbm', 'mbm.kode_transaksi', '=', 'mbmd.kode_transaksi')
-                            ->join('barang_satuan as bs', 'bs.id', '=', 'mbmd.satuan_id')
-                            ->join('barang as b', 'b.kode_barang', '=', 'bs.kode_barang')
-                            ->whereBetween('mbm.tanggal', [$tanggal_dari, $tanggal_sampai])
+                        // Retur Pembelian
+                        $returPembelian = DB::table('retur_pembelian_detail as rpd')
+                            ->join('barang as b', 'b.kode_barang', '=', 'rpd.kode_barang')
+                            ->join('retur_pembelian as rp', 'rp.no_retur', '=', 'rpd.no_retur')
+                            ->whereBetween('rp.tanggal', [$tanggal_dari, $tanggal_sampai])
                             ->where('b.kode_supplier', $d->kode_supplier)
-                            ->where('mbm.jenis_pemasukan', 'Retur Penjualan')
-                            ->where('mbm.kondisi', 'bs')
-                            ->sum(DB::raw('mbmd.qty * bs.harga_pokok'));
+                            ->sum('rpd.subtotal_retur');
 
-                        $returPenjualan = DB::table('mutasi_barang_masuk_detail as mbmd')
-                            ->join('mutasi_barang_masuk as mbm', 'mbm.kode_transaksi', '=', 'mbmd.kode_transaksi')
-                            ->join('barang_satuan as bs', 'bs.id', '=', 'mbmd.satuan_id')
-                            ->join('barang as b', 'b.kode_barang', '=', 'bs.kode_barang')
-                            ->whereBetween('mbm.tanggal', [$tanggal_dari, $tanggal_sampai])
+                        // Retur Penjualan
+                        $returPenjualan = DB::table('retur_penjualan_detail as rpd')
+                            ->join('barang as b', 'b.kode_barang', '=', 'rpd.kode_barang')
+                            ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
+                            ->whereBetween('rp.tanggal', [$tanggal_dari, $tanggal_sampai])
                             ->where('b.kode_supplier', $d->kode_supplier)
-                            ->where('mbm.jenis_pemasukan', 'Retur Penjualan')
-                            ->sum(DB::raw('mbmd.qty * bs.harga_jual'));
+                            ->sum(DB::raw('rpd.subtotal_retur - rpd.total_diskon_rupiah'));
 
                         // Retur Pembelian
                         // $returPembelian = DB::table('retur_pembelian_detail as rd')
