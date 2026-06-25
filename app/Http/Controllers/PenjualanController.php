@@ -526,7 +526,7 @@ class PenjualanController extends Controller
             'items.*.satuan' => 'required|string',
             'items.*.qty' => 'required|numeric|min:0.01',
             'items.*.harga' => 'required|numeric|min:0',
-            'items.*.diskon' => 'required|numeric|min:0',
+            'items.*.diskon' => 'nullable|numeric|min:0',
             'items.*.diskon1_persen' => 'nullable|numeric|min:0|max:100',
             'items.*.diskon2_persen' => 'nullable|numeric|min:0|max:100',
             'items.*.diskon3_persen' => 'nullable|numeric|min:0|max:100',
