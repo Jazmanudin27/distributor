@@ -1,16 +1,20 @@
 @php
-if (!function_exists('tanggal_indo2')) {
-    function tanggal_indo2($date) {
-        if (!$date) return '';
-        return \Carbon\Carbon::parse($date)->format('d-M-Y');
+    if (!function_exists('tanggal_indo2')) {
+        function tanggal_indo2($date)
+        {
+            if (!$date) {
+                return '';
+            }
+            return \Carbon\Carbon::parse($date)->format('d-M-Y');
+        }
     }
-}
 
-if (!function_exists('formatAngka')) {
-    function formatAngka($val, $decimals = 0) {
-        return number_format((float)$val, $decimals, ',', '.');
+    if (!function_exists('formatAngka')) {
+        function formatAngka($val, $decimals = 0)
+        {
+            return number_format((float) $val, $decimals, ',', '.');
+        }
     }
-}
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -138,10 +142,9 @@ if (!function_exists('formatAngka')) {
 
                         // Retur Pembelian
                         $returPembelian = DB::table('retur_pembelian_detail as rpd')
-                            ->join('barang as b', 'b.kode_barang', '=', 'rpd.kode_barang')
                             ->join('retur_pembelian as rp', 'rp.no_retur', '=', 'rpd.no_retur')
                             ->whereBetween('rp.tanggal', [$tanggal_dari, $tanggal_sampai])
-                            ->where('b.kode_supplier', $d->kode_supplier)
+                            ->where('rp.kode_supplier', $d->kode_supplier)
                             ->sum('rpd.subtotal_retur');
 
                         // Retur Penjualan
