@@ -305,7 +305,7 @@
                                 value="0">
                             <input type="hidden" id="quick_diskon3_percent" value="0">
                         </div>
-                        <div class="col-lg-1 col-md-5">
+                        <div class="col-lg-1 col-md-5 d-none">
                             <label class="form-label fs-8 fw-bold text-secondary mb-1">Potongan</label>
                             <div class="input-group input-group-sm" style="min-width: 100px;">
                                 <span class="input-group-text">Rp</span>
