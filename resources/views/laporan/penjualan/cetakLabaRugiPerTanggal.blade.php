@@ -117,11 +117,14 @@ if (!function_exists('formatAngka')) {
                             ->where('d.is_promo', 0)
                             ->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
-                        // Retur Pembelian per Tanggal
-                        $returPembelian = DB::table('retur_pembelian_detail as rpd')
-                            ->join('retur_pembelian as rp', 'rp.no_retur', '=', 'rpd.no_retur')
+                        // Retur Pembelian per Tanggal (calculated as HPP of BS Sales Returns)
+                        $returPembelian = DB::table('retur_penjualan_detail as rpd')
+                            ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
+                            ->join('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
+                            ->join('barang as b', 'b.kode_barang', '=', 'bs.kode_barang')
                             ->where('rp.tanggal', $t->tanggal)
-                            ->sum('rpd.subtotal_retur');
+                            ->where('rpd.kondisi', 'bs')
+                            ->sum(DB::raw('rpd.qty * bs.harga_pokok'));
 
                         // Retur Penjualan per Tanggal
                         $returPenjualan = DB::table('retur_penjualan_detail as rpd')

@@ -140,12 +140,14 @@
                             ->where('p.batal', 0)
                             ->sum(DB::raw('d.harga_pokok * d.qty'));
 
-                        // Retur Pembelian
-                        $returPembelian = DB::table('retur_pembelian_detail as rpd')
-                            ->join('retur_pembelian as rp', 'rp.no_retur', '=', 'rpd.no_retur')
+                        // Retur Pembelian (calculated as HPP of BS Sales Returns)
+                        $returPembelian = DB::table('retur_penjualan_detail as rpd')
+                            ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
+                            ->join('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
+                            ->join('barang as b', 'b.kode_barang', '=', 'bs.kode_barang')
                             ->whereBetween('rp.tanggal', [$tanggal_dari, $tanggal_sampai])
-                            ->where('rp.kode_supplier', $d->kode_supplier)
-                            ->sum('rpd.subtotal_retur');
+                            ->where('b.kode_supplier', $d->kode_supplier)
+                            ->sum(DB::raw('rpd.qty * bs.harga_pokok'));
 
                         // Retur Penjualan
                         $returPenjualan = DB::table('retur_penjualan_detail as rpd')
