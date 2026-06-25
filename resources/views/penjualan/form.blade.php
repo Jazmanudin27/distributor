@@ -262,7 +262,7 @@
                                 <option value="">-- Cari / Pilih Barang --</option>
                             </select>
                         </div>
-                        <div class="col-lg-2 col-md-6">
+                        <div class="col-lg-1 col-md-6">
                             <label class="form-label fs-8 fw-bold text-secondary mb-1">Satuan</label>
                             <select id="quick_satuan" class="form-select form-select-sm">
                                 <option value="">-- Pilih Satuan --</option>
@@ -348,7 +348,6 @@
                                     <th width="85" class="text-end">D1</th>
                                     <th width="85" class="text-end">D2</th>
                                     <th width="85" class="text-end">D3</th>
-                                    <th width="110" class="text-end">Potongan</th>
                                     <th width="130" class="text-end">Subtotal</th>
                                     <th width="40" class="text-center">Aksi</th>
                                 </tr>
@@ -541,7 +540,7 @@
                 theme: 'bootstrap-5',
                 width: '100%',
                 ajax: {
-                    url: '{{ route('pelanggan.search') }}',
+                    url: '{{ route('pelanggan.search', [], false) }}',
                     dataType: 'json',
                     delay: 250,
                     data: function(params) {
@@ -596,7 +595,7 @@
                 theme: 'bootstrap-5',
                 width: '100%',
                 ajax: {
-                    url: '{{ route('barang.search') }}',
+                    url: '{{ route('barang.search', [], false) }}',
                     dataType: 'json',
                     delay: 250,
                     data: function(params) {
@@ -1149,12 +1148,6 @@
                                 <span class="input-group-text cursor-pointer toggle-row-type text-primary fw-bold" style="padding: 0.1rem 0.3rem; font-size: 0.65rem; user-select: none;">%</span>
                                 <input type="text" class="form-control form-control-sm text-end input-diskon3-val" value="${formatPercentJS(d3)}" ${isPromo ? 'readonly' : ''}>
                                 <input type="hidden" name="items[${rowIndex}][diskon3_persen]" class="input-diskon3" value="${d3}">
-                            </div>
-                        </td>
-                        <td>
-                            <div class="input-group input-group-sm" style="max-width: 110px; margin-left: auto;">
-                                <span class="input-group-text">Rp</span>
-                                <input type="text" name="items[${rowIndex}][diskon]" class="form-control form-control-sm text-end input-diskon input-number-format" value="0" readonly>
                             </div>
                         </td>
                         <td class="text-end fw-semibold text-dark py-2 px-3 row-subtotal">Rp 0</td>
@@ -1931,7 +1924,7 @@
 
                 // Fetch history data
                 $.ajax({
-                    url: '{{ route('penjualan.history-barang') }}',
+                    url: '{{ route('penjualan.history-barang', [], false) }}',
                     method: 'GET',
                     data: {
                         kode_pelanggan: kodePelanggan,
