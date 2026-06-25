@@ -292,16 +292,16 @@
                     <td>{{ $d->kode_barang }}</td>
                     <td>{{ $d->barang->nama_barang ?? '' }}</td>
                     <td class="text-center">{{ round($qty) }}</td>
-                    <td class="text-center">{{ strtoupper($d->barangSatuan->satuan ?? '-') }}</td>
+                    <td class="text-center">{{ strtoupper($d->barangSatuan->satuan ?? '') }}</td>
                     <td class="text-end">{{ rupiah($harga) }}</td>
                     @if ($showD1)
-                        <td class="text-center">{{ round($d1, 2) . '%' ?: '' }}</td>
+                        <td class="text-center">{{ round($d1, 2) != 0 ? round($d1, 2) . '%' : '' }}</td>
                     @endif
                     @if ($showD2)
-                        <td class="text-center">{{ round($d2, 2) . '%' ?: '' }}</td>
+                        <td class="text-center">{{ round($d2, 2) != 0 ? round($d2, 2) . '%' : '' }}</td>
                     @endif
                     @if ($showD3)
-                        <td class="text-center">{{ round($d3, 2) . '%' ?: '' }}</td>
+                        <td class="text-center">{{ round($d3, 2) != 0 ? round($d3, 2) . '%' : '' }}</td>
                     @endif
                     <td class="text-end">{{ rupiah($total) }}</td>
                 </tr>
