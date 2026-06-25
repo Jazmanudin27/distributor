@@ -361,9 +361,20 @@
                 </div>
 
                 {{-- BOTTOM SUMMARY --}}
-                <div class="row g-4 pt-3 border-top justify-content-end">
+                <div class="row g-4 pt-3 border-top">
+                    <div class="col-md-7">
+                        <div class="card border p-3 rounded bg-white shadow-sm h-100">
+                            <h6 class="fw-bold text-secondary text-uppercase fs-8 mb-3 border-bottom pb-2">
+                                <i class="fa-solid fa-note-sticky text-warning me-1"></i> Keterangan / Catatan
+                            </h6>
+                            <div class="mb-3">
+                                <textarea name="keterangan" id="keterangan" class="form-control form-control-sm" rows="5"
+                                    placeholder="Masukkan keterangan atau catatan transaksi di sini...">{{ old('keterangan', $item->keterangan) }}</textarea>
+                            </div>
+                        </div>
+                    </div>
                     <div class="col-md-5">
-                        <div class="card bg-light border-0 shadow-sm p-3 rounded">
+                        <div class="card bg-light border-0 shadow-sm p-3 rounded h-100">
                             <h6 class="fw-bold text-secondary border-bottom pb-2 mb-3 fs-7">Ringkasan Penjualan</h6>
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="text-secondary small">Subtotal (Sebelum Diskon)</span>
@@ -377,8 +388,6 @@
                                 <span class="text-secondary small">Diskon Global</span>
                                 <span class="fw-semibold text-danger" id="summary-diskon-global">- Rp 0</span>
                             </div>
-                            <input type="hidden" name="keterangan" id="keterangan_hidden"
-                                value="{{ old('keterangan', $item->keterangan) }}">
                             <div class="d-flex justify-content-between align-items-center border-top pt-2">
                                 <span class="fw-bold text-success">Grand Total</span>
                                 <span class="fw-bold text-success fs-5" id="summary-grandtotal">Rp 0</span>
@@ -1914,7 +1923,7 @@
                 const tbody = $('#historyTable tbody');
                 tbody.html(
                     '<tr><td colspan="9" class="text-center"><i class="fa-solid fa-spinner fa-spin me-1"></i> Memuat data histori...</td></tr>'
-                    );
+                );
 
                 // Open modal
                 const myModal = new bootstrap.Modal(document.getElementById('historyBarangModal'));
@@ -1934,7 +1943,7 @@
                         if (response.length === 0) {
                             tbody.append(
                                 '<tr><td colspan="9" class="text-center text-muted py-3">Tidak ada riwayat transaksi untuk barang ini dengan pelanggan tersebut.</td></tr>'
-                                );
+                            );
                             return;
                         }
 
@@ -1971,7 +1980,7 @@
                     error: function(xhr) {
                         tbody.html(
                             '<tr><td colspan="9" class="text-center text-danger py-3"><i class="fa-solid fa-triangle-exclamation me-1"></i> Gagal memuat data histori transaksi.</td></tr>'
-                            );
+                        );
                     }
                 });
             });
