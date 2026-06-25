@@ -148,13 +148,25 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($details as $idx => $row)
+                    @php
+                        $groupedDetails = collect($details)->groupBy('kode_barang');
+                        $no = 1;
+                    @endphp
+                    @foreach ($groupedDetails as $kodeBarang => $group)
+                        @php
+                            $first = $group->first();
+                            $qtyStrings = [];
+                            foreach ($group as $item) {
+                                $qtyStrings[] = floatval($item->total_qty) . ' ' . strtoupper($item->satuan);
+                            }
+                            $qtyDisplay = implode(' + ', $qtyStrings);
+                        @endphp
                         <tr>
-                            <td class="text-center">{{ $idx + 1 }}</td>
-                            <td>{{ $row->kode_barang }}</td>
-                            <td>{{ strtoupper($row->nama_barang) }}</td>
+                            <td class="text-center">{{ $no++ }}</td>
+                            <td>{{ $kodeBarang }}</td>
+                            <td>{{ strtoupper($first->nama_barang) }}</td>
                             <td class="text-start">
-                                {{ floatval($row->total_qty) }} {{ strtoupper($row->satuan) }}
+                                {{ $qtyDisplay }}
                             </td>
                         </tr>
                     @endforeach
