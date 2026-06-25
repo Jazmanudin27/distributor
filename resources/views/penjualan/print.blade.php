@@ -124,11 +124,52 @@
 </head>
 
 <body>
+    @php
+        $no = 1;
+        $grandTotal = 0;
+        $totalDiskon = 0;
+
+        $showD1 = false;
+        $showD2 = false;
+        $showD3 = false;
+
+        foreach ($item->details as $d) {
+            if (floatval($d->diskon1_persen) > 0) {
+                $showD1 = true;
+            }
+            if (floatval($d->diskon2_persen) > 0) {
+                $showD2 = true;
+            }
+            if (floatval($d->diskon3_persen) > 0) {
+                $showD3 = true;
+            }
+        }
+
+        $colspanCount = 6;
+        $diskonCols = 0;
+        if ($showD1) {
+            $diskonCols++;
+        }
+        if ($showD2) {
+            $diskonCols++;
+        }
+        if ($showD3) {
+            $diskonCols++;
+        }
+        $colspanCount += $diskonCols;
+
+        if (!function_exists('rupiah')) {
+            function rupiah($val)
+            {
+                return 'Rp ' . number_format((float) $val, 0, ',', '.');
+            }
+        }
+    @endphp
 
     <table class="header-table" style="margin: 10px 0;">
         <tr>
-            <td style="width: 35%;">
-                <div style="display: flex; align-items: center; gap: 8px; padding-bottom:8px;">
+            <td style="width: 30%;">
+                <div style="display: flex; align-items: center; gap: 5px; padding-bottom:8px;">
                     <img src="{{ asset('assets/img/MJAP.png') }}" alt="Logo MJAP" style="height: 50px;">
                     <div>
                         <div class="header-title">FAKTUR PENJUALAN</div>
@@ -140,10 +181,10 @@
                 <div class="header-address">Rek: CIMB NIAGA A.N NANDANG PRISTIWANTO</div>
                 <div class="header-address">800184933300</div>
             </td>
-            <td style="width: 35%; font-size: 14px;">
+            <td style="width: 40%; font-size: 14px;">
                 <table class="info-table">
                     <tr>
-                        <td width="100">No Faktur</td>
+                        <td>No Faktur</td>
                         <td>: {{ $item->no_faktur }}</td>
                     </tr>
                     <tr>
@@ -161,7 +202,8 @@
                     <tr>
                         <td style="vertical-align: top;">Alamat Toko</td>
                         <td class="alamat-toko">:
-                            {{ $item->pelanggan->alamat_toko ?? ($item->pelanggan->alamat_pelanggan ?? '-') }}</td>
+                            {{ substr($item->pelanggan->alamat_toko ?? ($item->pelanggan->alamat_pelanggan ?? '-'), 0, 50) }}
+                        </td>
                     </tr>
                     <tr>
                         <td>No Telp.</td>
@@ -172,9 +214,9 @@
             <td style="width: 30%; font-size: 14px;">
                 <table class="info-table">
                     <tr>
-                        <td width="120">Tgl. Jatuh Tempo</td>
+                        <td>Tgl. Jatuh Tempo</td>
                         <td>:
-                            {{ $item->tanggal ? \Carbon\Carbon::parse($item->tanggal)->addDays(14)->format('d/m/Y') : '-' }}
+                            {{ $item->created_at ? \Carbon\Carbon::parse($item->created_at)->addDays(12)->format('d/m/Y') : '-' }}
                         </td>
                     </tr>
                     <tr>
@@ -187,14 +229,15 @@
                     </tr>
                     <tr>
                         <td>Dicetak</td>
-                        <td>: {{ auth()->user()->name ?? '-' }}</td>
+                        <td>: {{ Auth::user()->name }}</td>
                     </tr>
                     <tr>
                         <td>Jenis Transaksi</td>
-                        <td>
-                            <b style="zoom: 180%">
-                                {{ ($item->jenis_transaksi ?? 'K') == 'T' ? 'TUNAI' : 'KREDIT' }}
-                            </b>
+                        <td>: @if ($item->jenis_transaksi == 'T')
+                                <b style="zoom: 180%">TUNAI</b>
+                            @else
+                                <b style="zoom: 180%">KREDIT</b>
+                            @endif
                         </td>
                     </tr>
                 </table>
@@ -202,31 +245,6 @@
         </tr>
     </table>
 
-    @php
-        $showD1 = false;
-        $showD2 = false;
-        $showD3 = false;
-        foreach ($item->details as $d) {
-            if (floatval($d->diskon1_persen) > 0) {
-                $showD1 = true;
-            }
-            if (floatval($d->diskon2_persen) > 0) {
-                $showD2 = true;
-            }
-            if (floatval($d->diskon3_persen) > 0) {
-                $showD3 = true;
-            }
-        }
-        $colspanRight = 3 + ($showD1 ? 1 : 0) + ($showD2 ? 1 : 0) + ($showD3 ? 1 : 0);
-
-        $formatDisc = function ($val) {
-            $floatVal = floatval($val);
-            if ($floatVal == intval($floatVal)) {
-                return number_format($floatVal, 0, ',', '.');
-            }
-            return rtrim(rtrim(number_format($floatVal, 2, ',', '.'), '0'), ',');
-        };
-    @endphp
     <table>
         <thead>
             <tr class="text-center">
@@ -249,35 +267,45 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($item->details as $index => $detail)
+            @foreach ($item->details as $d)
+                @php
+                    $d1 = floatval($d->diskon1_persen ?? 0);
+                    $d2 = floatval($d->diskon2_persen ?? 0);
+                    $d3 = floatval($d->diskon3_persen ?? 0);
+                    $d4 = floatval($d->diskon4_persen ?? 0);
+                    $harga = floatval($d->harga);
+                    $qty = floatval($d->qty);
+
+                    $hargaSetelahDiskon = $harga;
+                    foreach ([$d1, $d2, $d3, $d4] as $diskon) {
+                        $hargaSetelahDiskon -= ($hargaSetelahDiskon * $diskon) / 100;
+                    }
+
+                    $total = $hargaSetelahDiskon * $qty;
+                    $potongan = $harga * $qty - $total;
+
+                    $grandTotal += $total;
+                    $totalDiskon += $potongan;
+                @endphp
                 <tr class="row-barang">
-                    <td class="text-center">{{ $index + 1 }}</td>
-                    <td>{{ $detail->kode_barang }}</td>
-                    <td>{{ $detail->barang->nama_barang ?? '' }}</td>
-                    <td class="text-center">{{ floatval($detail->qty) }}</td>
-                    <td class="text-center">{{ $detail->barangSatuan->satuan ?? '-' }}</td>
-                    <td class="text-end">Rp {{ number_format((float) $detail->harga, 0, ',', '.') }}</td>
+                    <td class="text-center">{{ $no++ }}</td>
+                    <td>{{ $d->kode_barang }}</td>
+                    <td>{{ $d->barang->nama_barang ?? '' }}</td>
+                    <td class="text-center">{{ round($qty) }}</td>
+                    <td class="text-center">{{ strtoupper($d->barangSatuan->satuan ?? '-') }}</td>
+                    <td class="text-end">{{ rupiah($harga) }}</td>
                     @if ($showD1)
-                        <td class="text-center">
-                            {{ floatval($detail->diskon1_persen) > 0 ? $formatDisc($detail->diskon1_persen) . '%' : '-' }}
-                        </td>
+                        <td class="text-center">{{ round($d1, 2) ?: '' }}</td>
                     @endif
                     @if ($showD2)
-                        <td class="text-center">
-                            {{ floatval($detail->diskon2_persen) > 0 ? $formatDisc($detail->diskon2_persen) . '%' : '-' }}
-                        </td>
+                        <td class="text-center">{{ round($d2, 2) ?: '' }}</td>
                     @endif
                     @if ($showD3)
-                        <td class="text-center">
-                            {{ floatval($detail->diskon3_persen) > 0 ? $formatDisc($detail->diskon3_persen) . '%' : '-' }}
-                        </td>
+                        <td class="text-center">{{ round($d3, 2) ?: '' }}</td>
                     @endif
-                    <td class="text-end">Rp
-                        {{ number_format((float) ($detail->qty * $detail->harga - $detail->total_diskon), 0, ',', '.') }}
-                    </td>
+                    <td class="text-end">{{ rupiah($total) }}</td>
                 </tr>
             @endforeach
-
             <tr>
                 <td class="text-start" rowspan="3" colspan="3">
                     <small>
@@ -289,16 +317,16 @@
                         </ul>
                     </small>
                 </td>
-                <td class="text-end" colspan="{{ $colspanRight }}">Subtotal</td>
-                <td class="text-end">Rp {{ number_format((float) $item->total, 0, ',', '.') }}</td>
+                <td class="text-end" colspan="{{ $colspanCount - 3 }}">Subtotal</td>
+                <td class="text-end">{{ rupiah($grandTotal + $totalDiskon) }}</td>
             </tr>
             <tr class="text-end">
-                <td colspan="{{ $colspanRight }}">Potongan</td>
-                <td>Rp {{ number_format((float) $item->diskon, 0, ',', '.') }}</td>
+                <td colspan="{{ $colspanCount - 3 }}">Potongan</td>
+                <td>{{ rupiah($totalDiskon) }}</td>
             </tr>
             <tr class="text-end">
-                <td colspan="{{ $colspanRight }}">Total Keseluruhan</td>
-                <td class="fw-bold">Rp {{ number_format((float) $item->grand_total, 0, ',', '.') }}</td>
+                <td colspan="{{ $colspanCount - 3 }}">Total Keseluruhan</td>
+                <td class="fw-bold">{{ rupiah($grandTotal) }}</td>
             </tr>
         </tbody>
     </table>
@@ -306,7 +334,7 @@
     <table style="margin-top: 10px; border-collapse: collapse; width: 100%;">
         <tr>
             <td style="width:15%; border: none;">Keterangan</td>
-            <td style="width:85%; border: none;" colspan="3">: </td>
+            <td style="width:85%; border: none;" colspan="{{ $colspanCount - 3 }}">: {{ $item->keterangan }}</td>
         </tr>
     </table>
 
@@ -328,8 +356,6 @@
             <td class="text-center" style="border: none;">(...................)</td>
         </tr>
     </table>
-
-
 </body>
 
 </html>
