@@ -128,9 +128,11 @@ if (!function_exists('formatAngka')) {
 
                         // Retur Penjualan per Tanggal
                         $returPenjualan = DB::table('retur_penjualan_detail as rpd')
+                            ->join('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
+                            ->join('barang as b', 'b.kode_barang', '=', 'bs.kode_barang')
                             ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
                             ->where('rp.tanggal', $t->tanggal)
-                            ->sum(DB::raw('rpd.subtotal_retur - rpd.total_diskon_rupiah'));
+                            ->sum(DB::raw('rpd.qty * bs.harga_jual'));
 
                         // HPP per Tanggal
                         $total_hpp = DB::table('penjualan_detail as d')
