@@ -52,6 +52,21 @@
 <body>
     <div class="container-fluid py-3">
         {{-- HEADER --}}
+        @php
+            $selectedWilayah = 'SEMUA WILAYAH';
+            if (!empty($wilayah_id)) {
+                $wil = isset($wilayahs) ? $wilayahs->where('kode_wilayah', $wilayah_id)->first() : null;
+                if ($wil) {
+                    $selectedWilayah = strtoupper($wil->nama_wilayah);
+                }
+            }
+            if (!empty($sub_wilayah_id)) {
+                $subWil = isset($subWilayahs) ? $subWilayahs->where('kode_wilayah', $sub_wilayah_id)->first() : null;
+                if ($subWil) {
+                    $selectedWilayah .= ' / ' . strtoupper($subWil->nama_wilayah);
+                }
+            }
+        @endphp
         <div class="text-center mb-4">
             <h4 class="fw-bold mb-1">LAPORAN PIUTANG & LIMIT KREDIT PELANGGAN
                 ({{ strtoupper($jenis_laporan ?? 'rekap') }})</h4>
@@ -59,6 +74,7 @@
                 <div class="small">Pelanggan: {{ $items->first()['pelanggan']->nama_pelanggan ?? $kode_pelanggan }}
                 </div>
             @endif
+            <div class="small">Wilayah: <strong>{{ $selectedWilayah }}</strong></div>
             <div class="small text-muted">Tanggal Cetak: {{ date('d/m/Y H:i:s') }}</div>
             <hr>
         </div>

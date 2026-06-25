@@ -476,6 +476,7 @@
         @php
             $userRole = strtolower(Auth::user()->role ?? '');
             $isOwner = in_array($userRole, ['owner', 'admin', 'super admin', 'superadmin']);
+            $isSpv = $userRole === 'spv sales';
         @endphp
         <!-- Bottom Nav -->
         <div class="bottom-nav">
@@ -528,6 +529,14 @@
                     <span>Penjualan</span>
                 </a>
 
+                @if ($isSpv)
+                {{-- Barang (hanya spv sales) --}}
+                <a href="{{ route('mobile.barang.index') }}"
+                    class="nav-item-mobile {{ Request::routeIs('mobile.barang.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-box-open"></i>
+                    <span>Barang</span>
+                </a>
+                @endif
 
             @endif
             @if ($isOwner)
