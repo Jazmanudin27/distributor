@@ -403,23 +403,27 @@
     </div>
 
     <!-- Modal Histori Penjualan Barang -->
-    <div class="modal fade" id="historyBarangModal" tabindex="-1" aria-labelledby="historyBarangModalLabel" aria-hidden="true">
+    <div class="modal fade" id="historyBarangModal" tabindex="-1" aria-labelledby="historyBarangModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content border-0 rounded-3 shadow">
                 <div class="modal-header bg-primary text-white py-3">
                     <h5 class="modal-title fw-bold" id="historyBarangModalLabel">
                         <i class="fa-solid fa-clock-rotate-left me-2"></i> Detail Penjualan Barang
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4 bg-white">
                     <div class="mb-3 p-3 bg-light rounded border">
                         <div class="row">
                             <div class="col-md-6">
-                                <span class="fw-bold text-secondary">Pelanggan:</span> <span id="history-pelanggan-name" class="fw-bold text-dark">-</span>
+                                <span class="fw-bold text-secondary">Pelanggan:</span> <span id="history-pelanggan-name"
+                                    class="fw-bold text-dark">-</span>
                             </div>
                             <div class="col-md-6">
-                                <span class="fw-bold text-secondary">Barang:</span> <span id="history-barang-name" class="fw-bold text-dark">-</span>
+                                <span class="fw-bold text-secondary">Barang:</span> <span id="history-barang-name"
+                                    class="fw-bold text-dark">-</span>
                             </div>
                         </div>
                     </div>
@@ -445,7 +449,8 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0 bg-light pt-0">
-                    <button type="button" class="btn btn-secondary px-4 fw-semibold" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-secondary px-4 fw-semibold"
+                        data-bs-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
@@ -457,7 +462,7 @@
         $(document).ready(function() {
             const isEditMode = {{ $item->exists ? 'true' : 'false' }};
             const existingDetails = {!! json_encode($item->details ?? []) !!};
-            
+
             // Sort existingDetails by brand/merk
             existingDetails.sort((a, b) => {
                 const brandA = (a.barang && a.barang.merk) ? a.barang.merk.toString().toLowerCase() : '';
@@ -1907,7 +1912,9 @@
 
                 // Clear history table tbody
                 const tbody = $('#historyTable tbody');
-                tbody.html('<tr><td colspan="9" class="text-center"><i class="fa-solid fa-spinner fa-spin me-1"></i> Memuat data histori...</td></tr>');
+                tbody.html(
+                    '<tr><td colspan="9" class="text-center"><i class="fa-solid fa-spinner fa-spin me-1"></i> Memuat data histori...</td></tr>'
+                    );
 
                 // Open modal
                 const myModal = new bootstrap.Modal(document.getElementById('historyBarangModal'));
@@ -1925,7 +1932,9 @@
                     success: function(response) {
                         tbody.empty();
                         if (response.length === 0) {
-                            tbody.append('<tr><td colspan="9" class="text-center text-muted py-3">Tidak ada riwayat transaksi untuk barang ini dengan pelanggan tersebut.</td></tr>');
+                            tbody.append(
+                                '<tr><td colspan="9" class="text-center text-muted py-3">Tidak ada riwayat transaksi untuk barang ini dengan pelanggan tersebut.</td></tr>'
+                                );
                             return;
                         }
 
@@ -1938,8 +1947,10 @@
                             const d2Str = d2 > 0 ? d2.toFixed(2) + '%' : '';
                             const d3Str = d3 > 0 ? d3.toFixed(2) + '%' : '';
 
-                            const formattedHarga = formatCurrency(row.harga).replace('Rp ', 'Rp');
-                            const formattedTotal = formatCurrency(row.total).replace('Rp ', 'Rp');
+                            const formattedHarga = formatCurrency(row.harga).replace(
+                                'Rp ', 'Rp');
+                            const formattedTotal = formatCurrency(row.total).replace(
+                                'Rp ', 'Rp');
 
                             const tr = `
                                 <tr>
@@ -1958,7 +1969,9 @@
                         });
                     },
                     error: function(xhr) {
-                        tbody.html('<tr><td colspan="9" class="text-center text-danger py-3"><i class="fa-solid fa-triangle-exclamation me-1"></i> Gagal memuat data histori transaksi.</td></tr>');
+                        tbody.html(
+                            '<tr><td colspan="9" class="text-center text-danger py-3"><i class="fa-solid fa-triangle-exclamation me-1"></i> Gagal memuat data histori transaksi.</td></tr>'
+                            );
                     }
                 });
             });

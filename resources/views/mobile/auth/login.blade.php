@@ -55,8 +55,8 @@
                     <label for="password" class="form-label">Password</label>
                     <div class="input-wrapper">
                         <i class="fas fa-lock input-icon"></i>
-                        <input type="password" id="password" name="password" class="form-input"
-                            placeholder="••••••••" required>
+                        <input type="password" id="password" name="password" class="form-input" placeholder="••••••••"
+                            required>
                         <button type="button" class="toggle-password" onclick="togglePassword()">
                             <i class="fas fa-eye" id="eye-icon"></i>
                         </button>
