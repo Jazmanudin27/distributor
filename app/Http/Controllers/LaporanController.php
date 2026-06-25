@@ -1478,7 +1478,7 @@ class LaporanController extends Controller
                             $q->whereNull('penjualan_detail.is_promo')
                               ->orWhere('penjualan_detail.is_promo', '!=', 1);
                         })
-                        ->sum('penjualan_detail.total');
+                        ->sum(DB::raw('penjualan_detail.qty * penjualan_detail.harga'));
 
                     $salesReturn = (float) DB::table('retur_penjualan_detail')
                         ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
@@ -1490,6 +1490,10 @@ class LaporanController extends Controller
                     $hppGross = (float) DB::table('penjualan_detail')
                         ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
                         ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                        ->join('barang_satuan', function ($join) {
+                            $join->on('penjualan_detail.kode_barang', '=', 'barang_satuan.kode_barang')
+                                 ->on('penjualan_detail.satuan_id', '=', 'barang_satuan.id');
+                        })
                         ->where('penjualan.batal', 0)
                         ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
                         ->where('barang.kode_supplier', $kode_supplier)
@@ -1497,7 +1501,7 @@ class LaporanController extends Controller
                             $q->whereNull('penjualan_detail.is_promo')
                               ->orWhere('penjualan_detail.is_promo', '!=', 1);
                         })
-                        ->sum(DB::raw('penjualan_detail.qty * penjualan_detail.harga_pokok'));
+                        ->sum(DB::raw('penjualan_detail.qty * barang_satuan.harga_pokok'));
 
                     $hppReturn = (float) DB::table('retur_penjualan_detail')
                         ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
@@ -1522,7 +1526,7 @@ class LaporanController extends Controller
                             $q->whereNull('penjualan_detail.is_promo')
                               ->orWhere('penjualan_detail.is_promo', '!=', 1);
                         })
-                        ->sum('penjualan_detail.total');
+                        ->sum(DB::raw('penjualan_detail.qty * penjualan_detail.harga'));
 
                     $salesReturn = (float) DB::table('retur_penjualan_detail')
                         ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
@@ -1533,13 +1537,17 @@ class LaporanController extends Controller
                     $hppGross = (float) DB::table('penjualan_detail')
                         ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
                         ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                        ->join('barang_satuan', function ($join) {
+                            $join->on('penjualan_detail.kode_barang', '=', 'barang_satuan.kode_barang')
+                                 ->on('penjualan_detail.satuan_id', '=', 'barang_satuan.id');
+                        })
                         ->where('penjualan.batal', 0)
                         ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
                         ->where(function($q) {
                             $q->whereNull('penjualan_detail.is_promo')
                               ->orWhere('penjualan_detail.is_promo', '!=', 1);
                         })
-                        ->sum(DB::raw('penjualan_detail.qty * penjualan_detail.harga_pokok'));
+                        ->sum(DB::raw('penjualan_detail.qty * barang_satuan.harga_pokok'));
 
                     $hppReturn = (float) DB::table('retur_penjualan_detail')
                         ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
@@ -1568,7 +1576,7 @@ class LaporanController extends Controller
                         $q->whereNull('penjualan_detail.is_promo')
                           ->orWhere('penjualan_detail.is_promo', '!=', 1);
                     })
-                    ->select('barang.kode_supplier', DB::raw('SUM(penjualan_detail.total) as total_sales'))
+                    ->select('barang.kode_supplier', DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga) as total_sales'))
                     ->groupBy('barang.kode_supplier')
                     ->get()
                     ->keyBy('kode_supplier');
@@ -1586,6 +1594,10 @@ class LaporanController extends Controller
                 $hpp = DB::table('penjualan_detail')
                     ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
                     ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                    ->join('barang_satuan', function ($join) {
+                        $join->on('penjualan_detail.kode_barang', '=', 'barang_satuan.kode_barang')
+                             ->on('penjualan_detail.satuan_id', '=', 'barang_satuan.id');
+                    })
                     ->where('penjualan.batal', 0)
                     ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
                     ->when($kode_supplier, fn($q) => $q->where('barang.kode_supplier', $kode_supplier))
@@ -1593,7 +1605,7 @@ class LaporanController extends Controller
                         $q->whereNull('penjualan_detail.is_promo')
                           ->orWhere('penjualan_detail.is_promo', '!=', 1);
                     })
-                    ->select('barang.kode_supplier', DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp'))
+                    ->select('barang.kode_supplier', DB::raw('SUM(penjualan_detail.qty * barang_satuan.harga_pokok) as total_hpp'))
                     ->groupBy('barang.kode_supplier')
                     ->get()
                     ->keyBy('kode_supplier');
@@ -1655,7 +1667,7 @@ class LaporanController extends Controller
                         $q->whereNull('penjualan_detail.is_promo')
                           ->orWhere('penjualan_detail.is_promo', '!=', 1);
                     })
-                    ->select('penjualan.tanggal', 'barang.kode_supplier', DB::raw('SUM(penjualan_detail.total) as total_sales'))
+                    ->select('penjualan.tanggal', 'barang.kode_supplier', DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga) as total_sales'))
                     ->groupBy('penjualan.tanggal', 'barang.kode_supplier')
                     ->get();
 
@@ -1671,6 +1683,10 @@ class LaporanController extends Controller
                 $hppGrouped = DB::table('penjualan_detail')
                     ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
                     ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                    ->join('barang_satuan', function ($join) {
+                        $join->on('penjualan_detail.kode_barang', '=', 'barang_satuan.kode_barang')
+                             ->on('penjualan_detail.satuan_id', '=', 'barang_satuan.id');
+                    })
                     ->where('penjualan.batal', 0)
                     ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
                     ->when($kode_supplier, fn($q) => $q->where('barang.kode_supplier', $kode_supplier))
@@ -1678,7 +1694,7 @@ class LaporanController extends Controller
                         $q->whereNull('penjualan_detail.is_promo')
                           ->orWhere('penjualan_detail.is_promo', '!=', 1);
                     })
-                    ->select('penjualan.tanggal', 'barang.kode_supplier', DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp'))
+                    ->select('penjualan.tanggal', 'barang.kode_supplier', DB::raw('SUM(penjualan_detail.qty * barang_satuan.harga_pokok) as total_hpp'))
                     ->groupBy('penjualan.tanggal', 'barang.kode_supplier')
                     ->get()
                     ->keyBy(fn($item) => $item->tanggal . '_' . $item->kode_supplier);
@@ -1774,6 +1790,10 @@ class LaporanController extends Controller
                     ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
                     ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
                     ->leftJoin('supplier', 'barang.kode_supplier', '=', 'supplier.kode_supplier')
+                    ->join('barang_satuan', function ($join) {
+                        $join->on('penjualan_detail.kode_barang', '=', 'barang_satuan.kode_barang')
+                             ->on('penjualan_detail.satuan_id', '=', 'barang_satuan.id');
+                    })
                     ->where('penjualan.batal', 0)
                     ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
                     ->when($kode_supplier, fn($q) => $q->where('barang.kode_supplier', $kode_supplier))
@@ -1790,8 +1810,8 @@ class LaporanController extends Controller
                         'supplier.nama_supplier',
                         'penjualan_detail.qty',
                         'penjualan_detail.harga',
-                        'penjualan_detail.total as total_jual',
-                        DB::raw('(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp')
+                        DB::raw('(penjualan_detail.qty * penjualan_detail.harga) as total_jual'),
+                        DB::raw('(penjualan_detail.qty * barang_satuan.harga_pokok) as total_hpp')
                     )
                     ->get();
 
