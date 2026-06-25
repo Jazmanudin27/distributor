@@ -213,7 +213,6 @@
                                         <th width="50" class="text-center py-2">No</th>
                                         <th width="130" class="py-2">Kode</th>
                                         <th class="py-2">Nama Barang</th>
-                                        <th width="120" class="py-2">Merk</th>
                                         <th width="110" class="text-center py-2">Satuan</th>
                                         <th width="90" class="text-end py-2">Qty</th>
                                         <th width="140" class="text-end py-2">Harga Jual</th>
@@ -256,10 +255,6 @@
                                             <td>
                                                 <span
                                                     class="fw-bold text-dark d-block">{{ $detail->barang->nama_barang ?? 'Barang Terhapus' }}</span>
-                                            </td>
-                                            <td>
-                                                <span
-                                                    class="text-secondary small">{{ $detail->barang->merk ?? '-' }}</span>
                                             </td>
                                             <td class="text-center">
                                                 <span
@@ -980,7 +975,8 @@
                     if (modalInst) {
                         modalInst.hide();
                     } else {
-                        $(this).removeClass('show').css('display', 'none').attr('aria-hidden', 'true');
+                        $(this).removeClass('show').css('display', 'none').attr('aria-hidden',
+                            'true');
                     }
                 });
                 $('.modal-backdrop').remove();
