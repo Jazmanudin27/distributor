@@ -457,6 +457,14 @@
         $(document).ready(function() {
             const isEditMode = {{ $item->exists ? 'true' : 'false' }};
             const existingDetails = {!! json_encode($item->details ?? []) !!};
+            
+            // Sort existingDetails by brand/merk
+            existingDetails.sort((a, b) => {
+                const brandA = (a.barang && a.barang.merk) ? a.barang.merk.toString().toLowerCase() : '';
+                const brandB = (b.barang && b.barang.merk) ? b.barang.merk.toString().toLowerCase() : '';
+                return brandA.localeCompare(brandB);
+            });
+
             const diskonStrata = {!! json_encode($diskonStrata ?? []) !!};
             const barangsCache = {};
 

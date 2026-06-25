@@ -245,7 +245,7 @@
                 <tr class="row-barang">
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td>{{ $detail->kode_barang }}</td>
-                    <td>{{ $detail->barang->nama_barang ?? 'Barang Terhapus' }}</td>
+                    <td>{{ $detail->barang->nama_barang ?? '' }}</td>
                     <td class="text-center">{{ floatval($detail->qty) }}</td>
                     <td class="text-center">{{ $detail->barangSatuan->satuan ?? '-' }}</td>
                     <td class="text-end">Rp {{ number_format((float) $detail->harga, 0, ',', '.') }}</td>
