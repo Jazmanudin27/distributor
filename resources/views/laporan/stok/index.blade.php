@@ -17,6 +17,7 @@
                             <select name="jenis_laporan" id="jenis_laporan" class="form-select form-select-sm">
                                 <option value="rekap">Rekap Stok Saat Ini</option>
                                 <option value="rekap_persediaan">Rekap Persediaan Stok (Good Stok)</option>
+                                <option value="margin">Laporan Margin Barang (Stok Saat Ini)</option>
                                 <option value="detail">Buku / Kartu Stok (Detail)</option>
                             </select>
                         </div>
@@ -147,6 +148,12 @@
                     $('.filter-barang').addClass('d-none');
                     $('.filter-supplier').removeClass('d-none');
                     $('.filter-dates').removeClass('d-none');
+                    $('#kode_barang').prop('required', false);
+                } else if (val === 'margin') {
+                    $('.filter-rekap').removeClass('d-none');
+                    $('.filter-barang').addClass('d-none');
+                    $('.filter-supplier').removeClass('d-none');
+                    $('.filter-dates').addClass('d-none');
                     $('#kode_barang').prop('required', false);
                 }
             }

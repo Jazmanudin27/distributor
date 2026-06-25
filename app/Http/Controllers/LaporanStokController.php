@@ -218,6 +218,83 @@ class LaporanStokController extends Controller
                 'barangsList', 'kategoris', 'merks', 'suppliers', 'items', 
                 'jenis_laporan', 'kategori', 'merk', 'kode_supplier', 'tanggal_mulai', 'tanggal_akhir', 'search', 'tampilkan_stok_kosong'
             ));
+        } elseif ($jenis_laporan === 'margin') {
+            $view = $isPrintOrExcel ? 'laporan.stok.margin' : 'laporan.stok.index';
+            $items = collect();
+            
+            if ($isPrintOrExcel) {
+                $query = Barang::with(['satuans', 'supplier']);
+                
+                if ($kode_supplier) {
+                    $query->where('kode_supplier', $kode_supplier);
+                }
+                if ($kategori) {
+                    $query->where('kategori', $kategori);
+                }
+                if ($merk) {
+                    $query->where('merk', $merk);
+                }
+                if ($search) {
+                    $query->where(function($q) use ($search) {
+                        $q->where('kode_barang', 'like', "%$search%")
+                          ->orWhere('nama_barang', 'like', "%$search%")
+                          ->orWhere('kode_item', 'like', "%$search%");
+                    });
+                }
+
+                if (!$tampilkan_stok_kosong) {
+                    $query->where('stok', '>', 0);
+                }
+
+                $barangs = $query->orderBy('nama_barang', 'asc')->get();
+                
+                foreach ($barangs as $b) {
+                    $baseSatuan = $b->satuans->sortBy('isi')->first();
+                    $baseSatuanName = $baseSatuan ? $baseSatuan->satuan : 'PCS';
+                    $hargaPokok = $baseSatuan ? (float)$baseSatuan->harga_pokok : 0;
+                    $hargaJual = $baseSatuan ? (float)$baseSatuan->harga_jual : 0;
+                    $stok = (float)$b->stok;
+                    
+                    $margin_rp = $hargaJual - $hargaPokok;
+                    $margin_persen = $hargaJual > 0 ? ($margin_rp / $hargaJual) * 100 : 0;
+
+                    $items->push([
+                        'barang'              => $b,
+                        'kode_barang'         => $b->kode_barang,
+                        'kode_item'           => $b->kode_item,
+                        'nama_barang'         => $b->nama_barang,
+                        'satuan'              => $baseSatuanName,
+                        'jenis'               => $b->jenis,
+                        'kategori'            => $b->kategori,
+                        'merk'                => $b->merk,
+                        'stok'                => $stok,
+                        'harga_pokok'         => $hargaPokok,
+                        'harga_jual'          => $hargaJual,
+                        'margin_rp'           => $margin_rp,
+                        'margin_persen'       => $margin_persen,
+                        'total_pokok'         => $stok * $hargaPokok,
+                        'total_jual'          => $stok * $hargaJual,
+                        'total_margin'        => $stok * $margin_rp,
+                    ]);
+                }
+            }
+
+            if ($isExcel) {
+                $filename = 'laporan_margin_barang_' . date('Ymd_His') . '.xls';
+                return response(view($view, compact(
+                    'barangsList', 'kategoris', 'merks', 'suppliers', 'items', 
+                    'jenis_laporan', 'kategori', 'merk', 'kode_supplier', 'tanggal_mulai', 'tanggal_akhir', 'search', 'isExcel', 'tampilkan_stok_kosong'
+                )))
+                ->header('Content-Type', 'application/vnd-ms-excel')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+            }
+
+            return view($view, compact(
+                'barangsList', 'kategoris', 'merks', 'suppliers', 'items', 
+                'jenis_laporan', 'kategori', 'merk', 'kode_supplier', 'tanggal_mulai', 'tanggal_akhir', 'search', 'tampilkan_stok_kosong'
+            ));
         } else {
             // detail (buku/kartu stok per barang)
             $barang = null;

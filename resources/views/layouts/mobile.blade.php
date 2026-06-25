@@ -507,12 +507,12 @@
                 </a>
 
                 @if ($isKanvas)
-                {{-- DPB (hanya sales canvas) --}}
-                <a href="{{ route('mobile.order.canvas.dpb') }}"
-                    class="nav-item-mobile {{ Request::routeIs('mobile.order.canvas.dpb*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-truck-ramp-box"></i>
-                    <span>DPB</span>
-                </a>
+                    {{-- DPB (hanya sales canvas) --}}
+                    <a href="{{ route('mobile.order.canvas.dpb') }}"
+                        class="nav-item-mobile {{ Request::routeIs('mobile.order.canvas.dpb*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-truck-ramp-box"></i>
+                        <span>DPB</span>
+                    </a>
                 @endif
 
                 {{-- Pelanggan / Kunjungan — untuk semua sales --}}
@@ -524,18 +524,18 @@
 
                 {{-- Penjualan (selalu ada, aktif juga saat canvas order) --}}
                 <a href="{{ route('mobile.order.index') }}"
-                    class="nav-item-mobile {{ (Request::routeIs('mobile.order.index') || (Request::routeIs('mobile.order.canvas.*') && !Request::routeIs('mobile.order.canvas.dpb*'))) ? 'active' : '' }}">
+                    class="nav-item-mobile {{ Request::routeIs('mobile.order.index') || (Request::routeIs('mobile.order.canvas.*') && !Request::routeIs('mobile.order.canvas.dpb*')) ? 'active' : '' }}">
                     <i class="fa-solid fa-receipt"></i>
                     <span>Penjualan</span>
                 </a>
 
-                @if ($isSpv)
-                {{-- Barang (hanya spv sales) --}}
-                <a href="{{ route('mobile.barang.index') }}"
-                    class="nav-item-mobile {{ Request::routeIs('mobile.barang.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-box-open"></i>
-                    <span>Barang</span>
-                </a>
+                @if (!$isKanvas)
+                    {{-- Barang (semua sales kecuali sales canvas) --}}
+                    <a href="{{ route('mobile.barang.index') }}"
+                        class="nav-item-mobile {{ Request::routeIs('mobile.barang.*') ? 'active' : '' }}">
+                        <i class="fa-solid fa-box-open"></i>
+                        <span>Barang</span>
+                    </a>
                 @endif
 
             @endif
@@ -742,11 +742,11 @@
         });
     </script>
     <script src="{{ asset('js/pwa.js') }}"></script>
-    @if(session('success'))
+    @if (session('success'))
         <script>
-            if (window.localStorage && '{{ Auth::user() ? Auth::user()->nik : "" }}') {
-                localStorage.removeItem('mobile_order_cart_' + '{{ Auth::user() ? Auth::user()->nik : "" }}');
-                localStorage.removeItem('mobile_order_canvas_cart_' + '{{ Auth::user() ? Auth::user()->nik : "" }}');
+            if (window.localStorage && '{{ Auth::user() ? Auth::user()->nik : '' }}') {
+                localStorage.removeItem('mobile_order_cart_' + '{{ Auth::user() ? Auth::user()->nik : '' }}');
+                localStorage.removeItem('mobile_order_canvas_cart_' + '{{ Auth::user() ? Auth::user()->nik : '' }}');
             }
         </script>
     @endif
