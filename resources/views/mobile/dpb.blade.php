@@ -231,7 +231,7 @@
                                         {{ $hs->details->count() }} Item
                                     </span>
                                     <span
-                                        class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-20 px-2 py-0.5"
+                                        class="badge bg-success bg-opacity-15 text-white border border-success border-opacity-20 px-2 py-0.5"
                                         style="font-size: 0.6rem; border-radius: 6px;">
                                         Selesai
                                     </span>
