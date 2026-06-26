@@ -546,7 +546,8 @@
                     data: function(params) {
                         return {
                             q: params.term,
-                            exclude_no_faktur: '{{ $item->no_faktur }}'
+                            exclude_no_faktur: '{{ $item->no_faktur }}',
+                            kode_sales: $('#kode_sales').val()
                         };
                     },
                     processResults: function(data) {
@@ -561,6 +562,9 @@
             $('#kode_sales').select2({
                 theme: 'bootstrap-5',
                 width: '100%'
+            }).on('change', function() {
+                // Clear customer when selected sales representative changes
+                $('#kode_pelanggan').val(null).trigger('change');
             });
 
             function formatBarangResult(barang) {

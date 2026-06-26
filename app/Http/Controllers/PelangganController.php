@@ -12,7 +12,7 @@ class PelangganController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pelanggan::with(['wilayah', 'subWilayah']);
+        $query = Pelanggan::with(['wilayah', 'subWilayah', 'sales']);
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -34,6 +34,10 @@ class PelangganController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('kode_sales')) {
+            $query->where('kode_sales', $request->kode_sales);
+        }
+
         if ($request->filled('approve')) {
             if ($request->approve === 'pending') {
                 $query->where(function ($q) {
@@ -47,7 +51,8 @@ class PelangganController extends Controller
         $pelanggans = $query->paginate(10)->appends($request->query());
         $wilayahs = Wilayah::all();
         $subWilayahs = SubWilayah::all();
-        return view('master.pelanggan.index', compact('pelanggans', 'wilayahs', 'subWilayahs'));
+        $salesmen = \App\Models\User::where(fn($q) => $q->where('role', 'sales')->orWhere('is_kanvas', 1))->where('status', 1)->orderBy('name')->get();
+        return view('master.pelanggan.index', compact('pelanggans', 'wilayahs', 'subWilayahs', 'salesmen'));
     }
 
     public function create()
@@ -55,7 +60,8 @@ class PelangganController extends Controller
         $item = new Pelanggan();
         $wilayahs = Wilayah::all();
         $subWilayahs = SubWilayah::all();
-        return view('master.pelanggan.form', compact('item', 'wilayahs', 'subWilayahs'));
+        $salesmen = \App\Models\User::where(fn($q) => $q->where('role', 'sales')->orWhere('is_kanvas', 1))->where('status', 1)->orderBy('name')->get();
+        return view('master.pelanggan.form', compact('item', 'wilayahs', 'subWilayahs', 'salesmen'));
     }
 
     public function store(Request $request)
@@ -70,7 +76,8 @@ class PelangganController extends Controller
             'kode_wilayah' => 'nullable|integer',
             'sub_wilayah' => 'nullable|integer',
             'status' => 'required|integer',
-            'jenis_pelanggan' => 'nullable|string|max:30'
+            'jenis_pelanggan' => 'nullable|string|max:30',
+            'kode_sales' => 'nullable|string|exists:users,nik'
         ]);
         
         $data['approve'] = 1; // Default to approved for desktop admin creation
@@ -85,7 +92,8 @@ class PelangganController extends Controller
         $item = Pelanggan::findOrFail($id);
         $wilayahs = Wilayah::all();
         $subWilayahs = SubWilayah::all();
-        return view('master.pelanggan.form', compact('item', 'wilayahs', 'subWilayahs'));
+        $salesmen = \App\Models\User::where(fn($q) => $q->where('role', 'sales')->orWhere('is_kanvas', 1))->where('status', 1)->orderBy('name')->get();
+        return view('master.pelanggan.form', compact('item', 'wilayahs', 'subWilayahs', 'salesmen'));
     }
 
     public function update(Request $request, $id)
@@ -102,7 +110,8 @@ class PelangganController extends Controller
             'kode_wilayah' => 'nullable|integer',
             'sub_wilayah' => 'nullable|integer',
             'status' => 'required|integer',
-            'jenis_pelanggan' => 'nullable|string|max:30'
+            'jenis_pelanggan' => 'nullable|string|max:30',
+            'kode_sales' => 'nullable|string|exists:users,nik'
         ]));
         
         return redirect()->route('pelanggan.index')->with('success', 'Data berhasil diubah');
@@ -176,6 +185,16 @@ class PelangganController extends Controller
 
         $query = Pelanggan::with(['wilayah', 'subWilayah'])
             ->where('status', 1);
+
+        // Filter by canvas sales
+        if (auth()->check() && auth()->user()->is_kanvas) {
+            $query->where('kode_sales', auth()->user()->nik);
+        } elseif ($request->filled('kode_sales')) {
+            $sales = \App\Models\User::where('nik', $request->kode_sales)->first();
+            if ($sales && $sales->is_kanvas) {
+                $query->where('kode_sales', $sales->nik);
+            }
+        }
 
         if ($request->filled('kode_wilayah')) {
             $query->where('kode_wilayah', $request->kode_wilayah);

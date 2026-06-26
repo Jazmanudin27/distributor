@@ -80,6 +80,9 @@ class MobilePelangganController extends Controller
             $fotoKtpPath = 'storage/uploads/pelanggan/' . $filename;
         }
 
+        $user = Auth::user();
+        $isCanvas = (bool)($user->is_kanvas ?? false);
+
         Pelanggan::create([
             'kode_pelanggan'   => $kodePelanggan,
             'nama_pelanggan'   => $request->nama_pelanggan,
@@ -97,11 +100,16 @@ class MobilePelangganController extends Controller
             'kode_wilayah'     => $request->kode_wilayah,
             'sub_wilayah'      => $request->sub_wilayah,
             'status'           => 1, // Status active
-            'approve'          => 0, // Pending approval
+            'approve'          => $isCanvas ? 1 : 0, // Auto-approved if sales canvas
+            'kode_sales'       => $isCanvas ? $user->nik : null, // Set sales code for canvas sales
             'jenis_pelanggan'  => '0', // Regular by default
         ]);
 
-        return redirect()->route('mobile.kunjungan.index')->with('success', 'Pelanggan baru berhasil didaftarkan dan sedang menunggu persetujuan (approval).');
+        $message = $isCanvas 
+            ? 'Pelanggan baru berhasil didaftarkan dan siap dikunjungi.'
+            : 'Pelanggan baru berhasil didaftarkan dan sedang menunggu persetujuan (approval).';
+
+        return redirect()->route('mobile.kunjungan.index')->with('success', $message);
     }
 
     /**

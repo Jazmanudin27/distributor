@@ -212,6 +212,15 @@ class PenjualanController extends Controller
         $tempGrandTotal = $tempSubtotalSum - $tempTotalDiskon - floatval($request->diskon_global ?? 0);
 
         $pelanggan = Pelanggan::findOrFail($request->kode_pelanggan);
+
+        // Verify canvas sales restrictions on the customer
+        $sales = User::where('nik', $request->kode_sales)->first();
+        if ($sales && $sales->is_kanvas) {
+            if ($pelanggan->kode_sales !== $sales->nik) {
+                return redirect()->back()->withInput()->with('error', "Gagal menyimpan transaksi. Pelanggan {$pelanggan->nama_pelanggan} bukan merupakan pelanggan milik sales canvas {$sales->name}!");
+            }
+        }
+
         if ($pelanggan->hasOverdueInvoices()) {
             $overdueInvoices = $pelanggan->getOverdueInvoices()->pluck('no_faktur')->implode(', ');
             return redirect()->back()->withInput()->with('error', "Gagal menyimpan transaksi. Pelanggan {$pelanggan->nama_pelanggan} memiliki faktur yang sudah jatuh tempo (overdue): {$overdueInvoices}!");
@@ -547,6 +556,14 @@ class PenjualanController extends Controller
         $tempGrandTotal = $tempSubtotalSum - $tempTotalDiskon - floatval($request->diskon_global ?? 0);
 
         $pelanggan = Pelanggan::findOrFail($request->kode_pelanggan);
+
+        // Verify canvas sales restrictions on the customer
+        $sales = User::where('nik', $request->kode_sales)->first();
+        if ($sales && $sales->is_kanvas) {
+            if ($pelanggan->kode_sales !== $sales->nik) {
+                return redirect()->back()->withInput()->with('error', "Gagal memperbarui transaksi. Pelanggan {$pelanggan->nama_pelanggan} bukan merupakan pelanggan milik sales canvas {$sales->name}!");
+            }
+        }
 
         // Verify product restrictions for the salesman
         $user = auth()->user();

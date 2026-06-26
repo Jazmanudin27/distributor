@@ -8,8 +8,11 @@ use App\Models\PembelianDetail;
 use App\Models\PembelianPembayaran;
 use App\Models\Supplier;
 use App\Models\Barang;
+use App\Models\BarangSatuan;
+use App\Models\StokMutasi;
+use App\Models\ActivityLog;
+use App\Models\ReturPembelian;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 
 class PembelianController extends Controller
 {
@@ -111,9 +114,9 @@ class PembelianController extends Controller
             $details = [];
 
             foreach ($request->items as $row) {
-                $satuan = \App\Models\BarangSatuan::findOrFail($row['satuan_id']);
+                $satuan = BarangSatuan::findOrFail($row['satuan_id']);
                 $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
-                \App\Models\StokMutasi::log($row['kode_barang'], $request->tanggal, 'Pembelian', $noFaktur, $qtySmallest, 0);
+                StokMutasi::log($row['kode_barang'], $request->tanggal, 'Pembelian', $noFaktur, $qtySmallest, 0);
 
                 $total = ($row['qty'] * $row['harga']) - $row['diskon'];
                 $subtotal = $row['qty'] * $row['harga'];
@@ -152,7 +155,7 @@ class PembelianController extends Controller
 
             $pembelian->details()->saveMany($details);
 
-            \App\Models\ActivityLog::create([
+            ActivityLog::create([
                 'user_id' => auth()->id() ?? 1,
                 'action' => 'Tambah Pembelian',
                 'description' => $pembelian->no_faktur . ' (Supplier: ' . $pembelian->kode_supplier . ')',
@@ -171,7 +174,7 @@ class PembelianController extends Controller
         $item = Pembelian::with(['supplier', 'details.barang', 'pembayarans'])->findOrFail($no_faktur);
         $totalBayar = $item->pembayarans->sum('jumlah');
         
-        $returs = \App\Models\ReturPembelian::where('no_faktur', $no_faktur)
+        $returs = ReturPembelian::where('no_faktur', $no_faktur)
             ->where('jenis_retur', 'PF')
             ->get();
         $totalRetur = $returs->sum('total');
@@ -229,9 +232,9 @@ class PembelianController extends Controller
         DB::transaction(function () use ($request, $pembelian) {
             // Revert old details stock additions
             foreach ($pembelian->details as $oldDetail) {
-                $oldSatuan = \App\Models\BarangSatuan::find($oldDetail->satuan_id);
+                $oldSatuan = BarangSatuan::find($oldDetail->satuan_id);
                 $oldQtySmallest = $oldDetail->qty * ($oldSatuan->isi ?? 1);
-                \App\Models\StokMutasi::log($oldDetail->kode_barang, $request->tanggal, 'Batal Pembelian (Edit)', $pembelian->no_faktur, 0, $oldQtySmallest);
+                StokMutasi::log($oldDetail->kode_barang, $request->tanggal, 'Batal Pembelian (Edit)', $pembelian->no_faktur, 0, $oldQtySmallest);
             }
 
             $subtotalSum = 0;
@@ -239,9 +242,9 @@ class PembelianController extends Controller
 
             foreach ($request->items as $row) {
                 // Increment new stock
-                $satuan = \App\Models\BarangSatuan::findOrFail($row['satuan_id']);
+                $satuan = BarangSatuan::findOrFail($row['satuan_id']);
                 $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
-                \App\Models\StokMutasi::log($row['kode_barang'], $request->tanggal, 'Pembelian (Edit)', $pembelian->no_faktur, $qtySmallest, 0);
+                StokMutasi::log($row['kode_barang'], $request->tanggal, 'Pembelian (Edit)', $pembelian->no_faktur, $qtySmallest, 0);
 
                 $total = ($row['qty'] * $row['harga']) - $row['diskon'];
                 $subtotal = $row['qty'] * $row['harga'];
@@ -279,7 +282,7 @@ class PembelianController extends Controller
             $pembelian->details()->delete();
             $pembelian->details()->saveMany($details);
 
-            \App\Models\ActivityLog::create([
+            ActivityLog::create([
                 'user_id' => auth()->id() ?? 1,
                 'action' => 'Edit Pembelian',
                 'description' => $no_faktur,
@@ -296,13 +299,12 @@ class PembelianController extends Controller
         $pembelian = Pembelian::with('details')->findOrFail($no_faktur);
         DB::transaction(function () use ($pembelian, $no_faktur) {
             foreach ($pembelian->details as $detail) {
-                $satuan = \App\Models\BarangSatuan::find($detail->satuan_id);
+                $satuan = BarangSatuan::find($detail->satuan_id);
                 $qtySmallest = $detail->qty * ($satuan->isi ?? 1);
-                \App\Models\StokMutasi::log($detail->kode_barang, now()->toDateString(), 'Batal Pembelian (Hapus)', $pembelian->no_faktur, 0, $qtySmallest);
+                StokMutasi::log($detail->kode_barang, now()->toDateString(), 'Batal Pembelian (Hapus)', $pembelian->no_faktur, 0, $qtySmallest);
             }
             $pembelian->delete();
-
-            \App\Models\ActivityLog::create([
+            ActivityLog::create([
                 'user_id' => auth()->id() ?? 1,
                 'action' => 'Hapus Pembelian',
                 'description' => $no_faktur,
@@ -327,7 +329,7 @@ class PembelianController extends Controller
 
         // Validate that payment does not exceed sisaBayar
         $totalBayar = $item->pembayarans->sum('jumlah');
-        $totalRetur = \App\Models\ReturPembelian::where('no_faktur', $no_faktur)
+        $totalRetur = ReturPembelian::where('no_faktur', $no_faktur)
             ->where('jenis_retur', 'PF')
             ->sum('total');
         $sisaBayar = $item->grand_total - $totalBayar - $totalRetur;
@@ -359,7 +361,7 @@ class PembelianController extends Controller
             'keterangan' => $request->keterangan,
         ]);
 
-        \App\Models\ActivityLog::create([
+        ActivityLog::create([
             'user_id' => auth()->id() ?? 1,
             'action' => 'Input Pembayaran ' . $request->jenis_bayar,
             'description' => $no_bukti,
@@ -382,7 +384,7 @@ class PembelianController extends Controller
             'tanggal_approve' => now(),
         ]);
 
-        \App\Models\ActivityLog::create([
+        ActivityLog::create([
             'user_id' => auth()->id() ?? 1,
             'action' => 'Approve Pembelian',
             'description' => $pembelian->no_faktur . ' disetujui.',

@@ -397,4 +397,101 @@ class CanvasSalesTest extends TestCase
         $response2->assertSessionHasNoErrors();
         $response2->assertRedirect(route('mobile.kunjungan.index'));
     }
+
+    /**
+     * Test canvas sales customer auto-approval and visibility restriction.
+     */
+    public function test_canvas_sales_customer_auto_approval_and_filtering(): void
+    {
+        // Setup regions so firstOrCreate works
+        \App\Models\Wilayah::firstOrCreate(
+            ['kode_wilayah' => 93],
+            ['nama_wilayah' => 'Canvas Area']
+        );
+        \App\Models\SubWilayah::firstOrCreate(
+            ['kode_wilayah' => 93],
+            ['nama_wilayah' => 'Canvas Sub Area']
+        );
+
+        // 1. A canvas sales registers a customer: must be auto-approved and assigned to them
+        $response = $this->actingAs($this->salesman)->post(route('mobile.pelanggan.store'), [
+            'nama_pelanggan' => 'Toko Baru Canvas',
+            'alamat_pelanggan' => 'Jl. Baru No. 1',
+            'no_hp_pelanggan' => '08123456789',
+            'kode_wilayah' => 93,
+            'sub_wilayah' => 93,
+            'metode_bayar' => 'Cash',
+        ]);
+
+        $response->assertRedirect(route('mobile.kunjungan.index'));
+        $response->assertSessionHas('success', 'Pelanggan baru berhasil didaftarkan dan siap dikunjungi.');
+
+        $newCustomer = Pelanggan::where('nama_pelanggan', 'Toko Baru Canvas')->first();
+        $this->assertNotNull($newCustomer);
+        $this->assertEquals(1, $newCustomer->approve);
+        $this->assertEquals($this->salesman->nik, $newCustomer->kode_sales);
+
+        // 2. A regular/different canvas sales (e.g. Sales Canva B) should not see this customer in search
+        $canvasSalesmanB = User::create([
+            'name' => 'Sales Kanvas 2',
+            'email' => 'sales2@test.com',
+            'password' => bcrypt('password'),
+            'nik' => 'SLS-002',
+            'role' => 'sales',
+            'status' => '1',
+            'is_kanvas' => true
+        ]);
+
+        // Search as Sales Canvas B
+        $responseSearchB = $this->actingAs($canvasSalesmanB)->getJson(route('pelanggan.search', ['q' => 'Toko Baru Canvas']));
+        $responseSearchB->assertOk();
+        $resultsB = $responseSearchB->json();
+        $this->assertCount(0, $resultsB); // Canvas B cannot see Canvas A's customer
+
+        // Search as Sales Canvas A (the owner)
+        $responseSearchA = $this->actingAs($this->salesman)->getJson(route('pelanggan.search', ['q' => 'Toko Baru Canvas']));
+        $responseSearchA->assertOk();
+        $resultsA = $responseSearchA->json();
+        $this->assertCount(1, $resultsA);
+        $this->assertEquals($newCustomer->kode_pelanggan, $resultsA[0]['id']);
+
+        // 3. Admin panel sales transaction validation:
+        // Choosing Canvas B salesman with Canvas A's customer should fail validation
+        $responseAdminStoreFail = $this->actingAs($this->admin)->post(route('penjualan.store'), [
+            'tanggal' => date('Y-m-d'),
+            'kode_pelanggan' => $newCustomer->kode_pelanggan,
+            'kode_sales' => $canvasSalesmanB->nik, // Canvas B
+            'jenis_transaksi' => 'Tunai',
+            'items' => [
+                [
+                    'kode_barang' => $this->barang->kode_barang,
+                    'satuan_id' => $this->satuan->id,
+                    'satuan' => 'PCS',
+                    'qty' => 1,
+                    'harga' => 1500
+                ]
+            ]
+        ]);
+        $responseAdminStoreFail->assertRedirect();
+        $responseAdminStoreFail->assertSessionHas('error');
+        $this->assertStringContainsString('bukan merupakan pelanggan milik sales canvas', session('error'));
+
+        // Choosing Canvas A salesman with Canvas A's customer should succeed
+        $responseAdminStoreSuccess = $this->actingAs($this->admin)->post(route('penjualan.store'), [
+            'tanggal' => date('Y-m-d'),
+            'kode_pelanggan' => $newCustomer->kode_pelanggan,
+            'kode_sales' => $this->salesman->nik, // Canvas A
+            'jenis_transaksi' => 'Tunai',
+            'items' => [
+                [
+                    'kode_barang' => $this->barang->kode_barang,
+                    'satuan_id' => $this->satuan->id,
+                    'satuan' => 'PCS',
+                    'qty' => 1,
+                    'harga' => 1500
+                ]
+            ]
+        ]);
+        $responseAdminStoreSuccess->assertSessionHasNoErrors();
+    }
 }

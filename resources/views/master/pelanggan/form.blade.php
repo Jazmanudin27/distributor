@@ -206,6 +206,25 @@
                                 @enderror
                             </div>
 
+                            <!-- Sales Canvas / Representative -->
+                            <div class="col-md-6">
+                                <label for="kode_sales" class="form-label fs-7 fw-bold text-secondary">Sales Canvas / Representative</label>
+                                <select name="kode_sales" id="kode_sales"
+                                    class="form-select form-select-sm @error('kode_sales') is-invalid @enderror">
+                                    <option value="">-- Pilih Sales (Opsional) --</option>
+                                    @foreach ($salesmen as $s)
+                                        <option value="{{ $s->nik }}"
+                                            {{ old('kode_sales', $item->kode_sales) == $s->nik ? 'selected' : '' }}>
+                                            {{ $s->name }} ({{ $s->is_kanvas ? 'Canvas' : 'Regular' }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('kode_sales')
+                                    <div class="text-danger small mt-1"><i
+                                            class="fa-solid fa-triangle-exclamation me-1"></i>{{ $message }}</div>
+                                @enderror
+                            </div>
+
                             <!-- Alamat Pelanggan -->
                             <div class="col-12">
                                 <label for="alamat_pelanggan" class="form-label fs-7 fw-bold text-secondary">Alamat

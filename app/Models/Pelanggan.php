@@ -20,7 +20,7 @@ class Pelanggan extends Model
         'limit_pelanggan', 'hari', 'kunjungan', 'metode_bayar',
         'latitude', 'longitude', 'status', 'foto', 'foto_ktp',
         'kode_wilayah', 'email', 'ljt', 'max_faktur',
-        'kode_toko', 'sub_wilayah', 'jenis_pelanggan', 'approve'
+        'kode_toko', 'sub_wilayah', 'jenis_pelanggan', 'approve', 'kode_sales'
     ];
 
     public function wilayah()
@@ -31,6 +31,11 @@ class Pelanggan extends Model
     public function subWilayah()
     {
         return $this->belongsTo(SubWilayah::class, 'sub_wilayah', 'kode_wilayah');
+    }
+
+    public function sales()
+    {
+        return $this->belongsTo(User::class, 'kode_sales', 'nik');
     }
 
     public function getOutstandingPiutang($excludeNoFaktur = null)

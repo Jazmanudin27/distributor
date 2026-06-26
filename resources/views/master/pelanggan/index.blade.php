@@ -51,7 +51,7 @@
 
                 {{-- Search & Filter Row --}}
                 <div class="row g-2 align-items-center mb-4">
-                    <div class="col-md-4 col-sm-6">
+                    <div class="col-md-3 col-sm-6">
                         <div class="input-group input-group-sm">
                             <span class="input-group-text"><i class="fa-solid fa-magnifying-glass"></i></span>
                             <input type="text" name="search" class="form-control"
@@ -81,6 +81,17 @@
                         </select>
                     </div>
                     <div class="col-md-2 col-sm-6">
+                        <select name="kode_sales" class="form-select form-select-sm">
+                            <option value="">Sales</option>
+                            @foreach ($salesmen as $s)
+                                <option value="{{ $s->nik }}"
+                                    {{ request('kode_sales') == $s->nik ? 'selected' : '' }}>
+                                    {{ $s->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-1 col-sm-6">
                         <select name="status" class="form-select form-select-sm">
                             <option value="">Status</option>
                             <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Aktif</option>
@@ -91,7 +102,7 @@
                         <button type="submit" class="btn btn-primary btn-sm flex-fill">
                             <i class="fa-solid fa-filter me-1"></i> Filter
                         </button>
-                        @if (request()->hasAny(['approve', 'search', 'kode_wilayah', 'sub_wilayah', 'status']))
+                        @if (request()->hasAny(['approve', 'search', 'kode_wilayah', 'sub_wilayah', 'status', 'kode_sales']))
                             <a href="{{ route('pelanggan.index') }}" class="btn btn-outline-secondary btn-sm" title="Reset Filter">
                                 <i class="fa-solid fa-rotate-left"></i>
                             </a>
@@ -146,6 +157,11 @@
                                         @else
                                             <span class="badge bg-info-subtle text-info border border-info-subtle">
                                                 <i class="fa-solid fa-circle-user me-1 opacity-75"></i>Regular
+                                            </span>
+                                        @endif
+                                        @if ($item->kode_sales)
+                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                                <i class="fa-solid fa-user-tie me-1 opacity-75"></i>Sales: {{ $item->sales->name ?? $item->kode_sales }}
                                             </span>
                                         @endif
                                         @if ($item->latitude && $item->longitude)

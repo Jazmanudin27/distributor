@@ -645,6 +645,10 @@ class MobileOrderController extends Controller
             return redirect()->route('mobile.dashboard')->with('error', 'Pelanggan aktif kunjungan Anda tidak ditemukan.');
         }
 
+        if ($pelanggan->kode_sales && $pelanggan->kode_sales !== $user->nik) {
+            return redirect()->route('mobile.kunjungan.index')->with('error', 'Anda tidak memiliki akses ke pelanggan ini.');
+        }
+
         // Fetch active diskon strata rules
         $diskonStrata = DiskonStrata::where('is_active', true)
             ->where(function ($q) {
@@ -1038,6 +1042,7 @@ class MobileOrderController extends Controller
                         'sub_wilayah'      => 93,
                         'status'           => 1,
                         'approve'          => 1, // Auto-approved!
+                        'kode_sales'       => $user->nik, // Set sales code for the canvas sales representative
                         'jenis_pelanggan'  => '0',
                     ]);
                 } else {
