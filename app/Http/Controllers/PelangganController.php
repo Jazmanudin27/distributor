@@ -303,4 +303,54 @@ class PelangganController extends Controller
         ]);
         return redirect()->back()->with('success', "Pendaftaran pelanggan '{$pelanggan->nama_pelanggan}' ditolak.");
     }
+
+    public function sisaLimitDetail($kode_pelanggan)
+    {
+        $pelanggan = Pelanggan::findOrFail($kode_pelanggan);
+
+        $outstanding = $pelanggan->getOutstandingPiutang();
+        $sisa        = $pelanggan->getSisaLimitKredit();
+
+        // Ambil detail faktur yang masih punya sisa hutang
+        $fakturBelumLunas = \App\Models\Penjualan::where('kode_pelanggan', $kode_pelanggan)
+            ->where('batal', 0)
+            ->select('no_faktur', 'tanggal', 'jenis_transaksi', 'grand_total')
+            ->orderBy('tanggal', 'desc')
+            ->get()
+            ->map(function ($f) {
+                $bayarTunai = \DB::table('penjualan_pembayaran')
+                    ->where('no_faktur', $f->no_faktur)->where('status', 'disetujui')->sum('jumlah');
+                $bayarTf = \DB::table('penjualan_pembayaran_transfer')
+                    ->where('no_faktur', $f->no_faktur)->where('status', 'disetujui')->sum('jumlah');
+                $bayarGiro = \DB::table('penjualan_pembayaran_giro')
+                    ->where('no_faktur', $f->no_faktur)->where('status', 'disetujui')->sum('jumlah');
+                $retur = \DB::table('retur_penjualan')
+                    ->where('no_faktur', $f->no_faktur)->sum('total');
+
+                $totalBayar = $bayarTunai + $bayarTf + $bayarGiro + $retur;
+                $sisaHutang = $f->grand_total - $totalBayar;
+
+                if ($sisaHutang < 1) return null;
+
+                return [
+                    'no_faktur'      => $f->no_faktur,
+                    'tanggal'        => \Carbon\Carbon::parse($f->tanggal)->format('d/m/Y'),
+                    'jenis'          => $f->jenis_transaksi,
+                    'grand_total'    => $f->grand_total,
+                    'total_bayar'    => $totalBayar,
+                    'sisa_hutang'    => $sisaHutang,
+                ];
+            })
+            ->filter()
+            ->values();
+
+        return response()->json([
+            'nama_pelanggan' => $pelanggan->nama_pelanggan,
+            'kode_pelanggan' => $pelanggan->kode_pelanggan,
+            'limit'          => $pelanggan->limit_pelanggan,
+            'outstanding'    => $outstanding,
+            'sisa_limit'     => $sisa,
+            'faktur'         => $fakturBelumLunas,
+        ]);
+    }
 }

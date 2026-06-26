@@ -152,6 +152,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/pelanggan/{id}/toggle-jenis', [PelangganController::class, 'toggleJenis'])->name('pelanggan.toggle-jenis');
         Route::post('/pelanggan/{kode_pelanggan}/approve', [PelangganController::class, 'approve'])->name('pelanggan.approve');
         Route::post('/pelanggan/{kode_pelanggan}/reject', [PelangganController::class, 'reject'])->name('pelanggan.reject');
+        Route::get('/pelanggan/{kode_pelanggan}/sisa-limit', [PelangganController::class, 'sisaLimitDetail'])->name('pelanggan.sisa-limit');
+
         Route::resource('users', UserController::class);
         Route::resource('diskon-strata', DiskonStrataController::class);
         Route::post('/diskon-strata/{id}/toggle-status', [DiskonStrataController::class, 'toggleStatus'])->name('diskon-strata.toggle-status');
