@@ -152,7 +152,7 @@
                                 <th width="120">Kode Barang</th>
                                 <th>Nama Barang</th>
                                 <th width="180">Kategori / Merk</th>
-                                <th>Satuan & Harga Pokok/Jual (Ke Samping)</th>
+                                <th width="230">Satuan & Harga Pokok/Jual (Ke Samping)</th>
                             </tr>
                         </thead>
 
