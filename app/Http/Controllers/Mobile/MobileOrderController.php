@@ -409,7 +409,8 @@ class MobileOrderController extends Controller
         $tempGrandTotal = $tempSubtotalSum - $tempTotalDiskon; // Salesman cannot input global discount
 
         // 2. Verify Credit Limit
-        if ($request->jenis_transaksi === 'Kredit' && ($pelanggan->jenis_pelanggan == '0' || empty($pelanggan->jenis_pelanggan))) {
+        $isCanvas = (bool)(Auth::user()->is_kanvas ?? false);
+        if (in_array($request->jenis_transaksi, ['Kredit', 'Tunai']) && !$isCanvas && ($pelanggan->jenis_pelanggan == '0' || empty($pelanggan->jenis_pelanggan))) {
             $sisaLimit = $pelanggan->getSisaLimitKredit();
             if ($tempGrandTotal > $sisaLimit) {
                 return redirect()->back()->withInput()->with('error', "Limit kredit terlampaui! Sisa limit: Rp " . number_format($sisaLimit, 0, ',', '.'));

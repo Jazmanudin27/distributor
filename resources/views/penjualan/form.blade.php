@@ -121,6 +121,7 @@
                                             <option value="">-- Pilih Salesman --</option>
                                             @foreach ($salesmen as $s)
                                                 <option value="{{ $s->nik }}"
+                                                    data-is-kanvas="{{ $s->is_kanvas ? 1 : 0 }}"
                                                     {{ old('kode_sales', $item->kode_sales) === $s->nik ? 'selected' : '' }}>
                                                     {{ $s->name }} ({{ $s->nik }})
                                                 </option>
@@ -1800,7 +1801,9 @@
 
                 // Credit Limit Check
                 const jenisTransaksi = $('#jenis_transaksi').val();
-                if (jenisTransaksi === 'K') {
+                const isSalesCanvas = parseInt($('#kode_sales').find(':selected').attr(
+                    'data-is-kanvas')) === 1;
+                if ((jenisTransaksi === 'K' || jenisTransaksi === 'T') && !isSalesCanvas) {
                     const opt = $('#kode_pelanggan').find(':selected');
                     if (opt.val()) {
                         const sisaLimit = parseFloat(opt.data('sisa-limit')) || 0;

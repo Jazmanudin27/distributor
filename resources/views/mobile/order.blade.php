@@ -1124,7 +1124,7 @@
 
                 // 2. Double check credit limit
                 const paymentMode = jenisTransaksiEl.value;
-                if (paymentMode === 'Kredit') {
+                if (paymentMode === 'Kredit' || paymentMode === 'Tunai') {
                     const jenisPelanggan = hiddenKodePelanggan.getAttribute('data-jenis-pelanggan') || '0';
                     if (jenisPelanggan === '0') {
                         const sisaLimit = parseFloat(hiddenKodePelanggan.getAttribute('data-sisa-limit')) ||

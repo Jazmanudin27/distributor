@@ -218,15 +218,18 @@
                     </button>
                 @endif --}}
                 {{-- Unified Ajukan Limit --}}
-                <button type="button"
-                    class="btn btn-sm btn-mobile btn-outline-light py-2 text-white border-secondary border-opacity-50"
-                    style="font-size: 0.85rem;" data-bs-toggle="modal" data-bs-target="#modal-ajuan-limit"
-                    data-customer-code="{{ $activeCheckin->kode_pelanggan }}"
-                    data-customer-name="{{ $activeCheckin->pelanggan->nama_pelanggan }}"
-                    data-customer-limit="{{ (float) $activeCheckin->pelanggan->limit_pelanggan }}">
-                    <i class="fa-solid fa-file-invoice-dollar me-2 text-purple" style="color: #a855f7 !important;"></i>
-                    Ajukan Limit Kredit Toko Ini
-                </button>
+                @if (!Auth::user()->is_kanvas)
+                    <button type="button"
+                        class="btn btn-sm btn-mobile btn-outline-light py-2 text-white border-secondary border-opacity-50"
+                        style="font-size: 0.85rem;" data-bs-toggle="modal" data-bs-target="#modal-ajuan-limit"
+                        data-customer-code="{{ $activeCheckin->kode_pelanggan }}"
+                        data-customer-name="{{ $activeCheckin->pelanggan->nama_pelanggan }}"
+                        data-customer-limit="{{ (float) $activeCheckin->pelanggan->limit_pelanggan }}">
+                        <i class="fa-solid fa-file-invoice-dollar me-2 text-purple"
+                            style="color: #a855f7 !important;"></i>
+                        Ajukan Limit Kredit Toko Ini
+                    </button>
+                @endif
                 {{-- Unified Ajukan Limit End --}}
             </div>
 
