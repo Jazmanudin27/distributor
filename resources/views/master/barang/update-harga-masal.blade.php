@@ -410,7 +410,8 @@
             // Apply bulk adjustment
             $('#btn-apply-bulk').on('click', function() {
                 let target = $('#bulk_target').val(); // 'jual' or 'pokok'
-                let operator = $('#bulk_operator').val(); // add_percent, sub_percent, add_nominal, sub_nominal, set_value
+                let operator = $('#bulk_operator')
+                    .val(); // add_percent, sub_percent, add_nominal, sub_nominal, set_value
                 let changeValStr = $('#bulk_value').val();
                 let changeVal = 0;
                 let rounding = $('#bulk_rounding').val();
