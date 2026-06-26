@@ -294,7 +294,7 @@ class PembelianController extends Controller
     public function destroy($no_faktur)
     {
         $pembelian = Pembelian::with('details')->findOrFail($no_faktur);
-        DB::transaction(function () use ($pembelian) {
+        DB::transaction(function () use ($pembelian, $no_faktur) {
             foreach ($pembelian->details as $detail) {
                 $satuan = \App\Models\BarangSatuan::find($detail->satuan_id);
                 $qtySmallest = $detail->qty * ($satuan->isi ?? 1);
