@@ -337,7 +337,7 @@
             });
 
             // --- Cart Management ---
-            function checkStockLimit(card) {
+            function checkStockLimit(card, suppressAlert = false) {
                 const code = card.getAttribute('data-code');
                 const product = barangsCache[code];
                 if (!product) return true;
@@ -349,14 +349,16 @@
                 const qtySmallest = qty * isi;
                 if (qtySmallest > product.stok) {
                     const formattedStok = formatStokJS(product.stok, product.satuans);
-                    Swal.fire({
-                        title: 'Stok Tidak Mencukupi',
-                        html: `Stok barang <b>${product.nama_barang}</b> tidak mencukupi!<br><br>Stok tersedia: <b>${formattedStok}</b><br>Jumlah diinput: <b>${qty} ${selectedOpt.getAttribute('data-name')}</b>`,
-                        icon: 'error',
-                        background: '#161e31',
-                        color: '#f8fafc',
-                        confirmButtonColor: '#6366f1'
-                    });
+                    if (!suppressAlert) {
+                        Swal.fire({
+                            title: 'Stok Tidak Mencukupi',
+                            html: `Stok barang <b>${product.nama_barang}</b> tidak mencukupi!<br><br>Stok tersedia: <b>${formattedStok}</b><br>Jumlah diinput: <b>${qty} ${selectedOpt.getAttribute('data-name')}</b>`,
+                            icon: 'error',
+                            background: '#161e31',
+                            color: '#f8fafc',
+                            confirmButtonColor: '#6366f1'
+                        });
+                    }
                     const maxQtyInUnit = Math.floor(product.stok / isi);
                     qtyInput.value = maxQtyInUnit;
                     return false;
@@ -368,7 +370,7 @@
                 productSearchResults.classList.add('d-none');
                 productSearchInput.value = '';
 
-                if (product.stok <= 0) {
+                if (product.stok <= 0 && !savedValues) {
                     Swal.fire({
                         title: 'Stok Habis',
                         text: `Barang "${product.nama_barang}" tidak dapat ditambahkan karena stok habis.`,
@@ -554,7 +556,7 @@
 
                 rowIndex++;
                 validateFormState();
-                checkStockLimit(card);
+                checkStockLimit(card, !!savedValues);
                 calculateTotals();
             }
 
@@ -788,7 +790,10 @@
                     if (!data || !data.items || data.items.length === 0) return;
 
                     const lockedKode = "{{ $pelanggan ? $pelanggan->kode_pelanggan : '' }}";
-                    if (lockedKode && data.kode_pelanggan !== lockedKode) {
+                    const dataKode = (data.kode_pelanggan || '').trim().toLowerCase();
+                    const currentLockedKode = (lockedKode || '').trim().toLowerCase();
+
+                    if (currentLockedKode && dataKode !== currentLockedKode) {
                         // Locked customer changed (different check-in), discard cart
                         localStorage.removeItem('mobile_order_canvas_cart_' + '{{ Auth::user()->nik }}');
                         return;

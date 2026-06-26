@@ -102,7 +102,7 @@ class MobilePelangganController extends Controller
             'status'           => 1, // Status active
             'approve'          => $isCanvas ? 1 : 0, // Auto-approved if sales canvas
             'kode_sales'       => $isCanvas ? $user->nik : null, // Set sales code for canvas sales
-            'jenis_pelanggan'  => '0', // Regular by default
+            'jenis_pelanggan'  => $isCanvas ? '1' : '0', // Unlimited limit for canvas sales, regular by default
         ]);
 
         $message = $isCanvas 

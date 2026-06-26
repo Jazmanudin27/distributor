@@ -877,11 +877,9 @@ class MobileOrderController extends Controller
 
         $isNewPelanggan = (int) $request->input('is_new_pelanggan') === 1;
         $pelanggan = null;
-        $sisaLimit = 200000; // Default limit for new customer
 
         if (!$isNewPelanggan) {
             $pelanggan = Pelanggan::findOrFail($request->kode_pelanggan);
-            $sisaLimit = $pelanggan->getSisaLimitKredit();
         }
 
         // Fetch diskon strata
@@ -980,28 +978,8 @@ class MobileOrderController extends Controller
             return ['d1' => round($d1_pct, 5), 'd2' => round($d2_pct, 5)];
         };
 
-        // Pre-calculate for credit limit check
-        $tempSubtotalSum = 0; $tempTotalDiskon = 0;
-        foreach ($request->items as $row) {
-            $barang = Barang::find($row['kode_barang']);
-            $sub = $row['qty'] * $row['harga'];
-            $strata = $calculateStrata($row['kode_barang'], $row['qty'], $sub, $barang);
-            $d1 = $sub * ($strata['d1'] / 100);
-            $d2 = ($sub - $d1) * ($strata['d2'] / 100);
-            $tempSubtotalSum += $sub;
-            $tempTotalDiskon += round($d1 + $d2, 2);
-        }
-        $tempGrandTotal = $tempSubtotalSum - $tempTotalDiskon;
-
-        // Verify Credit Limit
-        if ($request->jenis_transaksi === 'Kredit') {
-            if ($tempGrandTotal > $sisaLimit) {
-                return redirect()->back()->withInput()->with('error', "Limit kredit terlampaui! Sisa limit: Rp " . number_format($sisaLimit, 0, ',', '.'));
-            }
-        }
-
         try {
-            $savedNoFaktur = DB::transaction(function () use ($request, $user, $isNewPelanggan, $activeCheckin, $calculateStrata, $sisaLimit) {
+            $savedNoFaktur = DB::transaction(function () use ($request, $user, $isNewPelanggan, $activeCheckin, $calculateStrata) {
                 // Generate/Load Pelanggan
                 if ($isNewPelanggan) {
                     // Ensure region and sub-region 93 exist
@@ -1043,7 +1021,7 @@ class MobileOrderController extends Controller
                         'status'           => 1,
                         'approve'          => 1, // Auto-approved!
                         'kode_sales'       => $user->nik, // Set sales code for the canvas sales representative
-                        'jenis_pelanggan'  => '0',
+                        'jenis_pelanggan'  => '1',
                     ]);
                 } else {
                     $pelanggan = Pelanggan::findOrFail($request->kode_pelanggan);
@@ -1122,10 +1100,7 @@ class MobileOrderController extends Controller
 
                 $grandTotal = $subtotalSum - $totalDiskon;
 
-                // Validate credit limit inside transaction
-                if ($request->jenis_transaksi === 'Kredit' && $grandTotal > $sisaLimit) {
-                    throw new \Exception("Limit kredit terlampaui! Sisa limit: Rp " . number_format($sisaLimit, 0, ',', '.'));
-                }
+
 
                 $penjualan = Penjualan::create([
                     'no_faktur'       => $noFaktur,
