@@ -101,7 +101,7 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label fs-7 fw-bold text-secondary mb-1">Nilai Perubahan</label>
-                            <input type="text" id="bulk_value" class="form-control form-control-sm"
+                            <input type="text" id="bulk_value" class="form-control form-control-sm text-end"
                                 placeholder="Contoh: 10 atau 5.000">
                         </div>
                         <div class="col-md-3">
@@ -202,11 +202,11 @@
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text bg-light text-secondary fs-8">Rp</span>
                                             <input type="text" name="harga_pokok[{{ $item->id }}]"
-                                                class="form-control form-control-sm input-pokok text-success fw-semibold"
+                                                class="form-control form-control-sm input-pokok text-success fw-semibold text-end"
                                                 value="{{ number_format($item->harga_pokok, 0, ',', '.') }}"
                                                 data-original="{{ (int) $item->harga_pokok }}" disabled>
                                         </div>
-                                        <div class="text-muted fs-8 mt-1 original-label">Asli:
+                                        <div class="text-muted fs-8 mt-1 original-label text-end">Asli:
                                             {{ number_format($item->harga_pokok, 0, ',', '.') }}</div>
                                     </td>
                                     <!-- Harga Jual Input -->
@@ -214,11 +214,11 @@
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text bg-light text-secondary fs-8">Rp</span>
                                             <input type="text" name="harga_jual[{{ $item->id }}]"
-                                                class="form-control form-control-sm input-jual text-primary fw-bold"
+                                                class="form-control form-control-sm input-jual text-primary fw-bold text-end"
                                                 value="{{ number_format($item->harga_jual, 0, ',', '.') }}"
                                                 data-original="{{ (int) $item->harga_jual }}" disabled>
                                         </div>
-                                        <div class="text-muted fs-8 mt-1 original-label">Asli:
+                                        <div class="text-muted fs-8 mt-1 original-label text-end">Asli:
                                             {{ number_format($item->harga_jual, 0, ',', '.') }}</div>
                                     </td>
                                     <!-- Margin Rp -->
