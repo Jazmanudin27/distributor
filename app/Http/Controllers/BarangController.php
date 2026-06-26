@@ -7,6 +7,7 @@ use App\Models\Barang;
 use App\Models\Kategori;
 use App\Models\Merk;
 use App\Models\Supplier;
+use App\Models\BarangSatuan;
 
 
 class BarangController extends Controller
@@ -45,6 +46,78 @@ class BarangController extends Controller
         $suppliers = Supplier::where('status', 1)->get();
 
         return view('master.barang.index', compact('items', 'kategoris', 'merks', 'suppliers'));
+    }
+
+    public function editHargaMasal(Request $request)
+    {
+        $query = BarangSatuan::query()->with('barang');
+
+        $query->whereHas('barang', function ($q) use ($request) {
+            if ($request->filled('search')) {
+                $q->where(function ($sq) use ($request) {
+                    $sq->where('nama_barang', 'like', '%' . $request->search . '%')
+                       ->orWhere('kode_barang', 'like', '%' . $request->search . '%')
+                       ->orWhere('kode_item', 'like', '%' . $request->search . '%');
+                });
+            }
+
+            if ($request->filled('kategori')) {
+                $q->where('kategori', $request->kategori);
+            }
+
+            if ($request->filled('merk')) {
+                $q->where('merk', $request->merk);
+            }
+
+            if ($request->filled('kode_supplier')) {
+                $q->where('kode_supplier', $request->kode_supplier);
+            }
+
+            if ($request->filled('status')) {
+                $q->where('status', $request->status);
+            }
+        });
+
+        // Show up to 50 items per page for easier bulk editing
+        $items = $query->orderBy('id', 'asc')->paginate(50)->appends($request->query());
+
+        $kategoris = Kategori::all();
+        $merks = Merk::all();
+        $suppliers = Supplier::where('status', 1)->get();
+
+        return view('master.barang.update-harga-masal', compact('items', 'kategoris', 'merks', 'suppliers'));
+    }
+
+    public function updateHargaMasal(Request $request)
+    {
+        $request->validate([
+            'selected_ids' => 'required|array',
+            'selected_ids.*' => 'exists:barang_satuan,id',
+            'harga_pokok' => 'required|array',
+            'harga_jual' => 'required|array',
+        ]);
+
+        $selectedIds = $request->input('selected_ids');
+        $hargaPokok = $request->input('harga_pokok');
+        $hargaJual = $request->input('harga_jual');
+
+        $updatedCount = 0;
+        foreach ($selectedIds as $id) {
+            $satuan = BarangSatuan::find($id);
+            if ($satuan) {
+                // Ensure inputs are clean numbers by parsing formatted values if needed
+                $newPokok = (float)str_replace(['.', ','], ['', '.'], $hargaPokok[$id] ?? 0);
+                $newJual = (float)str_replace(['.', ','], ['', '.'], $hargaJual[$id] ?? 0);
+
+                $satuan->update([
+                    'harga_pokok' => $newPokok,
+                    'harga_jual' => $newJual
+                ]);
+                $updatedCount++;
+            }
+        }
+
+        return redirect()->back()->with('success', "Berhasil memperbarui harga $updatedCount satuan barang secara masal.");
     }
 
     public function create()

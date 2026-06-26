@@ -142,6 +142,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('kategori', KategoriController::class);
         Route::resource('merk', MerkController::class);
         Route::resource('supplier', SupplierController::class);
+        Route::get('/barang/update-harga-masal', [BarangController::class, 'editHargaMasal'])->name('barang.edit-harga-masal');
+        Route::post('/barang/update-harga-masal', [BarangController::class, 'updateHargaMasal'])->name('barang.update-harga-masal');
         Route::resource('barang', BarangController::class);
         Route::resource('barang_satuan', BarangSatuanController::class);
         Route::resource('pelanggan', PelangganController::class);

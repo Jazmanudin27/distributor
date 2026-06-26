@@ -14,4 +14,9 @@ class BarangSatuan extends Model
     
 
     protected $fillable = ['kode_barang', 'satuan', 'isi', 'harga_pokok', 'harga_jual'];
+
+    public function barang()
+    {
+        return $this->belongsTo(Barang::class, 'kode_barang', 'kode_barang');
+    }
 }

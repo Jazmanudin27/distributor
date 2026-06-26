@@ -15,10 +15,10 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold text-secondary mb-1">Jenis Laporan</label>
                             <select name="jenis_laporan" id="jenis_laporan" class="form-select form-select-sm">
-                                <option value="rekap">Rekap Stok Saat Ini</option>
-                                <option value="rekap_persediaan">Rekap Persediaan Stok (Good Stok)</option>
-                                <option value="margin">Laporan Margin Barang (Stok Saat Ini)</option>
-                                <option value="detail">Buku / Kartu Stok (Detail)</option>
+                                <option value="rekap" {{ request('jenis_laporan') === 'rekap' ? 'selected' : '' }}>Rekap Stok Saat Ini</option>
+                                <option value="rekap_persediaan" {{ request('jenis_laporan') === 'rekap_persediaan' ? 'selected' : '' }}>Rekap Persediaan Stok (Good Stok)</option>
+                                <option value="margin" {{ request('jenis_laporan') === 'margin' ? 'selected' : '' }}>Laporan Margin Barang (Stok Saat Ini)</option>
+                                <option value="detail" {{ request('jenis_laporan') === 'detail' ? 'selected' : '' }}>Buku / Kartu Stok (Detail)</option>
                             </select>
                         </div>
 

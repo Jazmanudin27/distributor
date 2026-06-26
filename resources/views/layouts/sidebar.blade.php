@@ -139,7 +139,13 @@
                         @endcan
                         @can('view-barang')
                             <a href="{{ route('barang.index') }}"
-                                class="{{ request()->routeIs('barang.*') ? 'active' : '' }}">Data Barang</a>
+                                class="{{ request()->routeIs('barang.*') && !request()->routeIs('barang.edit-harga-masal') ? 'active' : '' }}">Data
+                                Barang</a>
+                        @endcan
+                        @can('edit-barang')
+                            <a href="{{ route('barang.edit-harga-masal') }}"
+                                class="{{ request()->routeIs('barang.edit-harga-masal') ? 'active' : '' }}">Update Harga
+                                Masal</a>
                         @endcan
                         @can('view-satuan')
                             <a href="{{ route('barang_satuan.index') }}"
@@ -431,7 +437,11 @@
                     <div class="collapse {{ $isLapGudangActive ? 'show' : '' }}" id="collapseLapGudang">
                         <div class="submenu-container">
                             <a href="{{ route('laporan.stok') }}"
-                                class="{{ request()->routeIs('laporan.stok') ? 'active' : '' }}">Stok Barang</a>
+                                class="{{ request()->routeIs('laporan.stok') && request('jenis_laporan') !== 'margin' ? 'active' : '' }}">Stok
+                                Barang</a>
+                            <a href="{{ route('laporan.stok') }}?jenis_laporan=margin"
+                                class="{{ request()->routeIs('laporan.stok') && request('jenis_laporan') === 'margin' ? 'active' : '' }}">Margin
+                                Barang</a>
                         </div>
                     </div>
                 </div>
@@ -452,7 +462,8 @@
                         <div class="submenu-container">
                             @can('view-laporan_kas_bank')
                                 <a href="{{ route('laporan.kas-bank') }}"
-                                    class="{{ request()->routeIs('laporan.kas-bank') ? 'active' : '' }}">Buku Kas & Bank</a>
+                                    class="{{ request()->routeIs('laporan.kas-bank') ? 'active' : '' }}">Buku Kas &
+                                    Bank</a>
                             @endcan
                             @can('view-laporan_piutang')
                                 <a href="{{ route('laporan.piutang') }}"
