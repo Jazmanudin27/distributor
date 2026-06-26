@@ -101,7 +101,8 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label fs-7 fw-bold text-secondary mb-1">Nilai Perubahan</label>
-                            <input type="number" id="bulk_value" class="form-control form-control-sm" placeholder="Contoh: 10 atau 5000">
+                            <input type="text" id="bulk_value" class="form-control form-control-sm"
+                                placeholder="Contoh: 10 atau 5.000">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fs-7 fw-bold text-secondary mb-1">Pembulatan Hasil</label>
@@ -115,10 +116,12 @@
                             </select>
                         </div>
                         <div class="col-md-2 d-flex gap-2">
-                            <button type="button" id="btn-apply-bulk" class="btn btn-warning btn-sm fw-bold w-100" title="Terapkan rumus ke item yang dipilih">
+                            <button type="button" id="btn-apply-bulk" class="btn btn-warning btn-sm fw-bold w-100"
+                                title="Terapkan rumus ke item yang dipilih">
                                 <i class="fa-solid fa-calculator me-1"></i> Hitung
                             </button>
-                            <button type="button" id="btn-reset-bulk" class="btn btn-secondary btn-sm fw-bold" title="Reset ke harga asli">
+                            <button type="button" id="btn-reset-bulk" class="btn btn-secondary btn-sm fw-bold"
+                                title="Reset ke harga asli">
                                 <i class="fa-solid fa-undo"></i>
                             </button>
                         </div>
@@ -164,12 +167,14 @@
                                     $hargaJual = (float) $item->harga_jual;
                                     $marginRp = $hargaJual - $hargaPokok;
                                     $marginPct = $hargaJual > 0 ? ($marginRp / $hargaJual) * 100 : 0;
-                                    $colorClass = $marginRp < 0 ? 'text-danger' : ($marginRp > 0 ? 'text-success' : 'text-dark');
+                                    $colorClass =
+                                        $marginRp < 0 ? 'text-danger' : ($marginRp > 0 ? 'text-success' : 'text-dark');
                                 @endphp
                                 <tr class="price-row" data-id="{{ $item->id }}">
                                     <!-- Checkbox -->
                                     <td class="text-center">
-                                        <input type="checkbox" name="selected_ids[]" value="{{ $item->id }}" class="form-check-input row-checkbox">
+                                        <input type="checkbox" name="selected_ids[]" value="{{ $item->id }}"
+                                            class="form-check-input row-checkbox">
                                     </td>
                                     <!-- Kode Barang -->
                                     <td>
@@ -183,7 +188,8 @@
                                     </td>
                                     <!-- Satuan -->
                                     <td>
-                                        <span class="badge bg-info-subtle text-info px-2 py-1 border border-info-subtle font-monospace fw-bold">
+                                        <span
+                                            class="badge bg-info-subtle text-info px-2 py-1 border border-info-subtle font-monospace fw-bold">
                                             {{ $item->satuan }}
                                         </span>
                                     </td>
@@ -195,29 +201,25 @@
                                     <td>
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text bg-light text-secondary fs-8">Rp</span>
-                                            <input type="number" 
-                                                name="harga_pokok[{{ $item->id }}]" 
-                                                class="form-control form-control-sm input-pokok text-success fw-semibold" 
-                                                value="{{ (int) $item->harga_pokok }}"
-                                                data-original="{{ (int) $item->harga_pokok }}"
-                                                min="0"
-                                                disabled>
+                                            <input type="text" name="harga_pokok[{{ $item->id }}]"
+                                                class="form-control form-control-sm input-pokok text-success fw-semibold"
+                                                value="{{ number_format($item->harga_pokok, 0, ',', '.') }}"
+                                                data-original="{{ (int) $item->harga_pokok }}" disabled>
                                         </div>
-                                        <div class="text-muted fs-8 mt-1 original-label">Asli: {{ number_format($item->harga_pokok, 0, ',', '.') }}</div>
+                                        <div class="text-muted fs-8 mt-1 original-label">Asli:
+                                            {{ number_format($item->harga_pokok, 0, ',', '.') }}</div>
                                     </td>
                                     <!-- Harga Jual Input -->
                                     <td>
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text bg-light text-secondary fs-8">Rp</span>
-                                            <input type="number" 
-                                                name="harga_jual[{{ $item->id }}]" 
-                                                class="form-control form-control-sm input-jual text-primary fw-bold" 
-                                                value="{{ (int) $item->harga_jual }}"
-                                                data-original="{{ (int) $item->harga_jual }}"
-                                                min="0"
-                                                disabled>
+                                            <input type="text" name="harga_jual[{{ $item->id }}]"
+                                                class="form-control form-control-sm input-jual text-primary fw-bold"
+                                                value="{{ number_format($item->harga_jual, 0, ',', '.') }}"
+                                                data-original="{{ (int) $item->harga_jual }}" disabled>
                                         </div>
-                                        <div class="text-muted fs-8 mt-1 original-label">Asli: {{ number_format($item->harga_jual, 0, ',', '.') }}</div>
+                                        <div class="text-muted fs-8 mt-1 original-label">Asli:
+                                            {{ number_format($item->harga_jual, 0, ',', '.') }}</div>
                                     </td>
                                     <!-- Margin Rp -->
                                     <td class="text-end fw-semibold margin-rp-cell">
@@ -236,7 +238,8 @@
                                 <tr>
                                     <td colspan="9" class="text-center py-4 text-muted">
                                         <i class="fa-solid fa-tags d-block fs-3 mb-2 opacity-50"></i>
-                                        Tidak ada data satuan barang yang ditemukan. Silakan sesuaikan filter pencarian Anda.
+                                        Tidak ada data satuan barang yang ditemukan. Silakan sesuaikan filter pencarian
+                                        Anda.
                                     </td>
                                 </tr>
                             @endforelse
@@ -247,7 +250,8 @@
                 @if ($items->hasPages())
                     <div class="d-flex justify-content-between align-items-center mt-4">
                         <div class="text-muted small">
-                            Menampilkan {{ $items->firstItem() }} sampai {{ $items->lastItem() }} dari {{ $items->total() }} data
+                            Menampilkan {{ $items->firstItem() }} sampai {{ $items->lastItem() }} dari
+                            {{ $items->total() }} data
                         </div>
                         <div>
                             {{ $items->links() }}
@@ -270,6 +274,20 @@
                 }).format(number);
             }
 
+            // Number format helpers
+            function formatNumber(num) {
+                return num.toString().replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+            }
+
+            function cleanNumber(str) {
+                let s = str.toString();
+                if (s.includes('e') || s.includes('E')) {
+                    let num = parseFloat(s);
+                    return isNaN(num) ? "0" : Math.round(num).toString();
+                }
+                return s.replace(/\./g, "").replace(/\D/g, "") || "0";
+            }
+
             // Hitung Margin untuk satu baris
             function calculateMargin(row) {
                 let pokokInput = row.find('.input-pokok');
@@ -277,8 +295,8 @@
                 let marginRpSpan = row.find('.margin-rp');
                 let marginPctSpan = row.find('.margin-pct');
 
-                let pokok = parseFloat(pokokInput.val()) || 0;
-                let jual = parseFloat(jualInput.val()) || 0;
+                let pokok = parseFloat(cleanNumber(pokokInput.val())) || 0;
+                let jual = parseFloat(cleanNumber(jualInput.val())) || 0;
 
                 let marginRp = jual - pokok;
                 let marginPct = jual > 0 ? (marginRp / jual) * 100 : 0;
@@ -308,7 +326,7 @@
             function updateSelectionState() {
                 let checkedCount = $('.row-checkbox:checked').length;
                 $('#checked-counter').text(checkedCount + ' item dipilih');
-                
+
                 if (checkedCount > 0) {
                     $('#btn-submit-prices').prop('disabled', false);
                 } else {
@@ -339,15 +357,22 @@
                 $('.row-checkbox').prop('checked', isChecked).trigger('change');
             });
 
-            // Manual inputs change event
-            $('.input-pokok, .input-jual').on('input', function() {
+            // Manual inputs change event with number formatting
+            $(document).on('input', '.input-pokok, .input-jual', function() {
+                const start = this.selectionStart;
+                const prev = this.value.length;
+                const raw = cleanNumber($(this).val());
+                $(this).val(raw === "0" && $(this).val() === "" ? "" : formatNumber(raw));
+                const diff = this.value.length - prev;
+                this.setSelectionRange(start + diff, start + diff);
+
                 let row = $(this).closest('.price-row');
                 calculateMargin(row);
 
                 // Add indicator if price is changed from original
-                let pokok = parseFloat(row.find('.input-pokok').val()) || 0;
+                let pokok = parseFloat(cleanNumber(row.find('.input-pokok').val())) || 0;
                 let originalPokok = parseFloat(row.find('.input-pokok').data('original')) || 0;
-                let jual = parseFloat(row.find('.input-jual').val()) || 0;
+                let jual = parseFloat(cleanNumber(row.find('.input-jual').val())) || 0;
                 let originalJual = parseFloat(row.find('.input-jual').data('original')) || 0;
 
                 if (pokok !== originalPokok || jual !== originalJual) {
@@ -357,14 +382,47 @@
                 }
             });
 
+            // Formatting bulk_value field as user types
+            $('#bulk_value').on('input', function() {
+                let operator = $('#bulk_operator').val();
+                if (operator.includes('percent')) {
+                    // Allow decimal digits with dot
+                    let val = $(this).val().replace(/,/g, '.').replace(/[^0-9.]/g, '');
+                    const parts = val.split('.');
+                    if (parts.length > 2) {
+                        val = parts[0] + '.' + parts.slice(1).join('');
+                    }
+                    $(this).val(val);
+                } else {
+                    const start = this.selectionStart;
+                    const prev = this.value.length;
+                    const raw = cleanNumber($(this).val());
+                    $(this).val(raw === "0" && $(this).val() === "" ? "" : formatNumber(raw));
+                    const diff = this.value.length - prev;
+                    this.setSelectionRange(start + diff, start + diff);
+                }
+            });
+
+            $('#bulk_operator').on('change', function() {
+                $('#bulk_value').val('').trigger('input');
+            });
+
             // Apply bulk adjustment
             $('#btn-apply-bulk').on('click', function() {
                 let target = $('#bulk_target').val(); // 'jual' or 'pokok'
                 let operator = $('#bulk_operator').val(); // add_percent, sub_percent, add_nominal, sub_nominal, set_value
-                let changeVal = parseFloat($('#bulk_value').val());
+                let changeValStr = $('#bulk_value').val();
+                let changeVal = 0;
                 let rounding = $('#bulk_rounding').val();
 
-                if (isNaN(changeVal) || changeVal < 0) {
+                if (operator.includes('percent')) {
+                    changeValStr = changeValStr.replace(/,/g, '.').replace(/[^0-9.]/g, '');
+                    changeVal = parseFloat(changeValStr) || 0;
+                } else {
+                    changeVal = parseFloat(cleanNumber(changeValStr)) || 0;
+                }
+
+                if (isNaN(changeVal) || changeVal < 0 || changeValStr === '') {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Nilai Tidak Valid',
@@ -385,7 +443,8 @@
 
                 checkedRows.each(function() {
                     let row = $(this);
-                    let input = target === 'jual' ? row.find('.input-jual') : row.find('.input-pokok');
+                    let input = target === 'jual' ? row.find('.input-jual') : row.find(
+                        '.input-pokok');
                     let currentVal = parseFloat(input.data('original')) || 0;
                     let newVal = currentVal;
 
@@ -430,7 +489,7 @@
                     }
 
                     // Tulis hasil ke input
-                    input.val(Math.round(newVal)).trigger('input');
+                    input.val(formatNumber(Math.round(newVal))).trigger('input');
                 });
 
                 Swal.fire({
@@ -452,8 +511,8 @@
                     let pokokInput = row.find('.input-pokok');
                     let jualInput = row.find('.input-jual');
 
-                    pokokInput.val(pokokInput.data('original')).trigger('input');
-                    jualInput.val(jualInput.data('original')).trigger('input');
+                    pokokInput.val(formatNumber(pokokInput.data('original'))).trigger('input');
+                    jualInput.val(formatNumber(jualInput.data('original'))).trigger('input');
                     row.removeClass('table-warning-subtle');
                 });
 
@@ -469,7 +528,8 @@
 
                 Swal.fire({
                     title: 'Simpan Perubahan Harga?',
-                    text: 'Apakah Anda yakin ingin memperbarui harga untuk ' + checkedCount + ' satuan barang ini?',
+                    text: 'Apakah Anda yakin ingin memperbarui harga untuk ' + checkedCount +
+                        ' satuan barang ini?',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#198754',
