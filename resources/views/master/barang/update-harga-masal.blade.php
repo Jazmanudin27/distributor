@@ -151,30 +151,17 @@
                                 </th>
                                 <th width="120">Kode Barang</th>
                                 <th>Nama Barang</th>
-                                <th width="100">Satuan</th>
-                                <th width="100">Konversi (Isi)</th>
-                                <th width="160">Harga Pokok (Rp)</th>
-                                <th width="160">Harga Jual (Rp)</th>
-                                <th width="140" class="text-end">Margin (Rp)</th>
-                                <th width="100" class="text-end">Margin (%)</th>
+                                <th width="180">Kategori / Merk</th>
+                                <th>Satuan & Harga Pokok/Jual (Ke Samping)</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             @forelse($items as $item)
-                                @php
-                                    $hargaPokok = (float) $item->harga_pokok;
-                                    $hargaJual = (float) $item->harga_jual;
-                                    $marginRp = $hargaJual - $hargaPokok;
-                                    $marginPct = $hargaJual > 0 ? ($marginRp / $hargaJual) * 100 : 0;
-                                    $colorClass =
-                                        $marginRp < 0 ? 'text-danger' : ($marginRp > 0 ? 'text-success' : 'text-dark');
-                                @endphp
-                                <tr class="price-row" data-id="{{ $item->id }}">
-                                    <!-- Checkbox -->
+                                <tr class="product-row">
+                                    <!-- Checkbox Master Row -->
                                     <td class="text-center">
-                                        <input type="checkbox" name="selected_ids[]" value="{{ $item->id }}"
-                                            class="form-check-input row-checkbox">
+                                        <input type="checkbox" class="form-check-input product-group-checkbox">
                                     </td>
                                     <!-- Kode Barang -->
                                     <td>
@@ -184,61 +171,98 @@
                                     </td>
                                     <!-- Nama Barang -->
                                     <td class="fw-semibold text-dark">
-                                        {{ $item->barang->nama_barang ?? '-' }}
+                                        {{ $item->nama_barang }}
                                     </td>
-                                    <!-- Satuan -->
-                                    <td>
-                                        <span
-                                            class="badge bg-info-subtle text-info px-2 py-1 border border-info-subtle font-monospace fw-bold">
-                                            {{ $item->satuan }}
-                                        </span>
-                                    </td>
-                                    <!-- Konversi -->
-                                    <td class="text-secondary fw-semibold">
-                                        Isi {{ $item->isi }}
-                                    </td>
-                                    <!-- Harga Pokok Input -->
-                                    <td>
-                                        <div class="input-group input-group-sm">
-                                            <span class="input-group-text bg-light text-secondary fs-8">Rp</span>
-                                            <input type="text" name="harga_pokok[{{ $item->id }}]"
-                                                class="form-control form-control-sm input-pokok text-success fw-semibold text-end"
-                                                value="{{ number_format($item->harga_pokok, 0, ',', '.') }}"
-                                                data-original="{{ (int) $item->harga_pokok }}" disabled>
+                                    <!-- Kategori / Merk -->
+                                    <td class="text-secondary small fw-semibold">
+                                        <div>{{ $item->kategori ?? '-' }}</div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">{{ $item->merk ?? '-' }}
                                         </div>
-                                        <div class="text-muted fs-8 mt-1 original-label text-end">Asli:
-                                            {{ number_format($item->harga_pokok, 0, ',', '.') }}</div>
                                     </td>
-                                    <!-- Harga Jual Input -->
-                                    <td>
-                                        <div class="input-group input-group-sm">
-                                            <span class="input-group-text bg-light text-secondary fs-8">Rp</span>
-                                            <input type="text" name="harga_jual[{{ $item->id }}]"
-                                                class="form-control form-control-sm input-jual text-primary fw-bold text-end"
-                                                value="{{ number_format($item->harga_jual, 0, ',', '.') }}"
-                                                data-original="{{ (int) $item->harga_jual }}" disabled>
+                                    <!-- Units (Grouped side-by-side) -->
+                                    <td class="py-2">
+                                        <div class="d-flex flex-wrap gap-3">
+                                            @foreach ($item->satuans as $satuan)
+                                                @php
+                                                    $hargaPokok = (float) $satuan->harga_pokok;
+                                                    $hargaJual = (float) $satuan->harga_jual;
+                                                    $marginRp = $hargaJual - $hargaPokok;
+                                                    $marginPct = $hargaJual > 0 ? ($marginRp / $hargaJual) * 100 : 0;
+                                                    $colorClass =
+                                                        $marginRp < 0
+                                                            ? 'text-danger'
+                                                            : ($marginRp > 0
+                                                                ? 'text-success'
+                                                                : 'text-dark');
+                                                @endphp
+                                                <div class="price-row border rounded-3 p-2 bg-white shadow-xs d-flex align-items-center gap-2"
+                                                    data-id="{{ $satuan->id }}"
+                                                    style="border-color: #dee2e6 !important;">
+                                                    <input type="checkbox" name="selected_ids[]"
+                                                        value="{{ $satuan->id }}"
+                                                        class="form-check-input row-checkbox me-1">
+                                                    <div class="me-1">
+                                                        <span
+                                                            class="badge bg-info-subtle text-info border border-info-subtle font-monospace fw-bold mb-1"
+                                                            style="display:inline-block;">
+                                                            {{ $satuan->satuan }}
+                                                        </span>
+                                                        <div class="text-muted" style="font-size: 0.68rem;">Isi:
+                                                            {{ $satuan->isi }}</div>
+                                                    </div>
+
+                                                    <!-- Harga Pokok Input -->
+                                                    <div style="width: 125px;">
+                                                        <div class="input-group input-group-sm">
+                                                            <span
+                                                                class="input-group-text bg-light text-secondary fs-8 px-1">P</span>
+                                                            <input type="text" name="harga_pokok[{{ $satuan->id }}]"
+                                                                class="form-control form-control-sm input-pokok text-success fw-semibold text-end px-1.5"
+                                                                value="{{ number_format($satuan->harga_pokok, 0, ',', '.') }}"
+                                                                data-original="{{ (int) $satuan->harga_pokok }}" disabled>
+                                                        </div>
+                                                        <div
+                                                            class="text-muted text-end fs-9 mt-0.5 original-label text-end">
+                                                            Asli:
+                                                            {{ number_format($satuan->harga_pokok, 0, ',', '.') }}</div>
+                                                    </div>
+
+                                                    <!-- Harga Jual Input -->
+                                                    <div style="width: 125px;">
+                                                        <div class="input-group input-group-sm">
+                                                            <span
+                                                                class="input-group-text bg-light text-secondary fs-8 px-1">J</span>
+                                                            <input type="text" name="harga_jual[{{ $satuan->id }}]"
+                                                                class="form-control form-control-sm input-jual text-primary fw-bold text-end px-1.5"
+                                                                value="{{ number_format($satuan->harga_jual, 0, ',', '.') }}"
+                                                                data-original="{{ (int) $satuan->harga_jual }}" disabled>
+                                                        </div>
+                                                        <div
+                                                            class="text-muted text-end fs-9 mt-0.5 original-label text-end">
+                                                            Asli:
+                                                            {{ number_format($satuan->harga_jual, 0, ',', '.') }}</div>
+                                                    </div>
+
+                                                    <!-- Margin Display -->
+                                                    <div class="fs-8 text-end ps-2 border-start"
+                                                        style="min-width: 80px; line-height: 1.25;">
+                                                        <div class="fw-semibold margin-rp {{ $colorClass }}">
+                                                            Rp {{ number_format($marginRp, 0, ',', '.') }}
+                                                        </div>
+                                                        <div class="fw-bold margin-pct {{ $colorClass }}">
+                                                            {{ number_format($marginPct, 2, ',', '.') }}%
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
                                         </div>
-                                        <div class="text-muted fs-8 mt-1 original-label text-end">Asli:
-                                            {{ number_format($item->harga_jual, 0, ',', '.') }}</div>
-                                    </td>
-                                    <!-- Margin Rp -->
-                                    <td class="text-end fw-semibold margin-rp-cell">
-                                        <span class="margin-rp {{ $colorClass }}">
-                                            Rp {{ number_format($marginRp, 0, ',', '.') }}
-                                        </span>
-                                    </td>
-                                    <!-- Margin Pct -->
-                                    <td class="text-end fw-bold margin-pct-cell">
-                                        <span class="margin-pct {{ $colorClass }}">
-                                            {{ number_format($marginPct, 2, ',', '.') }}%
-                                        </span>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center py-4 text-muted">
+                                    <td colspan="5" class="text-center py-4 text-muted">
                                         <i class="fa-solid fa-tags d-block fs-3 mb-2 opacity-50"></i>
-                                        Tidak ada data satuan barang yang ditemukan. Silakan sesuaikan filter pencarian
+                                        Tidak ada data barang yang ditemukan. Silakan sesuaikan filter pencarian
                                         Anda.
                                     </td>
                                 </tr>

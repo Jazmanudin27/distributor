@@ -50,36 +50,34 @@ class BarangController extends Controller
 
     public function editHargaMasal(Request $request)
     {
-        $query = BarangSatuan::query()->with('barang');
+        $query = Barang::query()->with('satuans');
 
-        $query->whereHas('barang', function ($q) use ($request) {
-            if ($request->filled('search')) {
-                $q->where(function ($sq) use ($request) {
-                    $sq->where('nama_barang', 'like', '%' . $request->search . '%')
-                       ->orWhere('kode_barang', 'like', '%' . $request->search . '%')
-                       ->orWhere('kode_item', 'like', '%' . $request->search . '%');
-                });
-            }
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_barang', 'like', '%' . $request->search . '%')
+                   ->orWhere('kode_barang', 'like', '%' . $request->search . '%')
+                   ->orWhere('kode_item', 'like', '%' . $request->search . '%');
+            });
+        }
 
-            if ($request->filled('kategori')) {
-                $q->where('kategori', $request->kategori);
-            }
+        if ($request->filled('kategori')) {
+            $query->where('kategori', $request->kategori);
+        }
 
-            if ($request->filled('merk')) {
-                $q->where('merk', $request->merk);
-            }
+        if ($request->filled('merk')) {
+            $query->where('merk', $request->merk);
+        }
 
-            if ($request->filled('kode_supplier')) {
-                $q->where('kode_supplier', $request->kode_supplier);
-            }
+        if ($request->filled('kode_supplier')) {
+            $query->where('kode_supplier', $request->kode_supplier);
+        }
 
-            if ($request->filled('status')) {
-                $q->where('status', $request->status);
-            }
-        });
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
 
-        // Show up to 50 items per page for easier bulk editing
-        $items = $query->orderBy('id', 'asc')->paginate(50)->appends($request->query());
+        // Show up to 25 products per page (each can contain multiple unit cards)
+        $items = $query->orderBy('kode_barang', 'asc')->paginate(25)->appends($request->query());
 
         $kategoris = Kategori::all();
         $merks = Merk::all();
