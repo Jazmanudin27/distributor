@@ -131,25 +131,15 @@
                         $diskonPenjualan = (float) ($salesData->diskon ?? 0);
                         $totalPenjualan = $totalPenjualanBruto - $diskonPenjualan;
 
-                        // Retur Penjualan
-                        // $returPenjualan = DB::table('retur_penjualan_detail as rd')
-                        //     ->join('barang as b', 'b.kode_barang', '=', 'rd.kode_barang')
-                        //     ->join('retur_penjualan as r', 'r.no_retur', '=', 'rd.no_retur')
-                        //     ->whereBetween('r.tanggal', [$tanggal_dari, $tanggal_sampai])
-                        //     ->where('b.kode_supplier', $d->kode_supplier)
-                        //     ->sum(DB::raw('rd.subtotal_retur - rd.total_diskon_rupiah'));
-
-                        // HPP
-                        $total_hpp = DB::table('penjualan_detail as d')
-                            ->join('barang as b', 'b.kode_barang', '=', 'd.kode_barang')
-                            ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
-                            ->whereBetween('p.tanggal', [$tanggal_dari, $tanggal_sampai])
+                        // Retur Penjualan — pakai subtotal_retur (sama persis dengan laporan retur)
+                        $returPenjualan = DB::table('retur_penjualan_detail as rpd')
+                            ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
+                            ->join('barang as b', 'b.kode_barang', '=', 'rpd.kode_barang')
+                            ->whereBetween('rp.tanggal', [$tanggal_dari, $tanggal_sampai])
                             ->where('b.kode_supplier', $d->kode_supplier)
-                            ->where('d.is_promo', 0)
-                            ->where('p.batal', 0)
-                            ->sum(DB::raw('d.harga_pokok * d.qty'));
+                            ->sum('rpd.subtotal_retur');
 
-                        // Retur Pembelian (calculated as HPP of BS Sales Returns)
+                        // Retur Pembelian (HPP dari barang yang diretur)
                         $returPembelian = DB::table('retur_penjualan_detail as rpd')
                             ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
                             ->join('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
@@ -158,22 +148,15 @@
                             ->where('b.kode_supplier', $d->kode_supplier)
                             ->sum(DB::raw('rpd.qty * bs.harga_pokok'));
 
-                        // Retur Penjualan
-                        $returPenjualan = DB::table('retur_penjualan_detail as rpd')
-                            ->join('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
-                            ->join('barang as b', 'b.kode_barang', '=', 'bs.kode_barang')
-                            ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
-                            ->whereBetween('rp.tanggal', [$tanggal_dari, $tanggal_sampai])
+                        // HPP per Supplier
+                        $total_hpp = DB::table('penjualan_detail as d')
+                            ->join('barang as b', 'b.kode_barang', '=', 'd.kode_barang')
+                            ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+                            ->whereBetween('p.tanggal', [$tanggal_dari, $tanggal_sampai])
                             ->where('b.kode_supplier', $d->kode_supplier)
-                            ->sum(DB::raw('rpd.qty * bs.harga_jual'));
-
-                        // Retur Pembelian
-                        // $returPembelian = DB::table('retur_pembelian_detail as rd')
-                        //     ->join('barang as b', 'b.kode_barang', '=', 'rd.kode_barang')
-                        //     ->join('retur_pembelian as r', 'r.no_retur', '=', 'rd.no_retur')
-                        //     ->whereBetween('r.tanggal', [$tanggal_dari, $tanggal_sampai])
-                        //     ->where('b.kode_supplier', $d->kode_supplier)
-                        //     ->sum(DB::raw('rd.subtotal_retur'));
+                            ->where('d.is_promo', 0)
+                            ->where('p.batal', 0)
+                            ->sum(DB::raw('d.harga_pokok * d.qty'));
 
                         // Hitung bersih
                         $penjualanBersih = $totalPenjualan - $returPenjualan;
