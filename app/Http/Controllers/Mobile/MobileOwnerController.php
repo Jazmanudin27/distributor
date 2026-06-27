@@ -236,17 +236,10 @@ class MobileOwnerController extends Controller
             ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
             ->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
-        // 2. Retur Penjualan (scoped to invoices in date range to match Admin Laba Rugi Format 1)
+        // 2. Retur Penjualan (scoped to return date to match Format 2 & 3 and prevent duplicates)
         $salesReturn = (float) DB::table('retur_penjualan_detail as rpd')
             ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
-            ->join('penjualan as p', 'p.no_faktur', '=', 'rp.no_faktur')
-            ->join('penjualan_detail as pd', function($join) {
-                $join->on('pd.no_faktur', '=', 'p.no_faktur')
-                     ->on('pd.kode_barang', '=', 'rpd.kode_barang');
-            })
-            ->where('p.batal', 0)
-            ->where('pd.is_promo', 0)
-            ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->whereBetween('rp.tanggal', [$tanggal_mulai, $tanggal_akhir])
             ->sum(DB::raw('rpd.subtotal_retur - COALESCE(rpd.total_diskon_rupiah, 0)'));
 
         // 3. Penjualan Bersih
@@ -261,18 +254,12 @@ class MobileOwnerController extends Controller
             ->select(DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp'))
             ->first()->total_hpp ?? 0;
 
-        // 5. HPP Retur Penjualan (scoped to invoices in date range and uses pd.harga_pokok)
+        // 5. HPP Retur Penjualan (scoped to return date and return unit to prevent unit mismatches)
         $hppReturn = (float) DB::table('retur_penjualan_detail as rpd')
             ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
-            ->join('penjualan as p', 'p.no_faktur', '=', 'rp.no_faktur')
-            ->join('penjualan_detail as pd', function($join) {
-                $join->on('pd.no_faktur', '=', 'p.no_faktur')
-                     ->on('pd.kode_barang', '=', 'rpd.kode_barang');
-            })
-            ->where('p.batal', 0)
-            ->where('pd.is_promo', 0)
-            ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
-            ->sum(DB::raw('rpd.qty * pd.harga_pokok'));
+            ->leftJoin('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
+            ->whereBetween('rp.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->sum(DB::raw('rpd.qty * COALESCE(bs.harga_pokok, 0)'));
 
         // 6. HPP Bersih
         $hppNet = $hppGross - $hppReturn;
@@ -312,36 +299,24 @@ class MobileOwnerController extends Controller
 
         $returList = DB::table('retur_penjualan_detail as rpd')
             ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
-            ->join('penjualan as p', 'p.no_faktur', '=', 'rp.no_faktur')
-            ->join('penjualan_detail as pd', function($join) {
-                $join->on('pd.no_faktur', '=', 'p.no_faktur')
-                     ->on('pd.kode_barang', '=', 'rpd.kode_barang');
-            })
-            ->where('p.batal', 0)
-            ->where('pd.is_promo', 0)
-            ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->leftJoin('penjualan as p', 'p.no_faktur', '=', 'rp.no_faktur')
+            ->whereBetween('rp.tanggal', [$tanggal_mulai, $tanggal_akhir])
             ->select(
                 'rp.no_retur',
-                'p.tanggal as invoice_date',
+                'rp.tanggal as return_date',
                 'p.kode_sales',
                 DB::raw('SUM(rpd.subtotal_retur - COALESCE(rpd.total_diskon_rupiah, 0)) as total_return')
             )
-            ->groupBy('rp.no_retur', 'p.tanggal', 'p.kode_sales')
+            ->groupBy('rp.no_retur', 'rp.tanggal', 'p.kode_sales')
             ->get();
 
         $returHppList = DB::table('retur_penjualan_detail as rpd')
             ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
-            ->join('penjualan as p', 'p.no_faktur', '=', 'rp.no_faktur')
-            ->join('penjualan_detail as pd', function($join) {
-                $join->on('pd.no_faktur', '=', 'p.no_faktur')
-                     ->on('pd.kode_barang', '=', 'rpd.kode_barang');
-            })
-            ->where('p.batal', 0)
-            ->where('pd.is_promo', 0)
-            ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->leftJoin('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
+            ->whereBetween('rp.tanggal', [$tanggal_mulai, $tanggal_akhir])
             ->select(
                 'rp.no_retur',
-                DB::raw('SUM(rpd.qty * pd.harga_pokok) as total_hpp_return')
+                DB::raw('SUM(rpd.qty * COALESCE(bs.harga_pokok, 0)) as total_hpp_return')
             )
             ->groupBy('rp.no_retur')
             ->get()->keyBy('no_retur');
@@ -364,7 +339,7 @@ class MobileOwnerController extends Controller
         }
 
         foreach ($returList as $r) {
-            $date = $r->invoice_date;
+            $date = $r->return_date;
             $salesNik = $r->kode_sales ?: 'UMUM';
             $salesName = $users[$salesNik] ?? ($salesNik == 'UMUM' ? 'Tanpa Sales' : $salesNik);
             $hpp = $returHppList[$r->no_retur]->total_hpp_return ?? 0;
