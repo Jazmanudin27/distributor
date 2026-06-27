@@ -236,9 +236,10 @@ class MobileOwnerController extends Controller
             ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
             ->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
-        // 2. Retur Penjualan (scoped to return date to match Format 2 & 3 and prevent duplicates)
+        // 2. Retur Penjualan (scoped to return date and joined to barang to match Format 2 & 3)
         $salesReturn = (float) DB::table('retur_penjualan_detail as rpd')
             ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
+            ->join('barang as b', 'b.kode_barang', '=', 'rpd.kode_barang')
             ->whereBetween('rp.tanggal', [$tanggal_mulai, $tanggal_akhir])
             ->sum(DB::raw('rpd.subtotal_retur - COALESCE(rpd.total_diskon_rupiah, 0)'));
 
@@ -254,9 +255,10 @@ class MobileOwnerController extends Controller
             ->select(DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp'))
             ->first()->total_hpp ?? 0;
 
-        // 5. HPP Retur Penjualan (scoped to return date and return unit to prevent unit mismatches)
+        // 5. HPP Retur Penjualan (scoped to return date, joined to barang to match Format 2 & 3)
         $hppReturn = (float) DB::table('retur_penjualan_detail as rpd')
             ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
+            ->join('barang as b', 'b.kode_barang', '=', 'rpd.kode_barang')
             ->leftJoin('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
             ->whereBetween('rp.tanggal', [$tanggal_mulai, $tanggal_akhir])
             ->sum(DB::raw('rpd.qty * COALESCE(bs.harga_pokok, 0)'));
@@ -299,6 +301,7 @@ class MobileOwnerController extends Controller
 
         $returList = DB::table('retur_penjualan_detail as rpd')
             ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
+            ->join('barang as b', 'b.kode_barang', '=', 'rpd.kode_barang')
             ->leftJoin('penjualan as p', 'p.no_faktur', '=', 'rp.no_faktur')
             ->whereBetween('rp.tanggal', [$tanggal_mulai, $tanggal_akhir])
             ->select(
@@ -312,6 +315,7 @@ class MobileOwnerController extends Controller
 
         $returHppList = DB::table('retur_penjualan_detail as rpd')
             ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
+            ->join('barang as b', 'b.kode_barang', '=', 'rpd.kode_barang')
             ->leftJoin('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
             ->whereBetween('rp.tanggal', [$tanggal_mulai, $tanggal_akhir])
             ->select(
