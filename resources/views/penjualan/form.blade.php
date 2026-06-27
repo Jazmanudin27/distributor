@@ -629,14 +629,9 @@
                 const formattedStok = formatStokJS(data.stok, data.satuans);
                 $('#quick_stock_display').html(
                     `<i class="fa-solid fa-box me-1"></i> Stok: ${formattedStok}`).removeClass('d-none');
-                
-                if (data.diskon_persen !== undefined && parseFloat(data.diskon_persen) > 0) {
-                    $('#quick_diskon1_input').val(parseFloat(data.diskon_persen));
-                    recalcDiskon();
-                } else {
-                    $('#quick_diskon1_input').val(0);
-                    recalcDiskon();
-                }
+
+                evaluateQuickStrata();
+                recalcDiskon();
             });
 
             // Number format helpers
@@ -846,8 +841,201 @@
                 const opt = $(this).find(':selected');
                 const price = opt.data('price') || 0;
                 $('#quick_harga').val(formatNumber(price));
+                evaluateQuickStrata();
                 recalcDiskon();
             }); // Qty / harga / diskon sync
+            // Qty / harga / diskon sync
+
+            function evaluateQuickStrata() {
+                const barangCode = $('#quick_barang').val();
+                const qty = parseFloat($('#quick_qty').val()) || 0;
+                const price = parseFloat(cleanNumber($('#quick_harga').val())) || 0;
+                const sub = qty * price;
+                const satuanId = $('#quick_satuan').val();
+                const jenisTransaksi = $('#jenis_transaksi').val();
+
+                if (!barangCode) return;
+
+                const barang = barangsCache[barangCode];
+                if (!barang) return;
+
+                let bestRate = 0;
+                let bestRule = null;
+                let bestDetail = null;
+
+                const findRule = (tipe) => {
+                    return diskonStrata.filter(r => r.tipe === tipe && r.is_active);
+                };
+
+                const checkRule = (r, d) => {
+                    const rate = parseFloat(d.dis1) || 0;
+                    if (rate >= bestRate) {
+                        bestRate = rate;
+                        bestRule = r;
+                        bestDetail = d;
+                    }
+                };
+
+                // --- Priority 1: Per Barang ---
+                const rulesBarang = findRule('barang');
+                rulesBarang.forEach(r => {
+                    if (r.barangs && r.barangs.some(item => item.kode_barang === barangCode)) {
+                        r.details.forEach(d => {
+                            if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d
+                                .max_qty) && (d.satuan_id === null || d.satuan_id == satuanId)) {
+                                checkRule(r, d);
+                            }
+                        });
+                    }
+                });
+
+                // --- Priority 2: Per Beberapa Barang ---
+                if (!bestRule) {
+                    const rulesBeberapa = findRule('beberapa_barang');
+                    rulesBeberapa.forEach(r => {
+                        if (r.barangs && r.barangs.some(item => item.kode_barang === barangCode)) {
+                            r.details.forEach(d => {
+                                if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d
+                                        .max_qty) && (d.satuan_id === null || d.satuan_id ==
+                                        satuanId)) {
+                                    checkRule(r, d);
+                                }
+                            });
+                        }
+                    });
+                }
+
+                // --- Priority 3: Per Kategori ---
+                if (!bestRule && barang.kategori) {
+                    const rulesKategori = findRule('kategori');
+                    rulesKategori.forEach(r => {
+                        if (r.kategori && r.kategori.nama_kategori === barang.kategori) {
+                            r.details.forEach(d => {
+                                if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d
+                                        .max_qty)) {
+                                    checkRule(r, d);
+                                }
+                            });
+                        }
+                    });
+                }
+
+                // --- Priority 4: Per Merk ---
+                if (!bestRule && barang.merk) {
+                    const rulesMerk = findRule('merk');
+                    rulesMerk.forEach(r => {
+                        if (r.merk && r.merk.nama_merk === barang.merk) {
+                            r.details.forEach(d => {
+                                if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d
+                                        .max_qty)) {
+                                    checkRule(r, d);
+                                }
+                            });
+                        }
+                    });
+                }
+
+                // --- Priority 5: Per Supplier ---
+                if (!bestRule && barang.kode_supplier) {
+                    const rulesSupplier = findRule('supplier');
+                    let totalSupplierNominal = 0;
+                    $('#itemsTable tbody tr').each(function() {
+                        const row = $(this);
+                        const isPromo = row.find('.input-promo').is(':checked');
+                        if (isPromo) return;
+                        const bc = row.find('input[name*="[kode_barang]"]').val();
+                        const bItem = barangsCache[bc];
+                        if (bItem && bItem.kode_supplier === barang.kode_supplier) {
+                            const rQty = parseFloat(row.find('.input-qty').val()) || 0;
+                            const rHarga = parseFloat(cleanNumber(row.find('.input-harga').val())) || 0;
+                            totalSupplierNominal += rQty * rHarga;
+                        }
+                    });
+                    totalSupplierNominal += sub;
+
+                    rulesSupplier.forEach(r => {
+                        if (r.kode_supplier === barang.kode_supplier) {
+                            r.details.forEach(d => {
+                                const minNom = parseFloat(d.min_nominal) || 0;
+                                const maxNom = d.max_nominal ? parseFloat(d.max_nominal) : null;
+                                if (totalSupplierNominal >= minNom && (maxNom === null ||
+                                        totalSupplierNominal <= maxNom)) {
+                                    checkRule(r, d);
+                                }
+                            });
+                        }
+                    });
+                }
+
+                if (bestRule && bestDetail) {
+                    let d1_pct = 0;
+                    let d2_pct = 0;
+
+                    const rawDis1 = parseFloat(bestDetail.dis1) || 0;
+                    const rawDis2 = parseFloat(bestDetail.dis2) || 0;
+
+                    if (bestDetail.tipe_nilai === 'persen') {
+                        d1_pct = rawDis1;
+                        d2_pct = rawDis2;
+                    } else {
+                        if (bestRule.tipe === 'supplier') {
+                            let totalSupplierNominal = 0;
+                            $('#itemsTable tbody tr').each(function() {
+                                const row = $(this);
+                                const isPromo = row.find('.input-promo').is(':checked');
+                                if (isPromo) return;
+                                const bc = row.find('input[name*="[kode_barang]"]').val();
+                                const bItem = barangsCache[bc];
+                                if (bItem && bItem.kode_supplier === barang.kode_supplier) {
+                                    const rQty = parseFloat(row.find('.input-qty').val()) || 0;
+                                    const rHarga = parseFloat(cleanNumber(row.find('.input-harga')
+                                    .val())) || 0;
+                                    totalSupplierNominal += rQty * rHarga;
+                                }
+                            });
+                            totalSupplierNominal += sub;
+                            if (totalSupplierNominal <= 0) totalSupplierNominal = 1;
+
+                            d1_pct = (rawDis1 / totalSupplierNominal) * 100;
+                            d2_pct = (rawDis2 / totalSupplierNominal) * 100;
+                        } else {
+                            if (sub > 0) {
+                                d1_pct = (rawDis1 / sub) * 100;
+                                d2_pct = (rawDis2 / sub) * 100;
+                            }
+                        }
+                    }
+
+                    $('#quick_diskon1_input').val(formatPercentJS(d1_pct)).prop('readonly', true);
+                    $('#quick_diskon1_percent').val(d1_pct);
+                    $('#quick_d1_type').text('%').removeClass('bg-success').addClass('bg-secondary');
+
+                    if (jenisTransaksi === 'T') {
+                        $('#quick_diskon2_input').val(formatPercentJS(d2_pct)).prop('readonly', true);
+                        $('#quick_diskon2_percent').val(d2_pct);
+                        $('#quick_d2_type').text('%').removeClass('bg-success').addClass('bg-secondary');
+                    } else {
+                        $('#quick_diskon2_input').val('0').prop('readonly', true);
+                        $('#quick_diskon2_percent').val(0);
+                    }
+                } else {
+                    $('#quick_diskon1_input').prop('readonly', false);
+                    $('#quick_diskon2_input').prop('readonly', false);
+
+                    if (barang.diskon_persen !== undefined && parseFloat(barang.diskon_persen) > 0) {
+                        $('#quick_diskon1_input').val(formatPercentJS(barang.diskon_persen));
+                        $('#quick_diskon1_percent').val(barang.diskon_persen);
+                        $('#quick_d1_type').text('%').removeClass('bg-success').addClass('bg-secondary');
+                    } else {
+                        $('#quick_diskon1_input').val('0');
+                        $('#quick_diskon1_percent').val(0);
+                    }
+
+                    $('#quick_diskon2_input').val('0');
+                    $('#quick_diskon2_percent').val(0);
+                }
+            }
+
             function recalcDiskon() {
                 const price = parseFloat(cleanNumber($('#quick_harga').val())) || 0;
                 const qty = parseFloat($('#quick_qty').val()) || 0;
@@ -920,6 +1108,7 @@
             }
 
             $('#quick_qty, #quick_harga').on('input change', function() {
+                evaluateQuickStrata();
                 recalcDiskon();
             });
 
@@ -1232,6 +1421,7 @@
 
             // Trigger recalculation on jenis transaksi change
             $('#jenis_transaksi').on('change', function() {
+                evaluateQuickStrata();
                 calculateTotals();
             });
 
@@ -1342,7 +1532,9 @@
                     rulesBarang.forEach(r => {
                         if (r.barangs && r.barangs.some(item => item.kode_barang === barangCode)) {
                             r.details.forEach(d => {
-                                if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d.max_qty) && (d.satuan_id === null || d.satuan_id == satuanId)) {
+                                if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <=
+                                        d.max_qty) && (d.satuan_id === null || d
+                                        .satuan_id == satuanId)) {
                                     checkRule(r, d);
                                 }
                             });
@@ -1356,7 +1548,9 @@
                             if (r.barangs && r.barangs.some(item => item.kode_barang ===
                                     barangCode)) {
                                 r.details.forEach(d => {
-                                    if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d.max_qty) && (d.satuan_id === null || d.satuan_id == satuanId)) {
+                                    if (qty >= (d.min_qty || 0) && (d.max_qty === null ||
+                                            qty <= d.max_qty) && (d.satuan_id === null || d
+                                            .satuan_id == satuanId)) {
                                         checkRule(r, d);
                                     }
                                 });

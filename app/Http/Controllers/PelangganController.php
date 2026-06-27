@@ -187,12 +187,52 @@ class PelangganController extends Controller
             ->where('status', 1);
 
         // Filter by canvas sales
-        if (auth()->check() && auth()->user()->is_kanvas) {
-            $query->where('kode_sales', auth()->user()->nik);
-        } elseif ($request->filled('kode_sales')) {
+        $canvasSalesNiks = \App\Models\User::where('is_kanvas', 1)->pluck('nik')->filter()->toArray();
+        $allCanvasCustomerIds = \App\Models\User::whereNotNull('kode_pelanggan')->pluck('kode_pelanggan')->filter()->toArray();
+
+        if (auth()->check()) {
+            $currentUser = auth()->user();
+            if ($currentUser->is_kanvas) {
+                // Canvas Sales: can see all regular customers + only their own canvas dummy customer + shop customers assigned to them
+                $query->where(function ($q) use ($currentUser, $canvasSalesNiks, $allCanvasCustomerIds) {
+                    $q->where(function ($sub) use ($canvasSalesNiks, $allCanvasCustomerIds) {
+                        if (!empty($canvasSalesNiks)) {
+                            $sub->where(function ($inner) use ($canvasSalesNiks) {
+                                $inner->whereNotIn('kode_sales', $canvasSalesNiks)
+                                      ->orWhereNull('kode_sales');
+                            });
+                        }
+                        if (!empty($allCanvasCustomerIds)) {
+                            $sub->whereNotIn('kode_pelanggan', $allCanvasCustomerIds);
+                        }
+                    })
+                    ->orWhere('kode_sales', $currentUser->nik);
+                    
+                    if ($currentUser->kode_pelanggan) {
+                        $q->orWhere('kode_pelanggan', $currentUser->kode_pelanggan);
+                    }
+                });
+            } else {
+                // Regular Sales (role: sales/spv sales): cannot see any canvas dummy customers or shop customers assigned to canvas sales
+                $role = strtolower($currentUser->role ?? '');
+                if (in_array($role, ['sales', 'spv sales'])) {
+                    if (!empty($canvasSalesNiks)) {
+                        $query->where(function ($q) use ($canvasSalesNiks) {
+                            $q->whereNotIn('kode_sales', $canvasSalesNiks)
+                              ->orWhereNull('kode_sales');
+                        });
+                    }
+                    if (!empty($allCanvasCustomerIds)) {
+                        $query->whereNotIn('kode_pelanggan', $allCanvasCustomerIds);
+                    }
+                }
+            }
+        }
+
+        if ($request->filled('kode_sales')) {
             $sales = \App\Models\User::where('nik', $request->kode_sales)->first();
             if ($sales && $sales->is_kanvas) {
-                $query->where('kode_sales', $sales->nik);
+                $query->where('kode_pelanggan', $sales->kode_pelanggan);
             }
         }
 
