@@ -238,7 +238,7 @@ class LaporanPenjualanController extends Controller
                 $items = $query->orderBy('tanggal', 'asc')->orderBy('no_retur', 'asc')->get();
             } else {
                 // detail
-                $query = ReturPenjualanDetail::with(['returPenjualan.pelanggan', 'barang', 'barangSatuan'])
+                $query = ReturPenjualanDetail::with(['returPenjualan.pelanggan', 'returPenjualan.sales', 'barang', 'barang.supplier', 'barangSatuan'])
                     ->whereHas('returPenjualan', function ($q) use ($tanggal_mulai, $tanggal_akhir, $kode_pelanggan) {
                         if ($tanggal_mulai) $q->where('tanggal', '>=', $tanggal_mulai);
                         if ($tanggal_akhir) $q->where('tanggal', '<=', $tanggal_akhir);

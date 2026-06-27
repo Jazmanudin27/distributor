@@ -83,7 +83,9 @@
                             <th>Tanggal</th>
                             <th>Pelanggan</th>
                             <th>Salesman</th>
-                            <th class="text-end">Total Retur</th>
+                            <th>Jenis Retur</th>
+                            <th>Keterangan</th>
+                            <th class="text-end">Total Retur (Rp)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -98,17 +100,19 @@
                             <tr>
                                 <td class="text-center">{{ $num++ }}</td>
                                 <td>{{ $retur->no_retur }}</td>
-                                <td>{{ $retur->no_faktur }}</td>
+                                <td>{{ $retur->no_faktur ?? '-' }}</td>
                                 <td>{{ \Carbon\Carbon::parse($retur->tanggal)->format('d-m-Y') }}</td>
                                 <td>{{ $retur->pelanggan->nama_pelanggan ?? '-' }}</td>
                                 <td>{{ $retur->sales->name ?? '-' }}</td>
+                                <td>{{ $retur->jenis_retur ?? '-' }}</td>
+                                <td>{{ $retur->keterangan ?? '-' }}</td>
                                 <td class="text-end fw-bold">{{ number_format($retur->total, 0, ',', '.') }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                     <tfoot class="fw-bold">
                         <tr class="table-light">
-                            <td colspan="6" class="text-end">TOTAL KESELURUHAN:</td>
+                            <td colspan="8" class="text-end">TOTAL KESELURUHAN:</td>
                             <td class="text-end">{{ number_format($totGrand, 0, ',', '.') }}</td>
                         </tr>
                     </tfoot>
@@ -120,14 +124,20 @@
                         <tr>
                             <th width="40" class="text-center">No</th>
                             <th>No Retur</th>
+                            <th>No Faktur Asal</th>
                             <th>Tanggal</th>
                             <th>Pelanggan</th>
+                            <th>Salesman</th>
+                            <th>Supplier</th>
                             <th>Kode Barang</th>
                             <th>Nama Barang</th>
+                            <th>Kondisi</th>
                             <th class="text-end">Qty</th>
                             <th>Satuan</th>
-                            <th class="text-end">Harga Satuan</th>
-                            <th class="text-end">Subtotal</th>
+                            <th class="text-end">Harga (Rp)</th>
+                            <th class="text-end">Subtotal (Rp)</th>
+                            <th class="text-end">Diskon (Rp)</th>
+                            <th class="text-end">Net Retur (Rp)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -135,34 +145,47 @@
                             $num = 1;
                             $totQty = 0;
                             $totSubtotal = 0;
+                            $totDiskon = 0;
+                            $totNet = 0;
                         @endphp
                         @foreach ($items as $detail)
                             @php
+                                $diskon = $detail->total_diskon_rupiah ?? 0;
+                                $net = $detail->subtotal_retur - $diskon;
                                 $totQty += $detail->qty;
                                 $totSubtotal += $detail->subtotal_retur;
+                                $totDiskon += $diskon;
+                                $totNet += $net;
                             @endphp
                             <tr>
                                 <td class="text-center">{{ $num++ }}</td>
                                 <td>{{ $detail->no_retur }}</td>
+                                <td>{{ $detail->returPenjualan->no_faktur ?? '-' }}</td>
                                 <td>{{ \Carbon\Carbon::parse($detail->returPenjualan->tanggal)->format('d-m-Y') }}</td>
                                 <td>{{ $detail->returPenjualan->pelanggan->nama_pelanggan ?? '-' }}</td>
+                                <td>{{ $detail->returPenjualan->sales->name ?? '-' }}</td>
+                                <td>{{ $detail->barang->supplier->nama_supplier ?? '-' }}</td>
                                 <td>{{ $detail->kode_barang }}</td>
                                 <td>{{ $detail->barang->nama_barang ?? '-' }}</td>
+                                <td>{{ $detail->kondisi ?? '-' }}</td>
                                 <td class="text-end">{{ number_format($detail->qty, 0, ',', '.') }}</td>
                                 <td>{{ $detail->barangSatuan->satuan ?? 'PCS' }}</td>
                                 <td class="text-end">{{ number_format($detail->harga_retur, 0, ',', '.') }}</td>
-                                <td class="text-end fw-bold">{{ number_format($detail->subtotal_retur, 0, ',', '.') }}
-                                </td>
+                                <td class="text-end">{{ number_format($detail->subtotal_retur, 0, ',', '.') }}</td>
+                                <td class="text-end">{{ number_format($diskon, 0, ',', '.') }}</td>
+                                <td class="text-end fw-bold">{{ number_format($net, 0, ',', '.') }}</td>
                             </tr>
                         @endforeach
                     </tbody>
                     <tfoot class="fw-bold">
                         <tr class="table-light">
-                            <td colspan="6" class="text-end">TOTAL KESELURUHAN:</td>
+                            <td colspan="10" class="text-end">TOTAL KESELURUHAN:</td>
                             <td class="text-end">{{ number_format($totQty, 0, ',', '.') }}</td>
                             <td></td>
                             <td></td>
                             <td class="text-end">{{ number_format($totSubtotal, 0, ',', '.') }}</td>
+                            <td class="text-end">{{ number_format($totDiskon, 0, ',', '.') }}</td>
+                            <td class="text-end">{{ number_format($totNet, 0, ',', '.') }}</td>
                         </tr>
                     </tfoot>
                 </table>
