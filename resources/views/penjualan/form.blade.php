@@ -867,6 +867,21 @@
                     return diskonStrata.filter(r => r.tipe === tipe && r.is_active);
                 };
 
+                const isSatuanMatch = (d, rowSatuanId) => {
+                    if (d.satuan_id === null || !d.satuan_id) return true;
+                    if (d.satuan_id == rowSatuanId) return true;
+                    
+                    const ruleSatuanName = d.satuan && d.satuan.satuan ? d.satuan.satuan.toUpperCase().trim() : '';
+                    let rowSatuanName = '';
+                    if (barang && barang.satuans) {
+                        const found = barang.satuans.find(s => s.id == rowSatuanId);
+                        if (found) {
+                            rowSatuanName = (found.satuan || '').toUpperCase().trim();
+                        }
+                    }
+                    return ruleSatuanName !== '' && rowSatuanName !== '' && ruleSatuanName === rowSatuanName;
+                };
+
                 const checkRule = (r, d) => {
                     const rate = parseFloat(d.dis1) || 0;
                     if (rate >= bestRate) {
@@ -882,7 +897,7 @@
                     if (r.barangs && r.barangs.some(item => item.kode_barang === barangCode)) {
                         r.details.forEach(d => {
                             if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d
-                                .max_qty) && (d.satuan_id === null || d.satuan_id == satuanId)) {
+                                .max_qty) && isSatuanMatch(d, satuanId)) {
                                 checkRule(r, d);
                             }
                         });
@@ -896,8 +911,7 @@
                         if (r.barangs && r.barangs.some(item => item.kode_barang === barangCode)) {
                             r.details.forEach(d => {
                                 if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d
-                                        .max_qty) && (d.satuan_id === null || d.satuan_id ==
-                                        satuanId)) {
+                                        .max_qty) && isSatuanMatch(d, satuanId)) {
                                     checkRule(r, d);
                                 }
                             });
@@ -1518,6 +1532,21 @@
                         return diskonStrata.filter(r => r.tipe === tipe && r.is_active);
                     };
 
+                    const isSatuanMatch = (d, rowSatuanId) => {
+                        if (d.satuan_id === null || !d.satuan_id) return true;
+                        if (d.satuan_id == rowSatuanId) return true;
+                        
+                        const ruleSatuanName = d.satuan && d.satuan.satuan ? d.satuan.satuan.toUpperCase().trim() : '';
+                        let rowSatuanName = '';
+                        if (b && b.satuans) {
+                            const found = b.satuans.find(s => s.id == rowSatuanId);
+                            if (found) {
+                                rowSatuanName = (found.satuan || '').toUpperCase().trim();
+                            }
+                        }
+                        return ruleSatuanName !== '' && rowSatuanName !== '' && ruleSatuanName === rowSatuanName;
+                    };
+
                     const checkRule = (r, d) => {
                         const rate = parseFloat(d.dis1) || 0;
                         if (rate >= bestRate) {
@@ -1533,8 +1562,7 @@
                         if (r.barangs && r.barangs.some(item => item.kode_barang === barangCode)) {
                             r.details.forEach(d => {
                                 if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <=
-                                        d.max_qty) && (d.satuan_id === null || d
-                                        .satuan_id == satuanId)) {
+                                        d.max_qty) && isSatuanMatch(d, satuanId)) {
                                     checkRule(r, d);
                                 }
                             });
@@ -1549,8 +1577,7 @@
                                     barangCode)) {
                                 r.details.forEach(d => {
                                     if (qty >= (d.min_qty || 0) && (d.max_qty === null ||
-                                            qty <= d.max_qty) && (d.satuan_id === null || d
-                                            .satuan_id == satuanId)) {
+                                            qty <= d.max_qty) && isSatuanMatch(d, satuanId)) {
                                         checkRule(r, d);
                                     }
                                 });

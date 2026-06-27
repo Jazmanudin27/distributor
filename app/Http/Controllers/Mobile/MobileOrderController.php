@@ -254,6 +254,22 @@ class MobileOrderController extends Controller
         $calculateStrata = function($barangCode, $qty, $sub, $barang, $satuanId = null) use ($diskonStrata, $supplierSubtotals, $request) {
             if (!$barang) return ['d1' => 0, 'd2' => 0];
 
+            $isSatuanMatch = function($d, $rowSatuanId) use ($barang) {
+                if ($d->satuan_id === null || !$d->satuan_id) {
+                    return true;
+                }
+                if ($d->satuan_id == $rowSatuanId) {
+                    return true;
+                }
+                $ruleSatuanName = $d->satuan ? strtoupper(trim($d->satuan->satuan)) : '';
+                $rowSatuan = $barang->satuans ? $barang->satuans->where('id', $rowSatuanId)->first() : null;
+                if (!$rowSatuan) {
+                    $rowSatuan = \App\Models\BarangSatuan::find($rowSatuanId);
+                }
+                $rowSatuanName = $rowSatuan ? strtoupper(trim($rowSatuan->satuan)) : '';
+                return $ruleSatuanName !== '' && $rowSatuanName !== '' && $ruleSatuanName === $rowSatuanName;
+            };
+
             $bestRate = 0;
             $bestRule = null;
             $bestDetail = null;
@@ -274,7 +290,7 @@ class MobileOrderController extends Controller
                         foreach ($r->details as $d) {
                             $minQty = floatval($d->min_qty ?? 0);
                             $maxQty = $d->max_qty !== null ? floatval($d->max_qty) : null;
-                            if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty) && ($d->satuan_id === null || $d->satuan_id == $satuanId)) {
+                            if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty) && $isSatuanMatch($d, $satuanId)) {
                                 $checkRule($r, $d);
                             }
                         }
@@ -290,7 +306,7 @@ class MobileOrderController extends Controller
                             foreach ($r->details as $d) {
                                 $minQty = floatval($d->min_qty ?? 0);
                                 $maxQty = $d->max_qty !== null ? floatval($d->max_qty) : null;
-                                if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty) && ($d->satuan_id === null || $d->satuan_id == $satuanId)) {
+                                if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty) && $isSatuanMatch($d, $satuanId)) {
                                     $checkRule($r, $d);
                                 }
                             }
@@ -909,6 +925,23 @@ class MobileOrderController extends Controller
         // Strata matching closure
         $calculateStrata = function ($barangCode, $qty, $sub, $barang, $satuanId = null) use ($diskonStrata, $supplierSubtotals, $request) {
             if (!$barang) return ['d1' => 0, 'd2' => 0];
+
+            $isSatuanMatch = function($d, $rowSatuanId) use ($barang) {
+                if ($d->satuan_id === null || !$d->satuan_id) {
+                    return true;
+                }
+                if ($d->satuan_id == $rowSatuanId) {
+                    return true;
+                }
+                $ruleSatuanName = $d->satuan ? strtoupper(trim($d->satuan->satuan)) : '';
+                $rowSatuan = $barang->satuans ? $barang->satuans->where('id', $rowSatuanId)->first() : null;
+                if (!$rowSatuan) {
+                    $rowSatuan = \App\Models\BarangSatuan::find($rowSatuanId);
+                }
+                $rowSatuanName = $rowSatuan ? strtoupper(trim($rowSatuan->satuan)) : '';
+                return $ruleSatuanName !== '' && $rowSatuanName !== '' && $ruleSatuanName === $rowSatuanName;
+            };
+
             $bestRate = 0; $bestRule = null; $bestDetail = null;
             $checkRule = function ($r, $d) use (&$bestRate, &$bestRule, &$bestDetail) {
                 $rate = floatval($d->dis1 ?? 0);
@@ -918,7 +951,7 @@ class MobileOrderController extends Controller
                 if ($r->tipe === 'barang' && $r->barangs && $r->barangs->contains('kode_barang', $barangCode)) {
                     foreach ($r->details as $d) {
                         $minQty = floatval($d->min_qty ?? 0); $maxQty = $d->max_qty !== null ? floatval($d->max_qty) : null;
-                        if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty) && ($d->satuan_id === null || $d->satuan_id == $satuanId)) $checkRule($r, $d);
+                        if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty) && $isSatuanMatch($d, $satuanId)) $checkRule($r, $d);
                     }
                 }
             }
@@ -927,7 +960,7 @@ class MobileOrderController extends Controller
                     if ($r->tipe === 'beberapa_barang' && $r->barangs && $r->barangs->contains('kode_barang', $barangCode)) {
                         foreach ($r->details as $d) {
                             $minQty = floatval($d->min_qty ?? 0); $maxQty = $d->max_qty !== null ? floatval($d->max_qty) : null;
-                            if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty) && ($d->satuan_id === null || $d->satuan_id == $satuanId)) $checkRule($r, $d);
+                            if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty) && $isSatuanMatch($d, $satuanId)) $checkRule($r, $d);
                         }
                     }
                 }

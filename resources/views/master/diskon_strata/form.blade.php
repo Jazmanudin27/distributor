@@ -252,12 +252,15 @@
                         const barang = barangsData[code];
                         if (barang && barang.satuans) {
                             barang.satuans.forEach(satuan => {
-                                unitsMap.set(satuan.id, satuan.satuan);
+                                const satNameLower = (satuan.satuan || '').toUpperCase().trim();
+                                if (!unitsMap.has(satNameLower)) {
+                                    unitsMap.set(satNameLower, { id: satuan.id, name: satuan.satuan });
+                                }
                             });
                         }
                     });
                 }
-                return Array.from(unitsMap.entries()).map(([id, name]) => ({ id, name }));
+                return Array.from(unitsMap.values());
             }
 
             // Update all unit select dropdown options in the table
