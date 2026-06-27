@@ -131,13 +131,15 @@
                         $diskonPenjualan = (float) ($salesData->diskon ?? 0);
                         $totalPenjualan = $totalPenjualanBruto - $diskonPenjualan;
 
-                        // Retur Pembelian per Tanggal (HPP dari barang yang diretur)
+                        // Retur Pembelian per Tanggal (HPP aktual dari penjualan_detail saat faktur asli)
                         $returPembelian = DB::table('retur_penjualan_detail as rpd')
                             ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
-                            ->join('barang as b', 'b.kode_barang', '=', 'rpd.kode_barang')
-                            ->leftJoin('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
+                            ->join('penjualan_detail as pd', function ($join) {
+                                $join->on('pd.no_faktur', '=', 'rp.no_faktur')
+                                     ->on('pd.kode_barang', '=', 'rpd.kode_barang');
+                            })
                             ->where('rp.tanggal', $t->tanggal)
-                            ->sum(DB::raw('rpd.qty * COALESCE(bs.harga_pokok, 0)'));
+                            ->sum(DB::raw('rpd.qty * pd.harga_pokok'));
 
                         // Retur Penjualan per Tanggal — net setelah diskon (sama dengan retur_penjualan.total)
                         $returPenjualan = DB::table('retur_penjualan_detail as rpd')
