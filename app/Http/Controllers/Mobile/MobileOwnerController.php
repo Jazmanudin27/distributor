@@ -487,10 +487,10 @@ class MobileOwnerController extends Controller
                 $retHpp = $retItem->total_hpp_return;
             }
             
-            $netSales = $sale->total_sales - $retVal;
-            $netHpp = $sale->total_hpp - $retHpp;
-            $profit = $netSales - $netHpp;
-            $margin = $netSales > 0 ? ($profit / $netSales) * 100 : 0;
+            $itemNetSales = $sale->total_sales - $retVal;
+            $itemNetHpp = $sale->total_hpp - $retHpp;
+            $itemProfit = $itemNetSales - $itemNetHpp;
+            $itemMargin = $itemNetSales > 0 ? ($itemProfit / $itemNetSales) * 100 : 0;
             
             $supplierBreakdown[$supCode]['items'][] = [
                 'kode_barang' => $sale->kode_barang,
@@ -498,10 +498,10 @@ class MobileOwnerController extends Controller
                 'satuan' => $sale->satuan ?: 'PCS',
                 'qty_sales' => $sale->total_qty,
                 'qty_return' => $retQty,
-                'netSales' => $netSales,
-                'netHpp' => $netHpp,
-                'profit' => $profit,
-                'margin' => $margin
+                'netSales' => $itemNetSales,
+                'netHpp' => $itemNetHpp,
+                'profit' => $itemProfit,
+                'margin' => $itemMargin
             ];
         }
 
@@ -525,15 +525,15 @@ class MobileOwnerController extends Controller
         }
 
         foreach ($supplierBreakdown as $code => &$data) {
-            $netSales = $data['salesGross'] - $data['salesReturn'];
-            $netHpp = $data['hppGross'] - $data['hppReturn'];
-            $profit = $netSales - $netHpp;
-            $margin = $netSales > 0 ? ($profit / $netSales) * 100 : 0;
+            $supNetSales = $data['salesGross'] - $data['salesReturn'];
+            $supNetHpp = $data['hppGross'] - $data['hppReturn'];
+            $supProfit = $supNetSales - $supNetHpp;
+            $supMargin = $supNetSales > 0 ? ($supProfit / $supNetSales) * 100 : 0;
             
-            $data['netSales'] = $netSales;
-            $data['netHpp'] = $netHpp;
-            $data['profit'] = $profit;
-            $data['margin'] = $margin;
+            $data['netSales'] = $supNetSales;
+            $data['netHpp'] = $supNetHpp;
+            $data['profit'] = $supProfit;
+            $data['margin'] = $supMargin;
             
             usort($data['items'], function($a, $b) {
                 return $b['netSales'] <=> $a['netSales'];
