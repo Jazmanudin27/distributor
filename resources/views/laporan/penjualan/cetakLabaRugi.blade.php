@@ -1,16 +1,20 @@
 @php
-if (!function_exists('tanggal_indo2')) {
-    function tanggal_indo2($date) {
-        if (!$date) return '';
-        return \Carbon\Carbon::parse($date)->format('d-M-Y');
+    if (!function_exists('tanggal_indo2')) {
+        function tanggal_indo2($date)
+        {
+            if (!$date) {
+                return '';
+            }
+            return \Carbon\Carbon::parse($date)->format('d-M-Y');
+        }
     }
-}
 
-if (!function_exists('formatAngka')) {
-    function formatAngka($val, $decimals = 0) {
-        return number_format((float)$val, $decimals, ',', '.');
+    if (!function_exists('formatAngka')) {
+        function formatAngka($val, $decimals = 0)
+        {
+            return number_format((float) $val, $decimals, ',', '.');
+        }
     }
-}
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -90,7 +94,9 @@ if (!function_exists('formatAngka')) {
                     <th class="text-center">Satuan</th>
                     <th class="text-end">Qty</th>
                     <th class="text-end">Harga Jual (Rp)</th>
-                    <th class="text-end">Total Penjualan (Rp)</th>
+                    <th class="text-end">Subtotal (Rp)</th>
+                    <th class="text-end">Diskon (Rp)</th>
+                    <th class="text-end">Penjualan Net (Rp)</th>
                     <th class="text-end">HPP (Rp)</th>
                     <th class="text-end">Laba (Rp)</th>
                     <th class="text-end">Laba (%)</th>
@@ -99,6 +105,8 @@ if (!function_exists('formatAngka')) {
             <tbody>
                 @php
                     $no = 1;
+                    $grandSubtotal = 0;
+                    $grandDiskon = 0;
                     $grandPenjualan = 0;
                     $grandHpp = 0;
                     $grandLaba = 0;
@@ -125,6 +133,8 @@ if (!function_exists('formatAngka')) {
                             'd.is_promo',
                             'sup.kode_supplier',
                             'sup.nama_supplier',
+                            DB::raw('(d.qty * d.harga) as subtotal'),
+                            'd.total_diskon as diskon',
                             DB::raw('(d.qty * d.harga) - d.total_diskon as total_penjualan'),
                             DB::raw('(d.qty * d.harga_pokok) as total_hpp'),
                             DB::raw('((d.qty * d.harga) - d.total_diskon) - (d.qty * d.harga_pokok) as laba'),
@@ -136,6 +146,8 @@ if (!function_exists('formatAngka')) {
 
                 @foreach ($detail as $row)
                     @php
+                        $grandSubtotal += $row->subtotal;
+                        $grandDiskon += $row->diskon;
                         $grandPenjualan += $row->total_penjualan;
 
                         // kalau promo → HPP dianggap 0
@@ -158,6 +170,8 @@ if (!function_exists('formatAngka')) {
                         <td class="text-center">{{ $row->satuan }}</td>
                         <td class="text-end">{{ formatAngka($row->qty) }}</td>
                         <td class="text-end">{{ formatAngka($row->harga) }}</td>
+                        <td class="text-end">{{ formatAngka($row->subtotal) }}</td>
+                        <td class="text-end">{{ formatAngka($row->diskon) }}</td>
                         <td class="text-end">{{ formatAngka($row->total_penjualan) }}</td>
                         <td class="text-end">{{ formatAngka($rowHpp) }}</td>
                         <td class="text-end">{{ formatAngka($rowLaba) }}</td>
@@ -170,6 +184,8 @@ if (!function_exists('formatAngka')) {
                 @endphp
                 <tr class="highlight">
                     <td colspan="9" class="text-center">TOTAL</td>
+                    <td class="text-end">{{ formatAngka($grandSubtotal) }}</td>
+                    <td class="text-end">{{ formatAngka($grandDiskon) }}</td>
                     <td class="text-end">{{ formatAngka($grandPenjualan) }}</td>
                     <td class="text-end">{{ formatAngka($grandHpp) }}</td>
                     <td class="text-end">{{ formatAngka($grandLaba) }}</td>

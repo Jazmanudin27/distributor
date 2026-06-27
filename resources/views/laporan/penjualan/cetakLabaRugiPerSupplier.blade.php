@@ -147,7 +147,6 @@
                             ->join('barang as b', 'b.kode_barang', '=', 'bs.kode_barang')
                             ->whereBetween('rp.tanggal', [$tanggal_dari, $tanggal_sampai])
                             ->where('b.kode_supplier', $d->kode_supplier)
-                            ->where('rpd.kondisi', 'bs')
                             ->sum(DB::raw('rpd.qty * bs.harga_pokok'));
 
                         // Retur Penjualan
@@ -197,9 +196,10 @@
                 <form id="form-kartu-stok" action="{{ route('cetakLabaRugi') }}" method="POST" target="_blank"
                     style="display:none;">
                     @csrf
-                    <input type="hidden" name="tanggal_dari" value="{{ $tanggal_dari }}">
-                    <input type="hidden" name="tanggal_sampai" value="{{ $tanggal_sampai }}">
-                    <input type="hidden" name="jenis_laporan" value="1">
+                    <input type="hidden" name="tanggal_awal" value="{{ $tanggal_dari }}">
+                    <input type="hidden" name="tanggal_akhir" value="{{ $tanggal_sampai }}">
+                    <input type="hidden" name="bulan" value="{{ request('bulan') }}">
+                    <input type="hidden" name="tahun" value="{{ request('tahun') }}">
                     <input type="hidden" name="kode_supplier" id="input-supplier">
                 </form>
                 <tr class="highlight">

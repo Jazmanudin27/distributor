@@ -28,7 +28,7 @@
                             </div>
 
                             {{-- Supplier --}}
-                            <div class="row mt-3">
+                            <div class="row mt-3" hidden>
                                 <div class="col-md-12">
                                     <label class="form-label fw-semibold text-secondary mb-1">Supplier</label>
                                     <select name="supplier" class="form-select2 form-select-sm">
