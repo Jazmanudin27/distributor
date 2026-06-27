@@ -605,10 +605,15 @@ class LaporanKeuanganController extends Controller
         }
 
         if ($format === '2') {
-            $data = DB::table('supplier as s')
+            $query = DB::table('supplier as s')
                 ->select('s.kode_supplier', 's.nama_supplier')
-                ->where('s.status', '1')
-                ->groupBy('s.kode_supplier', 's.nama_supplier')
+                ->where('s.status', '1');
+
+            if ($request->filled('supplier')) {
+                $query->where('s.kode_supplier', $request->supplier);
+            }
+
+            $data = $query->groupBy('s.kode_supplier', 's.nama_supplier')
                 ->orderBy('s.nama_supplier')
                 ->get();
 
