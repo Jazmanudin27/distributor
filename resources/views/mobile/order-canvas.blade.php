@@ -301,7 +301,8 @@
                     productSearchResults.classList.add('d-none');
                     return;
                 }
-                fetch(`{{ route('barang.search') }}?q=${encodeURIComponent(q)}`)
+                const tgl = document.getElementById('tanggal').value || '';
+                fetch(`{{ route('barang.search') }}?q=${encodeURIComponent(q)}&kode_sales={{ Auth::user()->nik }}&tanggal=${tgl}`)
                     .then(res => res.json())
                     .then(data => {
                         productSearchResults.innerHTML = '';

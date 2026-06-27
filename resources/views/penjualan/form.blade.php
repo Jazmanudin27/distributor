@@ -629,6 +629,14 @@
                 const formattedStok = formatStokJS(data.stok, data.satuans);
                 $('#quick_stock_display').html(
                     `<i class="fa-solid fa-box me-1"></i> Stok: ${formattedStok}`).removeClass('d-none');
+                
+                if (data.diskon_persen !== undefined && parseFloat(data.diskon_persen) > 0) {
+                    $('#quick_diskon1_input').val(parseFloat(data.diskon_persen));
+                    recalcDiskon();
+                } else {
+                    $('#quick_diskon1_input').val(0);
+                    recalcDiskon();
+                }
             });
 
             // Number format helpers
