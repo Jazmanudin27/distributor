@@ -7,13 +7,14 @@
                 <h5 class="mb-0 fw-bold">
                     <i class="fa-solid fa-percent me-2"></i> Master Diskon Strata
                 </h5>
-                <small class="text-white-50">Atur diskon berjenjang (strata) berdasarkan Qty, Kategori, Merk, atau Supplier</small>
+                <small class="text-white-50">Atur diskon berjenjang (strata) berdasarkan Qty, Kategori, Merk, atau
+                    Supplier</small>
             </div>
-            <a href="{{ route('diskon-strata.create') }}" class="btn btn-light btn-sm fw-bold hover-scale">
-                <i class="fa-solid fa-circle-plus me-1 text-primary"></i> Tambah Diskon Strata
+            <a href="{{ route('diskon-strata.create') }}" class="btn btn-primary btn-sm fw-bold hover-scale">
+                <i class="fa-solid fa-circle-plus me-1 text-white"></i> Tambah Diskon Strata
             </a>
         </div>
-        
+
         <div class="card-body p-4">
             {{-- FILTER SECTION --}}
             <div class="bg-light p-3 rounded mb-4 border">
@@ -28,10 +29,13 @@
                         <select name="tipe" class="form-select form-select-sm">
                             <option value="">-- Semua Tipe --</option>
                             <option value="barang" {{ request('tipe') === 'barang' ? 'selected' : '' }}>Per Barang</option>
-                            <option value="beberapa_barang" {{ request('tipe') === 'beberapa_barang' ? 'selected' : '' }}>Per Beberapa Barang</option>
-                            <option value="kategori" {{ request('tipe') === 'kategori' ? 'selected' : '' }}>Per Kategori</option>
+                            <option value="beberapa_barang" {{ request('tipe') === 'beberapa_barang' ? 'selected' : '' }}>
+                                Per Beberapa Barang</option>
+                            <option value="kategori" {{ request('tipe') === 'kategori' ? 'selected' : '' }}>Per Kategori
+                            </option>
                             <option value="merk" {{ request('tipe') === 'merk' ? 'selected' : '' }}>Per Merk</option>
-                            <option value="supplier" {{ request('tipe') === 'supplier' ? 'selected' : '' }}>Per Supplier</option>
+                            <option value="supplier" {{ request('tipe') === 'supplier' ? 'selected' : '' }}>Per Supplier
+                            </option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -86,21 +90,26 @@
                                 </td>
                                 <td>
                                     @if ($item->tipe === 'barang')
-                                        <span class="text-secondary small">Barang:</span> <strong>{{ $item->barangs->first()->nama_barang ?? '-' }}</strong>
+                                        <span class="text-secondary small">Barang:</span>
+                                        <strong>{{ $item->barangs->first()->nama_barang ?? '-' }}</strong>
                                     @elseif ($item->tipe === 'beberapa_barang')
-                                        <span class="text-secondary small">Barang:</span> <strong>{{ $item->barangs->count() }} item terpilih</strong>
+                                        <span class="text-secondary small">Barang:</span>
+                                        <strong>{{ $item->barangs->count() }} item terpilih</strong>
                                     @elseif ($item->tipe === 'kategori')
-                                        <span class="text-secondary small">Kategori:</span> <strong>{{ $item->kategori->nama_kategori ?? '-' }}</strong>
+                                        <span class="text-secondary small">Kategori:</span>
+                                        <strong>{{ $item->kategori->nama_kategori ?? '-' }}</strong>
                                     @elseif ($item->tipe === 'merk')
-                                        <span class="text-secondary small">Merk:</span> <strong>{{ $item->merk->nama_merk ?? '-' }}</strong>
+                                        <span class="text-secondary small">Merk:</span>
+                                        <strong>{{ $item->merk->nama_merk ?? '-' }}</strong>
                                     @elseif ($item->tipe === 'supplier')
-                                        <span class="text-secondary small">Supplier:</span> <strong>{{ $item->supplier->nama_supplier ?? '-' }}</strong>
+                                        <span class="text-secondary small">Supplier:</span>
+                                        <strong>{{ $item->supplier->nama_supplier ?? '-' }}</strong>
                                     @endif
                                 </td>
                                 <td class="text-center small">
-                                    @if($item->berlaku_dari || $item->berlaku_sampai)
+                                    @if ($item->berlaku_dari || $item->berlaku_sampai)
                                         <span class="font-monospace text-secondary">
-                                            {{ $item->berlaku_dari ? $item->berlaku_dari->format('d/m/Y') : '∞' }} - 
+                                            {{ $item->berlaku_dari ? $item->berlaku_dari->format('d/m/Y') : '∞' }} -
                                             {{ $item->berlaku_sampai ? $item->berlaku_sampai->format('d/m/Y') : '∞' }}
                                         </span>
                                     @else
@@ -108,14 +117,19 @@
                                     @endif
                                 </td>
                                 <td class="text-center">
-                                    <form action="{{ route('diskon-strata.toggle-status', $item->id) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('diskon-strata.toggle-status', $item->id) }}" method="POST"
+                                        class="d-inline">
                                         @csrf
-                                        @if($item->is_active)
-                                            <button type="submit" class="badge bg-success px-2 py-1 fs-8 border-0 hover-scale text-decoration-none" style="cursor: pointer;" title="Klik untuk menonaktifkan">
+                                        @if ($item->is_active)
+                                            <button type="submit"
+                                                class="badge bg-success px-2 py-1 fs-8 border-0 hover-scale text-decoration-none"
+                                                style="cursor: pointer;" title="Klik untuk menonaktifkan">
                                                 <i class="fa-solid fa-toggle-on me-1"></i> Aktif
                                             </button>
                                         @else
-                                            <button type="submit" class="badge bg-danger px-2 py-1 fs-8 border-0 hover-scale text-decoration-none" style="cursor: pointer;" title="Klik untuk mengaktifkan">
+                                            <button type="submit"
+                                                class="badge bg-danger px-2 py-1 fs-8 border-0 hover-scale text-decoration-none"
+                                                style="cursor: pointer;" title="Klik untuk mengaktifkan">
                                                 <i class="fa-solid fa-toggle-off me-1"></i> Non-Aktif
                                             </button>
                                         @endif
