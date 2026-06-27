@@ -139,14 +139,14 @@
                             ->where('b.kode_supplier', $d->kode_supplier)
                             ->sum('rpd.subtotal_retur');
 
-                        // Retur Pembelian (HPP dari barang yang diretur)
+                        // Retur Pembelian (HPP dari barang yang diretur — filter supplier via kode_barang langsung)
                         $returPembelian = DB::table('retur_penjualan_detail as rpd')
                             ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
-                            ->join('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
-                            ->join('barang as b', 'b.kode_barang', '=', 'bs.kode_barang')
+                            ->join('barang as b', 'b.kode_barang', '=', 'rpd.kode_barang')
+                            ->leftJoin('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
                             ->whereBetween('rp.tanggal', [$tanggal_dari, $tanggal_sampai])
                             ->where('b.kode_supplier', $d->kode_supplier)
-                            ->sum(DB::raw('rpd.qty * bs.harga_pokok'));
+                            ->sum(DB::raw('rpd.qty * COALESCE(bs.harga_pokok, 0)'));
 
                         // HPP per Supplier
                         $total_hpp = DB::table('penjualan_detail as d')
