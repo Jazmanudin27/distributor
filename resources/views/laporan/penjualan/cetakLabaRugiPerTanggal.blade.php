@@ -122,6 +122,7 @@
                         $salesData = DB::table('penjualan_detail as d')
                             ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
                             ->where('p.tanggal', $t->tanggal)
+                            ->where('d.is_promo', 0)
                             ->where('p.batal', 0)
                             ->selectRaw('SUM(d.qty * d.harga) as bruto, SUM(d.total_diskon) as diskon')
                             ->first();
