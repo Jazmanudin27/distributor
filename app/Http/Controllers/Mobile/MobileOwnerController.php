@@ -26,19 +26,13 @@ class MobileOwnerController extends Controller
         $endOfMonth = Carbon::now()->endOfMonth()->toDateString();
 
         // 1. Penjualan
-        $salesToday = (float) DB::table('penjualan_detail as d')
-            ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
-            ->where('p.batal', 0)
-            ->where('d.is_promo', 0)
-            ->whereDate('p.tanggal', $today)
-            ->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
+        $salesToday = (float) Penjualan::where('batal', 0)
+            ->whereDate('tanggal', $today)
+            ->sum('grand_total');
 
-        $salesMonth = (float) DB::table('penjualan_detail as d')
-            ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
-            ->where('p.batal', 0)
-            ->where('d.is_promo', 0)
-            ->whereBetween('p.tanggal', [$startOfMonth, $endOfMonth])
-            ->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
+        $salesMonth = (float) Penjualan::where('batal', 0)
+            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+            ->sum('grand_total');
 
         // 2. Pembelian
         $purchaseToday = (float) Pembelian::whereDate('tanggal', $today)->sum('grand_total');
@@ -101,13 +95,10 @@ class MobileOwnerController extends Controller
 
         $topSales = [];
         foreach ($salesList as $sales) {
-            $totalSales = (float) DB::table('penjualan_detail as d')
-                ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
-                ->where('p.kode_sales', $sales->nik)
-                ->where('p.batal', 0)
-                ->where('d.is_promo', 0)
-                ->whereBetween('p.tanggal', [$startOfMonth, $endOfMonth])
-                ->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
+            $totalSales = (float) Penjualan::where('kode_sales', $sales->nik)
+                ->where('batal', 0)
+                ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
+                ->sum('grand_total');
 
             $invoiceCount = Penjualan::where('kode_sales', $sales->nik)
                 ->where('batal', 0)
