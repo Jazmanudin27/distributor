@@ -613,15 +613,15 @@ class LaporanKeuanganController extends Controller
                 ->where('p.batal', 0)
                 ->where('d.is_promo', 0)
                 ->select(
-                    DB::raw('COALESCE(s.kode_supplier, b.kode_supplier) as kode_supplier'),
-                    DB::raw('COALESCE(s.nama_supplier, CONCAT("Supplier: ", b.kode_supplier)) as nama_supplier')
+                    'b.kode_supplier',
+                    DB::raw('MAX(COALESCE(s.nama_supplier, CONCAT("Supplier: ", b.kode_supplier))) as nama_supplier')
                 );
 
             if ($request->filled('supplier')) {
                 $query->where('b.kode_supplier', $request->supplier);
             }
 
-            $data = $query->groupBy('kode_supplier', 'nama_supplier')
+            $data = $query->groupBy('b.kode_supplier')
                 ->orderBy('nama_supplier')
                 ->get();
 
