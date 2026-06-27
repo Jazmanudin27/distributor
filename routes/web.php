@@ -169,6 +169,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/penjualan/{no_faktur}/restore', [PenjualanController::class, 'restore'])->name('penjualan.restore');
         Route::get('/penjualan/{no_faktur}/print', [PenjualanController::class, 'print'])->name('penjualan.print');
         Route::get('/retur-penjualan/{no_retur}/print', [ReturPenjualanController::class, 'print'])->name('retur-penjualan.print');
+        Route::get('/penjualan/{penjualan}/edit', [PenjualanController::class, 'edit'])->name('penjualan.edit');
+        Route::get('/retur-penjualan/{retur_penjualan}/edit', [ReturPenjualanController::class, 'edit'])->name('retur-penjualan.edit');
+
         Route::resource('penjualan', PenjualanController::class);
         Route::resource('retur-penjualan', ReturPenjualanController::class);
         Route::get('/canvas/{canvas}/print', [CanvasController::class, 'print'])->name('canvas.print');
@@ -190,6 +193,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/pembelian/{no_faktur}/items', [PembelianController::class, 'getPurchaseItems'])->name('pembelian.items');
         Route::post('/pembelian/{id}/payment', [PembelianController::class, 'storePayment'])->name('pembelian.payment');
         Route::post('/pembelian/{id}/approve', [PembelianController::class, 'approve'])->name('pembelian.approve');
+        Route::get('/pembelian/{pembelian}/edit', [PembelianController::class, 'edit'])->name('pembelian.edit');
         Route::resource('pembelian', PembelianController::class);
         Route::resource('retur-pembelian', ReturPembelianController::class);
         Route::resource('stok-opname', StokOpnameController::class);
