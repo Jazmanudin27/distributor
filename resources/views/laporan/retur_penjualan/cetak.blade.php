@@ -16,24 +16,46 @@
             background-color: #fff;
             font-family: "Inter", sans-serif;
             font-size: 11px;
-            color: #000;
+            color: #333;
         }
 
-        .table-sm th,
+        .table-sm th {
+            background-color: #2c3e50 !important;
+            color: #ffffff !important;
+            border: 1px solid #1a252f !important;
+            font-size: 11px !important;
+            padding: 6px 8px !important;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
         .table-sm td {
             font-size: 11px !important;
-            padding: 4px 6px !important;
-            border: 1px solid #000 !important;
+            padding: 5px 7px !important;
+            border: 1px solid #dee2e6 !important;
         }
 
-        .table-light th {
-            background-color: #f2f2f2 !important;
-            color: #000 !important;
+        tr:nth-child(even) td {
+            background-color: #f8f9fa;
         }
 
         hr {
-            border-top: 1px dashed #000;
+            border: 0;
+            border-top: 2px solid #2c3e50;
             opacity: 1;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .fw-bold {
+            font-weight: 700;
+        }
+
+        .tfoot-highlight td {
+            font-weight: bold;
+            background-color: #e9ecef !important;
+            border-top: 2px solid #2c3e50 !important;
+            border-bottom: 3px double #2c3e50 !important;
         }
 
         @media print {
@@ -44,6 +66,19 @@
             body {
                 margin: 0;
                 padding: 10px;
+            }
+
+            th {
+                background-color: #2c3e50 !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .tfoot-highlight td {
+                background-color: #e9ecef !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
         }
     </style>
@@ -61,6 +96,10 @@
             @if ($kode_pelanggan)
                 @php $pelangganName = $pelanggans->firstWhere('kode_pelanggan', $kode_pelanggan)->nama_pelanggan ?? $kode_pelanggan; @endphp
                 <div class="small">Pelanggan: {{ $pelangganName }}</div>
+            @endif
+            @if ($kode_supplier)
+                @php $supplierName = $suppliers->firstWhere('kode_supplier', $kode_supplier)->nama_supplier ?? $kode_supplier; @endphp
+                <div class="small">Supplier: {{ $supplierName }}</div>
             @endif
             <div class="small text-muted">Tanggal Cetak: {{ date('d/m/Y H:i:s') }}</div>
             <hr>
@@ -111,7 +150,7 @@
                         @endforeach
                     </tbody>
                     <tfoot class="fw-bold">
-                        <tr class="table-light">
+                        <tr class="tfoot-highlight">
                             <td colspan="8" class="text-end">TOTAL KESELURUHAN:</td>
                             <td class="text-end">{{ number_format($totGrand, 0, ',', '.') }}</td>
                         </tr>
@@ -120,7 +159,7 @@
             @else
                 {{-- DETAIL TABLES --}}
                 <table class="table table-sm align-middle w-100">
-                    <thead class="table-light">
+                    <thead>
                         <tr>
                             <th width="40" class="text-center">No</th>
                             <th>No Retur</th>
@@ -174,7 +213,7 @@
                         @endforeach
                     </tbody>
                     <tfoot class="fw-bold">
-                        <tr class="table-light">
+                        <tr class="tfoot-highlight">
                             <td colspan="10" class="text-end">TOTAL KESELURUHAN:</td>
                             <td class="text-end">{{ number_format($totQty, 0, ',', '.') }}</td>
                             <td></td>

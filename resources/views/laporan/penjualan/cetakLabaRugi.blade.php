@@ -24,10 +24,11 @@
     <title>Cetak Laba Rugi Detail</title>
     <style>
         body {
-            font-family: Tahoma, sans-serif;
-            font-size: 13px;
-            margin: 10px;
-            line-height: 1.2;
+            font-family: 'Inter', Tahoma, sans-serif;
+            font-size: 12px;
+            margin: 15px;
+            line-height: 1.3;
+            color: #333;
             width: 297mm;
         }
 
@@ -35,13 +36,31 @@
             border-collapse: collapse;
             width: 100%;
             table-layout: auto;
+            margin-top: 10px;
         }
 
-        th,
+        th {
+            background-color: #2c3e50 !important;
+            color: #ffffff !important;
+            border: 1px solid #1a252f !important;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
         td {
-            border: 1px solid #000;
-            padding: 4px 6px;
+            border: 1px solid #dee2e6;
+            padding: 6px 8px;
             white-space: nowrap;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover td {
+            background-color: #e9ecef;
         }
 
         .text-center {
@@ -52,21 +71,39 @@
             text-align: right;
         }
 
-        .header-title {
+        .fw-bold {
             font-weight: bold;
-            font-size: 20px;
-            text-align: center;
         }
 
-        .highlight {
+        .header-title {
+            font-weight: 700;
+            font-size: 24px;
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .highlight td {
             font-weight: bold;
-            border-top: 2px solid #000;
-            border-bottom: 2px solid #000;
+            background-color: #e9ecef !important;
+            border-top: 2px solid #2c3e50 !important;
+            border-bottom: 3px double #2c3e50 !important;
         }
 
         @media print {
             body {
                 margin: 0;
+            }
+            th {
+                background-color: #2c3e50 !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .highlight td {
+                background-color: #e9ecef !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
         }
     </style>
@@ -74,12 +111,12 @@
 
 <body>
     <section>
-        <header style="text-align: center; margin-bottom: 15px;">
+        <header style="text-align: center; margin-bottom: 25px;">
             <h1 class="header-title">LAPORAN LABA RUGI DETAIL</h1>
-            <p style="margin: 0;">
+            <p style="margin: 0; font-size: 14px; color: #7f8c8d; font-weight: 500;">
                 Periode: {{ tanggal_indo2($tanggal_dari) }} s/d {{ tanggal_indo2($tanggal_sampai) }}
             </p>
-            <hr style="border: 1px solid #000; margin-top: 10px;">
+            <hr style="border: 0; border-top: 2px solid #2c3e50; margin-top: 15px; margin-bottom: 0;">
         </header>
 
         <table>
