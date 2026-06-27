@@ -166,9 +166,16 @@
                                         </td>
                                     @else
                                         <td class="text-end font-monospace fw-semibold">
-                                            {{ number_format($d->min_qty ?? 0, 0, ',', '.') }}</td>
+                                            {{ number_format($d->min_qty ?? 0, 0, ',', '.') }}
+                                            {{ $d->satuan ? $d->satuan->satuan : '' }}
+                                        </td>
                                         <td class="text-end font-monospace fw-semibold">
-                                            {{ $d->max_qty ? number_format($d->max_qty, 0, ',', '.') : 'Infinity (∞)' }}
+                                            @if($d->max_qty)
+                                                {{ number_format($d->max_qty, 0, ',', '.') }}
+                                                {{ $d->satuan ? $d->satuan->satuan : '' }}
+                                            @else
+                                                Infinity (∞)
+                                            @endif
                                         </td>
                                     @endif
                                     <td class="text-center">

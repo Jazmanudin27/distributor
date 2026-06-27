@@ -251,7 +251,7 @@ class MobileOrderController extends Controller
         }
 
         // Strata matching closure matching JS logic
-        $calculateStrata = function($barangCode, $qty, $sub, $barang) use ($diskonStrata, $supplierSubtotals, $request) {
+        $calculateStrata = function($barangCode, $qty, $sub, $barang, $satuanId = null) use ($diskonStrata, $supplierSubtotals, $request) {
             if (!$barang) return ['d1' => 0, 'd2' => 0];
 
             $bestRate = 0;
@@ -274,7 +274,7 @@ class MobileOrderController extends Controller
                         foreach ($r->details as $d) {
                             $minQty = floatval($d->min_qty ?? 0);
                             $maxQty = $d->max_qty !== null ? floatval($d->max_qty) : null;
-                            if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty)) {
+                            if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty) && ($d->satuan_id === null || $d->satuan_id == $satuanId)) {
                                 $checkRule($r, $d);
                             }
                         }
@@ -290,7 +290,7 @@ class MobileOrderController extends Controller
                             foreach ($r->details as $d) {
                                 $minQty = floatval($d->min_qty ?? 0);
                                 $maxQty = $d->max_qty !== null ? floatval($d->max_qty) : null;
-                                if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty)) {
+                                if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty) && ($d->satuan_id === null || $d->satuan_id == $satuanId)) {
                                     $checkRule($r, $d);
                                 }
                             }
@@ -394,7 +394,7 @@ class MobileOrderController extends Controller
         foreach ($request->items as $row) {
             $barang = Barang::find($row['kode_barang']);
             $sub = $row['qty'] * $row['harga'];
-            $strata = $calculateStrata($row['kode_barang'], $row['qty'], $sub, $barang);
+            $strata = $calculateStrata($row['kode_barang'], $row['qty'], $sub, $barang, $row['satuan_id'] ?? null);
             
             $d1_pct = $strata['d1'];
             $d2_pct = $strata['d2'];
@@ -488,7 +488,7 @@ class MobileOrderController extends Controller
                     $subtotal    = $row['qty'] * $row['harga'];
                     
                     // Recalculate strata discounts
-                    $strata      = $calculateStrata($row['kode_barang'], $row['qty'], $subtotal, $barang);
+                    $strata      = $calculateStrata($row['kode_barang'], $row['qty'], $subtotal, $barang, $row['satuan_id'] ?? null);
                     $d1_pct      = $strata['d1'];
                     $d2_pct      = $strata['d2'];
                     $d3_pct      = 0; // Salesman cannot input manual D3 discount
@@ -907,7 +907,7 @@ class MobileOrderController extends Controller
         }
 
         // Strata matching closure
-        $calculateStrata = function ($barangCode, $qty, $sub, $barang) use ($diskonStrata, $supplierSubtotals, $request) {
+        $calculateStrata = function ($barangCode, $qty, $sub, $barang, $satuanId = null) use ($diskonStrata, $supplierSubtotals, $request) {
             if (!$barang) return ['d1' => 0, 'd2' => 0];
             $bestRate = 0; $bestRule = null; $bestDetail = null;
             $checkRule = function ($r, $d) use (&$bestRate, &$bestRule, &$bestDetail) {
@@ -918,7 +918,7 @@ class MobileOrderController extends Controller
                 if ($r->tipe === 'barang' && $r->barangs && $r->barangs->contains('kode_barang', $barangCode)) {
                     foreach ($r->details as $d) {
                         $minQty = floatval($d->min_qty ?? 0); $maxQty = $d->max_qty !== null ? floatval($d->max_qty) : null;
-                        if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty)) $checkRule($r, $d);
+                        if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty) && ($d->satuan_id === null || $d->satuan_id == $satuanId)) $checkRule($r, $d);
                     }
                 }
             }
@@ -927,7 +927,7 @@ class MobileOrderController extends Controller
                     if ($r->tipe === 'beberapa_barang' && $r->barangs && $r->barangs->contains('kode_barang', $barangCode)) {
                         foreach ($r->details as $d) {
                             $minQty = floatval($d->min_qty ?? 0); $maxQty = $d->max_qty !== null ? floatval($d->max_qty) : null;
-                            if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty)) $checkRule($r, $d);
+                            if ($qty >= $minQty && ($maxQty === null || $qty <= $maxQty) && ($d->satuan_id === null || $d->satuan_id == $satuanId)) $checkRule($r, $d);
                         }
                     }
                 }

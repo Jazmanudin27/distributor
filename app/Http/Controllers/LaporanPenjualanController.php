@@ -215,6 +215,7 @@ class LaporanPenjualanController extends Controller
         $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
         $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
         $kode_pelanggan = $request->input('kode_pelanggan');
+        $kode_supplier = $request->input('kode_supplier');
         $jenis_laporan = $request->input('jenis_laporan', 'rekap');
 
         $pelanggans = collect();
@@ -222,6 +223,7 @@ class LaporanPenjualanController extends Controller
             $pelanggans = Pelanggan::where('kode_pelanggan', $kode_pelanggan)->get();
         }
 
+        $suppliers = Supplier::orderBy('nama_supplier', 'asc')->get();
         $items = collect();
         $isCetak = $request->is('*/cetak');
         $isExcel = $request->is('*/excel');
@@ -258,8 +260,8 @@ class LaporanPenjualanController extends Controller
         if ($isExcel) {
             $filename = 'laporan_retur_penjualan_' . date('Ymd_His') . '.xls';
             return response(view($view, compact(
-                'pelanggans', 'items', 'tanggal_mulai', 'tanggal_akhir', 
-                'kode_pelanggan', 'jenis_laporan', 'isExcel'
+                'pelanggans', 'suppliers', 'items', 'tanggal_mulai', 'tanggal_akhir', 
+                'kode_pelanggan', 'kode_supplier', 'jenis_laporan', 'isExcel'
             )))
             ->header('Content-Type', 'application/vnd-ms-excel')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
@@ -268,8 +270,8 @@ class LaporanPenjualanController extends Controller
         }
 
         return view($view, compact(
-            'pelanggans', 'items', 'tanggal_mulai', 'tanggal_akhir', 
-            'kode_pelanggan', 'jenis_laporan'
+            'pelanggans', 'suppliers', 'items', 'tanggal_mulai', 'tanggal_akhir', 
+            'kode_pelanggan', 'kode_supplier', 'jenis_laporan'
         ));
     }
 

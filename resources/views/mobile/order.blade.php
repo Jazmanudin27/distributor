@@ -871,6 +871,8 @@
                     const qty = parseFloat(card.querySelector('.input-qty').value) || 0;
                     const harga = parseCleanNumber(card.querySelector('.input-harga').value) || 0;
                     const sub = qty * harga;
+                    const selectSatuan = card.querySelector('.select-satuan');
+                    const satuanId = selectSatuan ? selectSatuan.value : null;
 
                     const b = barangsCache[barangCode];
                     if (!b) return;
@@ -897,8 +899,7 @@
                     rulesBarang.forEach(r => {
                         if (r.barangs && r.barangs.some(item => item.kode_barang === barangCode)) {
                             r.details.forEach(d => {
-                                if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <=
-                                        d.max_qty)) {
+                                if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d.max_qty) && (d.satuan_id === null || d.satuan_id == satuanId)) {
                                     checkRule(r, d);
                                 }
                             });
@@ -912,8 +913,7 @@
                             if (r.barangs && r.barangs.some(item => item.kode_barang ===
                                     barangCode)) {
                                 r.details.forEach(d => {
-                                    if (qty >= (d.min_qty || 0) && (d.max_qty === null ||
-                                            qty <= d.max_qty)) {
+                                    if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d.max_qty) && (d.satuan_id === null || d.satuan_id == satuanId)) {
                                         checkRule(r, d);
                                     }
                                 });

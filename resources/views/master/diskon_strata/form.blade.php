@@ -188,23 +188,23 @@
                             </div>
 
                             <div class="table-responsive">
-                                <table class="table table-bordered table-sm align-middle fs-7" id="tiersTable">
-                                    <thead class="table-light text-secondary text-uppercase tracking-wider">
-                                        <tr>
-                                            <th class="text-center" width="50">No</th>
-                                            <th class="text-center col-range-1" width="180">Min Qty</th>
-                                            <th class="text-center col-range-2" width="180">Max Qty (Kosongkan jika ∞)
-                                            </th>
-                                            <th class="text-center" width="130">Tipe Nilai</th>
-                                            <th class="text-center">Diskon Reguler (dis1)</th>
-                                            <th class="text-center">Diskon Cash (dis2)</th>
-                                            <th class="text-center" width="50">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {{-- Rows added dynamically --}}
-                                    </tbody>
-                                </table>
+                                 <table class="table table-bordered table-sm align-middle fs-7" id="tiersTable">
+                                     <thead class="table-light text-secondary text-uppercase tracking-wider">
+                                         <tr>
+                                             <th class="text-center" width="50">No</th>
+                                             <th class="text-center col-range-1" width="160">Min Qty</th>
+                                             <th class="text-center col-range-2" width="160">Max Qty (Kosongkan jika ∞)</th>
+                                             <th class="text-center col-satuan" width="140">Satuan</th>
+                                             <th class="text-center" width="120">Tipe Nilai</th>
+                                             <th class="text-center">Diskon Reguler (dis1)</th>
+                                             <th class="text-center">Diskon Cash (dis2)</th>
+                                             <th class="text-center" width="50">Aksi</th>
+                                         </tr>
+                                     </thead>
+                                     <tbody>
+                                         {{-- Rows added dynamically --}}
+                                     </tbody>
+                                 </table>
                             </div>
                         </div>
 
@@ -230,6 +230,7 @@
         $(document).ready(function() {
             let detailIndex = 0;
             const existingDetails = {!! json_encode($item->details ?? []) !!};
+            const barangsData = {!! json_encode($barangs->keyBy('kode_barang')) !!};
 
             // Initialize select2 multiple
             $('#barang_ids').select2({
@@ -237,6 +238,68 @@
                 placeholder: 'Cari / pilih barang...',
                 allowClear: true,
                 width: '100%'
+            });
+
+            // Get available unique units for currently selected barang(s)
+            function getAvailableUnits() {
+                const type = $('#tipe').val();
+                const selectedBarangCodes = $('#barang_ids').val() || [];
+                const unitsMap = new Map();
+
+                if (type === 'barang' || type === 'beberapa_barang') {
+                    const codes = Array.isArray(selectedBarangCodes) ? selectedBarangCodes : [selectedBarangCodes];
+                    codes.forEach(code => {
+                        const barang = barangsData[code];
+                        if (barang && barang.satuans) {
+                            barang.satuans.forEach(satuan => {
+                                unitsMap.set(satuan.id, satuan.satuan);
+                            });
+                        }
+                    });
+                }
+                return Array.from(unitsMap.entries()).map(([id, name]) => ({ id, name }));
+            }
+
+            // Update all unit select dropdown options in the table
+            function updateUnitDropdowns() {
+                const units = getAvailableUnits();
+                const type = $('#tipe').val();
+                const isBarangType = type === 'barang' || type === 'beberapa_barang';
+
+                if (isBarangType) {
+                    $('.col-satuan').show();
+                    $('#tiersTable tbody tr').each(function() {
+                        const row = $(this);
+                        const td = row.find('td:nth-child(4)');
+                        const select = td.find('.select-satuan');
+                        const savedValue = select.attr('data-saved-value');
+                        const currentValue = select.val() || savedValue;
+
+                        td.show();
+                        select.prop('disabled', false).prop('required', true);
+                        select.empty().append('<option value="">-- Pilih Satuan --</option>');
+                        units.forEach(u => {
+                            const selectedAttr = currentValue == u.id ? 'selected' : '';
+                            select.append(`<option value="${u.id}" ${selectedAttr}>${u.name}</option>`);
+                        });
+                    });
+                } else {
+                    $('.col-satuan').hide();
+                    $('#tiersTable tbody tr').each(function() {
+                        const row = $(this);
+                        const td = row.find('td:nth-child(4)');
+                        const select = td.find('.select-satuan');
+
+                        td.hide();
+                        select.prop('disabled', true).prop('required', false);
+                        select.empty().append('<option value="">N/A</option>');
+                    });
+                }
+            }
+
+            // Listen to selected barang changes
+            $('#barang_ids').on('change', function() {
+                updateUnitDropdowns();
             });
 
             // Handle type changes
@@ -292,11 +355,14 @@
                 } else {
                     adjustRowInputsFormat(type);
                 }
+
+                updateUnitDropdowns();
             });
 
             // Add new tier row
             $('#btn-add-tier').on('click', function() {
                 addTierRow();
+                updateUnitDropdowns();
             });
 
             // Remove row
@@ -319,6 +385,7 @@
                 const tipeNilai = data ? data.tipe_nilai : (isSupplier ? 'nominal' : 'persen');
                 const dis1 = data ? data.dis1 : 0;
                 const dis2 = data ? data.dis2 : 0;
+                const selectedSatuanId = data ? (data.satuan_id || '') : '';
 
                 const colRange1Html = isSupplier ?
                     `<div class="input-group input-group-sm">
@@ -339,6 +406,11 @@
                         <td class="text-center row-num fw-bold text-secondary"></td>
                         <td>${colRange1Html}</td>
                         <td>${colRange2Html}</td>
+                        <td>
+                            <select name="details[${detailIndex}][satuan_id]" class="form-select form-select-sm select-satuan" data-saved-value="${selectedSatuanId}">
+                                <option value="">-- Pilih --</option>
+                            </select>
+                        </td>
                         <td>
                             <select name="details[${detailIndex}][tipe_nilai]" class="form-select form-select-sm select-tipe-nilai">
                                 <option value="persen" ${tipeNilai === 'persen' ? 'selected' : ''}>Persen (%)</option>
@@ -442,6 +514,7 @@
                 existingDetails.forEach(d => {
                     addTierRow(d);
                 });
+                updateUnitDropdowns();
             }
 
             // Client-side validations before submit

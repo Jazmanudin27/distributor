@@ -13,6 +13,7 @@ class DiskonStrataDetail extends Model
 
     protected $fillable = [
         'diskon_strata_id',
+        'satuan_id',
         'min_qty',
         'max_qty',
         'min_nominal',
@@ -23,6 +24,7 @@ class DiskonStrataDetail extends Model
     ];
 
     protected $casts = [
+        'satuan_id' => 'integer',
         'min_qty' => 'integer',
         'max_qty' => 'integer',
         'min_nominal' => 'decimal:2',
@@ -34,5 +36,10 @@ class DiskonStrataDetail extends Model
     public function header()
     {
         return $this->belongsTo(DiskonStrata::class, 'diskon_strata_id');
+    }
+
+    public function satuan()
+    {
+        return $this->belongsTo(BarangSatuan::class, 'satuan_id');
     }
 }

@@ -1315,6 +1315,7 @@
                     const qty = parseFloat(row.find('.input-qty').val()) || 0;
                     const harga = parseFloat(cleanNumber(row.find('.input-harga').val())) || 0;
                     const sub = qty * harga;
+                    const satuanId = row.find('input[name*="[satuan_id]"]').val();
 
                     const b = barangsCache[barangCode];
                     if (!b) return;
@@ -1341,8 +1342,7 @@
                     rulesBarang.forEach(r => {
                         if (r.barangs && r.barangs.some(item => item.kode_barang === barangCode)) {
                             r.details.forEach(d => {
-                                if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <=
-                                        d.max_qty)) {
+                                if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d.max_qty) && (d.satuan_id === null || d.satuan_id == satuanId)) {
                                     checkRule(r, d);
                                 }
                             });
@@ -1356,8 +1356,7 @@
                             if (r.barangs && r.barangs.some(item => item.kode_barang ===
                                     barangCode)) {
                                 r.details.forEach(d => {
-                                    if (qty >= (d.min_qty || 0) && (d.max_qty === null ||
-                                            qty <= d.max_qty)) {
+                                    if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d.max_qty) && (d.satuan_id === null || d.satuan_id == satuanId)) {
                                         checkRule(r, d);
                                     }
                                 });

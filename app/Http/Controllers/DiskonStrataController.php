@@ -42,7 +42,7 @@ class DiskonStrataController extends Controller
         $kategoris = Kategori::orderBy('nama_kategori')->get();
         $merks = Merk::orderBy('nama_merk')->get();
         $suppliers = Supplier::where('status', 1)->orderBy('nama_supplier')->get();
-        $barangs = Barang::where('status', 1)->orderBy('nama_barang')->get();
+        $barangs = Barang::with('satuans')->where('status', 1)->orderBy('nama_barang')->get();
 
         return view('master.diskon_strata.form', compact('item', 'kategoris', 'merks', 'suppliers', 'barangs'));
     }
@@ -62,6 +62,7 @@ class DiskonStrataController extends Controller
             'berlaku_sampai' => 'nullable|date',
             'barang_ids' => 'required_if:tipe,barang,beberapa_barang|array',
             'details' => 'required|array|min:1',
+            'details.*.satuan_id' => 'nullable|integer|exists:barang_satuan,id',
             'details.*.min_qty' => 'nullable|integer|min:0',
             'details.*.max_qty' => 'nullable|integer|min:0',
             'details.*.min_nominal' => 'nullable|numeric|min:0',
@@ -93,6 +94,7 @@ class DiskonStrataController extends Controller
             // Save tiers details
             foreach ($request->details as $detail) {
                 $header->details()->create([
+                    'satuan_id' => in_array($request->tipe, ['barang', 'beberapa_barang']) ? ($detail['satuan_id'] ?? null) : null,
                     'min_qty' => $request->tipe !== 'supplier' ? ($detail['min_qty'] ?? null) : null,
                     'max_qty' => $request->tipe !== 'supplier' ? ($detail['max_qty'] ?? null) : null,
                     'min_nominal' => $request->tipe === 'supplier' ? ($detail['min_nominal'] ?? null) : null,
@@ -121,11 +123,11 @@ class DiskonStrataController extends Controller
      */
     public function edit($id)
     {
-        $item = DiskonStrata::with(['barangs', 'details'])->findOrFail($id);
+        $item = DiskonStrata::with(['barangs', 'details.satuan'])->findOrFail($id);
         $kategoris = Kategori::orderBy('nama_kategori')->get();
         $merks = Merk::orderBy('nama_merk')->get();
         $suppliers = Supplier::where('status', 1)->orderBy('nama_supplier')->get();
-        $barangs = Barang::where('status', 1)->orderBy('nama_barang')->get();
+        $barangs = Barang::with('satuans')->where('status', 1)->orderBy('nama_barang')->get();
 
         return view('master.diskon_strata.form', compact('item', 'kategoris', 'merks', 'suppliers', 'barangs'));
     }
@@ -145,6 +147,7 @@ class DiskonStrataController extends Controller
             'berlaku_sampai' => 'nullable|date',
             'barang_ids' => 'required_if:tipe,barang,beberapa_barang|array',
             'details' => 'required|array|min:1',
+            'details.*.satuan_id' => 'nullable|integer|exists:barang_satuan,id',
             'details.*.min_qty' => 'nullable|integer|min:0',
             'details.*.max_qty' => 'nullable|integer|min:0',
             'details.*.min_nominal' => 'nullable|numeric|min:0',
@@ -180,6 +183,7 @@ class DiskonStrataController extends Controller
             $header->details()->delete();
             foreach ($request->details as $detail) {
                 $header->details()->create([
+                    'satuan_id' => in_array($request->tipe, ['barang', 'beberapa_barang']) ? ($detail['satuan_id'] ?? null) : null,
                     'min_qty' => $request->tipe !== 'supplier' ? ($detail['min_qty'] ?? null) : null,
                     'max_qty' => $request->tipe !== 'supplier' ? ($detail['max_qty'] ?? null) : null,
                     'min_nominal' => $request->tipe === 'supplier' ? ($detail['min_nominal'] ?? null) : null,
