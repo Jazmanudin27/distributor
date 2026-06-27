@@ -153,7 +153,7 @@
                                 FROM retur_penjualan_detail as rpd
                                 JOIN retur_penjualan as rp ON rp.no_retur = rpd.no_retur
                                 WHERE rp.no_faktur = p.no_faktur AND rpd.kode_barang = d.kode_barang
-                            ), 0) as hpp_retur')
+                            ), 0) as hpp_retur'),
                         )
                         ->orderBy('p.tanggal')
                         ->orderBy('p.no_faktur')
@@ -162,8 +162,8 @@
 
                 @foreach ($detail as $row)
                     @php
-                        $returPenjualanVal = (float)$row->retur_penjualan;
-                        $hppReturVal = (float)$row->hpp_retur;
+                        $returPenjualanVal = (float) $row->retur_penjualan;
+                        $hppReturVal = (float) $row->hpp_retur;
 
                         $grandSubtotal += $row->subtotal;
                         $grandDiskon += $row->diskon;
@@ -178,7 +178,7 @@
                         // laba kotor = (Penjualan Net - Retur Penjualan) - (HPP - HPP Retur)
                         $penjualanNet = $row->total_penjualan - $returPenjualanVal;
                         $hppNet = $rowHpp - $hppReturVal;
-                        $rowLaba = $row->is_promo == 1 ? 0 : ($penjualanNet - $hppNet);
+                        $rowLaba = $row->is_promo == 1 ? 0 : $penjualanNet - $hppNet;
                         $grandLaba += $rowLaba;
 
                         $persenLaba = $penjualanNet > 0 ? ($rowLaba / $penjualanNet) * 100 : 0;
