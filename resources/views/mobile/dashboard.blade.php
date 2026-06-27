@@ -381,8 +381,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Footer: Total Grand Total -->
                 <div
                     class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-10 mt-2">
                     <span class="text-secondary" style="font-size: 0.75rem; font-weight: 500;">Grand Total:</span>

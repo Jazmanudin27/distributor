@@ -611,7 +611,6 @@ class LaporanKeuanganController extends Controller
                 ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
                 ->whereBetween('p.tanggal', [$tanggalAwal, $tanggalAkhir])
                 ->where('p.batal', 0)
-                ->where('d.is_promo', 0)
                 ->select(
                     'b.kode_supplier',
                     DB::raw('MAX(COALESCE(s.nama_supplier, CONCAT("Supplier: ", b.kode_supplier))) as nama_supplier')

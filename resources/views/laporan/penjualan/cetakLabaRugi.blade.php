@@ -122,7 +122,6 @@
                         ->leftJoin('supplier as sup', 'sup.kode_supplier', '=', 'b.kode_supplier')
                         ->whereBetween('p.tanggal', [$tanggal_dari, $tanggal_sampai])
                         ->where('p.batal', 0) // hanya ambil penjualan yang tidak batal
-                        ->where('d.is_promo', 0) // exclude promo
                         ->when(request('kode_supplier') ?: request('supplier'), function ($query) {
                             $query->where('b.kode_supplier', request('kode_supplier') ?: request('supplier'));
                         })

@@ -122,7 +122,6 @@
                             ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
                             ->whereBetween('p.tanggal', [$tanggal_dari, $tanggal_sampai])
                             ->where('b.kode_supplier', $d->kode_supplier)
-                            ->where('d.is_promo', 0)
                             ->where('p.batal', 0)
                             ->selectRaw('SUM(d.qty * d.harga) as bruto, SUM(d.total_diskon) as diskon')
                             ->first();

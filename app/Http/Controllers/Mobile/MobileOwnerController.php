@@ -235,7 +235,6 @@ class MobileOwnerController extends Controller
         $salesGross = (float) DB::table('penjualan_detail as d')
             ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
             ->where('p.batal', 0)
-            ->where('d.is_promo', 0)
             ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
             ->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
