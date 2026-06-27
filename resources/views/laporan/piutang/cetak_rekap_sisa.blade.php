@@ -209,7 +209,6 @@
                     <th style="width: 15%">NAMA PELANGGAN</th>
                     @if ($isSpvSales)
                         <th style="width: 8%">WILAYAH</th>
-                        <th style="width: 8%">SUB WILAYAH</th>
                     @endif
                     <th style="width: 7%">SALES</th>
                     <th style="width: 7%">JUMLAH</th>
@@ -233,7 +232,6 @@
                         <td class="nama-pelanggan">{{ $item['pelanggan']->nama_pelanggan ?? '-' }}</td>
                         @if ($isSpvSales)
                             <td class="text-center">{{ $item['pelanggan']->wilayah->nama_wilayah ?? '-' }}</td>
-                            <td class="text-center">{{ $item['pelanggan']->subWilayah->nama_wilayah ?? '-' }}</td>
                         @endif
                         <td>{{ $item['sales']->name ?? '-' }}</td>
                         <td style="text-align: right">{{ number_format($item['sisa_piutang'], 0, ',', '.') }}</td>

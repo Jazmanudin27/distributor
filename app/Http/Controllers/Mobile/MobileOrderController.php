@@ -750,6 +750,7 @@ class MobileOrderController extends Controller
             'items.*.kode_barang' => 'required|string|exists:barang,kode_barang',
             'items.*.satuan_id' => 'required|integer|exists:barang_satuan,id',
             'items.*.qty_ambil' => 'required|numeric|min:0.01',
+            'items.*.diskon_persen' => 'nullable|numeric|min:0|max:100',
         ]);
 
         // Pastikan tidak ada DPB aktif untuk sales ini
@@ -811,6 +812,7 @@ class MobileOrderController extends Controller
                         'kode_barang' => $item['kode_barang'],
                         'satuan_id' => $item['satuan_id'],
                         'qty_ambil' => $item['qty_ambil'],
+                        'diskon_persen' => isset($item['diskon_persen']) ? floatval($item['diskon_persen']) : 0,
                         'qty_terjual' => 0,
                         'qty_kembali' => 0,
                         'selisih' => $item['qty_ambil'],
@@ -1070,13 +1072,12 @@ class MobileOrderController extends Controller
                     }
 
                     $subtotal = $row['qty'] * $row['harga'];
-                    $strata   = $calculateStrata($row['kode_barang'], $row['qty'], $subtotal, $barang);
-                    $d1_pct   = $strata['d1'];
-                    $d2_pct   = $strata['d2'];
+                    $d1_pct   = isset($row['diskon1_persen']) ? floatval($row['diskon1_persen']) : 0;
+                    $d2_pct   = 0;
                     $d3_pct   = 0;
 
                     $d1        = $subtotal * ($d1_pct / 100);
-                    $d2        = ($subtotal - $d1) * ($d2_pct / 100);
+                    $d2        = 0;
                     $d3        = 0;
                     $rowDiskon = round($d1 + $d2 + $d3, 2);
                     $rowTotal  = $subtotal - $rowDiskon;

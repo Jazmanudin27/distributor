@@ -286,6 +286,11 @@ class BarangController extends Controller
                 continue; // skip items with no stock in canvas
             }
 
+            $canvasDiskon = 0;
+            if ($isCanvas && isset($activeCanvasDetails[$b->kode_barang])) {
+                $canvasDiskon = (float)($activeCanvasDetails[$b->kode_barang]->diskon_persen ?? 0);
+            }
+
             $results[] = [
                 'id' => $b->kode_barang,
                 'text' => $b->nama_barang . ' (Stok ' . $b->formatStok($stokVal) . ')',
@@ -295,6 +300,7 @@ class BarangController extends Controller
                 'merk' => $b->merk,
                 'kode_supplier' => $b->kode_supplier,
                 'stok' => $stokVal,
+                'diskon_persen' => $canvasDiskon,
                 'satuans' => $satuansList
             ];
         }

@@ -106,8 +106,6 @@
                     class="form-control form-control-sm bg-dark text-white border-secondary"
                     placeholder="Catatan tambahan (opsional)..."></textarea>
             </div>
-
-            <!-- Product List Container (Daftar Semua Barang) -->
             <div class="mb-3">
                 <label class="form-label text-secondary small mb-1">Pilih Barang dari Gudang</label>
                 <div class="input-group input-group-sm mb-2">
@@ -143,7 +141,7 @@
                 </div>
 
                 <div class="row g-2 mb-3">
-                    <div class="col-6">
+                    <div class="col-4">
                         <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Pilih
                             Satuan</label>
                         <select id="select-temp-satuan"
@@ -151,21 +149,21 @@
                             style="font-size: 0.75rem; border-radius: 8px; height: 34px;">
                         </select>
                     </div>
-                    <div class="col-6">
+                    <div class="col-4">
                         <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Jumlah
                             (Qty)</label>
-                        <div class="input-group input-group-sm">
-                            <button type="button" id="btn-temp-minus"
-                                class="btn btn-outline-secondary btn-qty-minus text-white px-2"
-                                style="border-radius: 8px 0 0 8px; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">-</button>
-                            <input type="number" id="input-temp-qty"
-                                class="form-control form-control-sm bg-dark text-white border-secondary text-center px-1"
-                                min="0.01" step="any" value="1"
-                                style="font-size: 0.8rem; border-color: rgba(255,255,255,0.15); height: 34px;">
-                            <button type="button" id="btn-temp-plus"
-                                class="btn btn-outline-secondary btn-qty-plus text-white px-2"
-                                style="border-radius: 0 8px 8px 0; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); height: 34px;">+</button>
-                        </div>
+                        <input type="number" id="input-temp-qty"
+                            class="form-control form-control-sm bg-dark text-white border-secondary text-center px-1"
+                            min="0.01" step="any" value="1"
+                            style="font-size: 0.8rem; border-color: rgba(255,255,255,0.15); height: 34px; border-radius: 8px !important;">
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label text-secondary mb-1" style="font-size: 0.7rem; font-weight: 500;">Diskon
+                            (%)</label>
+                        <input type="number" id="input-temp-diskon"
+                            class="form-control form-control-sm bg-dark text-white border-secondary text-center px-1"
+                            min="0" max="100" step="any" value="0"
+                            style="font-size: 0.8rem; border-color: rgba(255,255,255,0.15); height: 34px; border-radius: 8px !important;">
                     </div>
                 </div>
 
@@ -375,20 +373,6 @@
             inputTempQty.addEventListener('input', updateRequestedQtyInfo);
             inputTempQty.addEventListener('change', updateRequestedQtyInfo);
 
-            btnTempMinus.addEventListener('click', function() {
-                let val = parseFloat(inputTempQty.value) || 0;
-                if (val > 1) {
-                    inputTempQty.value = val - 1;
-                    updateRequestedQtyInfo();
-                }
-            });
-
-            btnTempPlus.addEventListener('click', function() {
-                let val = parseFloat(inputTempQty.value) || 0;
-                inputTempQty.value = val + 1;
-                updateRequestedQtyInfo();
-            });
-
             btnCancelSelect.addEventListener('click', function() {
                 clearSelection();
             });
@@ -397,6 +381,8 @@
                 currentSelectedProduct = null;
                 selectedProductPanel.classList.add('d-none');
                 productFilterInput.value = '';
+                const diskonInput = document.getElementById('input-temp-diskon');
+                if (diskonInput) diskonInput.value = 0;
                 renderProductList('');
             }
 
@@ -416,6 +402,9 @@
                     });
                     return;
                 }
+
+                const diskonInput = document.getElementById('input-temp-diskon');
+                const diskon = diskonInput ? (parseFloat(diskonInput.value) || 0) : 0;
 
                 const selectedOpt = selectTempSatuan.options[selectTempSatuan.selectedIndex];
                 const satuanId = selectTempSatuan.value;
@@ -461,10 +450,12 @@
                                 <span class="badge bg-secondary" style="font-size: 0.6rem; opacity: 0.8;">${currentSelectedProduct.kode_barang}</span>
                                 <span class="text-warning fw-semibold font-monospace" style="font-size: 0.75rem;">${qty} ${satuanName}</span>
                                 <span class="text-secondary" style="font-size: 0.65rem;">(Setara ${qtySmallest} PCS)</span>
+                                ${diskon > 0 ? `<span class="badge bg-danger" style="font-size: 0.6rem;">Disc: ${diskon}%</span>` : ''}
                             </div>
                             <input type="hidden" name="items[${rowIndex}][kode_barang]" value="${currentSelectedProduct.kode_barang}">
                             <input type="hidden" name="items[${rowIndex}][satuan_id]" value="${satuanId}">
                             <input type="hidden" name="items[${rowIndex}][qty_ambil]" value="${qty}">
+                            <input type="hidden" name="items[${rowIndex}][diskon_persen]" value="${diskon}">
                         </div>
                         <button type="button" class="btn btn-sm rounded-circle d-flex align-items-center justify-content-center btn-remove-item" style="width: 28px; height: 28px; background: rgba(239, 68, 68, 0.15); color: #f87171; border: none;">
                             <i class="fa-solid fa-trash-can" style="font-size: 0.8rem;"></i>

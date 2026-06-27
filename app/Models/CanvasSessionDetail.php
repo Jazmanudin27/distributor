@@ -16,6 +16,7 @@ class CanvasSessionDetail extends Model
         'kode_barang',
         'satuan_id',
         'qty_ambil',
+        'diskon_persen',
         'qty_terjual',
         'qty_kembali',
         'selisih'
@@ -23,6 +24,7 @@ class CanvasSessionDetail extends Model
 
     protected $casts = [
         'qty_ambil' => 'decimal:2',
+        'diskon_persen' => 'decimal:2',
         'qty_terjual' => 'decimal:2',
         'qty_kembali' => 'decimal:2',
         'selisih' => 'decimal:2',

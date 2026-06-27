@@ -13,6 +13,7 @@ class Wilayah extends Model
     protected $primaryKey = 'kode_wilayah';
     public $incrementing = false;
     protected $keyType = 'int';
+    public $timestamps = false;
 
     protected $fillable = ['kode_wilayah', 'nama_wilayah'];
 }

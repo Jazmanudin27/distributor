@@ -79,6 +79,7 @@ class CanvasController extends Controller
             'items.*.kode_barang' => 'required|string|exists:barang,kode_barang',
             'items.*.satuan_id' => 'required|integer|exists:barang_satuan,id',
             'items.*.qty_ambil' => 'required|numeric|min:0.01',
+            'items.*.diskon_persen' => 'nullable|numeric|min:0|max:100',
         ]);
 
         try {
@@ -138,6 +139,7 @@ class CanvasController extends Controller
                         'kode_barang' => $item['kode_barang'],
                         'satuan_id' => $item['satuan_id'],
                         'qty_ambil' => $item['qty_ambil'],
+                        'diskon_persen' => isset($item['diskon_persen']) ? floatval($item['diskon_persen']) : 0,
                         'qty_terjual' => 0,
                         'qty_kembali' => 0,
                         'selisih' => $item['qty_ambil'], // initially the entire taken qty is "discrepancy" (not sold or returned yet)

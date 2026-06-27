@@ -66,13 +66,13 @@
                                     style="font-size: 11px; font-weight: 600;"></span>
                             </div>
                             <div class="row g-2 align-items-end">
-                                <div class="col-md-5 col-sm-12">
+                                <div class="col-md-4 col-sm-12">
                                     <label class="form-label fs-7 fw-bold text-secondary mb-1">Pilih Barang</label>
                                     <select id="quick_barang" class="form-select form-select-sm" style="width: 100%;">
                                         <option value="">-- Cari / Pilih Barang --</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3 col-sm-6">
+                                <div class="col-md-2 col-sm-6">
                                     <label class="form-label fs-7 fw-bold text-secondary mb-1">Satuan</label>
                                     <select id="quick_satuan" class="form-select form-select-sm" disabled>
                                         <option value="">-- Pilih Satuan --</option>
@@ -83,6 +83,12 @@
                                     <input type="number" id="quick_qty"
                                         class="form-control form-control-sm text-center fw-bold text-primary" value="1"
                                         min="0.01" step="any" placeholder="0.00">
+                                </div>
+                                <div class="col-md-2 col-sm-6">
+                                    <label class="form-label fs-7 fw-bold text-secondary mb-1">Diskon (%)</label>
+                                    <input type="number" id="quick_diskon"
+                                        class="form-control form-control-sm text-center fw-bold text-primary" value="0"
+                                        min="0" max="100" step="any" placeholder="0.00">
                                 </div>
                                 <div class="col-md-2 col-sm-12">
                                     <button type="button" class="btn btn-primary btn-sm w-100 fw-bold hover-scale py-1.5"
@@ -108,7 +114,8 @@
                                             <th>Nama Barang</th>
                                             <th width="200" class="text-center">Stok Gudang</th>
                                             <th width="150" class="text-center">Satuan</th>
-                                            <th width="150" class="text-center">Qty Muat</th>
+                                            <th width="120" class="text-center">Qty Muat</th>
+                                            <th width="120" class="text-center">Diskon (%)</th>
                                             <th width="80" class="text-center">Aksi</th>
                                         </tr>
                                     </thead>
@@ -305,17 +312,19 @@
 
                 const satuanName = $('#quick_satuan').find(':selected').text().split(' (Isi')[0].trim();
                 const formattedStok = formatStokJS(barang.stok, barang.satuans);
+                const diskon = parseFloat($('#quick_diskon').val()) || 0;
 
-                appendRow(barangCode, barang.nama_barang, satuanId, satuanName, qty, formattedStok);
+                appendRow(barangCode, barang.nama_barang, satuanId, satuanName, qty, diskon, formattedStok);
 
                 // Reset Quick Inputs
                 $('#quick_barang').val('').trigger('change');
                 $('#quick_qty').val(1);
+                $('#quick_diskon').val(0);
                 $('#quick_barang').select2('open');
             });
 
-            // Add on Enter key press in Qty and Satuan fields
-            $('#quick_qty, #quick_satuan').on('keypress', function(e) {
+            // Add on Enter key press in Qty, Satuan and Diskon fields
+            $('#quick_qty, #quick_satuan, #quick_diskon').on('keypress', function(e) {
                 if (e.which === 13) {
                     e.preventDefault();
                     $('#btn-add-quick').click();
@@ -377,7 +386,7 @@
                 reindexRows();
             });
 
-            function appendRow(barangCode, barangName, satuanId, satuanName, qty, formattedStok) {
+            function appendRow(barangCode, barangName, satuanId, satuanName, qty, diskon, formattedStok) {
                 const template = `
                 <tr class="item-row" data-index="${rowIdx}">
                     <td class="row-num text-center fw-bold text-secondary font-12"></td>
@@ -395,8 +404,11 @@
                         </span>
                         <input type="hidden" name="items[${rowIdx}][satuan_id]" value="${satuanId}">
                     </td>
-                    <td style="width: 150px;">
+                    <td style="width: 120px;">
                         <input type="number" name="items[${rowIdx}][qty_ambil]" class="form-control form-control-sm text-center fw-bold text-primary input-qty" value="${qty}" min="0.01" step="any" placeholder="0.00" required>
+                    </td>
+                    <td style="width: 120px;">
+                        <input type="number" name="items[${rowIdx}][diskon_persen]" class="form-control form-control-sm text-center fw-bold text-primary input-diskon" value="${diskon}" min="0" max="100" step="any" placeholder="0.00" required>
                     </td>
                     <td class="text-center">
                         <button type="button" class="btn btn-sm btn-outline-danger remove-row-btn"><i class="fa-solid fa-trash"></i></button>

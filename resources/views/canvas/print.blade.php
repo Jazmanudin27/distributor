@@ -169,7 +169,7 @@
                 <tr class="row-barang">
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td class="text-center font-monospace">{{ $detail->kode_barang }}</td>
-                    <td>{{ $detail->barang->nama_barang }}</td>
+                    <td>{{ $detail->barang->nama_barang }}{{ $detail->diskon_persen > 0 ? ' (Disc: ' . (float)$detail->diskon_persen . '%)' : '' }}</td>
                     <td class="text-end fw-bold">
                         {{ str_replace(', ', ' ', $detail->barang->formatStok($qtyAmbilSmallest)) }}</td>
                     <td class="text-end fw-bold text-info">

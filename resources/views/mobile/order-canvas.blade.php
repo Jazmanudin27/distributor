@@ -410,6 +410,7 @@
                     'card-item bg-dark bg-opacity-40 border border-secondary border-opacity-30 rounded-4 p-3 mb-2 cart-item-card';
                 card.setAttribute('data-code', product.kode_barang);
                 card.setAttribute('id', `row_${rowIndex}`);
+                card.setAttribute('data-manual-discount', '1');
 
                 let unitOptions = '';
                 const selectedSatuanId = savedValues ? parseInt(savedValues.satuan_id) : (product.satuans.length >
@@ -424,9 +425,9 @@
                 if (savedValues) defaultPrice = savedValues.harga;
 
                 const initialQty = savedValues ? savedValues.qty : 1;
-                const initialD1 = savedValues ? savedValues.diskon1 : 0;
-                const initialD2 = savedValues ? savedValues.diskon2 : 0;
-                const initialD3 = savedValues ? savedValues.diskon3 : 0;
+                const initialD1 = savedValues ? savedValues.diskon1 : (product.diskon_persen || 0);
+                const initialD2 = 0;
+                const initialD3 = 0;
 
                 card.innerHTML = `
                     <div class="d-flex justify-content-between align-items-start mb-2">
@@ -444,24 +445,24 @@
                     </div>
 
                     <div class="row g-2 align-items-center mb-2">
-                        <div class="col-4">
+                        <div class="col-3">
                             <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Satuan</label>
-                            <select name="items[${rowIndex}][satuan_id]" class="form-select form-select-sm bg-dark text-white border-secondary select-satuan" style="font-size: 0.75rem; border-radius: 8px; height: 32px; padding: 2px 8px;">
+                            <select name="items[${rowIndex}][satuan_id]" class="form-select form-select-sm bg-dark text-white border-secondary select-satuan" style="font-size: 0.75rem; border-radius: 8px; height: 32px; padding: 2px 4px;">
                                 ${unitOptions}
                             </select>
                             <input type="hidden" name="items[${rowIndex}][satuan]" class="hidden-satuan-name" value="${product.satuans.length > 0 ? product.satuans[0].satuan : ''}">
                         </div>
-                        <div class="col-4">
+                        <div class="col-3">
                             <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Qty</label>
-                            <div class="input-group input-group-sm" style="height: 32px;">
-                                <button type="button" class="btn btn-outline-secondary btn-qty-minus text-white px-2 d-flex align-items-center justify-content-center" style="border-radius: 8px 0 0 8px; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); width: 28px; height: 100%;">-</button>
-                                <input type="number" name="items[${rowIndex}][qty]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-qty px-1" min="0.01" step="any" value="${initialQty}" required style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 100%;">
-                                <button type="button" class="btn btn-outline-secondary btn-qty-plus text-white px-2 d-flex align-items-center justify-content-center" style="border-radius: 0 8px 8px 0; border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); width: 28px; height: 100%;">+</button>
-                            </div>
+                            <input type="number" name="items[${rowIndex}][qty]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-qty px-1" min="0.01" step="any" value="${initialQty}" required style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important;">
                         </div>
-                        <div class="col-4 text-end">
+                        <div class="col-3">
+                            <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Disc 1 (%)</label>
+                            <input type="number" name="items[${rowIndex}][diskon1_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon1 px-1" min="0" max="100" step="any" value="${initialD1}" style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important;">
+                        </div>
+                        <div class="col-3 text-end">
                             <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Harga</label>
-                            <div class="fw-semibold text-white-50 price-display" style="font-size: 0.75rem; line-height: 32px;">
+                            <div class="fw-semibold text-white-50 price-display" style="font-size: 0.75rem; line-height: 32px; text-align: right;">
                                 Rp ${parseFloat(defaultPrice).toLocaleString('id-ID')}
                             </div>
                             <input type="hidden" name="items[${rowIndex}][harga]" class="input-harga" value="${defaultPrice}">
@@ -478,7 +479,6 @@
                         </div>
                     </div>
 
-                    <input type="hidden" name="items[${rowIndex}][diskon1_persen]" class="input-diskon1" value="${initialD1}">
                     <input type="hidden" name="items[${rowIndex}][diskon2_persen]" class="input-diskon2" value="${initialD2}">
                     <input type="hidden" name="items[${rowIndex}][diskon3_persen]" class="input-diskon3" value="${initialD3}">
                 `;
@@ -490,6 +490,10 @@
                     cartContainer.prepend(card);
                 }
 
+                if (savedValues && savedValues.isManual === 1) {
+                    card.setAttribute('data-manual-discount', '1');
+                }
+
                 const selectSatuan = card.querySelector('.select-satuan');
                 const hiddenSatuanName = card.querySelector('.hidden-satuan-name');
                 const inputHarga = card.querySelector('.input-harga');
@@ -498,8 +502,6 @@
                 const inputDis1 = card.querySelector('.input-diskon1');
                 const inputDis2 = card.querySelector('.input-diskon2');
                 const inputDis3 = card.querySelector('.input-diskon3');
-                const btnQtyMinus = card.querySelector('.btn-qty-minus');
-                const btnQtyPlus = card.querySelector('.btn-qty-plus');
 
                 const selectedOpt = selectSatuan.options[selectSatuan.selectedIndex];
                 if (selectedOpt) hiddenSatuanName.value = selectedOpt.getAttribute('data-name');
@@ -528,6 +530,11 @@
                     validateFormState();
                 });
 
+                inputDis1.addEventListener('input', function() {
+                    card.setAttribute('data-manual-discount', '1');
+                    calculateTotals();
+                });
+
                 [inputQty, inputHarga, inputDis1, inputDis2, inputDis3].forEach(input => {
                     input.addEventListener('input', calculateTotals);
                 });
@@ -535,23 +542,6 @@
                 inputQty.addEventListener('change', function() {
                     checkStockLimit(card);
                     calculateTotals();
-                });
-
-                btnQtyMinus.addEventListener('click', function() {
-                    let val = parseFloat(inputQty.value) || 0;
-                    if (val > 0.01) {
-                        let newVal = Math.max(0.01, val - 1);
-                        inputQty.value = parseFloat(newVal.toFixed(2));
-                        inputQty.dispatchEvent(new Event('input'));
-                        inputQty.dispatchEvent(new Event('change'));
-                    }
-                });
-
-                btnQtyPlus.addEventListener('click', function() {
-                    let val = parseFloat(inputQty.value) || 0;
-                    inputQty.value = parseFloat((val + 1).toFixed(2));
-                    inputQty.dispatchEvent(new Event('input'));
-                    inputQty.dispatchEvent(new Event('change'));
                 });
 
                 rowIndex++;
@@ -583,6 +573,16 @@
                     const sub = qty * harga;
                     const b = barangsCache[barangCode];
                     if (!b) return;
+
+                    const inputDis1 = card.querySelector('.input-diskon1');
+                    const inputDis2 = card.querySelector('.input-diskon2');
+                    const inputDis3 = card.querySelector('.input-diskon3');
+
+                    if (card.getAttribute('data-manual-discount') === '1') {
+                        if (inputDis2) inputDis2.value = '0';
+                        if (inputDis3) inputDis3.value = '0';
+                        return;
+                    }
 
                     let bestRate = 0,
                         bestRule = null,
@@ -645,31 +645,26 @@
                         });
                     }
 
-                    const inputDis1 = card.querySelector('.input-diskon1');
-                    const inputDis2 = card.querySelector('.input-diskon2');
                     if (bestRule && bestDetail) {
-                        let d1_pct = 0,
-                            d2_pct = 0;
+                        let d1_pct = 0;
                         const rawDis1 = parseFloat(bestDetail.dis1) || 0;
-                        const rawDis2 = parseFloat(bestDetail.dis2) || 0;
                         if (bestDetail.tipe_nilai === 'persen') {
                             d1_pct = rawDis1;
-                            d2_pct = rawDis2;
                         } else {
                             if (bestRule.tipe === 'supplier') {
                                 const t = supplierSubtotals[b.kode_supplier] || 1;
                                 d1_pct = (rawDis1 / t) * 100;
-                                d2_pct = (rawDis2 / t) * 100;
                             } else if (sub > 0) {
                                 d1_pct = (rawDis1 / sub) * 100;
-                                d2_pct = (rawDis2 / sub) * 100;
                             }
                         }
-                        inputDis1.value = d1_pct.toFixed(2);
-                        inputDis2.value = jenisTransaksi === 'Tunai' ? d2_pct.toFixed(2) : '0';
+                        if (inputDis1) inputDis1.value = d1_pct.toFixed(2);
+                        if (inputDis2) inputDis2.value = '0';
+                        if (inputDis3) inputDis3.value = '0';
                     } else {
-                        inputDis1.value = '0';
-                        inputDis2.value = '0';
+                        if (inputDis1) inputDis1.value = '0';
+                        if (inputDis2) inputDis2.value = '0';
+                        if (inputDis3) inputDis3.value = '0';
                     }
                 });
             }
@@ -757,6 +752,7 @@
                     const diskon1 = card.querySelector('.input-diskon1').value;
                     const diskon2 = card.querySelector('.input-diskon2').value;
                     const diskon3 = card.querySelector('.input-diskon3').value;
+                    const isManual = card.getAttribute('data-manual-discount') === '1' ? 1 : 0;
                     const product = barangsCache[code];
 
                     items.push({
@@ -767,6 +763,7 @@
                         diskon1: diskon1,
                         diskon2: diskon2,
                         diskon3: diskon3,
+                        isManual: isManual,
                         product: product
                     });
                 });

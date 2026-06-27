@@ -73,7 +73,11 @@
                                         <td class="text-center fw-semibold text-secondary">{{ $index + 1 }}</td>
                                         <td>
                                             <div class="fw-bold text-dark">{{ $detail->barang->nama_barang }}</div>
-                                            <span class="text-secondary small font-11">Kode: {{ $detail->kode_barang }}</span>
+                                            <span class="text-secondary small font-11">Kode: {{ $detail->kode_barang }}
+                                                @if($detail->diskon_persen > 0)
+                                                    | Diskon: {{ (float)$detail->diskon_persen }}%
+                                                @endif
+                                            </span>
                                         </td>
                                         <td class="text-center">
                                             <span class="badge bg-light text-secondary border fw-semibold font-11 py-1 px-2.5"

@@ -88,7 +88,8 @@ class CanvasSalesTest extends TestCase
             'nama_pelanggan' => 'Pelanggan Test',
             'status' => 1,
             'limit_kredit' => 1000000,
-            'metode_bayar' => 'Cash'
+            'metode_bayar' => 'Cash',
+            'kode_sales' => $this->salesman->nik
         ]);
     }
 

@@ -80,14 +80,23 @@ class CanvasService
      */
     public static function trackSale($penjualan): void
     {
+        \Log::info("trackSale called for: " . $penjualan->no_faktur);
         if (!self::isCanvasSalesman($penjualan->kode_sales)) {
+            \Log::info("isCanvasSalesman failed for: " . ($penjualan->kode_sales ?? 'null'));
             return;
         }
 
         $session = self::getActiveSession($penjualan->kode_sales, $penjualan->tanggal ? $penjualan->tanggal->toDateString() : null);
         if (!$session) {
+            \Log::info("getActiveSession failed for: " . $penjualan->kode_sales . " date: " . ($penjualan->tanggal ? $penjualan->tanggal->toDateString() : 'null'));
             return;
         }
+
+        if (!$penjualan->relationLoaded('details')) {
+            $penjualan->load('details');
+        }
+
+        \Log::info("details count in trackSale: " . $penjualan->details->count());
 
         foreach ($penjualan->details as $detail) {
             $canvasDetail = $session->details()
@@ -102,9 +111,13 @@ class CanvasService
                     $detail->kode_barang
                 );
 
+                \Log::info("tracking qty: " . $convertedQty . " for " . $detail->kode_barang);
+
                 $canvasDetail->qty_terjual = (float)$canvasDetail->qty_terjual + $convertedQty;
                 $canvasDetail->selisih = (float)$canvasDetail->qty_ambil - $canvasDetail->qty_terjual - (float)$canvasDetail->qty_kembali;
                 $canvasDetail->save();
+            } else {
+                \Log::info("canvasDetail not found for: " . $detail->kode_barang);
             }
         }
     }
@@ -123,6 +136,10 @@ class CanvasService
             return;
         }
 
+        if (!$penjualan->relationLoaded('details')) {
+            $penjualan->load('details');
+        }
+
         foreach ($penjualan->details as $detail) {
             $canvasDetail = $session->details()
                 ->where('kode_barang', $detail->kode_barang)
@@ -136,7 +153,7 @@ class CanvasService
                     $detail->kode_barang
                 );
 
-                $canvasDetail->qty_terjual = max(0.0, (float)$canvasDetail->qty_terjual - $convertedQty);
+                $canvasDetail->qty_terjual = max(0, (float)$canvasDetail->qty_terjual - $convertedQty);
                 $canvasDetail->selisih = (float)$canvasDetail->qty_ambil - $canvasDetail->qty_terjual - (float)$canvasDetail->qty_kembali;
                 $canvasDetail->save();
             }

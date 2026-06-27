@@ -606,6 +606,7 @@ class LaporanKeuanganController extends Controller
 
         if ($format === '2') {
             $data = DB::table('supplier as s')
+                ->select('s.kode_supplier', 's.nama_supplier')
                 ->where('s.status', '1')
                 ->groupBy('s.kode_supplier', 's.nama_supplier')
                 ->orderBy('s.nama_supplier')
