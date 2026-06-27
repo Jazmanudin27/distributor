@@ -229,7 +229,7 @@ class MobileOwnerController extends Controller
         }
 
         $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
-        $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
+        $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-t'));
 
         // 1. Penjualan Kotor
         $salesGross = (float) DB::table('penjualan_detail as d')
