@@ -52,19 +52,25 @@ class MobileOrderController extends Controller
         }
 
         // Calculate summary for today & month
-        $todaySalesQuery = Penjualan::where('batal', 0)
-            ->whereDate('tanggal', $todayStr);
+        $todaySalesQuery = DB::table('penjualan_detail as d')
+            ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+            ->where('p.batal', 0)
+            ->where('d.is_promo', 0)
+            ->whereDate('p.tanggal', $todayStr);
 
-        $monthSalesQuery = Penjualan::where('batal', 0)
-            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
+        $monthSalesQuery = DB::table('penjualan_detail as d')
+            ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+            ->where('p.batal', 0)
+            ->where('d.is_promo', 0)
+            ->whereBetween('p.tanggal', [$startOfMonth, $endOfMonth]);
 
         if (!$isSpv) {
-            $todaySalesQuery->where('kode_sales', $nik);
-            $monthSalesQuery->where('kode_sales', $nik);
+            $todaySalesQuery->where('p.kode_sales', $nik);
+            $monthSalesQuery->where('p.kode_sales', $nik);
         }
 
-        $todaySales = $todaySalesQuery->sum('grand_total');
-        $monthSales = $monthSalesQuery->sum('grand_total');
+        $todaySales = (float) $todaySalesQuery->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
+        $monthSales = (float) $monthSalesQuery->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
         $orders = $query->orderBy('tanggal', 'desc')
             ->orderBy('created_at', 'desc')

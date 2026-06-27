@@ -26,8 +26,19 @@ class MobileOwnerController extends Controller
         $endOfMonth = Carbon::now()->endOfMonth()->toDateString();
 
         // 1. Penjualan
-        $salesToday = (float) Penjualan::where('batal', 0)->whereDate('tanggal', $today)->sum('grand_total');
-        $salesMonth = (float) Penjualan::where('batal', 0)->whereBetween('tanggal', [$startOfMonth, $endOfMonth])->sum('grand_total');
+        $salesToday = (float) DB::table('penjualan_detail as d')
+            ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+            ->where('p.batal', 0)
+            ->where('d.is_promo', 0)
+            ->whereDate('p.tanggal', $today)
+            ->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
+
+        $salesMonth = (float) DB::table('penjualan_detail as d')
+            ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+            ->where('p.batal', 0)
+            ->where('d.is_promo', 0)
+            ->whereBetween('p.tanggal', [$startOfMonth, $endOfMonth])
+            ->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
         // 2. Pembelian
         $purchaseToday = (float) Pembelian::whereDate('tanggal', $today)->sum('grand_total');
@@ -90,10 +101,13 @@ class MobileOwnerController extends Controller
 
         $topSales = [];
         foreach ($salesList as $sales) {
-            $totalSales = (float) Penjualan::where('kode_sales', $sales->nik)
-                ->where('batal', 0)
-                ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
-                ->sum('grand_total');
+            $totalSales = (float) DB::table('penjualan_detail as d')
+                ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+                ->where('p.kode_sales', $sales->nik)
+                ->where('p.batal', 0)
+                ->where('d.is_promo', 0)
+                ->whereBetween('p.tanggal', [$startOfMonth, $endOfMonth])
+                ->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
             $invoiceCount = Penjualan::where('kode_sales', $sales->nik)
                 ->where('batal', 0)
@@ -227,9 +241,12 @@ class MobileOwnerController extends Controller
         $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
 
         // 1. Penjualan Kotor
-        $salesGross = (float) Penjualan::where('batal', 0)
-            ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
-            ->sum('grand_total');
+        $salesGross = (float) DB::table('penjualan_detail as d')
+            ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+            ->where('p.batal', 0)
+            ->where('d.is_promo', 0)
+            ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
         // 2. Retur Penjualan
         $salesReturn = (float) DB::table('retur_penjualan')
@@ -662,13 +679,21 @@ class MobileOwnerController extends Controller
         $endOfMonth = now()->endOfMonth()->toDateString();
 
         // Calculate summary for context
-        $todaySalesQuery = Penjualan::where('batal', 0)->whereDate('tanggal', $todayStr);
-        if ($selected_sales !== '') $todaySalesQuery->where('kode_sales', $selected_sales);
-        $todaySales = $todaySalesQuery->sum('grand_total');
+        $todaySalesQuery = DB::table('penjualan_detail as d')
+            ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+            ->where('p.batal', 0)
+            ->where('d.is_promo', 0)
+            ->whereDate('p.tanggal', $todayStr);
+        if ($selected_sales !== '') $todaySalesQuery->where('p.kode_sales', $selected_sales);
+        $todaySales = (float) $todaySalesQuery->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
-        $monthSalesQuery = Penjualan::where('batal', 0)->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
-        if ($selected_sales !== '') $monthSalesQuery->where('kode_sales', $selected_sales);
-        $monthSales = $monthSalesQuery->sum('grand_total');
+        $monthSalesQuery = DB::table('penjualan_detail as d')
+            ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+            ->where('p.batal', 0)
+            ->where('d.is_promo', 0)
+            ->whereBetween('p.tanggal', [$startOfMonth, $endOfMonth]);
+        if ($selected_sales !== '') $monthSalesQuery->where('p.kode_sales', $selected_sales);
+        $monthSales = (float) $monthSalesQuery->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
         // Fetch lists for filter dropdowns
         $salesmen = \App\Models\User::whereIn('role', ['sales', 'spv sales'])

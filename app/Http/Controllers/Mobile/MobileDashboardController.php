@@ -28,14 +28,20 @@ class MobileDashboardController extends Controller
 
         if ($isSpv) {
             // Achieved sales of all sales this month
-            $achievedSales = Penjualan::where('batal', 0)
-                ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
-                ->sum('grand_total');
+            $achievedSales = (float) \Illuminate\Support\Facades\DB::table('penjualan_detail as d')
+                ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+                ->where('p.batal', 0)
+                ->where('d.is_promo', 0)
+                ->whereBetween('p.tanggal', [$startOfMonth, $endOfMonth])
+                ->sum(\Illuminate\Support\Facades\DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
             // Today's sales of all sales
-            $todaySales = Penjualan::where('batal', 0)
-                ->whereDate('tanggal', $today)
-                ->sum('grand_total');
+            $todaySales = (float) \Illuminate\Support\Facades\DB::table('penjualan_detail as d')
+                ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+                ->where('p.batal', 0)
+                ->where('d.is_promo', 0)
+                ->whereDate('p.tanggal', $today)
+                ->sum(\Illuminate\Support\Facades\DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
             // Today's visits count of all sales
             $todayVisitsCount = PenjualanCheckin::whereDate('checkin', $today)
@@ -48,16 +54,22 @@ class MobileDashboardController extends Controller
                 ->get();
         } else {
             // 1. Achieved sales this month
-            $achievedSales = Penjualan::where('kode_sales', $nik)
-                ->where('batal', 0)
-                ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
-                ->sum('grand_total');
+            $achievedSales = (float) \Illuminate\Support\Facades\DB::table('penjualan_detail as d')
+                ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+                ->where('p.kode_sales', $nik)
+                ->where('p.batal', 0)
+                ->where('d.is_promo', 0)
+                ->whereBetween('p.tanggal', [$startOfMonth, $endOfMonth])
+                ->sum(\Illuminate\Support\Facades\DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
             // 2. Today's sales
-            $todaySales = Penjualan::where('kode_sales', $nik)
-                ->where('batal', 0)
-                ->whereDate('tanggal', $today)
-                ->sum('grand_total');
+            $todaySales = (float) \Illuminate\Support\Facades\DB::table('penjualan_detail as d')
+                ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+                ->where('p.kode_sales', $nik)
+                ->where('p.batal', 0)
+                ->where('d.is_promo', 0)
+                ->whereDate('p.tanggal', $today)
+                ->sum(\Illuminate\Support\Facades\DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
             // 3. Today's visits count
             $todayVisitsCount = PenjualanCheckin::where('kode_sales', $nik)
@@ -134,10 +146,13 @@ class MobileDashboardController extends Controller
         $totalVisitsCount = 0;
 
         if ($isSales && $nik) {
-            $achievedSales = Penjualan::where('kode_sales', $nik)
-                ->where('batal', 0)
-                ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
-                ->sum('grand_total');
+            $achievedSales = (float) \Illuminate\Support\Facades\DB::table('penjualan_detail as d')
+                ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+                ->where('p.kode_sales', $nik)
+                ->where('p.batal', 0)
+                ->where('d.is_promo', 0)
+                ->whereBetween('p.tanggal', [$startOfMonth, $endOfMonth])
+                ->sum(\Illuminate\Support\Facades\DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
             $totalOrdersCount = Penjualan::where('kode_sales', $nik)->where('batal', 0)->count();
             $totalVisitsCount = PenjualanCheckin::where('kode_sales', $nik)->count();
@@ -169,10 +184,13 @@ class MobileDashboardController extends Controller
 
         $achievements = [];
         foreach ($salesList as $sales) {
-            $totalSales = (float) Penjualan::where('kode_sales', $sales->nik)
-                ->where('batal', 0)
-                ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
-                ->sum('grand_total');
+            $totalSales = (float) \Illuminate\Support\Facades\DB::table('penjualan_detail as d')
+                ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+                ->where('p.kode_sales', $sales->nik)
+                ->where('p.batal', 0)
+                ->where('d.is_promo', 0)
+                ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
+                ->sum(\Illuminate\Support\Facades\DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
             $invoiceCount = Penjualan::where('kode_sales', $sales->nik)
                 ->where('batal', 0)
