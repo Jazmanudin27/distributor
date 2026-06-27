@@ -239,10 +239,18 @@ class MobileOwnerController extends Controller
             ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
             ->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
-        // 2. Retur Penjualan
-        $salesReturn = (float) DB::table('retur_penjualan')
-            ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
-            ->sum('total');
+        // 2. Retur Penjualan (scoped to invoices in date range to match Admin Laba Rugi Format 1)
+        $salesReturn = (float) DB::table('retur_penjualan_detail as rpd')
+            ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
+            ->join('penjualan as p', 'p.no_faktur', '=', 'rp.no_faktur')
+            ->join('penjualan_detail as pd', function($join) {
+                $join->on('pd.no_faktur', '=', 'p.no_faktur')
+                     ->on('pd.kode_barang', '=', 'rpd.kode_barang');
+            })
+            ->where('p.batal', 0)
+            ->where('pd.is_promo', 0)
+            ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->sum(DB::raw('rpd.subtotal_retur - COALESCE(rpd.total_diskon_rupiah, 0)'));
 
         // 3. Penjualan Bersih
         $salesNet = $salesGross - $salesReturn;
@@ -259,17 +267,18 @@ class MobileOwnerController extends Controller
             ->select(DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp'))
             ->first()->total_hpp ?? 0;
 
-        // 5. HPP Retur Penjualan (qty * barang_satuan.harga_pokok)
-        $hppReturn = (float) DB::table('retur_penjualan_detail')
-            ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
-            ->join('barang_satuan', 'retur_penjualan_detail.id_satuan', '=', 'barang_satuan.id')
-            ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-            ->select(DB::raw('SUM(retur_penjualan_detail.qty * barang_satuan.harga_pokok) as total_hpp'))
-            ->first()->total_hpp ?? 0;
-
-        if ($hppReturn == 0 && $salesReturn > 0 && $salesGross > 0) {
-            $hppReturn = $salesReturn * ($hppGross / $salesGross);
-        }
+        // 5. HPP Retur Penjualan (scoped to invoices in date range and uses pd.harga_pokok)
+        $hppReturn = (float) DB::table('retur_penjualan_detail as rpd')
+            ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
+            ->join('penjualan as p', 'p.no_faktur', '=', 'rp.no_faktur')
+            ->join('penjualan_detail as pd', function($join) {
+                $join->on('pd.no_faktur', '=', 'p.no_faktur')
+                     ->on('pd.kode_barang', '=', 'rpd.kode_barang');
+            })
+            ->where('p.batal', 0)
+            ->where('pd.is_promo', 0)
+            ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->sum(DB::raw('rpd.qty * pd.harga_pokok'));
 
         // 6. HPP Bersih
         $hppNet = $hppGross - $hppReturn;
@@ -302,26 +311,45 @@ class MobileOwnerController extends Controller
             ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
             ->where('penjualan.batal', 0)
             ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-            ->where(function($q) {
-                $q->whereNull('penjualan_detail.is_promo')
-                  ->orWhere('penjualan_detail.is_promo', '!=', 1);
-            })
+            ->where('penjualan_detail.is_promo', 0)
             ->select('penjualan.no_faktur', DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp'))
             ->groupBy('penjualan.no_faktur')
             ->get()->keyBy('no_faktur');
 
-        $returList = DB::table('retur_penjualan')
-            ->leftJoin('penjualan', 'retur_penjualan.no_faktur', '=', 'penjualan.no_faktur')
-            ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-            ->select('retur_penjualan.no_retur', 'retur_penjualan.tanggal', 'retur_penjualan.total as grand_total', 'penjualan.kode_sales')
+        $returList = DB::table('retur_penjualan_detail as rpd')
+            ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
+            ->join('penjualan as p', 'p.no_faktur', '=', 'rp.no_faktur')
+            ->join('penjualan_detail as pd', function($join) {
+                $join->on('pd.no_faktur', '=', 'p.no_faktur')
+                     ->on('pd.kode_barang', '=', 'rpd.kode_barang');
+            })
+            ->where('p.batal', 0)
+            ->where('pd.is_promo', 0)
+            ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->select(
+                'rp.no_retur',
+                'p.tanggal as invoice_date',
+                'p.kode_sales',
+                DB::raw('SUM(rpd.subtotal_retur - COALESCE(rpd.total_diskon_rupiah, 0)) as total_return')
+            )
+            ->groupBy('rp.no_retur', 'p.tanggal', 'p.kode_sales')
             ->get();
 
-        $returHppList = DB::table('retur_penjualan_detail')
-            ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
-            ->join('barang_satuan', 'retur_penjualan_detail.id_satuan', '=', 'barang_satuan.id')
-            ->whereBetween('retur_penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-            ->select('retur_penjualan.no_retur', DB::raw('SUM(retur_penjualan_detail.qty * barang_satuan.harga_pokok) as total_hpp'))
-            ->groupBy('retur_penjualan.no_retur')
+        $returHppList = DB::table('retur_penjualan_detail as rpd')
+            ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
+            ->join('penjualan as p', 'p.no_faktur', '=', 'rp.no_faktur')
+            ->join('penjualan_detail as pd', function($join) {
+                $join->on('pd.no_faktur', '=', 'p.no_faktur')
+                     ->on('pd.kode_barang', '=', 'rpd.kode_barang');
+            })
+            ->where('p.batal', 0)
+            ->where('pd.is_promo', 0)
+            ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->select(
+                'rp.no_retur',
+                DB::raw('SUM(rpd.qty * pd.harga_pokok) as total_hpp_return')
+            )
+            ->groupBy('rp.no_retur')
             ->get()->keyBy('no_retur');
 
         $users = \App\Models\User::pluck('name', 'nik');
@@ -342,21 +370,17 @@ class MobileOwnerController extends Controller
         }
 
         foreach ($returList as $r) {
-            $date = $r->tanggal;
+            $date = $r->invoice_date;
             $salesNik = $r->kode_sales ?: 'UMUM';
             $salesName = $users[$salesNik] ?? ($salesNik == 'UMUM' ? 'Tanpa Sales' : $salesNik);
-            $hpp = $returHppList[$r->no_retur]->total_hpp ?? 0;
+            $hpp = $returHppList[$r->no_retur]->total_hpp_return ?? 0;
             
-            if ($hpp == 0 && $r->grand_total > 0 && $salesGross > 0) {
-                 $hpp = $r->grand_total * ($hppGross / $salesGross);
-            }
-
             if (!isset($dailyBreakdown[$date])) $dailyBreakdown[$date] = ['salesGross' => 0, 'salesReturn' => 0, 'hppGross' => 0, 'hppReturn' => 0];
-            $dailyBreakdown[$date]['salesReturn'] += $r->grand_total;
+            $dailyBreakdown[$date]['salesReturn'] += $r->total_return;
             $dailyBreakdown[$date]['hppReturn'] += $hpp;
 
             if (!isset($salesBreakdown[$salesName])) $salesBreakdown[$salesName] = ['salesGross' => 0, 'salesReturn' => 0, 'hppGross' => 0, 'hppReturn' => 0];
-            $salesBreakdown[$salesName]['salesReturn'] += $r->grand_total;
+            $salesBreakdown[$salesName]['salesReturn'] += $r->total_return;
             $salesBreakdown[$salesName]['hppReturn'] += $hpp;
         }
 
