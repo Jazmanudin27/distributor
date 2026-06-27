@@ -135,7 +135,6 @@
                             <th class="text-end">Qty</th>
                             <th>Satuan</th>
                             <th class="text-end">Harga (Rp)</th>
-                            <th class="text-end">Subtotal (Rp)</th>
                             <th class="text-end">Diskon (Rp)</th>
                             <th class="text-end">Net Retur (Rp)</th>
                         </tr>
@@ -144,7 +143,6 @@
                         @php
                             $num = 1;
                             $totQty = 0;
-                            $totSubtotal = 0;
                             $totDiskon = 0;
                             $totNet = 0;
                         @endphp
@@ -153,7 +151,6 @@
                                 $diskon = $detail->total_diskon_rupiah ?? 0;
                                 $net = $detail->subtotal_retur - $diskon;
                                 $totQty += $detail->qty;
-                                $totSubtotal += $detail->subtotal_retur;
                                 $totDiskon += $diskon;
                                 $totNet += $net;
                             @endphp
@@ -171,7 +168,6 @@
                                 <td class="text-end">{{ number_format($detail->qty, 0, ',', '.') }}</td>
                                 <td>{{ $detail->barangSatuan->satuan ?? 'PCS' }}</td>
                                 <td class="text-end">{{ number_format($detail->harga_retur, 0, ',', '.') }}</td>
-                                <td class="text-end">{{ number_format($detail->subtotal_retur, 0, ',', '.') }}</td>
                                 <td class="text-end">{{ number_format($diskon, 0, ',', '.') }}</td>
                                 <td class="text-end fw-bold">{{ number_format($net, 0, ',', '.') }}</td>
                             </tr>
@@ -183,7 +179,6 @@
                             <td class="text-end">{{ number_format($totQty, 0, ',', '.') }}</td>
                             <td></td>
                             <td></td>
-                            <td class="text-end">{{ number_format($totSubtotal, 0, ',', '.') }}</td>
                             <td class="text-end">{{ number_format($totDiskon, 0, ',', '.') }}</td>
                             <td class="text-end">{{ number_format($totNet, 0, ',', '.') }}</td>
                         </tr>
