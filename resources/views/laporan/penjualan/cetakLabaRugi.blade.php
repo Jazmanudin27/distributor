@@ -114,12 +114,13 @@
                     $detail = DB::table('penjualan_detail as d')
                         ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
                         ->join('barang as b', 'b.kode_barang', '=', 'd.kode_barang')
-                        ->join('barang_satuan as s', 's.id', '=', 'd.satuan_id')
-                        ->join('supplier as sup', 'sup.kode_supplier', '=', 'b.kode_supplier')
+                        ->leftJoin('barang_satuan as s', 's.id', '=', 'd.satuan_id')
+                        ->leftJoin('supplier as sup', 'sup.kode_supplier', '=', 'b.kode_supplier')
                         ->whereBetween('p.tanggal', [$tanggal_dari, $tanggal_sampai])
                         ->where('p.batal', 0) // hanya ambil penjualan yang tidak batal
+                        ->where('d.is_promo', 0) // exclude promo
                         ->when(request('kode_supplier') ?: request('supplier'), function ($query) {
-                            $query->where('sup.kode_supplier', request('kode_supplier') ?: request('supplier'));
+                            $query->where('b.kode_supplier', request('kode_supplier') ?: request('supplier'));
                         })
                         ->select(
                             'p.tanggal',
@@ -131,7 +132,7 @@
                             'd.harga',
                             'd.harga_pokok',
                             'd.is_promo',
-                            'sup.kode_supplier',
+                            'b.kode_supplier',
                             'sup.nama_supplier',
                             DB::raw('(d.qty * d.harga) as subtotal'),
                             'd.total_diskon as diskon',
