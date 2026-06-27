@@ -134,8 +134,7 @@
                         // Retur Penjualan — net setelah diskon (sama dengan retur_penjualan.total)
                         $returPenjualan = DB::table('retur_penjualan_detail as rpd')
                             ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
-                            ->join('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
-                            ->join('barang as b', 'b.kode_barang', '=', 'bs.kode_barang')
+                            ->join('barang as b', 'b.kode_barang', '=', 'rpd.kode_barang')
                             ->whereBetween('rp.tanggal', [$tanggal_dari, $tanggal_sampai])
                             ->where('b.kode_supplier', $d->kode_supplier)
                             ->sum(DB::raw('rpd.subtotal_retur - COALESCE(rpd.total_diskon_rupiah, 0)'));

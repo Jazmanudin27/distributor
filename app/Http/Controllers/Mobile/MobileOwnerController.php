@@ -284,10 +284,18 @@ class MobileOwnerController extends Controller
         $dailyBreakdown = [];
         $salesBreakdown = [];
 
-        $penjualanList = DB::table('penjualan')
-            ->where('batal', 0)
-            ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
-            ->select('no_faktur', 'tanggal', 'kode_sales', 'grand_total')
+        $penjualanList = DB::table('penjualan_detail as d')
+            ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
+            ->where('p.batal', 0)
+            ->where('d.is_promo', 0)
+            ->whereBetween('p.tanggal', [$tanggal_mulai, $tanggal_akhir])
+            ->select(
+                'p.no_faktur',
+                'p.tanggal',
+                'p.kode_sales',
+                DB::raw('SUM((d.qty * d.harga) - d.total_diskon) as total_invoice')
+            )
+            ->groupBy('p.no_faktur', 'p.tanggal', 'p.kode_sales')
             ->get();
 
         $penjualanHppList = DB::table('penjualan_detail')
@@ -325,11 +333,11 @@ class MobileOwnerController extends Controller
             $hpp = $penjualanHppList[$p->no_faktur]->total_hpp ?? 0;
             
             if (!isset($dailyBreakdown[$date])) $dailyBreakdown[$date] = ['salesGross' => 0, 'salesReturn' => 0, 'hppGross' => 0, 'hppReturn' => 0];
-            $dailyBreakdown[$date]['salesGross'] += $p->grand_total;
+            $dailyBreakdown[$date]['salesGross'] += $p->total_invoice;
             $dailyBreakdown[$date]['hppGross'] += $hpp;
 
             if (!isset($salesBreakdown[$salesName])) $salesBreakdown[$salesName] = ['salesGross' => 0, 'salesReturn' => 0, 'hppGross' => 0, 'hppReturn' => 0];
-            $salesBreakdown[$salesName]['salesGross'] += $p->grand_total;
+            $salesBreakdown[$salesName]['salesGross'] += $p->total_invoice;
             $salesBreakdown[$salesName]['hppGross'] += $hpp;
         }
 
@@ -379,10 +387,7 @@ class MobileOwnerController extends Controller
             ->leftJoin('barang_satuan', 'penjualan_detail.satuan_id', '=', 'barang_satuan.id')
             ->where('penjualan.batal', 0)
             ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-            ->where(function($q) {
-                $q->whereNull('penjualan_detail.is_promo')
-                  ->orWhere('penjualan_detail.is_promo', '!=', 1);
-            })
+            ->where('penjualan_detail.is_promo', 0)
             ->select(
                 'barang.kode_supplier',
                 'barang.kode_barang',
