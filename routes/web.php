@@ -38,6 +38,12 @@ use App\Http\Controllers\Mobile\MobileAjuanLimitController;
 use App\Http\Controllers\Mobile\MobileOwnerController;
 use App\Http\Controllers\Mobile\MobilePelangganController;
 
+Route::pattern('no_faktur', '[A-Za-z0-9_/-]+');
+Route::pattern('penjualan', '[A-Za-z0-9_/-]+');
+Route::pattern('no_retur', '[A-Za-z0-9_/-]+');
+Route::pattern('retur_penjualan', '[A-Za-z0-9_/-]+');
+Route::pattern('pembelian', '[A-Za-z0-9_/-]+');
+
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
