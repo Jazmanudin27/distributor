@@ -88,7 +88,9 @@
                 <tr>
                     <th class="text-center">No</th>
                     <th class="text-center">Tanggal</th>
-                    <th class="text-end">Jumlah Penjualan (Rp)</th>
+                    <th class="text-end">Penjualan Bruto (Rp)</th>
+                    <th class="text-end">Diskon Penjualan (Rp)</th>
+                    <th class="text-end">Penjualan Net (Rp)</th>
                     <th class="text-end">Retur Penjualan (Rp)</th>
                     <th class="text-end">Total HPP (Rp)</th>
                     <th class="text-end">Retur Pembelian (Rp)</th>
@@ -98,6 +100,8 @@
             <tbody>
                 @php
                     $no = 1;
+                    $grandPenjualanBruto = 0;
+                    $grandDiskonPenjualan = 0;
                     $grandPenjualan = 0;
                     $grandReturPenjualan = 0;
                     $grandReturPembelian = 0;
@@ -114,12 +118,18 @@
 
                 @foreach ($tanggalList as $t)
                     @php
-                        // Total Penjualan per Tanggal
-                        $totalPenjualan = DB::table('penjualan_detail as d')
+                        // Total Penjualan per Tanggal (Bruto & Diskon)
+                        $salesData = DB::table('penjualan_detail as d')
                             ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
                             ->where('p.tanggal', $t->tanggal)
                             ->where('d.is_promo', 0)
-                            ->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
+                            ->where('p.batal', 0)
+                            ->selectRaw('SUM(d.qty * d.harga) as bruto, SUM(d.total_diskon) as diskon')
+                            ->first();
+
+                        $totalPenjualanBruto = (float) ($salesData->bruto ?? 0);
+                        $diskonPenjualan = (float) ($salesData->diskon ?? 0);
+                        $totalPenjualan = $totalPenjualanBruto - $diskonPenjualan;
 
                         // Retur Pembelian per Tanggal (calculated as HPP of BS Sales Returns)
                         $returPembelian = DB::table('retur_penjualan_detail as rpd')
@@ -143,13 +153,8 @@
                             ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
                             ->where('p.tanggal', $t->tanggal)
                             ->where('d.is_promo', 0)
+                            ->where('p.batal', 0)
                             ->sum(DB::raw('d.harga_pokok * d.qty'));
-
-                        // Retur Pembelian per Tanggal
-                        // $returPembelian = DB::table('retur_pembelian_detail as rd')
-                        //     ->join('retur_pembelian as r', 'r.no_retur', '=', 'rd.no_retur')
-                        //     ->where('r.tanggal', $t->tanggal)
-                        //     ->sum(DB::raw('rd.subtotal_retur'));
 
                         // Hitung bersih
                         $penjualanBersih = $totalPenjualan - $returPenjualan;
@@ -157,6 +162,8 @@
                         $laba = $penjualanBersih - $hppBersih;
 
                         // Akumulasi
+                        $grandPenjualanBruto += $totalPenjualanBruto;
+                        $grandDiskonPenjualan += $diskonPenjualan;
                         $grandPenjualan += $totalPenjualan;
                         $grandReturPenjualan += $returPenjualan;
                         $grandReturPembelian += $returPembelian;
@@ -167,6 +174,8 @@
                     <tr>
                         <td class="text-center">{{ $no++ }}</td>
                         <td class="text-center">{{ tanggal_indo2($t->tanggal) }}</td>
+                        <td class="text-end">{{ formatAngka($totalPenjualanBruto) }}</td>
+                        <td class="text-end">{{ formatAngka($diskonPenjualan) }}</td>
                         <td class="text-end">{{ formatAngka($totalPenjualan) }}</td>
                         <td class="text-end">{{ formatAngka($returPenjualan) }}</td>
                         <td class="text-end">{{ formatAngka($total_hpp) }}</td>
@@ -177,6 +186,8 @@
 
                 <tr class="highlight">
                     <td colspan="2" class="text-center">TOTAL</td>
+                    <td class="text-end">{{ formatAngka($grandPenjualanBruto) }}</td>
+                    <td class="text-end">{{ formatAngka($grandDiskonPenjualan) }}</td>
                     <td class="text-end">{{ formatAngka($grandPenjualan) }}</td>
                     <td class="text-end">{{ formatAngka($grandReturPenjualan) }}</td>
                     <td class="text-end">{{ formatAngka($grandHpp) }}</td>
