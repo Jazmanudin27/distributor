@@ -38,6 +38,18 @@
                             </select>
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary mb-1">Supplier</label>
+                            <select name="kode_supplier" id="kode_supplier" class="form-select form-select-sm select-supplier">
+                                <option value="">-- Semua Supplier --</option>
+                                @foreach ($suppliers as $s)
+                                    <option value="{{ $s->kode_supplier }}" {{ request('kode_supplier') == $s->kode_supplier ? 'selected' : '' }}>
+                                        {{ $s->nama_supplier }} ({{ $s->kode_supplier }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <div class="mb-4">
                             <label class="form-label fw-semibold text-secondary mb-1">Jenis Laporan</label>
                             <select name="jenis_laporan" class="form-select form-select-sm">
