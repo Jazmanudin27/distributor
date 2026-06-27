@@ -24,11 +24,10 @@
     <title>Cetak Laba Rugi Detail</title>
     <style>
         body {
-            font-family: 'Inter', Tahoma, sans-serif;
-            font-size: 12px;
-            margin: 15px;
-            line-height: 1.3;
-            color: #333;
+            font-family: Tahoma, sans-serif;
+            font-size: 13px;
+            margin: 10px;
+            line-height: 1.2;
             width: 297mm;
         }
 
@@ -36,31 +35,13 @@
             border-collapse: collapse;
             width: 100%;
             table-layout: auto;
-            margin-top: 10px;
         }
 
-        th {
-            background-color: #2c3e50 !important;
-            color: #ffffff !important;
-            border: 1px solid #1a252f !important;
-            padding: 8px 10px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
+        th,
         td {
-            border: 1px solid #dee2e6;
-            padding: 6px 8px;
+            border: 1px solid #000;
+            padding: 4px 6px;
             white-space: nowrap;
-        }
-
-        tr:nth-child(even) td {
-            background-color: #f8f9fa;
-        }
-
-        tr:hover td {
-            background-color: #e9ecef;
         }
 
         .text-center {
@@ -71,39 +52,21 @@
             text-align: right;
         }
 
-        .fw-bold {
-            font-weight: bold;
-        }
-
         .header-title {
-            font-weight: 700;
-            font-size: 24px;
+            font-weight: bold;
+            font-size: 20px;
             text-align: center;
-            color: #2c3e50;
-            margin-bottom: 5px;
         }
 
-        .highlight td {
+        .highlight {
             font-weight: bold;
-            background-color: #e9ecef !important;
-            border-top: 2px solid #2c3e50 !important;
-            border-bottom: 3px double #2c3e50 !important;
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
         }
 
         @media print {
             body {
                 margin: 0;
-            }
-            th {
-                background-color: #2c3e50 !important;
-                color: #ffffff !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .highlight td {
-                background-color: #e9ecef !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
             }
         }
     </style>
@@ -111,12 +74,12 @@
 
 <body>
     <section>
-        <header style="text-align: center; margin-bottom: 25px;">
+        <header style="text-align: center; margin-bottom: 15px;">
             <h1 class="header-title">LAPORAN LABA RUGI DETAIL</h1>
-            <p style="margin: 0; font-size: 14px; color: #7f8c8d; font-weight: 500;">
+            <p style="margin: 0;">
                 Periode: {{ tanggal_indo2($tanggal_dari) }} s/d {{ tanggal_indo2($tanggal_sampai) }}
             </p>
-            <hr style="border: 0; border-top: 2px solid #2c3e50; margin-top: 15px; margin-bottom: 0;">
+            <hr style="border: 1px solid #000; margin-top: 10px;">
         </header>
 
         <table>
@@ -134,7 +97,9 @@
                     <th class="text-end">Subtotal (Rp)</th>
                     <th class="text-end">Diskon (Rp)</th>
                     <th class="text-end">Penjualan Net (Rp)</th>
+                    <th class="text-end">Retur Penjualan (Rp)</th>
                     <th class="text-end">HPP (Rp)</th>
+                    <th class="text-end">HPP Retur (Rp)</th>
                     <th class="text-end">Laba (Rp)</th>
                     <th class="text-end">Laba (%)</th>
                 </tr>
@@ -145,7 +110,9 @@
                     $grandSubtotal = 0;
                     $grandDiskon = 0;
                     $grandPenjualan = 0;
+                    $grandReturPenjualan = 0;
                     $grandHpp = 0;
+                    $grandHppRetur = 0;
                     $grandLaba = 0;
 
                     $detail = DB::table('penjualan_detail as d')
@@ -174,8 +141,19 @@
                             DB::raw('(d.qty * d.harga) as subtotal'),
                             'd.total_diskon as diskon',
                             DB::raw('(d.qty * d.harga) - d.total_diskon as total_penjualan'),
+                            DB::raw('COALESCE((
+                                SELECT SUM(rpd.subtotal_retur - COALESCE(rpd.total_diskon_rupiah, 0))
+                                FROM retur_penjualan_detail as rpd
+                                JOIN retur_penjualan as rp ON rp.no_retur = rpd.no_retur
+                                WHERE rp.no_faktur = p.no_faktur AND rpd.kode_barang = d.kode_barang
+                            ), 0) as retur_penjualan'),
                             DB::raw('(d.qty * d.harga_pokok) as total_hpp'),
-                            DB::raw('((d.qty * d.harga) - d.total_diskon) - (d.qty * d.harga_pokok) as laba'),
+                            DB::raw('COALESCE((
+                                SELECT SUM(rpd.qty * d.harga_pokok)
+                                FROM retur_penjualan_detail as rpd
+                                JOIN retur_penjualan as rp ON rp.no_retur = rpd.no_retur
+                                WHERE rp.no_faktur = p.no_faktur AND rpd.kode_barang = d.kode_barang
+                            ), 0) as hpp_retur')
                         )
                         ->orderBy('p.tanggal')
                         ->orderBy('p.no_faktur')
@@ -184,19 +162,26 @@
 
                 @foreach ($detail as $row)
                     @php
+                        $returPenjualanVal = (float)$row->retur_penjualan;
+                        $hppReturVal = (float)$row->hpp_retur;
+
                         $grandSubtotal += $row->subtotal;
                         $grandDiskon += $row->diskon;
                         $grandPenjualan += $row->total_penjualan;
+                        $grandReturPenjualan += $returPenjualanVal;
 
                         // kalau promo → HPP dianggap 0
                         $rowHpp = $row->is_promo == 1 ? 0 : $row->total_hpp;
                         $grandHpp += $rowHpp;
+                        $grandHppRetur += $hppReturVal;
 
-                        // kalau laba negatif → 0
-                        $rowLaba = $row->is_promo == 1 ? 0 : $row->laba;
+                        // laba kotor = (Penjualan Net - Retur Penjualan) - (HPP - HPP Retur)
+                        $penjualanNet = $row->total_penjualan - $returPenjualanVal;
+                        $hppNet = $rowHpp - $hppReturVal;
+                        $rowLaba = $row->is_promo == 1 ? 0 : ($penjualanNet - $hppNet);
                         $grandLaba += $rowLaba;
 
-                        $persenLaba = $row->total_penjualan > 0 ? ($rowLaba / $row->total_penjualan) * 100 : 0;
+                        $persenLaba = $penjualanNet > 0 ? ($rowLaba / $penjualanNet) * 100 : 0;
                     @endphp
                     <tr @if ($row->is_promo == 1) style="background-color: orange; color: #000;" @endif>
                         <td class="text-center">{{ $no++ }}</td>
@@ -211,21 +196,26 @@
                         <td class="text-end">{{ formatAngka($row->subtotal) }}</td>
                         <td class="text-end">{{ formatAngka($row->diskon) }}</td>
                         <td class="text-end">{{ formatAngka($row->total_penjualan) }}</td>
+                        <td class="text-end">{{ formatAngka($returPenjualanVal) }}</td>
                         <td class="text-end">{{ formatAngka($rowHpp) }}</td>
+                        <td class="text-end">{{ formatAngka($hppReturVal) }}</td>
                         <td class="text-end">{{ formatAngka($rowLaba) }}</td>
                         <td class="text-end">{{ formatAngka($persenLaba, 2) }}%</td>
                     </tr>
                 @endforeach
 
                 @php
-                    $persenGrand = $grandPenjualan > 0 ? ($grandLaba / $grandPenjualan) * 100 : 0;
+                    $grandPenjualanNetVal = $grandPenjualan - $grandReturPenjualan;
+                    $persenGrand = $grandPenjualanNetVal > 0 ? ($grandLaba / $grandPenjualanNetVal) * 100 : 0;
                 @endphp
                 <tr class="highlight">
                     <td colspan="9" class="text-center">TOTAL</td>
                     <td class="text-end">{{ formatAngka($grandSubtotal) }}</td>
                     <td class="text-end">{{ formatAngka($grandDiskon) }}</td>
                     <td class="text-end">{{ formatAngka($grandPenjualan) }}</td>
+                    <td class="text-end">{{ formatAngka($grandReturPenjualan) }}</td>
                     <td class="text-end">{{ formatAngka($grandHpp) }}</td>
+                    <td class="text-end">{{ formatAngka($grandHppRetur) }}</td>
                     <td class="text-end">{{ formatAngka($grandLaba) }}</td>
                     <td class="text-end">{{ formatAngka($persenGrand, 2) }}%</td>
                 </tr>

@@ -605,40 +605,25 @@ class LaporanKeuanganController extends Controller
         }
 
         if ($format === '2') {
-            // Get supplier codes from sales
-            $salesSuppliers = DB::table('penjualan_detail as d')
+            $query = DB::table('penjualan_detail as d')
                 ->join('barang as b', 'b.kode_barang', '=', 'd.kode_barang')
+                ->leftJoin('supplier as s', 's.kode_supplier', '=', 'b.kode_supplier')
                 ->join('penjualan as p', 'p.no_faktur', '=', 'd.no_faktur')
                 ->whereBetween('p.tanggal', [$tanggalAwal, $tanggalAkhir])
                 ->where('p.batal', 0)
                 ->where('d.is_promo', 0)
-                ->select('b.kode_supplier');
-
-            // Get supplier codes from retur
-            $returSuppliers = DB::table('retur_penjualan_detail as rpd')
-                ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
-                ->join('barang as b', 'b.kode_barang', '=', 'rpd.kode_barang')
-                ->whereBetween('rp.tanggal', [$tanggalAwal, $tanggalAkhir])
-                ->select('b.kode_supplier');
+                ->select(
+                    'b.kode_supplier',
+                    DB::raw('MAX(COALESCE(s.nama_supplier, CONCAT("Supplier: ", b.kode_supplier))) as nama_supplier')
+                );
 
             if ($request->filled('supplier')) {
-                $salesSuppliers->where('b.kode_supplier', $request->supplier);
-                $returSuppliers->where('b.kode_supplier', $request->supplier);
+                $query->where('b.kode_supplier', $request->supplier);
             }
 
-            $supplierCodes = $salesSuppliers->union($returSuppliers)->pluck('kode_supplier')->filter()->unique()->toArray();
-
-            $dbSuppliers = DB::table('supplier')
-                ->whereIn('kode_supplier', $supplierCodes)
-                ->pluck('nama_supplier', 'kode_supplier')
-                ->toArray();
-
-            $data = collect($supplierCodes)->map(function($code) use ($dbSuppliers) {
-                return (object)[
-                    'kode_supplier' => $code,
-                    'nama_supplier' => $dbSuppliers[$code] ?? ('Supplier: ' . $code)
-                ];
-            })->sortBy('nama_supplier');
+            $data = $query->groupBy('b.kode_supplier')
+                ->orderBy('nama_supplier')
+                ->get();
 
             $viewContent = view('laporan.penjualan.cetakLabaRugiPerSupplier', [
                 'data' => $data,

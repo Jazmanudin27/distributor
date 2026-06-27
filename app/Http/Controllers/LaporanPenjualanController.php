@@ -215,10 +215,7 @@ class LaporanPenjualanController extends Controller
         $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
         $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
         $kode_pelanggan = $request->input('kode_pelanggan');
-        $kode_supplier = $request->input('kode_supplier');
         $jenis_laporan = $request->input('jenis_laporan', 'rekap');
-
-        $suppliers = \App\Models\Supplier::orderBy('nama_supplier')->get();
 
         $pelanggans = collect();
         if ($kode_pelanggan) {
@@ -237,15 +234,6 @@ class LaporanPenjualanController extends Controller
                 if ($tanggal_mulai) $query->where('tanggal', '>=', $tanggal_mulai);
                 if ($tanggal_akhir) $query->where('tanggal', '<=', $tanggal_akhir);
                 if ($kode_pelanggan) $query->where('kode_pelanggan', $kode_pelanggan);
-                if ($kode_supplier) {
-                    $query->whereExists(function ($q) use ($kode_supplier) {
-                        $q->select(DB::raw(1))
-                          ->from('retur_penjualan_detail as rpd')
-                          ->join('barang as b', 'b.kode_barang', '=', 'rpd.kode_barang')
-                          ->whereColumn('rpd.no_retur', 'retur_penjualan.no_retur')
-                          ->where('b.kode_supplier', $kode_supplier);
-                    });
-                }
 
                 $items = $query->orderBy('tanggal', 'asc')->orderBy('no_retur', 'asc')->get();
             } else {
@@ -256,12 +244,6 @@ class LaporanPenjualanController extends Controller
                         if ($tanggal_akhir) $q->where('tanggal', '<=', $tanggal_akhir);
                         if ($kode_pelanggan) $q->where('kode_pelanggan', $kode_pelanggan);
                     });
-
-                if ($kode_supplier) {
-                    $query->whereHas('barang', function ($q) use ($kode_supplier) {
-                        $q->where('kode_supplier', $kode_supplier);
-                    });
-                }
 
                 $items = $query->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
                     ->orderBy('retur_penjualan.tanggal', 'asc')
@@ -276,8 +258,8 @@ class LaporanPenjualanController extends Controller
         if ($isExcel) {
             $filename = 'laporan_retur_penjualan_' . date('Ymd_His') . '.xls';
             return response(view($view, compact(
-                'pelanggans', 'suppliers', 'items', 'tanggal_mulai', 'tanggal_akhir', 
-                'kode_pelanggan', 'kode_supplier', 'jenis_laporan', 'isExcel'
+                'pelanggans', 'items', 'tanggal_mulai', 'tanggal_akhir', 
+                'kode_pelanggan', 'jenis_laporan', 'isExcel'
             )))
             ->header('Content-Type', 'application/vnd-ms-excel')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
@@ -286,8 +268,8 @@ class LaporanPenjualanController extends Controller
         }
 
         return view($view, compact(
-            'pelanggans', 'suppliers', 'items', 'tanggal_mulai', 'tanggal_akhir', 
-            'kode_pelanggan', 'kode_supplier', 'jenis_laporan'
+            'pelanggans', 'items', 'tanggal_mulai', 'tanggal_akhir', 
+            'kode_pelanggan', 'jenis_laporan'
         ));
     }
 
