@@ -414,16 +414,36 @@
                 card.setAttribute('data-manual-discount', '1');
 
                 let unitOptions = '';
-                const selectedSatuanId = savedValues ? parseInt(savedValues.satuan_id) : (product.satuans.length >
-                    0 ? product.satuans[0].id : null);
+                let selectedSatuanId = null;
+                if (savedValues) {
+                    selectedSatuanId = parseInt(savedValues.satuan_id);
+                } else if (product.satuans && product.satuans.length > 0) {
+                    // Sort unit by capacity descending to find largest and smallest
+                    const sortedSatuans = [...product.satuans].sort((a, b) => b.isi - a.isi);
+                    const largestUnit = sortedSatuans[0];
+                    const smallestUnit = sortedSatuans[sortedSatuans.length - 1];
+                    
+                    const largestIsi = parseFloat(largestUnit.isi) || 1.0;
+                    if (product.stok >= largestIsi) {
+                        selectedSatuanId = largestUnit.id;
+                    } else {
+                        selectedSatuanId = smallestUnit.id;
+                    }
+                }
+
                 product.satuans.forEach((sat, i) => {
                     const isSelected = selectedSatuanId ? (sat.id === selectedSatuanId) : (i === 0);
                     unitOptions +=
                         `<option value="${sat.id}" data-name="${sat.satuan}" data-harga="${sat.harga_jual}" data-isi="${sat.isi}" ${isSelected ? 'selected' : ''}>${sat.satuan} (${sat.isi})</option>`;
                 });
 
-                let defaultPrice = product.satuans.length > 0 ? product.satuans[0].harga_jual : 0;
-                if (savedValues) defaultPrice = savedValues.harga;
+                let defaultPrice = 0;
+                if (savedValues) {
+                    defaultPrice = savedValues.harga;
+                } else if (product.satuans.length > 0) {
+                    const selSat = product.satuans.find(s => s.id === selectedSatuanId) || product.satuans[0];
+                    defaultPrice = selSat.harga_jual;
+                }
 
                 const initialQty = savedValues ? savedValues.qty : 1;
                 const initialD1 = savedValues ? savedValues.diskon1 : (product.diskon_persen || 0);
@@ -536,8 +556,13 @@
                     calculateTotals();
                 });
 
-                [inputQty, inputHarga, inputDis1, inputDis2, inputDis3].forEach(input => {
+                [inputHarga, inputDis1, inputDis2, inputDis3].forEach(input => {
                     input.addEventListener('input', calculateTotals);
+                });
+
+                inputQty.addEventListener('input', function() {
+                    checkStockLimit(card);
+                    calculateTotals();
                 });
 
                 inputQty.addEventListener('change', function() {
