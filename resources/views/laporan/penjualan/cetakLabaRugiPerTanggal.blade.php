@@ -131,22 +131,19 @@
                         $diskonPenjualan = (float) ($salesData->diskon ?? 0);
                         $totalPenjualan = $totalPenjualanBruto - $diskonPenjualan;
 
-                        // Retur Pembelian per Tanggal (calculated as HPP of BS Sales Returns)
+                        // Retur Pembelian per Tanggal (HPP dari barang yang diretur)
                         $returPembelian = DB::table('retur_penjualan_detail as rpd')
                             ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
-                            ->join('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
-                            ->join('barang as b', 'b.kode_barang', '=', 'bs.kode_barang')
+                            ->join('barang as b', 'b.kode_barang', '=', 'rpd.kode_barang')
+                            ->leftJoin('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
                             ->where('rp.tanggal', $t->tanggal)
-                            ->where('rpd.kondisi', 'bs')
-                            ->sum(DB::raw('rpd.qty * bs.harga_pokok'));
+                            ->sum(DB::raw('rpd.qty * COALESCE(bs.harga_pokok, 0)'));
 
-                        // Retur Penjualan per Tanggal
+                        // Retur Penjualan per Tanggal — net setelah diskon (sama dengan retur_penjualan.total)
                         $returPenjualan = DB::table('retur_penjualan_detail as rpd')
-                            ->join('barang_satuan as bs', 'bs.id', '=', 'rpd.id_satuan')
-                            ->join('barang as b', 'b.kode_barang', '=', 'bs.kode_barang')
                             ->join('retur_penjualan as rp', 'rp.no_retur', '=', 'rpd.no_retur')
                             ->where('rp.tanggal', $t->tanggal)
-                            ->sum(DB::raw('rpd.qty * bs.harga_jual'));
+                            ->sum(DB::raw('rpd.subtotal_retur - COALESCE(rpd.total_diskon_rupiah, 0)'));
 
                         // HPP per Tanggal
                         $total_hpp = DB::table('penjualan_detail as d')
