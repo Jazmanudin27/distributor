@@ -61,10 +61,7 @@ class MobileOwnerController extends Controller
             ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
             ->where('penjualan.batal', 0)
             ->whereBetween('penjualan.tanggal', [$startOfMonth, $endOfMonth])
-            ->where(function($q) {
-                $q->whereNull('penjualan_detail.is_promo')
-                  ->orWhere('penjualan_detail.is_promo', '!=', 1);
-            })
+            ->where('penjualan_detail.is_promo', 0)
             ->select(DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp'))
             ->first()->total_hpp ?? 0;
 
@@ -260,10 +257,7 @@ class MobileOwnerController extends Controller
             ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
             ->where('penjualan.batal', 0)
             ->whereBetween('penjualan.tanggal', [$tanggal_mulai, $tanggal_akhir])
-            ->where(function($q) {
-                $q->whereNull('penjualan_detail.is_promo')
-                  ->orWhere('penjualan_detail.is_promo', '!=', 1);
-            })
+            ->where('penjualan_detail.is_promo', 0)
             ->select(DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp'))
             ->first()->total_hpp ?? 0;
 
