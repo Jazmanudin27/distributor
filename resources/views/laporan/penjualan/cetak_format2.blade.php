@@ -56,7 +56,7 @@
 
     $pctFmt = function ($val, $decimals = 2) use ($isExcel) {
         if ($isExcel) {
-            return $val ? round((float) $val, $decimals) / 100 : '';
+            return $val > 0 ? round((float) $val, $decimals) : '';
         }
         return $val > 0 ? number_format((float) $val, $decimals, ',', '.') : '';
     };
@@ -172,11 +172,9 @@
                         <th class="text-center"
                             style="border: 1px solid #999; text-align: center; font-weight: bold; padding: 5px 6px;">
                             JT</th>
-                        <th class="text-center"
-                            style="border: 1px solid #999; text-align: center; padding: 5px 6px;">
+                        <th class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px;">
                             Diinput</th>
-                        <th class="text-center"
-                            style="border: 1px solid #999; text-align: center; padding: 5px 6px;">
+                        <th class="text-center" style="border: 1px solid #999; text-align: center; padding: 5px 6px;">
                             Update</th>
                         <th
                             style="border: 1px solid #999; background-color: #0d6efd; color: #ffffff; font-weight: bold; padding: 5px 6px; text-align: left;">
@@ -240,15 +238,15 @@
                                 style="border: 1px solid #999; text-align: right; padding: 5px 6px; mso-number-format:'#,##0';">
                                 {{ $numFmt($row->harga) }}</td>
                             <td class="text-center"
-                                style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'0.00%';">
+                                style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'#,##0.00';">
                                 {{ $row->diskon1_persen > 0 ? $pctFmt($row->diskon1_persen) : '' }}
                             </td>
                             <td class="text-center"
-                                style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'0.00%';">
+                                style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'#,##0.00';">
                                 {{ $row->diskon2_persen > 0 ? $pctFmt($row->diskon2_persen) : '' }}
                             </td>
                             <td class="text-center"
-                                style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'0.00%';">
+                                style="border: 1px solid #999; text-align: center; padding: 5px 6px; mso-number-format:'#,##0.00';">
                                 {{ $row->diskon3_persen > 0 ? $pctFmt($row->diskon3_persen) : '' }}
                             </td>
                             <td class="text-end"
