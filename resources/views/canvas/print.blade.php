@@ -193,7 +193,8 @@
             @endforeach
             <tr class="fw-bold" style="background-color: #f2f2f2;">
                 <td colspan="5" class="text-end py-1.5">TOTAL NILAI MUATAN (LOADING):</td>
-                <td class="text-end py-1.5" style="border-double: 3px double #000;">Rp {{ number_format($grandTotalAmbil, 0, ',', '.') }}</td>
+                <td class="text-end py-1.5" style="border-double: 3px double #000;">Rp
+                    {{ number_format($grandTotalAmbil, 0, ',', '.') }}</td>
                 <td colspan="3"></td>
             </tr>
         </tbody>
