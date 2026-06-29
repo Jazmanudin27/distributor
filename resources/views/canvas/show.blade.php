@@ -19,11 +19,11 @@
                     </div>
                     <div>
                         @if ($canvasSession->status === 'pending')
-                            <form action="{{ route('canvas.approve', $canvasSession->id) }}" method="POST"
-                                class="d-inline"
+                            <form action="{{ route('canvas.approve', $canvasSession->id) }}" method="POST" class="d-inline"
                                 onsubmit="return confirm('Apakah Anda yakin ingin menyetujui DPB ini? Stok gudang akan langsung dipotong.')">
                                 @csrf
-                                <button type="submit" class="btn btn-success btn-sm fw-bold hover-scale me-1 text-white shadow-sm">
+                                <button type="submit"
+                                    class="btn btn-success btn-sm fw-bold hover-scale me-1 text-white shadow-sm">
                                     <i class="fa-solid fa-circle-check me-1"></i> Setujui & Potong Stok
                                 </button>
                             </form>
@@ -130,8 +130,8 @@
                                             <div class="fw-bold text-dark">{{ $detail->barang->nama_barang }}</div>
                                             <span class="text-secondary small font-11">Kode:
                                                 {{ $detail->kode_barang }}
-                                                @if($detail->diskon_persen > 0)
-                                                    | Diskon: {{ (float)$detail->diskon_persen }}%
+                                                @if ($detail->diskon_persen > 0)
+                                                    | Diskon: {{ (float) $detail->diskon_persen }}%
                                                 @endif
                                             </span>
                                         </td>

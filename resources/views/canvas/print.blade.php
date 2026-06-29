@@ -140,9 +140,7 @@
                 <th width="40">No</th>
                 <th width="100">Kode Barang</th>
                 <th>Nama Barang</th>
-                <th width="85">Harga Satuan</th>
                 <th width="100">Ambil (Loading)</th>
-                <th width="100">Total Nilai</th>
                 <th width="100">Terjual (Sales)</th>
                 <th width="100">Kembali (Unload)</th>
                 <th width="100">Selisih (Discrepancy)</th>
@@ -179,10 +177,10 @@
                     <td class="text-center font-monospace">{{ $detail->kode_barang }}</td>
                     <td>{{ $detail->barang->nama_barang }}{{ $detail->diskon_persen > 0 ? ' (Disc: ' . (float) $detail->diskon_persen . '%)' : '' }}
                     </td>
-                    <td class="text-end">Rp {{ number_format($price, 0, ',', '.') }}</td>
-                    <td class="text-end fw-bold">
+                    <td class="text-end">Rp {{ number_format($price, 0, ',', '.') }} *
                         {{ str_replace(', ', ' ', $detail->barang->formatStok($qtyAmbilSmallest)) }}</td>
-                    <td class="text-end fw-bold">Rp {{ number_format($subTotalAmbil, 0, ',', '.') }}</td>
+                    Rp {{ number_format($subTotalAmbil, 0, ',', '.') }}
+                    </td>
                     <td class="text-end fw-bold text-info">
                         {{ str_replace(', ', ' ', $detail->barang->formatStok($qtyTerjualSmallest)) }}</td>
                     <td class="text-end fw-bold text-success">
