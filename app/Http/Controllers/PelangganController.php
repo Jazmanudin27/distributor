@@ -193,25 +193,8 @@ class PelangganController extends Controller
         if (auth()->check()) {
             $currentUser = auth()->user();
             if ($currentUser->is_kanvas) {
-                // Canvas Sales: can see all regular customers + only their own canvas dummy customer + shop customers assigned to them
-                $query->where(function ($q) use ($currentUser, $canvasSalesNiks, $allCanvasCustomerIds) {
-                    $q->where(function ($sub) use ($canvasSalesNiks, $allCanvasCustomerIds) {
-                        if (!empty($canvasSalesNiks)) {
-                            $sub->where(function ($inner) use ($canvasSalesNiks) {
-                                $inner->whereNotIn('kode_sales', $canvasSalesNiks)
-                                      ->orWhereNull('kode_sales');
-                            });
-                        }
-                        if (!empty($allCanvasCustomerIds)) {
-                            $sub->whereNotIn('kode_pelanggan', $allCanvasCustomerIds);
-                        }
-                    })
-                    ->orWhere('kode_sales', $currentUser->nik);
-                    
-                    if ($currentUser->kode_pelanggan) {
-                        $q->orWhere('kode_pelanggan', $currentUser->kode_pelanggan);
-                    }
-                });
+                // Canvas Sales: should only see customers where kode_sales matches their NIK
+                $query->where('kode_sales', $currentUser->nik);
             } else {
                 // Regular Sales (role: sales/spv sales): cannot see any canvas dummy customers or shop customers assigned to canvas sales
                 $role = strtolower($currentUser->role ?? '');
