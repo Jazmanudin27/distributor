@@ -86,7 +86,8 @@
                                 </td>
                                 <td class="text-center">
                                     @if ($item->status === 'pending')
-                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                        <span
+                                            class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
                                             <i class="fa-solid fa-clock me-1"></i> Menunggu Approval
                                         </span>
                                     @elseif ($item->status === 'loading')

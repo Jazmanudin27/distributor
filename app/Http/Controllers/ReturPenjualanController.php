@@ -78,7 +78,7 @@ class ReturPenjualanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'no_retur'        => 'required|string|unique:retur_penjualan,no_retur',
+            'no_retur'        => 'nullable|string',
             'tanggal'         => 'required|date',
             'jenis_retur'     => 'required|string',
             'kode_pelanggan'  => 'required|string|exists:pelanggan,kode_pelanggan',
@@ -96,100 +96,92 @@ class ReturPenjualanController extends Controller
             'items.*.kondisi'        => 'nullable|string|max:50',
         ]);
 
-        // Validate quantities against original invoice if provided
-        // if ($request->filled('no_faktur')) {
-        //     $penjualan = Penjualan::with('details')->findOrFail($request->no_faktur);
-        //     foreach ($request->items as $row) {
-        //         $penjDetail = $penjualan->details->where('kode_barang', $row['kode_barang'])->first();
+        try {
+            DB::transaction(function () use ($request) {
+                // === Generate no_retur secara atomik (mencegah race condition) ===
+                $today = date('ym');
+                $last = ReturPenjualan::where('no_retur', 'like', 'RP' . $today . '%')
+                    ->lockForUpdate()
+                    ->orderBy('no_retur', 'desc')
+                    ->first();
 
-        //         if ($penjDetail) {
-        //             // Sum already returned qty for this barang from all OTHER returns
-        //             $returnedQty = DB::table('retur_penjualan_detail')
-        //                 ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
-        //                 ->where('retur_penjualan.no_faktur', $request->no_faktur)
-        //                 ->where('retur_penjualan_detail.kode_barang', $row['kode_barang'])
-        //                 ->sum('retur_penjualan_detail.qty');
+                $nextNumber = $last ? (intval(substr($last->no_retur, -4)) + 1) : 1;
+                $noRetur = 'RP' . $today . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
-        //             $maxAvailable = $penjDetail->qty - $returnedQty;
-        //             if ($row['qty'] > $maxAvailable) {
-        //                 return redirect()->back()->withInput()->with('error', "Jumlah retur untuk barang {$row['kode_barang']} melebihi sisa penjualan (Maksimal: {$maxAvailable}).");
-        //             }
-        //         }
-        //     }
-        // }
+                $totalRetur = 0;
+                $details = [];
 
-        DB::transaction(function () use ($request) {
-            $totalRetur = 0;
-            $details = [];
+                foreach ($request->items as $row) {
+                    // Increment stock (goods returned to warehouse) ONLY if condition is Bagus
+                    if (($row['kondisi'] ?? 'Bagus') === 'Bagus') {
+                        $satuan = BarangSatuan::findOrFail($row['satuan_id']);
+                        $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
+                        \App\Models\StokMutasi::log(
+                            $row['kode_barang'],
+                            $request->tanggal,
+                            'Retur Penjualan',
+                            $noRetur,
+                            $qtySmallest,
+                            0,
+                            Auth::id(),
+                            'Retur Penjualan (' . ($row['kondisi'] ?? 'Bagus') . ')'
+                        );
+                    }
 
-            foreach ($request->items as $row) {
-                // Increment stock (goods returned to warehouse) ONLY if condition is Bagus
-                if (($row['kondisi'] ?? 'Bagus') === 'Bagus') {
-                    $satuan = BarangSatuan::findOrFail($row['satuan_id']);
-                    $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
-                    \App\Models\StokMutasi::log(
-                        $row['kode_barang'],
-                        $request->tanggal,
-                        'Retur Penjualan',
-                        $request->no_retur,
-                        $qtySmallest,
-                        0,
-                        Auth::id(),
-                        'Retur Penjualan (' . ($row['kondisi'] ?? 'Bagus') . ')'
-                    );
+                    $subtotal = $row['qty'] * $row['harga_retur'];
+                    $d1_pct   = floatval($row['diskon1_persen'] ?? 0);
+                    $d2_pct   = floatval($row['diskon2_persen'] ?? 0);
+                    $d3_pct   = floatval($row['diskon3_persen'] ?? 0);
+
+                    $d1 = $subtotal * ($d1_pct / 100);
+                    $d2 = ($subtotal - $d1) * ($d2_pct / 100);
+                    $d3 = ($subtotal - $d1 - $d2) * ($d3_pct / 100);
+
+                    $rowDiskon = round($d1 + $d2 + $d3, 2);
+                    $rowNett   = $subtotal - $rowDiskon;
+                    $totalRetur += $rowNett;
+
+                    $details[] = new ReturPenjualanDetail([
+                        'kode_barang'         => $row['kode_barang'],
+                        'id_satuan'           => $row['satuan_id'],
+                        'qty'                 => $row['qty'],
+                        'harga_retur'         => $row['harga_retur'],
+                        'subtotal_retur'      => $subtotal,
+                        'diskon1_persen'      => $d1_pct,
+                        'diskon2_persen'      => $d2_pct,
+                        'diskon3_persen'      => $d3_pct,
+                        'total_diskon_rupiah' => $rowDiskon,
+                        'kondisi'             => $row['kondisi'] ?? null,
+                    ]);
                 }
 
-                $subtotal = $row['qty'] * $row['harga_retur'];
-                $d1_pct   = floatval($row['diskon1_persen'] ?? 0);
-                $d2_pct   = floatval($row['diskon2_persen'] ?? 0);
-                $d3_pct   = floatval($row['diskon3_persen'] ?? 0);
-
-                $d1 = $subtotal * ($d1_pct / 100);
-                $d2 = ($subtotal - $d1) * ($d2_pct / 100);
-                $d3 = ($subtotal - $d1 - $d2) * ($d3_pct / 100);
-
-                $rowDiskon = round($d1 + $d2 + $d3, 2);
-                $rowNett   = $subtotal - $rowDiskon;
-                $totalRetur += $rowNett;
-
-                $details[] = new ReturPenjualanDetail([
-                    'kode_barang'         => $row['kode_barang'],
-                    'id_satuan'           => $row['satuan_id'],
-                    'qty'                 => $row['qty'],
-                    'harga_retur'         => $row['harga_retur'],
-                    'subtotal_retur'      => $subtotal,
-                    'diskon1_persen'      => $d1_pct,
-                    'diskon2_persen'      => $d2_pct,
-                    'diskon3_persen'      => $d3_pct,
-                    'total_diskon_rupiah' => $rowDiskon,
-                    'kondisi'             => $row['kondisi'] ?? null,
+                $retur = ReturPenjualan::create([
+                    'no_retur'       => $noRetur,
+                    'tanggal'        => $request->tanggal,
+                    'jenis_retur'    => $request->jenis_retur,
+                    'kode_pelanggan' => $request->kode_pelanggan,
+                    'kode_sales'     => $request->kode_sales,
+                    'no_faktur'      => $request->no_faktur,
+                    'keterangan'     => $request->keterangan,
+                    'total'          => $totalRetur,
+                    'user_id'        => Auth::id() ?? 1,
                 ]);
-            }
 
-            $retur = ReturPenjualan::create([
-                'no_retur'       => $request->no_retur,
-                'tanggal'        => $request->tanggal,
-                'jenis_retur'    => $request->jenis_retur,
-                'kode_pelanggan' => $request->kode_pelanggan,
-                'kode_sales'     => $request->kode_sales,
-                'no_faktur'      => $request->no_faktur,
-                'keterangan'     => $request->keterangan,
-                'total'          => $totalRetur,
-                'user_id'        => Auth::id() ?? 1,
-            ]);
+                $retur->details()->saveMany($details);
 
-            $retur->details()->saveMany($details);
+                \App\Models\ActivityLog::create([
+                    'user_id' => Auth::id() ?? 1,
+                    'action' => 'Input Retur',
+                    'description' => 'Input Retur No Retur ' . $retur->no_retur,
+                    'ip_address' => $request->ip(),
+                    'no_faktur' => $retur->no_retur,
+                ]);
+            });
 
-            \App\Models\ActivityLog::create([
-                'user_id' => Auth::id() ?? 1,
-                'action' => 'Input Retur',
-                'description' => 'Input Retur No Retur ' . $retur->no_retur,
-                'ip_address' => $request->ip(),
-                'no_faktur' => $retur->no_retur,
-            ]);
-        });
-
-        return redirect()->route('retur-penjualan.index')->with('success', 'Transaksi retur penjualan berhasil disimpan.');
+            return redirect()->route('retur-penjualan.index')->with('success', 'Transaksi retur penjualan berhasil disimpan.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
     }
 
     public function show($no_retur)
