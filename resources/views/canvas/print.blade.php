@@ -140,8 +140,9 @@
                 <th width="40">No</th>
                 <th width="100">Kode Barang</th>
                 <th>Nama Barang</th>
-                <th width="85">Harga</th>
+                <th width="85">Harga Satuan</th>
                 <th width="100">Ambil (Loading)</th>
+                <th width="100">Total Nilai</th>
                 <th width="100">Terjual (Sales)</th>
                 <th width="100">Kembali (Unload)</th>
                 <th width="100">Selisih (Discrepancy)</th>
@@ -153,6 +154,7 @@
                 $totalTerjual = 0;
                 $totalKembali = 0;
                 $totalSelisih = 0;
+                $grandTotalAmbil = 0;
             @endphp
             @foreach ($canvasSession->details as $index => $detail)
                 @php
@@ -167,20 +169,10 @@
                     $qtyKembaliSmallest = (float) $detail->qty_kembali * $isi;
                     $qtySelisihSmallest = (float) $detail->selisih * $isi;
 
-                    // Cari harga dari detail penjualan pada tanggal tersebut
-                    $price = null;
-                    foreach ($invoices as $inv) {
-                        $invDet = $inv->details->where('kode_barang', $detail->kode_barang)
-                            ->where('id_satuan', $detail->satuan_id)
-                            ->first();
-                        if ($invDet) {
-                            $price = $invDet->harga;
-                            break;
-                        }
-                    }
-                    if (!$price) {
-                        $price = $detail->barangSatuan->harga_jual ?? 0;
-                    }
+                    // Mengambil harga dari tabel satuan barang langsung
+                    $price = $detail->barangSatuan->harga_jual ?? 0;
+                    $subTotalAmbil = (float) $detail->qty_ambil * $price;
+                    $grandTotalAmbil += $subTotalAmbil;
                 @endphp
                 <tr class="row-barang">
                     <td class="text-center">{{ $index + 1 }}</td>
@@ -190,6 +182,7 @@
                     <td class="text-end">Rp {{ number_format($price, 0, ',', '.') }}</td>
                     <td class="text-end fw-bold">
                         {{ str_replace(', ', ' ', $detail->barang->formatStok($qtyAmbilSmallest)) }}</td>
+                    <td class="text-end fw-bold">Rp {{ number_format($subTotalAmbil, 0, ',', '.') }}</td>
                     <td class="text-end fw-bold text-info">
                         {{ str_replace(', ', ' ', $detail->barang->formatStok($qtyTerjualSmallest)) }}</td>
                     <td class="text-end fw-bold text-success">
@@ -198,6 +191,11 @@
                         {{ str_replace(', ', ' ', $detail->barang->formatStok($qtySelisihSmallest)) }}</td>
                 </tr>
             @endforeach
+            <tr class="fw-bold" style="background-color: #f2f2f2;">
+                <td colspan="5" class="text-end py-1.5">TOTAL NILAI MUATAN (LOADING):</td>
+                <td class="text-end py-1.5" style="border-double: 3px double #000;">Rp {{ number_format($grandTotalAmbil, 0, ',', '.') }}</td>
+                <td colspan="3"></td>
+            </tr>
         </tbody>
     </table>
 
