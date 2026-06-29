@@ -870,8 +870,9 @@
                 const isSatuanMatch = (d, rowSatuanId) => {
                     if (d.satuan_id === null || !d.satuan_id) return true;
                     if (d.satuan_id == rowSatuanId) return true;
-                    
-                    const ruleSatuanName = d.satuan && d.satuan.satuan ? d.satuan.satuan.toUpperCase().trim() : '';
+
+                    const ruleSatuanName = d.satuan && d.satuan.satuan ? d.satuan.satuan.toUpperCase().trim() :
+                        '';
                     let rowSatuanName = '';
                     if (barang && barang.satuans) {
                         const found = barang.satuans.find(s => s.id == rowSatuanId);
@@ -897,7 +898,7 @@
                     if (r.barangs && r.barangs.some(item => item.kode_barang === barangCode)) {
                         r.details.forEach(d => {
                             if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d
-                                .max_qty) && isSatuanMatch(d, satuanId)) {
+                                    .max_qty) && isSatuanMatch(d, satuanId)) {
                                 checkRule(r, d);
                             }
                         });
@@ -1003,7 +1004,7 @@
                                 if (bItem && bItem.kode_supplier === barang.kode_supplier) {
                                     const rQty = parseFloat(row.find('.input-qty').val()) || 0;
                                     const rHarga = parseFloat(cleanNumber(row.find('.input-harga')
-                                    .val())) || 0;
+                                        .val())) || 0;
                                     totalSupplierNominal += rQty * rHarga;
                                 }
                             });
@@ -1020,16 +1021,27 @@
                         }
                     }
 
-                    $('#quick_diskon1_input').val(formatPercentJS(d1_pct)).prop('readonly', true);
+                    if (!isEditMode) {
+                        $('#quick_diskon1_input').val(formatPercentJS(d1_pct)).prop('readonly', true);
+                    } else {
+                        $('#quick_diskon1_input').val(formatPercentJS(d1_pct));
+                    }
                     $('#quick_diskon1_percent').val(d1_pct);
                     $('#quick_d1_type').text('%').removeClass('bg-success').addClass('bg-secondary');
 
                     if (jenisTransaksi === 'T') {
-                        $('#quick_diskon2_input').val(formatPercentJS(d2_pct)).prop('readonly', true);
+                        if (!isEditMode) {
+                            $('#quick_diskon2_input').val(formatPercentJS(d2_pct)).prop('readonly', true);
+                        } else {
+                            $('#quick_diskon2_input').val(formatPercentJS(d2_pct));
+                        }
                         $('#quick_diskon2_percent').val(d2_pct);
                         $('#quick_d2_type').text('%').removeClass('bg-success').addClass('bg-secondary');
                     } else {
-                        $('#quick_diskon2_input').val('0').prop('readonly', true);
+                        $('#quick_diskon2_input').val('0');
+                        if (!isEditMode) {
+                            $('#quick_diskon2_input').prop('readonly', true);
+                        }
                         $('#quick_diskon2_percent').val(0);
                     }
                 } else {
@@ -1389,6 +1401,7 @@
                 if (row.find('.input-promo').is(':checked') || $(this).closest('td').find(
                         'input[type="text"]').attr('readonly')) return;
 
+                row.attr('data-manual-discount', '1');
                 const current = $(this).text().trim();
                 const nextType = current === '%' ? 'Rp' : '%';
                 $(this).text(nextType);
@@ -1432,6 +1445,12 @@
             $(document).on('input change',
                 '.input-qty, .input-harga, .input-diskon1-val, .input-diskon2-val, .input-diskon3-val, #diskon_global',
                 calculateTotals);
+
+            // Mark row as manual discount when manually editing discount values
+            $(document).on('input keydown change', '.input-diskon1-val, .input-diskon2-val, .input-diskon3-val',
+                function() {
+                    $(this).closest('tr').attr('data-manual-discount', '1');
+                });
 
             // Trigger recalculation on jenis transaksi change
             $('#jenis_transaksi').on('change', function() {
@@ -1515,6 +1534,11 @@
                         return;
                     }
 
+                    if (row.attr('data-manual-discount') === '1') {
+                        // Skip strata recalculation to preserve manual overrides or loaded values
+                        return;
+                    }
+
                     const barangCode = row.find('input[name*="[kode_barang]"]').val();
                     const qty = parseFloat(row.find('.input-qty').val()) || 0;
                     const harga = parseFloat(cleanNumber(row.find('.input-harga').val())) || 0;
@@ -1535,8 +1559,9 @@
                     const isSatuanMatch = (d, rowSatuanId) => {
                         if (d.satuan_id === null || !d.satuan_id) return true;
                         if (d.satuan_id == rowSatuanId) return true;
-                        
-                        const ruleSatuanName = d.satuan && d.satuan.satuan ? d.satuan.satuan.toUpperCase().trim() : '';
+
+                        const ruleSatuanName = d.satuan && d.satuan.satuan ? d.satuan.satuan
+                            .toUpperCase().trim() : '';
                         let rowSatuanName = '';
                         if (b && b.satuans) {
                             const found = b.satuans.find(s => s.id == rowSatuanId);
@@ -1544,7 +1569,8 @@
                                 rowSatuanName = (found.satuan || '').toUpperCase().trim();
                             }
                         }
-                        return ruleSatuanName !== '' && rowSatuanName !== '' && ruleSatuanName === rowSatuanName;
+                        return ruleSatuanName !== '' && rowSatuanName !== '' && ruleSatuanName ===
+                            rowSatuanName;
                     };
 
                     const checkRule = (r, d) => {
@@ -1577,7 +1603,8 @@
                                     barangCode)) {
                                 r.details.forEach(d => {
                                     if (qty >= (d.min_qty || 0) && (d.max_qty === null ||
-                                            qty <= d.max_qty) && isSatuanMatch(d, satuanId)) {
+                                            qty <= d.max_qty) && isSatuanMatch(d,
+                                            satuanId)) {
                                         checkRule(r, d);
                                     }
                                 });
@@ -1668,16 +1695,25 @@
                         }
 
                         inputDis1.val(d1_pct);
-                        inputDis1Val.val(formatPercentJS(d1_pct)).attr('readonly', true);
+                        inputDis1Val.val(formatPercentJS(d1_pct));
+                        if (!isEditMode) {
+                            inputDis1Val.attr('readonly', true);
+                        }
                         inputDis1Type.text('%').removeClass('text-success').addClass('text-primary');
 
                         if (jenisTransaksi === 'T') {
                             inputDis2.val(d2_pct);
-                            inputDis2Val.val(formatPercentJS(d2_pct)).attr('readonly', true);
+                            inputDis2Val.val(formatPercentJS(d2_pct));
+                            if (!isEditMode) {
+                                inputDis2Val.attr('readonly', true);
+                            }
                             inputDis2Type.text('%').removeClass('text-success').addClass('text-primary');
                         } else {
                             inputDis2.val('0');
-                            inputDis2Val.val('0').attr('readonly', true);
+                            inputDis2Val.val('0');
+                            if (!isEditMode) {
+                                inputDis2Val.attr('readonly', true);
+                            }
                         }
                     } else {
                         if (inputDis1Val.attr('readonly')) {
@@ -1809,6 +1845,8 @@
                     appendRow(d.kode_barang, name, d.satuan_id, satuan, d.qty, parseInt(d.harga),
                         parseFloat(d.diskon1_persen || 0), parseFloat(d.diskon2_persen || 0),
                         parseFloat(d.diskon3_persen || 0), isPromo);
+                    // Mark loaded rows as manual so their loaded discounts aren't overwritten
+                    $('#itemsTable tbody tr').last().attr('data-manual-discount', '1');
                 });
                 calculateTotals();
             }
