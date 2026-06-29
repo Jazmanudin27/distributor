@@ -274,6 +274,7 @@
             </div>
 
             <!-- Region Filter -->
+            @if (!Auth::user()->is_kanvas)
             <div class="mb-3">
                 <label class="form-label text-secondary" style="font-size: 0.85rem; font-weight: 500;">Filter Wilayah
                     (Opsional)</label>
@@ -285,6 +286,7 @@
                     @endforeach
                 </select>
             </div>
+            @endif
 
             <!-- Live Autocomplete Customer Search -->
             <div class="mb-3 position-relative">
