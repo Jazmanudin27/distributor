@@ -175,6 +175,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('penjualan', PenjualanController::class);
         Route::resource('retur-penjualan', ReturPenjualanController::class);
         Route::get('/canvas/{canvas}/print', [CanvasController::class, 'print'])->name('canvas.print');
+        Route::post('/canvas/{id}/approve', [CanvasController::class, 'approve'])->name('canvas.approve');
         Route::resource('canvas', CanvasController::class);
 
         // Kiriman Penjualan Routes

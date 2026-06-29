@@ -85,7 +85,11 @@
                                     <span class="text-secondary small d-block">NIK: {{ $item->kode_sales }}</span>
                                 </td>
                                 <td class="text-center">
-                                    @if ($item->status === 'loading')
+                                    @if ($item->status === 'pending')
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                            <i class="fa-solid fa-clock me-1"></i> Menunggu Approval
+                                        </span>
+                                    @elseif ($item->status === 'loading')
                                         <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
                                             <i class="fa-solid fa-truck-moving me-1"></i> Aktif (Di Jalan)
                                         </span>
@@ -98,6 +102,17 @@
                                 <td class="text-secondary small">{{ $item->keterangan ?? '-' }}</td>
                                 <td class="text-center">
                                     <div class="btn-group gap-1">
+                                        @if ($item->status === 'pending')
+                                            <form action="{{ route('canvas.approve', $item->id) }}" method="POST"
+                                                class="d-inline"
+                                                onsubmit="return confirm('Apakah Anda yakin ingin menyetujui DPB ini? Stok gudang akan langsung dipotong.')">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-outline-success rounded"
+                                                    title="Setujui & Potong Stok">
+                                                    <i class="fa-solid fa-circle-check"></i>
+                                                </button>
+                                            </form>
+                                        @endif
                                         <a href="{{ route('canvas.show', $item->id) }}"
                                             class="btn btn-sm btn-outline-info rounded" title="Detail / Rekonsiliasi">
                                             <i class="fa-solid fa-eye"></i>

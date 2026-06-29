@@ -18,6 +18,16 @@
                         </div>
                     </div>
                     <div>
+                        @if ($canvasSession->status === 'pending')
+                            <form action="{{ route('canvas.approve', $canvasSession->id) }}" method="POST"
+                                class="d-inline"
+                                onsubmit="return confirm('Apakah Anda yakin ingin menyetujui DPB ini? Stok gudang akan langsung dipotong.')">
+                                @csrf
+                                <button type="submit" class="btn btn-success btn-sm fw-bold hover-scale me-1 text-white shadow-sm">
+                                    <i class="fa-solid fa-circle-check me-1"></i> Setujui & Potong Stok
+                                </button>
+                            </form>
+                        @endif
                         @if ($canvasSession->status === 'loading')
                             <a href="{{ route('canvas.edit', $canvasSession->id) }}"
                                 class="btn btn-primary btn-sm fw-bold hover-scale me-1 text-dark shadow-sm">
@@ -53,7 +63,13 @@
                         <div class="col-md-3">
                             <span class="text-secondary small d-block mb-1 text-uppercase fw-bold"
                                 style="font-size: 10px; letter-spacing: 0.5px;">Status Session</span>
-                            @if ($canvasSession->status === 'loading')
+                            @if ($canvasSession->status === 'pending')
+                                <button type="button"
+                                    class="btn btn-sm btn-secondary py-1 px-2.5 fw-bold text-white shadow-sm mt-1" disabled
+                                    style="opacity: 0.9; cursor: default; pointer-events: none; font-size: 11px;">
+                                    <i class="fa-solid fa-clock me-1"></i> Menunggu Approval
+                                </button>
+                            @elseif ($canvasSession->status === 'loading')
                                 <button type="button"
                                     class="btn btn-sm btn-danger py-1 px-2.5 fw-bold text-dark shadow-sm mt-1" disabled
                                     style="opacity: 0.9; cursor: default; pointer-events: none; font-size: 11px;">

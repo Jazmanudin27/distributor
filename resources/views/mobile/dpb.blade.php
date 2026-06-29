@@ -76,7 +76,7 @@
             </div>
         </div>
         <div>
-            @if (!$session)
+            @if (!$session && !$pendingSession)
                 <a href="{{ route('mobile.order.canvas.dpb.create') }}"
                     class="btn btn-sm btn-mobile-primary d-flex align-items-center gap-1 px-2.5 py-1.5 fw-semibold"
                     style="font-size: 0.75rem; border-radius: 8px;">
@@ -158,6 +158,72 @@
                             <span class="text-secondary" style="font-size: 0.65rem;">Sisa:</span>
                             <strong class="text-success font-monospace"
                                 style="font-size: 0.85rem;">{{ $detail->barang ? $detail->barang->formatStok($sisaStok) : $sisaStok }}</strong>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @elseif ($pendingSession)
+        <!-- DPB Pending (Menunggu Approval) -->
+        <h5 class="fw-bold mb-3 text-warning" style="font-size: 0.95rem; letter-spacing: 0.5px;">
+            <i class="fa-solid fa-clock me-1"></i> DPB Menunggu Approval
+        </h5>
+
+        <div class="mobile-card p-3 mb-4"
+            style="background: rgba(30, 41, 59, 0.45); border-left: 3px solid #6b7280; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <span class="text-secondary font-monospace" style="font-size: 0.65rem;">{{ $pendingSession->no_canvas }}</span>
+                    <h6 class="fw-bold text-white mb-0" style="font-size: 0.85rem;">Status Permintaan DPB</h6>
+                </div>
+                <span class="badge px-2 py-1"
+                    style="font-size: 0.625rem; font-weight: 600; border-radius: 6px; background: rgba(107, 114, 128, 0.15); color: #9ca3af; border: 1px solid rgba(107, 114, 128, 0.35);">
+                    <i class="fa-solid fa-clock me-1"></i> Pending Approval
+                </span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top border-secondary border-opacity-10"
+                style="font-size: 0.75rem;">
+                <span class="text-secondary" style="font-size: 0.7rem;">Tanggal: <strong
+                        class="text-white-50">{{ \Carbon\Carbon::parse($pendingSession->tanggal)->format('d M Y') }}</strong></span>
+                @if ($pendingSession->keterangan)
+                    <span class="text-secondary italic" style="font-size: 0.7rem;">"{{ $pendingSession->keterangan }}"</span>
+                @endif
+            </div>
+        </div>
+
+        <!-- Items Listing -->
+        <h5 class="fw-bold mb-3" style="font-size: 0.95rem; letter-spacing: 0.5px;">
+            Daftar Barang Bawaan ({{ $pendingSession->details->count() }} Item)
+        </h5>
+
+        <div class="mobile-card p-0 overflow-hidden mb-5"
+            style="background: rgba(30, 41, 59, 0.35); border: 1px solid rgba(255, 255, 255, 0.08);">
+            @foreach ($pendingSession->details as $index => $detail)
+                @php
+                    $qtyAmbil = (float) $detail->qty_ambil;
+                @endphp
+                <div class="p-3 {{ $index > 0 ? 'border-top border-secondary border-opacity-10' : '' }}">
+                    <div class="d-flex justify-content-between align-items-start mb-1.5">
+                        <div style="flex: 1; min-width: 0; padding-right: 8px;">
+                            <h6 class="fw-bold text-white mb-0 text-truncate" style="font-size: 0.85rem;"
+                                title="{{ $detail->barang->nama_barang }}">
+                                {{ $detail->barang->nama_barang }}
+                            </h6>
+                            <span class="text-secondary font-monospace" style="font-size: 0.6rem; opacity: 0.75;">
+                                {{ $detail->kode_barang }}
+                            </span>
+                        </div>
+                        <span class="badge bg-secondary bg-opacity-35 text-white-50 border-0 px-2 py-0.5"
+                            style="font-size: 0.65rem; border-radius: 6px;">
+                            {{ $detail->barangSatuan->satuan ?? 'PCS' }}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-1" style="font-size: 0.75rem;">
+                        <div class="d-flex gap-3 text-secondary" style="font-size: 0.7rem;">
+                            <div>Diajukan Bawa: <strong class="text-info font-monospace"
+                                    style="font-size: 0.8rem;">{{ $detail->barang ? $detail->barang->formatStok($qtyAmbil) : $qtyAmbil }}</strong>
+                            </div>
                         </div>
                     </div>
                 </div>

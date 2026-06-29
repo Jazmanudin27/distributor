@@ -696,10 +696,21 @@ class MobileOrderController extends Controller
             $session->load(['details.barang', 'details.barangSatuan']);
         }
 
+        // Fetch pending canvas session
+        $pendingSession = \App\Models\CanvasSession::where('kode_sales', $user->nik)
+            ->where('status', 'pending')
+            ->orderBy('tanggal', 'desc')
+            ->first();
+
+        if ($pendingSession) {
+            $pendingSession->load(['details.barang', 'details.barangSatuan']);
+        }
+
         $filter = $request->input('filter', 'all');
 
         // Fetch historical canvas sessions
         $historyQuery = \App\Models\CanvasSession::where('kode_sales', $user->nik)
+            ->whereNotIn('status', ['pending']) // Exclude pending from history list
             ->when($session, function ($q) use ($session) {
                 $q->where('id', '!=', $session->id);
             });
@@ -720,7 +731,7 @@ class MobileOrderController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('mobile.dpb', compact('session', 'historySessions', 'filter'));
+        return view('mobile.dpb', compact('session', 'pendingSession', 'historySessions', 'filter'));
     }
 
     /**
@@ -737,6 +748,13 @@ class MobileOrderController extends Controller
         $session = \App\Services\CanvasService::getActiveSession($user->nik);
         if ($session) {
             return redirect()->route('mobile.order.canvas.dpb')->with('error', 'Anda sudah memiliki sesi DPB yang aktif.');
+        }
+
+        $pending = \App\Models\CanvasSession::where('kode_sales', $user->nik)
+            ->where('status', 'pending')
+            ->first();
+        if ($pending) {
+            return redirect()->route('mobile.order.canvas.dpb')->with('error', 'Sesi DPB Anda sedang menunggu approval.');
         }
 
         $products = \App\Models\Barang::where('status', 1)
@@ -775,6 +793,14 @@ class MobileOrderController extends Controller
             return redirect()->back()->with('error', 'Anda sudah memiliki sesi DPB yang aktif.');
         }
 
+        // Pastikan tidak ada DPB pending untuk sales ini
+        $pending = \App\Models\CanvasSession::where('kode_sales', $user->nik)
+            ->where('status', 'pending')
+            ->first();
+        if ($pending) {
+            return redirect()->back()->with('error', 'Anda memiliki DPB yang sedang menunggu approval.');
+        }
+
         try {
             $canvasSessionId = DB::transaction(function () use ($request, $user) {
                 // Generate atomic no_canvas
@@ -796,33 +822,12 @@ class MobileOrderController extends Controller
                     'no_canvas' => $noCanvas,
                     'kode_sales' => $user->nik,
                     'tanggal' => $request->tanggal,
-                    'status' => 'loading',
+                    'status' => 'pending',
                     'keterangan' => $request->keterangan,
                 ]);
 
-                // Create details and adjust warehouse stock
+                // Create details only
                 foreach ($request->items as $item) {
-                    $satuan = \App\Models\BarangSatuan::findOrFail($item['satuan_id']);
-                    $qtySmallest = (float)$item['qty_ambil'] * ($satuan->isi ?? 1);
-
-                    // Lock and check warehouse stock
-                    $barang = \App\Models\Barang::lockForUpdate()->findOrFail($item['kode_barang']);
-                    if ($barang->stok < $qtySmallest) {
-                        throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi untuk loading! Sisa stok gudang: " . $barang->formatStok($barang->stok));
-                    }
-
-                    // Deduct stock and log mutation
-                    \App\Models\StokMutasi::log(
-                        $item['kode_barang'],
-                        $request->tanggal,
-                        'Canvas Ambil',
-                        $noCanvas,
-                        0,
-                        $qtySmallest,
-                        Auth::id(),
-                        'Loading Canvas via Mobile: ' . $user->name
-                    );
-
                     \App\Models\CanvasSessionDetail::create([
                         'canvas_session_id' => $session->id,
                         'kode_barang' => $item['kode_barang'],
@@ -835,21 +840,10 @@ class MobileOrderController extends Controller
                     ]);
                 }
 
-                // Sync any already recorded sales for this day and salesman
-                $invoices = \App\Models\Penjualan::where('kode_sales', $user->nik)
-                    ->where('tanggal', $request->tanggal)
-                    ->where('batal', 0)
-                    ->with('details')
-                    ->get();
-
-                foreach ($invoices as $invoice) {
-                    \App\Services\CanvasService::trackSale($invoice);
-                }
-
                 return $session->id;
             });
 
-            return redirect()->route('mobile.order.canvas.dpb')->with('success', 'DPB berhasil dibuat dan barang telah dimuat.');
+            return redirect()->route('mobile.order.canvas.dpb')->with('success', 'DPB berhasil dibuat dan menunggu approval dari Admin.');
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }

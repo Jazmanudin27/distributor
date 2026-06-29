@@ -98,42 +98,17 @@ class CanvasController extends Controller
                 }
                 $noCanvas = $prefix . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
 
-                // Find salesman details for stock logging
-                $salesman = User::where('nik', $request->kode_sales)->first();
-                $salesName = $salesman ? $salesman->name : $request->kode_sales;
-
                 // Create Canvas Session
                 $session = CanvasSession::create([
                     'no_canvas' => $noCanvas,
                     'kode_sales' => $request->kode_sales,
                     'tanggal' => $request->tanggal,
-                    'status' => 'loading',
+                    'status' => 'pending',
                     'keterangan' => $request->keterangan,
                 ]);
 
-                // Create details and adjust warehouse stock
+                // Create details only
                 foreach ($request->items as $item) {
-                    $satuan = BarangSatuan::findOrFail($item['satuan_id']);
-                    $qtySmallest = (float)$item['qty_ambil'] * ($satuan->isi ?? 1);
-
-                    // Lock and check warehouse stock
-                    $barang = Barang::lockForUpdate()->findOrFail($item['kode_barang']);
-                    if ($barang->stok < $qtySmallest) {
-                        throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi untuk loading kanvas! Sisa stok gudang: " . $barang->formatStok($barang->stok) . " (Dibutuhkan: " . $barang->formatStok($qtySmallest) . ")");
-                    }
-
-                    // Deduct stock and log mutation
-                    StokMutasi::log(
-                        $item['kode_barang'],
-                        $request->tanggal,
-                        'Canvas Ambil',
-                        $noCanvas,
-                        0,
-                        $qtySmallest,
-                        Auth::id(),
-                        'Loading Canvas: ' . $salesName
-                    );
-
                     CanvasSessionDetail::create([
                         'canvas_session_id' => $session->id,
                         'kode_barang' => $item['kode_barang'],
@@ -142,14 +117,66 @@ class CanvasController extends Controller
                         'diskon_persen' => isset($item['diskon_persen']) ? floatval($item['diskon_persen']) : 0,
                         'qty_terjual' => 0,
                         'qty_kembali' => 0,
-                        'selisih' => $item['qty_ambil'], // initially the entire taken qty is "discrepancy" (not sold or returned yet)
+                        'selisih' => $item['qty_ambil'],
                     ]);
                 }
 
+                return $session->id;
+            });
+
+            return redirect()->route('canvas.show', $canvasSessionId)->with('success', 'Session kanvas berhasil dibuat dan menunggu approval dari Admin.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Approve the canvas session (Approve loading and deduct stock).
+     */
+    public function approve($id)
+    {
+        $canvasSession = CanvasSession::with('details')->findOrFail($id);
+
+        if ($canvasSession->status !== 'pending') {
+            return redirect()->route('canvas.show', $id)->with('error', 'DPB ini tidak berada dalam status pending.');
+        }
+
+        try {
+            DB::transaction(function () use ($canvasSession) {
+                $salesman = User::where('nik', $canvasSession->kode_sales)->first();
+                $salesName = $salesman ? $salesman->name : $canvasSession->kode_sales;
+
+                // Validate and deduct warehouse stock for each item
+                foreach ($canvasSession->details as $detail) {
+                    $satuan = BarangSatuan::findOrFail($detail->satuan_id);
+                    $qtySmallest = (float)$detail->qty_ambil * ($satuan->isi ?? 1);
+
+                    // Lock and check warehouse stock
+                    $barang = Barang::lockForUpdate()->findOrFail($detail->kode_barang);
+                    if ($barang->stok < $qtySmallest) {
+                        throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi untuk loading kanvas! Sisa stok gudang: " . $barang->formatStok($barang->stok) . " (Dibutuhkan: " . $barang->formatStok($qtySmallest) . ")");
+                    }
+
+                    // Deduct stock and log mutation
+                    StokMutasi::log(
+                        $detail->kode_barang,
+                        $canvasSession->tanggal,
+                        'Canvas Ambil',
+                        $canvasSession->no_canvas,
+                        0,
+                        $qtySmallest,
+                        Auth::id(),
+                        'Loading Canvas (Approve): ' . $salesName
+                    );
+                }
+
+                // Update session status to loading
+                $canvasSession->status = 'loading';
+                $canvasSession->save();
+
                 // Sync any already recorded sales for this day and salesman
-                // (e.g. if they did a sale earlier and then we started a canvas session, or retroactively created it)
-                $invoices = \App\Models\Penjualan::where('kode_sales', $request->kode_sales)
-                    ->where('tanggal', $request->tanggal)
+                $invoices = \App\Models\Penjualan::where('kode_sales', $canvasSession->kode_sales)
+                    ->where('tanggal', $canvasSession->tanggal)
                     ->where('batal', 0)
                     ->with('details')
                     ->get();
@@ -157,13 +184,11 @@ class CanvasController extends Controller
                 foreach ($invoices as $invoice) {
                     \App\Services\CanvasService::trackSale($invoice);
                 }
-
-                return $session->id;
             });
 
-            return redirect()->route('canvas.show', $canvasSessionId)->with('success', 'Session kanvas berhasil dibuat dan barang telah diambil dari gudang.');
+            return redirect()->route('canvas.show', $id)->with('success', 'DPB berhasil disetujui dan stok gudang telah dipotong.');
         } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', $e->getMessage());
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
 
@@ -188,6 +213,10 @@ class CanvasController extends Controller
 
         if ($canvasSession->status === 'completed') {
             return redirect()->route('canvas.show', $id)->with('error', 'Session kanvas ini sudah selesai.');
+        }
+
+        if ($canvasSession->status === 'pending') {
+            return redirect()->route('canvas.show', $id)->with('error', 'Session kanvas ini belum disetujui (approve).');
         }
 
         return view('canvas.edit', compact('canvasSession'));
