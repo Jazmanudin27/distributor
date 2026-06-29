@@ -178,8 +178,9 @@
                     <td>{{ $detail->barang->nama_barang }}{{ $detail->diskon_persen > 0 ? ' (Disc: ' . (float) $detail->diskon_persen . '%)' : '' }}
                     </td>
                     <td class="text-end">Rp {{ number_format($price, 0, ',', '.') }} *
-                        {{ str_replace(', ', ' ', $detail->barang->formatStok($qtyAmbilSmallest)) }}</td>
-                    Rp {{ number_format($subTotalAmbil, 0, ',', '.') }}
+                        {{ str_replace(', ', ' ', $detail->barang->formatStok($qtyAmbilSmallest)) }} =
+                        {{ number_format($subTotalAmbil, 0, ',', '.') }}</td>
+
                     </td>
                     <td class="text-end fw-bold text-info">
                         {{ str_replace(', ', ' ', $detail->barang->formatStok($qtyTerjualSmallest)) }}</td>
