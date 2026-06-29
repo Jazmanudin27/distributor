@@ -79,8 +79,39 @@
                 </div>
 
                 <input type="hidden" name="no_hp_pelanggan" value="-">
-                <input type="hidden" name="kode_wilayah" value="93">
-                <input type="hidden" name="sub_wilayah" value="93">
+                
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold mb-1">Wilayah *</label>
+                    <select name="kode_wilayah" class="form-control form-control-mobile" required>
+                        <option value="">-- Pilih Wilayah --</option>
+                        @foreach ($wilayahs as $w)
+                            <option value="{{ $w->kode_wilayah }}"
+                                {{ old('kode_wilayah') == $w->kode_wilayah ? 'selected' : '' }}>
+                                {{ $w->nama_wilayah }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('kode_wilayah')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold mb-1">Sub Wilayah *</label>
+                    <select name="sub_wilayah" class="form-control form-control-mobile" required>
+                        <option value="">-- Pilih Sub Wilayah --</option>
+                        @foreach ($subWilayahs as $sw)
+                            <option value="{{ $sw->kode_wilayah }}"
+                                {{ old('sub_wilayah') == $sw->kode_wilayah ? 'selected' : '' }}>
+                                {{ $sw->nama_wilayah }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('sub_wilayah')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
                 <input type="hidden" name="metode_bayar" value="Cash">
                 <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">
                 <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude') }}">
