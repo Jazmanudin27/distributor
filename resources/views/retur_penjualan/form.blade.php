@@ -39,7 +39,8 @@
                             </h6>
                             <div class="mb-2">
                                 <label for="no_retur" class="form-label fs-7 fw-bold text-secondary mb-1">No Retur
-                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle ms-1"
+                                    <span
+                                        class="badge bg-secondary-subtle text-secondary border border-secondary-subtle ms-1"
                                         style="font-size:10px; font-weight:500;">Auto</span></label>
                                 <input type="text" name="no_retur" id="no_retur"
                                     class="form-control form-control-sm font-monospace fw-bold bg-light @error('no_retur') is-invalid @enderror"
