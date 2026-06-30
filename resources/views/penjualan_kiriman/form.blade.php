@@ -4,21 +4,25 @@
 @push('styles')
     @if (!$isEdit)
         <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-        <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+            rel="stylesheet" />
     @endif
     <style>
         .fs-7 {
             font-size: 0.85rem !important;
         }
+
         .fs-8 {
             font-size: 0.75rem !important;
         }
+
         .cart-badge-item {
             transition: all 0.2s ease-in-out;
         }
+
         .cart-badge-item:hover {
             transform: translateY(-1px);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
         }
     </style>
 @endpush
@@ -132,9 +136,12 @@
 
                 {{-- SELECTED INVOICES CART --}}
                 <div class="card border shadow-sm rounded-3 mb-4" id="cart-card">
-                    <div class="card-header bg-light py-2 px-3 fw-bold text-secondary d-flex justify-content-between align-items-center">
-                        <span class="fs-7"><i class="fa-solid fa-cart-shopping text-primary me-2"></i> Keranjang Faktur Terpilih (<span id="cart-count" class="text-primary fw-bold">0</span>)</span>
-                        <button type="button" id="btn-clear-cart" class="btn btn-link btn-sm text-danger text-decoration-none p-0 fw-bold fs-8" disabled>
+                    <div
+                        class="card-header bg-light py-2 px-3 fw-bold text-secondary d-flex justify-content-between align-items-center">
+                        <span class="fs-7"><i class="fa-solid fa-cart-shopping text-primary me-2"></i> Keranjang Faktur
+                            Terpilih (<span id="cart-count" class="text-primary fw-bold">0</span>)</span>
+                        <button type="button" id="btn-clear-cart"
+                            class="btn btn-link btn-sm text-danger text-decoration-none p-0 fw-bold fs-8" disabled>
                             <i class="fa-solid fa-trash-can me-1"></i> Bersihkan Semua
                         </button>
                     </div>
@@ -204,10 +211,14 @@
                         <div class="col-md-4">
                             <label class="form-label fw-bold text-secondary">Status Pengiriman</label>
                             <select name="status" id="shipment-status" class="form-select">
-                                <option value="proses" {{ (isset($status) && $status === 'proses') ? 'selected' : '' }}>Proses (Draft)</option>
-                                <option value="kirim" {{ (isset($status) && $status === 'kirim') ? 'selected' : '' }}>Dikirim</option>
-                                <option value="selesai" {{ (isset($status) && $status === 'selesai') ? 'selected' : '' }}>Selesai (Sampai)</option>
-                                <option value="batal" {{ (isset($status) && $status === 'batal') ? 'selected' : '' }}>Batal</option>
+                                <option value="proses" {{ isset($status) && $status === 'proses' ? 'selected' : '' }}>
+                                    Proses (Draft)</option>
+                                <option value="kirim" {{ isset($status) && $status === 'kirim' ? 'selected' : '' }}>
+                                    Dikirim</option>
+                                <option value="selesai" {{ isset($status) && $status === 'selesai' ? 'selected' : '' }}>
+                                    Selesai (Sampai)</option>
+                                <option value="batal" {{ isset($status) && $status === 'batal' ? 'selected' : '' }}>
+                                    Batal</option>
                             </select>
                         </div>
                     </div>
@@ -222,12 +233,13 @@
                         <div class="col-md-8">
                             <label class="form-label fw-bold text-secondary">Upload Foto POD (Bukti Terima)</label>
                             <input type="file" name="foto_penerima" class="form-control" accept="image/*">
-                            @if(isset($foto_penerima) && $foto_penerima)
+                            @if (isset($foto_penerima) && $foto_penerima)
                                 <input type="hidden" name="old_foto_penerima" value="{{ $foto_penerima }}">
                                 <div class="mt-2">
                                     <small class="text-secondary d-block mb-1">Bukti Foto Saat Ini:</small>
                                     <a href="{{ asset($foto_penerima) }}" target="_blank">
-                                        <img src="{{ asset($foto_penerima) }}" alt="POD" class="rounded border" style="max-height: 80px;">
+                                        <img src="{{ asset($foto_penerima) }}" alt="POD" class="rounded border"
+                                            style="max-height: 80px;">
                                     </a>
                                 </div>
                             @endif
@@ -256,7 +268,7 @@
         $(document).ready(function() {
             // Map to track globally selected invoices: { no_faktur: invoiceObject }
             var selectedInvoices = {};
-            
+
             // Map to track loaded invoices on current table display
             var loadedInvoicesMap = {};
 
@@ -270,7 +282,8 @@
                         grand_total: parseFloat(inv.grand_total),
                         nama_pelanggan: inv.pelanggan ? inv.pelanggan.nama_pelanggan : '',
                         kode_pelanggan: inv.pelanggan ? inv.pelanggan.kode_pelanggan : '',
-                        nama_wilayah: (inv.pelanggan && inv.pelanggan.wilayah) ? inv.pelanggan.wilayah.nama_wilayah : '-',
+                        nama_wilayah: (inv.pelanggan && inv.pelanggan.wilayah) ? inv.pelanggan.wilayah
+                            .nama_wilayah : '-',
                         nama_sales: inv.sales ? inv.sales.name : '-',
                         nik_sales: inv.kode_sales ? inv.kode_sales : ''
                     };
@@ -376,7 +389,8 @@
 
                             var salesName = invoice.sales ? invoice.sales.name : '-';
                             var salesNIK = invoice.kode_sales ? invoice.kode_sales : '';
-                            var wilayahName = (invoice.pelanggan && invoice.pelanggan.wilayah) ? invoice.pelanggan.wilayah.nama_wilayah : '-';
+                            var wilayahName = (invoice.pelanggan && invoice.pelanggan.wilayah) ?
+                                invoice.pelanggan.wilayah.nama_wilayah : '-';
 
                             // Check if this invoice is in selectedInvoices
                             var isChecked = !!selectedInvoices[invoice.no_faktur];
@@ -471,7 +485,8 @@
                         cartBadges.append(badge);
 
                         // Add hidden input for form submission
-                        hiddenContainer.append(`<input type="hidden" name="invoices[]" value="${inv.no_faktur}">`);
+                        hiddenContainer.append(
+                            `<input type="hidden" name="invoices[]" value="${inv.no_faktur}">`);
                     });
 
                     var formattedGrandTotal = new Intl.NumberFormat('id-ID', {
@@ -499,9 +514,12 @@
                                 no_faktur: invData.no_faktur,
                                 tanggal: invData.tanggal,
                                 grand_total: parseFloat(invData.grand_total),
-                                nama_pelanggan: invData.pelanggan ? invData.pelanggan.nama_pelanggan : '',
-                                kode_pelanggan: invData.pelanggan ? invData.pelanggan.kode_pelanggan : '',
-                                nama_wilayah: (invData.pelanggan && invData.pelanggan.wilayah) ? invData.pelanggan.wilayah.nama_wilayah : '-',
+                                nama_pelanggan: invData.pelanggan ? invData.pelanggan
+                                    .nama_pelanggan : '',
+                                kode_pelanggan: invData.pelanggan ? invData.pelanggan
+                                    .kode_pelanggan : '',
+                                nama_wilayah: (invData.pelanggan && invData.pelanggan.wilayah) ?
+                                    invData.pelanggan.wilayah.nama_wilayah : '-',
                                 nama_sales: invData.sales ? invData.sales.name : '-',
                                 nik_sales: invData.kode_sales ? invData.kode_sales : ''
                             };
@@ -525,7 +543,8 @@
                             grand_total: parseFloat(invData.grand_total),
                             nama_pelanggan: invData.pelanggan ? invData.pelanggan.nama_pelanggan : '',
                             kode_pelanggan: invData.pelanggan ? invData.pelanggan.kode_pelanggan : '',
-                            nama_wilayah: (invData.pelanggan && invData.pelanggan.wilayah) ? invData.pelanggan.wilayah.nama_wilayah : '-',
+                            nama_wilayah: (invData.pelanggan && invData.pelanggan.wilayah) ? invData
+                                .pelanggan.wilayah.nama_wilayah : '-',
                             nama_sales: invData.sales ? invData.sales.name : '-',
                             nik_sales: invData.kode_sales ? invData.kode_sales : ''
                         };
