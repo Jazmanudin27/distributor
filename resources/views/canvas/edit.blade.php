@@ -1,5 +1,8 @@
 @extends('layouts.app')
-@section('title', 'Selesaikan DPB')
+@php
+    $isPending = $canvasSession->status === 'pending';
+@endphp
+@section('title', $isPending ? 'Edit DPB' : 'Selesaikan DPB')
 @section('content')
     <div class="row justify-content-start">
         <div class="col-lg-10 col-md-12">
@@ -12,9 +15,20 @@
                             <i class="fa-solid fa-box-open fs-5"></i>
                         </div>
                         <div>
-                            <h5 class="mb-0 fw-bold">Selesaikan DPB: {{ $canvasSession->no_canvas }}</h5>
-                            <small class="text-white-50 font-12 font-italic">Bongkar muatan dan catat pengembalian barang
-                                sisa</small>
+                            <h5 class="mb-0 fw-bold">
+                                @if ($isPending)
+                                    Edit Qty Loading DPB: {{ $canvasSession->no_canvas }}
+                                @else
+                                    Selesaikan DPB: {{ $canvasSession->no_canvas }}
+                                @endif
+                            </h5>
+                            <small class="text-white-50 font-12 font-italic">
+                                @if ($isPending)
+                                    Ubah kuantitas pengambilan barang salesman sebelum disetujui
+                                @else
+                                    Bongkar muatan dan catat pengembalian barang sisa
+                                @endif
+                            </small>
                         </div>
                     </div>
                     <a href="{{ route('canvas.show', $canvasSession->id) }}"
@@ -47,135 +61,276 @@
                         @method('PUT')
 
                         <table class="table table-bordered table-sm align-middle">
-                            <thead class="table-light text-secondary text-uppercase fs-7 font-11">
-                                <tr>
-                                    <th width="50" class="text-center">No</th>
-                                    <th>Nama Barang</th>
-                                    <th width="150" class="text-center">Satuan</th>
-                                    <th width="140" class="text-end pe-3 bg-primary-subtle text-primary">Ambil (Loading)</th>
-                                    <th width="140" class="text-end pe-3 bg-info-subtle text-info">Terjual (Sales)</th>
-                                    <th width="240" class="text-center bg-success-subtle text-success fw-bold">Qty Kembali (Unload)</th>
-                                    <th width="140" class="text-end pe-3">Expected Sisa</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($canvasSession->details as $index => $detail)
-                                    @php
-                                        $expectedSisa = max(
-                                            0.0,
-                                            (float) $detail->qty_ambil - (float) $detail->qty_terjual,
-                                        );
-                                        $qtyAmbilSmallest = $detail->qty_ambil * ($detail->barangSatuan->isi ?? 1);
-                                        $qtyTerjualSmallest = $detail->qty_terjual * ($detail->barangSatuan->isi ?? 1);
-                                        $qtyExpectedSmallest = $expectedSisa * ($detail->barangSatuan->isi ?? 1);
-                                    @endphp
+                            @if ($isPending)
+                                <thead class="table-light text-secondary text-uppercase fs-7 font-11">
                                     <tr>
-                                        <td class="text-center fw-semibold text-secondary">{{ $index + 1 }}</td>
-                                        <td>
-                                            <div class="fw-bold text-dark">{{ $detail->barang->nama_barang }}</div>
-                                            <span class="text-secondary small font-11">Kode: {{ $detail->kode_barang }}
-                                                @if($detail->diskon_persen > 0)
-                                                    | Diskon: {{ (float)$detail->diskon_persen }}%
-                                                @endif
-                                            </span>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge bg-light text-secondary border fw-semibold font-11 py-1 px-2.5"
-                                                style="opacity: 0.85;">
-                                                {{ $detail->barangSatuan->satuan ?? 'PCS' }}
-                                            </span>
-                                        </td>
-                                        <td class="text-end pe-3 bg-primary-subtle text-primary fw-bold">
-                                            <div class="fs-7">{{ $detail->barang->formatStok($qtyAmbilSmallest) }}</div>
-                                            <small class="text-secondary font-11 d-block">({{ (float) $detail->qty_ambil }} {{ $detail->barangSatuan->satuan ?? 'PCS' }})</small>
-                                        </td>
-                                        <td class="text-end pe-3 bg-info-subtle text-info fw-bold">
-                                            <div class="fs-7">{{ $detail->barang->formatStok($qtyTerjualSmallest) }}</div>
-                                            <small class="text-secondary font-11 d-block">({{ (float) $detail->qty_terjual }} {{ $detail->barangSatuan->satuan ?? 'PCS' }})</small>
-                                        </td>
-                                        <td class="bg-success-subtle px-3">
-                                            <input type="hidden" name="details[{{ $index }}][id]" value="{{ $detail->id }}">
-                                            <input type="hidden" name="details[{{ $index }}][qty_kembali]" id="qty-kembali-{{ $index }}"
-                                                class="input-qty-kembali"
-                                                value="{{ $expectedSisa }}"
-                                                data-isi="{{ $detail->barangSatuan->isi ?? 1 }}"
-                                                data-row-id="{{ $index }}"
-                                                data-max-smallest="{{ $qtyAmbilSmallest }}"
-                                                data-satuans="{{ json_encode($detail->barang->satuans) }}">
-                                            @php
-                                                $satuans = $detail->barang->satuans;
-                                                $unitValues = [];
-                                                if ($satuans && $satuans->count() > 0) {
-                                                    $sorted = $satuans->sortByDesc('isi');
-                                                    $remaining = $qtyExpectedSmallest;
-                                                    $count = $sorted->count();
-                                                    $i = 0;
-                                                    foreach ($sorted as $sat) {
-                                                        $i++;
-                                                        $factor = (float)($sat->isi ?: 1);
-                                                        if ($i === $count) {
-                                                            $unitQty = round($remaining / $factor, 4);
-                                                            $unitValues[$sat->id] = (float)$unitQty;
-                                                        } else {
-                                                            $unitQty = floor(round($remaining / $factor, 8));
-                                                            $unitValues[$sat->id] = (float)$unitQty;
-                                                            $remaining = round($remaining - ($unitQty * $factor), 4);
-                                                        }
-                                                    }
-                                                } else {
-                                                    $unitValues[0] = $expectedSisa;
-                                                }
-                                            @endphp
-                                            <div class="d-flex flex-column gap-1 align-items-center">
-                                                <div class="d-flex flex-wrap gap-1 justify-content-center">
-                                                    @if ($satuans && $satuans->count() > 0)
-                                                        @foreach ($sorted as $sat)
-                                                            @php
-                                                                $val = $unitValues[$sat->id] ?? 0;
-                                                            @endphp
-                                                            <div class="input-group input-group-sm" style="width: 100px;">
-                                                                <input type="number" 
-                                                                    class="form-control text-center input-unit-qty input-qty-row-{{ $index }}" 
-                                                                    data-isi="{{ $sat->isi }}" 
-                                                                    data-id="{{ $sat->id }}" 
-                                                                    data-row-id="{{ $index }}"
-                                                                    value="{{ $val }}" 
-                                                                    min="0" 
-                                                                    step="any">
-                                                                <span class="input-group-text bg-light text-secondary font-monospace" style="font-size: 10px; padding: 0.25rem 0.4rem;">{{ $sat->satuan }}</span>
-                                                            </div>
-                                                        @endforeach
-                                                    @else
-                                                        <div class="input-group input-group-sm" style="width: 100px;">
-                                                            <input type="number" 
-                                                                class="form-control text-center input-unit-qty input-qty-row-{{ $index }}" 
-                                                                data-isi="1" 
-                                                                data-id="0" 
-                                                                data-row-id="{{ $index }}"
-                                                                value="{{ $expectedSisa }}" 
-                                                                min="0" 
-                                                                step="any">
-                                                            <span class="input-group-text bg-light text-secondary font-monospace" style="font-size: 10px; padding: 0.25rem 0.4rem;">PCS</span>
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                                <div class="text-center mt-1 fw-bold text-success font-monospace live-convert-display" id="convert-display-{{ $index }}" style="font-size: 11px;"></div>
-                                            </div>
-                                        </td>
-                                        <td class="text-end pe-3 fw-bold">
-                                            <div class="fs-7 text-dark">{{ $detail->barang->formatStok($qtyExpectedSmallest) }}</div>
-                                            <small class="text-secondary font-11 d-block">({{ (float) $expectedSisa }} {{ $detail->barangSatuan->satuan ?? 'PCS' }})</small>
-                                        </td>
+                                        <th width="50" class="text-center">No</th>
+                                        <th>Nama Barang</th>
+                                        <th width="150" class="text-center">Satuan</th>
+                                        <th width="240" class="text-center bg-primary-subtle text-primary fw-bold">Qty
+                                            Ambil (Loading)</th>
+                                        <th width="150" class="text-center">Diskon (%)</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
+                                </thead>
+                                <tbody>
+                                    @foreach ($canvasSession->details as $index => $detail)
+                                        @php
+                                            $qtyAmbilSmallest = $detail->qty_ambil * ($detail->barangSatuan->isi ?? 1);
+                                            $targetQty = (float) $detail->qty_ambil;
+                                            $targetQtySmallest = $qtyAmbilSmallest;
+                                        @endphp
+                                        <tr>
+                                            <td class="text-center fw-semibold text-secondary">{{ $index + 1 }}</td>
+                                            <td>
+                                                <div class="fw-bold text-dark">{{ $detail->barang->nama_barang }}</div>
+                                                <span class="text-secondary small font-11">Kode:
+                                                    {{ $detail->kode_barang }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span
+                                                    class="badge bg-light text-secondary border fw-semibold font-11 py-1 px-2.5"
+                                                    style="opacity: 0.85;">
+                                                    {{ $detail->barangSatuan->satuan ?? 'PCS' }}
+                                                </span>
+                                            </td>
+                                            <td class="bg-primary-subtle px-3">
+                                                <input type="hidden" name="details[{{ $index }}][id]"
+                                                    value="{{ $detail->id }}">
+                                                <input type="hidden" name="details[{{ $index }}][qty_ambil]"
+                                                    id="qty-ambil-{{ $index }}" class="input-qty-ambil"
+                                                    value="{{ $targetQty }}"
+                                                    data-isi="{{ $detail->barangSatuan->isi ?? 1 }}"
+                                                    data-row-id="{{ $index }}"
+                                                    data-satuans="{{ json_encode($detail->barang->satuans) }}">
+                                                @php
+                                                    $satuans = $detail->barang->satuans;
+                                                    $unitValues = [];
+                                                    if ($satuans && $satuans->count() > 0) {
+                                                        $sorted = $satuans->sortByDesc('isi');
+                                                        $remaining = $targetQtySmallest;
+                                                        $count = $sorted->count();
+                                                        $i = 0;
+                                                        foreach ($sorted as $sat) {
+                                                            $i++;
+                                                            $factor = (float) ($sat->isi ?: 1);
+                                                            if ($i === $count) {
+                                                                $unitQty = round($remaining / $factor, 4);
+                                                                $unitValues[$sat->id] = (float) $unitQty;
+                                                            } else {
+                                                                $unitQty = floor(round($remaining / $factor, 8));
+                                                                $unitValues[$sat->id] = (float) $unitQty;
+                                                                $remaining = round($remaining - $unitQty * $factor, 4);
+                                                            }
+                                                        }
+                                                    } else {
+                                                        $unitValues[0] = $targetQty;
+                                                    }
+                                                @endphp
+                                                <div class="d-flex flex-column gap-1 align-items-center">
+                                                    <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                                        @if ($satuans && $satuans->count() > 0)
+                                                            @foreach ($sorted as $sat)
+                                                                @php
+                                                                    $val = $unitValues[$sat->id] ?? 0;
+                                                                @endphp
+                                                                <div class="input-group input-group-sm"
+                                                                    style="width: 100px;">
+                                                                    <input type="number"
+                                                                        class="form-control text-center input-unit-qty input-qty-row-{{ $index }}"
+                                                                        data-isi="{{ $sat->isi }}"
+                                                                        data-id="{{ $sat->id }}"
+                                                                        data-row-id="{{ $index }}"
+                                                                        value="{{ $val }}" min="0"
+                                                                        step="any">
+                                                                    <span
+                                                                        class="input-group-text bg-light text-secondary font-monospace"
+                                                                        style="font-size: 10px; padding: 0.25rem 0.4rem;">{{ $sat->satuan }}</span>
+                                                                </div>
+                                                            @endforeach
+                                                        @else
+                                                            <div class="input-group input-group-sm" style="width: 100px;">
+                                                                <input type="number"
+                                                                    class="form-control text-center input-unit-qty input-qty-row-{{ $index }}"
+                                                                    data-isi="1" data-id="0"
+                                                                    data-row-id="{{ $index }}"
+                                                                    value="{{ $targetQty }}" min="0"
+                                                                    step="any">
+                                                                <span
+                                                                    class="input-group-text bg-light text-secondary font-monospace"
+                                                                    style="font-size: 10px; padding: 0.25rem 0.4rem;">PCS</span>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                    <div class="text-center mt-1 fw-bold text-success font-monospace live-convert-display"
+                                                        id="convert-display-{{ $index }}" style="font-size: 11px;">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="input-group input-group-sm mx-auto" style="width: 100px;">
+                                                    <input type="number"
+                                                        name="details[{{ $index }}][diskon_persen]"
+                                                        class="form-control text-center"
+                                                        value="{{ (float) $detail->diskon_persen }}" min="0"
+                                                        max="100" step="any">
+                                                    <span class="input-group-text">%</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            @else
+                                <thead class="table-light text-secondary text-uppercase fs-7 font-11">
+                                    <tr>
+                                        <th width="50" class="text-center">No</th>
+                                        <th>Nama Barang</th>
+                                        <th width="150" class="text-center">Satuan</th>
+                                        <th width="140" class="text-end pe-3 bg-primary-subtle text-primary">Ambil
+                                            (Loading)</th>
+                                        <th width="140" class="text-end pe-3 bg-info-subtle text-info">Terjual (Sales)
+                                        </th>
+                                        <th width="240" class="text-center bg-success-subtle text-success fw-bold">Qty
+                                            Kembali (Unload)</th>
+                                        <th width="140" class="text-end pe-3">Expected Sisa</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($canvasSession->details as $index => $detail)
+                                        @php
+                                            $expectedSisa = max(
+                                                0.0,
+                                                (float) $detail->qty_ambil - (float) $detail->qty_terjual,
+                                            );
+                                            $qtyAmbilSmallest = $detail->qty_ambil * ($detail->barangSatuan->isi ?? 1);
+                                            $qtyTerjualSmallest =
+                                                $detail->qty_terjual * ($detail->barangSatuan->isi ?? 1);
+                                            $qtyExpectedSmallest = $expectedSisa * ($detail->barangSatuan->isi ?? 1);
+                                        @endphp
+                                        <tr>
+                                            <td class="text-center fw-semibold text-secondary">{{ $index + 1 }}</td>
+                                            <td>
+                                                <div class="fw-bold text-dark">{{ $detail->barang->nama_barang }}</div>
+                                                <span class="text-secondary small font-11">Kode:
+                                                    {{ $detail->kode_barang }}
+                                                    @if ($detail->diskon_persen > 0)
+                                                        | Diskon: {{ (float) $detail->diskon_persen }}%
+                                                    @endif
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span
+                                                    class="badge bg-light text-secondary border fw-semibold font-11 py-1 px-2.5"
+                                                    style="opacity: 0.85;">
+                                                    {{ $detail->barangSatuan->satuan ?? 'PCS' }}
+                                                </span>
+                                            </td>
+                                            <td class="text-end pe-3 bg-primary-subtle text-primary fw-bold">
+                                                <div class="fs-7">{{ $detail->barang->formatStok($qtyAmbilSmallest) }}
+                                                </div>
+                                                <small
+                                                    class="text-secondary font-11 d-block">({{ (float) $detail->qty_ambil }}
+                                                    {{ $detail->barangSatuan->satuan ?? 'PCS' }})</small>
+                                            </td>
+                                            <td class="text-end pe-3 bg-info-subtle text-info fw-bold">
+                                                <div class="fs-7">{{ $detail->barang->formatStok($qtyTerjualSmallest) }}
+                                                </div>
+                                                <small
+                                                    class="text-secondary font-11 d-block">({{ (float) $detail->qty_terjual }}
+                                                    {{ $detail->barangSatuan->satuan ?? 'PCS' }})</small>
+                                            </td>
+                                            <td class="bg-success-subtle px-3">
+                                                <input type="hidden" name="details[{{ $index }}][id]"
+                                                    value="{{ $detail->id }}">
+                                                <input type="hidden" name="details[{{ $index }}][qty_kembali]"
+                                                    id="qty-kembali-{{ $index }}" class="input-qty-kembali"
+                                                    value="{{ $expectedSisa }}"
+                                                    data-isi="{{ $detail->barangSatuan->isi ?? 1 }}"
+                                                    data-row-id="{{ $index }}"
+                                                    data-max-smallest="{{ $qtyAmbilSmallest }}"
+                                                    data-satuans="{{ json_encode($detail->barang->satuans) }}">
+                                                @php
+                                                    $satuans = $detail->barang->satuans;
+                                                    $unitValues = [];
+                                                    if ($satuans && $satuans->count() > 0) {
+                                                        $sorted = $satuans->sortByDesc('isi');
+                                                        $remaining = $qtyExpectedSmallest;
+                                                        $count = $sorted->count();
+                                                        $i = 0;
+                                                        foreach ($sorted as $sat) {
+                                                            $i++;
+                                                            $factor = (float) ($sat->isi ?: 1);
+                                                            if ($i === $count) {
+                                                                $unitQty = round($remaining / $factor, 4);
+                                                                $unitValues[$sat->id] = (float) $unitQty;
+                                                            } else {
+                                                                $unitQty = floor(round($remaining / $factor, 8));
+                                                                $unitValues[$sat->id] = (float) $unitQty;
+                                                                $remaining = round($remaining - $unitQty * $factor, 4);
+                                                            }
+                                                        }
+                                                    } else {
+                                                        $unitValues[0] = $expectedSisa;
+                                                    }
+                                                @endphp
+                                                <div class="d-flex flex-column gap-1 align-items-center">
+                                                    <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                                        @if ($satuans && $satuans->count() > 0)
+                                                            @foreach ($sorted as $sat)
+                                                                @php
+                                                                    $val = $unitValues[$sat->id] ?? 0;
+                                                                @endphp
+                                                                <div class="input-group input-group-sm"
+                                                                    style="width: 100px;">
+                                                                    <input type="number"
+                                                                        class="form-control text-center input-unit-qty input-qty-row-{{ $index }}"
+                                                                        data-isi="{{ $sat->isi }}"
+                                                                        data-id="{{ $sat->id }}"
+                                                                        data-row-id="{{ $index }}"
+                                                                        value="{{ $val }}" min="0"
+                                                                        step="any">
+                                                                    <span
+                                                                        class="input-group-text bg-light text-secondary font-monospace"
+                                                                        style="font-size: 10px; padding: 0.25rem 0.4rem;">{{ $sat->satuan }}</span>
+                                                                </div>
+                                                            @endforeach
+                                                        @else
+                                                            <div class="input-group input-group-sm" style="width: 100px;">
+                                                                <input type="number"
+                                                                    class="form-control text-center input-unit-qty input-qty-row-{{ $index }}"
+                                                                    data-isi="1" data-id="0"
+                                                                    data-row-id="{{ $index }}"
+                                                                    value="{{ $expectedSisa }}" min="0"
+                                                                    step="any">
+                                                                <span
+                                                                    class="input-group-text bg-light text-secondary font-monospace"
+                                                                    style="font-size: 10px; padding: 0.25rem 0.4rem;">PCS</span>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                    <div class="text-center mt-1 fw-bold text-success font-monospace live-convert-display"
+                                                        id="convert-display-{{ $index }}"
+                                                        style="font-size: 11px;"></div>
+                                                </div>
+                                            </td>
+                                            <td class="text-end pe-3 fw-bold">
+                                                <div class="fs-7 text-dark">
+                                                    {{ $detail->barang->formatStok($qtyExpectedSmallest) }}</div>
+                                                <small class="text-secondary font-11 d-block">({{ (float) $expectedSisa }}
+                                                    {{ $detail->barangSatuan->satuan ?? 'PCS' }})</small>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            @endif
                         </table>
 
                         <div class="row mt-4">
                             <div class="col-md-6 mb-3">
-                                <label for="keterangan" class="form-label fs-7 fw-bold text-secondary">Catatan Akhir DPB</label>
+                                <label for="keterangan" class="form-label fs-7 fw-bold text-secondary">
+                                    {{ $isPending ? 'Catatan DPB' : 'Catatan Akhir DPB' }}
+                                </label>
                                 <textarea name="keterangan" id="keterangan" rows="2" class="form-control form-control-sm"
-                                    placeholder="Catatan unloading, misal: ada barang rusak 1 pcs, atau selisih..."></textarea>
+                                    placeholder="{{ $isPending ? 'Catatan awal DPB...' : 'Catatan unloading, misal: ada barang rusak 1 pcs, atau selisih...' }}">{{ $canvasSession->keterangan }}</textarea>
                             </div>
                         </div>
 
@@ -185,7 +340,8 @@
                                 <i class="fa-solid fa-arrow-left me-1"></i> Batal
                             </a>
                             <button type="submit" class="btn btn-success px-4 fw-semibold hover-scale text-white">
-                                <i class="fa-solid fa-circle-check me-1"></i> Selesaikan DPB & Unload
+                                <i class="fa-solid fa-circle-check me-1"></i>
+                                {{ $isPending ? 'Simpan Perubahan DPB' : 'Selesaikan DPB & Unload' }}
                             </button>
                         </div>
                     </form>
@@ -230,7 +386,9 @@
             }
 
             function updateAllConversions() {
-                $('.input-qty-kembali').each(function() {
+                const isPending = @json($isPending);
+                const selector = isPending ? '.input-qty-ambil' : '.input-qty-kembali';
+                $(selector).each(function() {
                     const $el = $(this);
                     const rowId = $el.data('row-id');
                     const qtyVal = parseFloat($el.val()) || 0;
@@ -255,7 +413,8 @@
                 const $input = $(this);
                 const prevVal = $input.data('prev-val') || 0;
                 const rowId = $input.data('row-id');
-                const $hiddenInput = $('#qty-kembali-' + rowId);
+                const isPending = @json($isPending);
+                const $hiddenInput = isPending ? $('#qty-ambil-' + rowId) : $('#qty-kembali-' + rowId);
                 const maxSmallest = parseFloat($hiddenInput.data('max-smallest'));
                 const primaryIsi = parseFloat($hiddenInput.data('isi')) || 1;
                 const satuans = $hiddenInput.data('satuans') || [];
@@ -270,12 +429,12 @@
                 // Round values to prevent float precision errors
                 totalSmallest = Math.round(totalSmallest * 10000) / 10000;
 
-                if (totalSmallest > maxSmallest) {
+                if (!isPending && totalSmallest > maxSmallest) {
                     Swal.fire({
                         title: 'Melebihi Batas',
                         html: `Jumlah pengembalian tidak boleh melebihi jumlah ambil!<br><br>` +
-                              `Maksimal ambil: <b>${formatStokJS(maxSmallest, satuans)}</b><br>` +
-                              `Diinput: <b>${formatStokJS(totalSmallest, satuans)}</b>`,
+                            `Maksimal ambil: <b>${formatStokJS(maxSmallest, satuans)}</b><br>` +
+                            `Diinput: <b>${formatStokJS(totalSmallest, satuans)}</b>`,
                         icon: 'warning',
                         confirmButtonText: 'OK'
                     });
@@ -286,8 +445,8 @@
                 $input.data('prev-val', $input.val());
 
                 // Set the value of the hidden input in primary units
-                const qtyKembali = totalSmallest / primaryIsi;
-                $hiddenInput.val(qtyKembali);
+                const qtyVal = totalSmallest / primaryIsi;
+                $hiddenInput.val(qtyVal);
 
                 // Update live convert display
                 $(`#convert-display-${rowId}`).text(formatStokJS(totalSmallest, satuans));

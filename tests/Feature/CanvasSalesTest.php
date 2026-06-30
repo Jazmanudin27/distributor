@@ -114,15 +114,17 @@ class CanvasSalesTest extends TestCase
         $response->assertSessionHasNoErrors();
         $response->assertRedirect();
 
+        // Get canvas session and approve it
+        $session = CanvasSession::where('kode_sales', $this->salesman->nik)->first();
+        $this->actingAs($this->admin)->post(route('canvas.approve', $session->id));
+
         // Stock in warehouse should be reduced by 10 (from 50 to 40)
         $this->barang->refresh();
         $this->assertEquals(40.00, (float)$this->barang->stok);
 
         // Canvas session should be recorded in loading status
-        $this->assertDatabaseHas('canvas_sessions', [
-            'kode_sales' => $this->salesman->nik,
-            'status' => 'loading'
-        ]);
+        $session->refresh();
+        $this->assertEquals('loading', $session->status);
 
         // Stock mutation log should exist
         $this->assertDatabaseHas('stok_mutasi', [
@@ -149,6 +151,9 @@ class CanvasSalesTest extends TestCase
                 ]
             ]
         ]);
+
+        $session = CanvasSession::where('kode_sales', $this->salesman->nik)->first();
+        $this->actingAs($this->admin)->post(route('canvas.approve', $session->id));
 
         $this->barang->refresh();
         $this->assertEquals(40.00, (float)$this->barang->stok);
@@ -207,6 +212,8 @@ class CanvasSalesTest extends TestCase
         ]);
 
         $session = CanvasSession::where('kode_sales', $this->salesman->nik)->first();
+        $this->actingAs($this->admin)->post(route('canvas.approve', $session->id));
+
         $detail = CanvasSessionDetail::where('canvas_session_id', $session->id)->first();
 
         // 2. Mock 7 units sold
@@ -265,6 +272,7 @@ class CanvasSalesTest extends TestCase
         ]);
 
         $session = CanvasSession::where('kode_sales', $this->salesman->nik)->first();
+        $this->actingAs($this->admin)->post(route('canvas.approve', $session->id));
 
         // 2. Delete the session
         $response = $this->actingAs($this->admin)->delete(route('canvas.destroy', $session->id));
@@ -282,6 +290,65 @@ class CanvasSalesTest extends TestCase
             'kode_barang' => $this->barang->kode_barang,
             'jenis_transaksi' => 'Batal Canvas Ambil',
             'qty_masuk' => 10.00
+        ]);
+    }
+
+    /**
+     * Test admin can edit canvas session details while it is pending approval.
+     */
+    public function test_admin_can_edit_pending_canvas_session(): void
+    {
+        // 1. Create a pending canvas session
+        $session = CanvasSession::create([
+            'no_canvas' => 'KVS-20260630-0001',
+            'kode_sales' => $this->salesman->nik,
+            'tanggal' => date('Y-m-d'),
+            'status' => 'pending',
+            'keterangan' => 'KVS pending'
+        ]);
+
+        $detail = CanvasSessionDetail::create([
+            'canvas_session_id' => $session->id,
+            'kode_barang' => $this->barang->kode_barang,
+            'satuan_id' => $this->satuan->id,
+            'qty_ambil' => 10,
+            'diskon_persen' => 0,
+            'qty_terjual' => 0,
+            'qty_kembali' => 0,
+            'selisih' => 10
+        ]);
+
+        // 2. Admin gets the edit page - should succeed (status 200)
+        $responseGet = $this->actingAs($this->admin)->get(route('canvas.edit', $session->id));
+        $responseGet->assertStatus(200);
+
+        // 3. Admin updates the qty_ambil and diskon_persen
+        $responsePut = $this->actingAs($this->admin)->put(route('canvas.update', $session->id), [
+            'keterangan' => 'Updated keterangan pending',
+            'details' => [
+                [
+                    'id' => $detail->id,
+                    'qty_ambil' => 15,
+                    'diskon_persen' => 5
+                ]
+            ]
+        ]);
+
+        $responsePut->assertSessionHasNoErrors();
+        $responsePut->assertRedirect(route('canvas.show', $session->id));
+
+        // 4. Verify updates in the database
+        $session->refresh();
+        $detail->refresh();
+        $this->assertEquals('pending', $session->status); // status should remain pending
+        $this->assertEquals('Updated keterangan pending', $session->keterangan);
+        $this->assertEquals(15.0, (float)$detail->qty_ambil);
+        $this->assertEquals(5.0, (float)$detail->diskon_persen);
+        $this->assertEquals(15.0, (float)$detail->selisih);
+
+        // 5. Verify no stock mutation was logged yet
+        $this->assertDatabaseMissing('stok_mutasi', [
+            'kode_barang' => $this->barang->kode_barang
         ]);
     }
 
@@ -321,6 +388,9 @@ class CanvasSalesTest extends TestCase
             ]
         ]);
 
+        $session = CanvasSession::where('kode_sales', $this->salesman->nik)->first();
+        $this->actingAs($this->admin)->post(route('canvas.approve', $session->id));
+
         // 3. Search as canvas salesman
         $response = $this->actingAs($this->salesman)->getJson(route('barang.search', ['q' => '']));
         $data = $response->json();
@@ -348,6 +418,9 @@ class CanvasSalesTest extends TestCase
                 ]
             ]
         ]);
+
+        $session = CanvasSession::where('kode_sales', $this->salesman->nik)->first();
+        $this->actingAs($this->admin)->post(route('canvas.approve', $session->id));
 
         // 2. Setup check-in for the customer
         \App\Models\PenjualanCheckin::create([

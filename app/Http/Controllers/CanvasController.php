@@ -215,15 +215,11 @@ class CanvasController extends Controller
             return redirect()->route('canvas.show', $id)->with('error', 'Session kanvas ini sudah selesai.');
         }
 
-        if ($canvasSession->status === 'pending') {
-            return redirect()->route('canvas.show', $id)->with('error', 'Session kanvas ini belum disetujui (approve).');
-        }
-
         return view('canvas.edit', compact('canvasSession'));
     }
 
     /**
-     * Update the canvas session (Unloading / Evening Return).
+     * Update the canvas session (Unloading / Evening Return or editing pending quantities).
      */
     public function update(Request $request, $id)
     {
@@ -231,6 +227,39 @@ class CanvasController extends Controller
 
         if ($canvasSession->status === 'completed') {
             return redirect()->route('canvas.show', $id)->with('error', 'Session kanvas ini sudah selesai.');
+        }
+
+        if ($canvasSession->status === 'pending') {
+            $request->validate([
+                'keterangan' => 'nullable|string',
+                'details' => 'required|array',
+                'details.*.id' => 'required|integer|exists:canvas_session_details,id',
+                'details.*.qty_ambil' => 'required|numeric|min:0.01',
+                'details.*.diskon_persen' => 'nullable|numeric|min:0|max:100',
+            ]);
+
+            try {
+                DB::transaction(function () use ($request, $canvasSession) {
+                    foreach ($request->details as $item) {
+                        $detail = CanvasSessionDetail::findOrFail($item['id']);
+                        $detail->qty_ambil = (float)$item['qty_ambil'];
+                        $detail->diskon_persen = isset($item['diskon_persen']) ? (float)$item['diskon_persen'] : 0;
+                        $detail->selisih = (float)$item['qty_ambil'];
+                        $detail->save();
+                    }
+
+                    if ($request->filled('keterangan')) {
+                        $canvasSession->keterangan = $request->keterangan;
+                    } else {
+                        $canvasSession->keterangan = null;
+                    }
+                    $canvasSession->save();
+                });
+
+                return redirect()->route('canvas.show', $id)->with('success', 'Detail DPB berhasil diperbarui.');
+            } catch (\Exception $e) {
+                return redirect()->back()->withInput()->with('error', $e->getMessage());
+            }
         }
 
         $request->validate([

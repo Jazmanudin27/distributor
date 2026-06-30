@@ -19,6 +19,10 @@
                     </div>
                     <div>
                         @if ($canvasSession->status === 'pending')
+                            <a href="{{ route('canvas.edit', $canvasSession->id) }}"
+                                class="btn btn-warning btn-sm fw-bold hover-scale me-1 text-dark shadow-sm">
+                                <i class="fa-solid fa-pen-to-square me-1"></i> Edit DPB
+                            </a>
                             <form action="{{ route('canvas.approve', $canvasSession->id) }}" method="POST" class="d-inline"
                                 onsubmit="return confirm('Apakah Anda yakin ingin menyetujui DPB ini? Stok gudang akan langsung dipotong.')">
                                 @csrf

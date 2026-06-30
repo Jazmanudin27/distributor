@@ -104,6 +104,11 @@
                                 <td class="text-center">
                                     <div class="btn-group gap-1">
                                         @if ($item->status === 'pending')
+                                            <a href="{{ route('canvas.edit', $item->id) }}"
+                                                class="btn btn-sm btn-outline-warning rounded"
+                                                title="Edit DPB">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </a>
                                             <form action="{{ route('canvas.approve', $item->id) }}" method="POST"
                                                 class="d-inline"
                                                 onsubmit="return confirm('Apakah Anda yakin ingin menyetujui DPB ini? Stok gudang akan langsung dipotong.')">
