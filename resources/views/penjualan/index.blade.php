@@ -50,7 +50,19 @@
                         </select>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <label class="form-label fs-7 fw-semibold text-secondary mb-1">Kategori Sales</label>
+                        <select name="kategori_sales" class="form-select form-select-sm">
+                            <option value="non_canvas"
+                                {{ request('kategori_sales', 'non_canvas') === 'non_canvas' ? 'selected' : '' }}>Sales
+                                Non-Kanvas</option>
+                            <option value="canvas" {{ request('kategori_sales') === 'canvas' ? 'selected' : '' }}>Sales
+                                Kanvas</option>
+                            <option value="all" {{ request('kategori_sales') === 'all' ? 'selected' : '' }}>Semua
+                                Kategori</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label fs-7 fw-semibold text-secondary mb-1">Wilayah</label>
                         <select name="kode_wilayah" class="form-select form-select-sm">
                             <option value="">Semua Wilayah</option>
@@ -62,7 +74,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label fs-7 fw-semibold text-secondary mb-1">Salesman</label>
                         <select name="kode_sales" class="form-select form-select-sm">
                             <option value="">Semua</option>
@@ -74,7 +86,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label fs-7 fw-semibold text-transparent mb-1">Aksi</label>
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary btn-sm flex-fill fw-bold" title="Filter Data">
@@ -332,6 +344,13 @@
                         form.submit();
                     }
                 });
+            });
+
+            // Auto-submit form when Kategori Sales changes to refresh the Salesman dropdown and results
+            $('select[name="kategori_sales"]').on('change', function() {
+                // Clear selected salesman first since the list of salesmen will change
+                $('select[name="kode_sales"]').val('');
+                $(this).closest('form').submit();
             });
         });
     </script>

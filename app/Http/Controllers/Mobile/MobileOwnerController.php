@@ -19,20 +19,39 @@ class MobileOwnerController extends Controller
     /**
      * Dashboard Utama Owner
      */
-    public function index()
+    public function index(Request $request)
     {
         $today = Carbon::today()->toDateString();
         $startOfMonth = Carbon::now()->startOfMonth()->toDateString();
         $endOfMonth = Carbon::now()->endOfMonth()->toDateString();
+        $kategoriSales = $request->input('kategori_sales', 'non_canvas');
 
         // 1. Penjualan
-        $salesToday = (float) Penjualan::where('batal', 0)
-            ->whereDate('tanggal', $today)
-            ->sum('grand_total');
+        $salesTodayQuery = Penjualan::where('batal', 0)->whereDate('tanggal', $today);
+        $salesMonthQuery = Penjualan::where('batal', 0)->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
 
-        $salesMonth = (float) Penjualan::where('batal', 0)
-            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
-            ->sum('grand_total');
+        if ($kategoriSales === 'canvas') {
+            $salesTodayQuery->whereHas('sales', function ($q) {
+                $q->where('is_kanvas', 1);
+            });
+            $salesMonthQuery->whereHas('sales', function ($q) {
+                $q->where('is_kanvas', 1);
+            });
+        } elseif ($kategoriSales === 'non_canvas') {
+            $salesTodayQuery->where(function ($q) {
+                $q->whereHas('sales', function ($sq) {
+                    $sq->where('is_kanvas', 0);
+                })->orWhereNull('kode_sales');
+            });
+            $salesMonthQuery->where(function ($q) {
+                $q->whereHas('sales', function ($sq) {
+                    $sq->where('is_kanvas', 0);
+                })->orWhereNull('kode_sales');
+            });
+        }
+
+        $salesToday = (float) $salesTodayQuery->sum('grand_total');
+        $salesMonth = (float) $salesMonthQuery->sum('grand_total');
 
         // 2. Pembelian
         $purchaseToday = (float) Pembelian::whereDate('tanggal', $today)->sum('grand_total');
@@ -40,37 +59,128 @@ class MobileOwnerController extends Controller
 
         // 3. Setoran / Pembayaran Masuk (Cash + Transfer + Giro)
         // Today
-        $payCashToday = (float) DB::table('penjualan_pembayaran')->whereDate('tanggal', $today)->sum('jumlah');
-        $payTransferToday = (float) DB::table('penjualan_pembayaran_transfer')->whereDate('tanggal', $today)->sum('jumlah');
-        $payGiroToday = (float) DB::table('penjualan_pembayaran_giro')->whereDate('tanggal', $today)->sum('jumlah');
-        $paymentsToday = $payCashToday + $payTransferToday + $payGiroToday;
+        $payCashTodayQuery = DB::table('penjualan_pembayaran')->whereDate('tanggal', $today);
+        $payTransferTodayQuery = DB::table('penjualan_pembayaran_transfer')->whereDate('tanggal', $today);
+        $payGiroTodayQuery = DB::table('penjualan_pembayaran_giro')->whereDate('tanggal', $today);
 
         // Month
-        $payCashMonth = (float) DB::table('penjualan_pembayaran')->whereBetween('tanggal', [$startOfMonth, $endOfMonth])->sum('jumlah');
-        $payTransferMonth = (float) DB::table('penjualan_pembayaran_transfer')->whereBetween('tanggal', [$startOfMonth, $endOfMonth])->sum('jumlah');
-        $payGiroMonth = (float) DB::table('penjualan_pembayaran_giro')->whereBetween('tanggal', [$startOfMonth, $endOfMonth])->sum('jumlah');
+        $payCashMonthQuery = DB::table('penjualan_pembayaran')->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
+        $payTransferMonthQuery = DB::table('penjualan_pembayaran_transfer')->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
+        $payGiroMonthQuery = DB::table('penjualan_pembayaran_giro')->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
+
+        if ($kategoriSales === 'canvas') {
+            $payCashTodayQuery->whereExists(function ($q) {
+                $q->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran.kode_sales')->where('users.is_kanvas', 1);
+            });
+            $payTransferTodayQuery->whereExists(function ($q) {
+                $q->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_transfer.kode_sales')->where('users.is_kanvas', 1);
+            });
+            $payGiroTodayQuery->whereExists(function ($q) {
+                $q->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_giro.kode_sales')->where('users.is_kanvas', 1);
+            });
+
+            $payCashMonthQuery->whereExists(function ($q) {
+                $q->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran.kode_sales')->where('users.is_kanvas', 1);
+            });
+            $payTransferMonthQuery->whereExists(function ($q) {
+                $q->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_transfer.kode_sales')->where('users.is_kanvas', 1);
+            });
+            $payGiroMonthQuery->whereExists(function ($q) {
+                $q->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_giro.kode_sales')->where('users.is_kanvas', 1);
+            });
+        } elseif ($kategoriSales === 'non_canvas') {
+            $payCashTodayQuery->where(function ($q) {
+                $q->whereExists(function ($sq) {
+                    $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran.kode_sales')->where('users.is_kanvas', 0);
+                })->orWhereNull('kode_sales');
+            });
+            $payTransferTodayQuery->where(function ($q) {
+                $q->whereExists(function ($sq) {
+                    $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_transfer.kode_sales')->where('users.is_kanvas', 0);
+                })->orWhereNull('kode_sales');
+            });
+            $payGiroTodayQuery->where(function ($q) {
+                $q->whereExists(function ($sq) {
+                    $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_giro.kode_sales')->where('users.is_kanvas', 0);
+                })->orWhereNull('kode_sales');
+            });
+
+            $payCashMonthQuery->where(function ($q) {
+                $q->whereExists(function ($sq) {
+                    $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran.kode_sales')->where('users.is_kanvas', 0);
+                })->orWhereNull('kode_sales');
+            });
+            $payTransferMonthQuery->where(function ($q) {
+                $q->whereExists(function ($sq) {
+                    $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_transfer.kode_sales')->where('users.is_kanvas', 0);
+                })->orWhereNull('kode_sales');
+            });
+            $payGiroMonthQuery->where(function ($q) {
+                $q->whereExists(function ($sq) {
+                    $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_giro.kode_sales')->where('users.is_kanvas', 0);
+                })->orWhereNull('kode_sales');
+            });
+        }
+
+        $payCashToday = (float) $payCashTodayQuery->sum('jumlah');
+        $payTransferToday = (float) $payTransferTodayQuery->sum('jumlah');
+        $payGiroToday = (float) $payGiroTodayQuery->sum('jumlah');
+        $paymentsToday = $payCashToday + $payTransferToday + $payGiroToday;
+
+        $payCashMonth = (float) $payCashMonthQuery->sum('jumlah');
+        $payTransferMonth = (float) $payTransferMonthQuery->sum('jumlah');
+        $payGiroMonth = (float) $payGiroMonthQuery->sum('jumlah');
         $paymentsMonth = $payCashMonth + $payTransferMonth + $payGiroMonth;
 
         // 4. Laba Kotor Bulan Ini
-        $salesReturnMonth = (float) DB::table('retur_penjualan')
-            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
-            ->sum('total');
-        $salesNetMonth = $salesMonth - $salesReturnMonth;
+        $salesReturnMonthQuery = DB::table('retur_penjualan')
+            ->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
 
-        $hppGrossMonth = (float) DB::table('penjualan_detail')
+        $hppGrossMonthQuery = DB::table('penjualan_detail')
             ->join('penjualan', 'penjualan_detail.no_faktur', '=', 'penjualan.no_faktur')
             ->where('penjualan.batal', 0)
             ->whereBetween('penjualan.tanggal', [$startOfMonth, $endOfMonth])
-            ->where('penjualan_detail.is_promo', 0)
-            ->select(DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp'))
-            ->first()->total_hpp ?? 0;
+            ->where('penjualan_detail.is_promo', 0);
 
-        $hppReturnMonth = (float) DB::table('retur_penjualan_detail')
+        $hppReturnMonthQuery = DB::table('retur_penjualan_detail')
             ->join('retur_penjualan', 'retur_penjualan_detail.no_retur', '=', 'retur_penjualan.no_retur')
             ->join('barang_satuan', 'retur_penjualan_detail.id_satuan', '=', 'barang_satuan.id')
-            ->whereBetween('retur_penjualan.tanggal', [$startOfMonth, $endOfMonth])
-            ->select(DB::raw('SUM(retur_penjualan_detail.qty * barang_satuan.harga_pokok) as total_hpp'))
-            ->first()->total_hpp ?? 0;
+            ->whereBetween('retur_penjualan.tanggal', [$startOfMonth, $endOfMonth]);
+
+        if ($kategoriSales === 'canvas') {
+            $salesReturnMonthQuery->whereExists(function ($q) {
+                $q->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'retur_penjualan.kode_sales')->where('users.is_kanvas', 1);
+            });
+            $hppGrossMonthQuery->whereExists(function ($q) {
+                $q->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan.kode_sales')->where('users.is_kanvas', 1);
+            });
+            $hppReturnMonthQuery->whereExists(function ($q) {
+                $q->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'retur_penjualan.kode_sales')->where('users.is_kanvas', 1);
+            });
+        } elseif ($kategoriSales === 'non_canvas') {
+            $salesReturnMonthQuery->where(function ($q) {
+                $q->whereExists(function ($sq) {
+                    $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'retur_penjualan.kode_sales')->where('users.is_kanvas', 0);
+                })->orWhereNull('kode_sales');
+            });
+            $hppGrossMonthQuery->where(function ($q) {
+                $q->whereExists(function ($sq) {
+                    $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan.kode_sales')->where('users.is_kanvas', 0);
+                })->orWhereNull('penjualan.kode_sales');
+            });
+            $hppReturnMonthQuery->where(function ($q) {
+                $q->whereExists(function ($sq) {
+                    $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'retur_penjualan.kode_sales')->where('users.is_kanvas', 0);
+                })->orWhereNull('kode_sales');
+            });
+        }
+
+        $salesReturnMonth = (float) $salesReturnMonthQuery->sum('total');
+        $salesNetMonth = $salesMonth - $salesReturnMonth;
+
+        $hppGrossMonth = (float) $hppGrossMonthQuery->select(DB::raw('SUM(penjualan_detail.qty * penjualan_detail.harga_pokok) as total_hpp'))->first()->total_hpp ?? 0;
+
+        $hppReturnMonth = (float) $hppReturnMonthQuery->select(DB::raw('SUM(retur_penjualan_detail.qty * barang_satuan.harga_pokok) as total_hpp'))->first()->total_hpp ?? 0;
 
         if ($hppReturnMonth == 0 && $salesReturnMonth > 0 && $salesMonth > 0) {
             $hppReturnMonth = $salesReturnMonth * ($hppGrossMonth / $salesMonth);
@@ -86,9 +196,16 @@ class MobileOwnerController extends Controller
         })->count();
 
         // 6. Top Pencapaian Sales Bulan Ini (Top 5)
-        $salesList = \App\Models\User::whereIn('role', ['sales', 'spv sales'])
-            ->where('status', '1')
-            ->get();
+        $salesListQuery = \App\Models\User::whereIn('role', ['sales', 'spv sales'])
+            ->where('status', '1');
+
+        if ($kategoriSales === 'canvas') {
+            $salesListQuery->where('is_kanvas', 1);
+        } elseif ($kategoriSales === 'non_canvas') {
+            $salesListQuery->where('is_kanvas', 0);
+        }
+
+        $salesList = $salesListQuery->get();
 
         $topSales = [];
         foreach ($salesList as $sales) {

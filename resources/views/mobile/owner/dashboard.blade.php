@@ -148,6 +148,20 @@
         </div>
     </div>
 
+    <!-- Filter Kategori Sales -->
+    <div class="metric-card p-3 mb-3" style="background: rgba(255, 255, 255, 0.05); border-radius: 16px;">
+        <form method="GET" action="{{ url()->current() }}" id="filter-form">
+            <div class="d-flex align-items-center justify-content-between">
+                <label class="text-secondary mb-0 fw-semibold" style="font-size: 0.8rem;"><i class="fa-solid fa-filter me-1"></i> Kategori Sales:</label>
+                <select name="kategori_sales" class="form-select form-select-sm border-0 text-white font-monospace" style="width: auto; background-color: rgba(255,255,255,0.08); font-size: 0.8rem; border-radius: 8px;" onchange="this.form.submit()">
+                    <option value="non_canvas" {{ request('kategori_sales', 'non_canvas') === 'non_canvas' ? 'selected' : '' }}>Non-Kanvas</option>
+                    <option value="canvas" {{ request('kategori_sales') === 'canvas' ? 'selected' : '' }}>Kanvas</option>
+                    <option value="all" {{ request('kategori_sales') === 'all' ? 'selected' : '' }}>Semua</option>
+                </select>
+            </div>
+        </form>
+    </div>
+
     <!-- Alert / Task Section -->
     <div class="row g-2 mb-4">
         <div class="col-4">

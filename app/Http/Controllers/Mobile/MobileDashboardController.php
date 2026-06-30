@@ -14,7 +14,7 @@ use Carbon\Carbon;
 
 class MobileDashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         $nik = $user->nik;
@@ -27,25 +27,67 @@ class MobileDashboardController extends Controller
         $today = Carbon::now()->toDateString();
 
         if ($isSpv) {
+            $kategoriSales = $request->input('kategori_sales', 'non_canvas');
+
+            $achievedSalesQuery = Penjualan::where('batal', 0)
+                ->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
+
+            $todaySalesQuery = Penjualan::where('batal', 0)
+                ->whereDate('tanggal', $today);
+
+            $todayVisitsQuery = PenjualanCheckin::whereDate('checkin', $today);
+
+            $recentOrdersQuery = Penjualan::with(['pelanggan.wilayah', 'pelanggan.subWilayah', 'sales', 'user'])
+                ->orderBy('created_at', 'desc')
+                ->limit(5);
+
+            if ($kategoriSales === 'canvas') {
+                $achievedSalesQuery->whereHas('sales', function ($q) {
+                    $q->where('is_kanvas', 1);
+                });
+                $todaySalesQuery->whereHas('sales', function ($q) {
+                    $q->where('is_kanvas', 1);
+                });
+                $todayVisitsQuery->whereHas('sales', function ($q) {
+                    $q->where('is_kanvas', 1);
+                });
+                $recentOrdersQuery->whereHas('sales', function ($q) {
+                    $q->where('is_kanvas', 1);
+                });
+            } elseif ($kategoriSales === 'non_canvas') {
+                $achievedSalesQuery->where(function ($q) {
+                    $q->whereHas('sales', function ($sq) {
+                        $sq->where('is_kanvas', 0);
+                    })->orWhereNull('kode_sales');
+                });
+                $todaySalesQuery->where(function ($q) {
+                    $q->whereHas('sales', function ($sq) {
+                        $sq->where('is_kanvas', 0);
+                    })->orWhereNull('kode_sales');
+                });
+                $todayVisitsQuery->where(function ($q) {
+                    $q->whereHas('sales', function ($sq) {
+                        $sq->where('is_kanvas', 0);
+                    })->orWhereNull('kode_sales');
+                });
+                $recentOrdersQuery->where(function ($q) {
+                    $q->whereHas('sales', function ($sq) {
+                        $sq->where('is_kanvas', 0);
+                    })->orWhereNull('kode_sales');
+                });
+            }
+
             // Achieved sales of all sales this month
-            $achievedSales = (float) Penjualan::where('batal', 0)
-                ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
-                ->sum('grand_total');
+            $achievedSales = (float) $achievedSalesQuery->sum('grand_total');
 
             // Today's sales of all sales
-            $todaySales = (float) Penjualan::where('batal', 0)
-                ->whereDate('tanggal', $today)
-                ->sum('grand_total');
+            $todaySales = (float) $todaySalesQuery->sum('grand_total');
 
             // Today's visits count of all sales
-            $todayVisitsCount = PenjualanCheckin::whereDate('checkin', $today)
-                ->count();
+            $todayVisitsCount = $todayVisitsQuery->count();
 
             // Recent orders of all sales
-            $recentOrders = Penjualan::with(['pelanggan.wilayah', 'pelanggan.subWilayah', 'sales', 'user'])
-                ->orderBy('created_at', 'desc')
-                ->limit(5)
-                ->get();
+            $recentOrders = $recentOrdersQuery->get();
         } else {
             // 1. Achieved sales this month
             $achievedSales = (float) Penjualan::where('kode_sales', $nik)

@@ -68,8 +68,31 @@ class PenjualanController extends Controller
             }
         }
 
+        $kategoriSales = $request->input('kategori_sales', 'non_canvas');
+
         if ($request->filled('kode_sales')) {
-            $query->where('kode_sales', $request->kode_sales);
+            $selectedSales = User::where('nik', $request->kode_sales)->first();
+            if ($selectedSales) {
+                if ($kategoriSales === 'all' || 
+                    ($kategoriSales === 'canvas' && $selectedSales->is_kanvas) || 
+                    ($kategoriSales === 'non_canvas' && !$selectedSales->is_kanvas)) {
+                    $query->where('kode_sales', $request->kode_sales);
+                } else {
+                    $request->merge(['kode_sales' => null]);
+                }
+            }
+        }
+
+        if ($kategoriSales === 'canvas') {
+            $query->whereHas('sales', function ($q) {
+                $q->where('is_kanvas', 1);
+            });
+        } elseif ($kategoriSales === 'non_canvas') {
+            $query->where(function ($q) {
+                $q->whereHas('sales', function ($sq) {
+                    $sq->where('is_kanvas', 0);
+                })->orWhereNull('kode_sales');
+            });
         }
 
         if ($request->filled('kode_wilayah')) {
@@ -78,9 +101,17 @@ class PenjualanController extends Controller
             });
         }
 
-        $salesmen = User::where(function ($q) {
+        $salesmenQuery = User::where(function ($q) {
             $q->where('role', 'sales')->orWhere('role', 'Salesman');
-        })->where('status', '1')->orderBy('name')->get();
+        })->where('status', '1');
+
+        if ($kategoriSales === 'canvas') {
+            $salesmenQuery->where('is_kanvas', 1);
+        } elseif ($kategoriSales === 'non_canvas') {
+            $salesmenQuery->where('is_kanvas', 0);
+        }
+
+        $salesmen = $salesmenQuery->orderBy('name')->get();
         $wilayahs = \App\Models\Wilayah::orderBy('nama_wilayah')->get();
         $items = $query->orderBy('tanggal', 'desc')->orderBy('no_faktur', 'desc')->paginate(15)->appends($request->query());
         return view('penjualan.index', compact('items', 'salesmen', 'wilayahs'));

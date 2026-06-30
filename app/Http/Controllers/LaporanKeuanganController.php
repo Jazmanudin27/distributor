@@ -325,6 +325,8 @@ class LaporanKeuanganController extends Controller
     {
         $this->authorizeReport('piutang');
 
+        $kategoriSales = $request->input('kategori_sales', 'non_canvas');
+
         $kode_pelanggan = $request->input('kode_pelanggan');
         $tanggal = $request->input('tanggal', date('Y-m-d'));
         $wilayah_id = $request->input('wilayah_id');
@@ -334,9 +336,18 @@ class LaporanKeuanganController extends Controller
         // Fetch master data for dropdown filters
         $wilayahs = Wilayah::orderBy('nama_wilayah')->get();
         $subWilayahs = SubWilayah::orderBy('nama_wilayah')->get();
-        $salesmen = User::where(function ($q) {
+        
+        $salesmenQuery = User::where(function ($q) {
             $q->where('role', 'sales')->orWhere('role', 'Salesman');
-        })->where('status', '1')->orderBy('name')->get();
+        })->where('status', '1');
+
+        if ($kategoriSales === 'canvas') {
+            $salesmenQuery->where('is_kanvas', 1);
+        } elseif ($kategoriSales === 'non_canvas') {
+            $salesmenQuery->where('is_kanvas', 0);
+        }
+
+        $salesmen = $salesmenQuery->orderBy('name')->get();
 
         $pelanggans = collect();
         if ($kode_pelanggan) {
@@ -368,6 +379,18 @@ class LaporanKeuanganController extends Controller
             if ($sub_wilayah_id) {
                 $query->whereHas('pelanggan', function($q) use ($sub_wilayah_id) {
                     $q->where('sub_wilayah', $sub_wilayah_id);
+                });
+            }
+
+            if ($kategoriSales === 'canvas') {
+                $query->whereHas('sales', function ($q) {
+                    $q->where('is_kanvas', 1);
+                });
+            } elseif ($kategoriSales === 'non_canvas') {
+                $query->where(function ($q) {
+                    $q->whereHas('sales', function ($sq) {
+                        $sq->where('is_kanvas', 0);
+                    })->orWhereNull('kode_sales');
                 });
             }
 
@@ -459,7 +482,7 @@ class LaporanKeuanganController extends Controller
         $compactData = compact(
             'pelanggans', 'items', 'kode_pelanggan',
             'tanggal', 'wilayah_id', 'sub_wilayah_id', 'kode_sales',
-            'wilayahs', 'subWilayahs', 'salesmen'
+            'wilayahs', 'subWilayahs', 'salesmen', 'kategoriSales'
         );
 
         if ($isExcel) {
@@ -479,9 +502,19 @@ class LaporanKeuanganController extends Controller
     {
         $this->authorizeReport('setoran');
 
-        $salesmen = User::where(function ($q) {
+        $kategoriSales = $request->input('kategori_sales', 'non_canvas');
+
+        $salesmenQuery = User::where(function ($q) {
             $q->where('role', 'sales')->orWhere('role', 'Salesman');
-        })->where('status', '1')->orderBy('name')->get();
+        })->where('status', '1');
+
+        if ($kategoriSales === 'canvas') {
+            $salesmenQuery->where('is_kanvas', 1);
+        } elseif ($kategoriSales === 'non_canvas') {
+            $salesmenQuery->where('is_kanvas', 0);
+        }
+
+        $salesmen = $salesmenQuery->orderBy('name')->get();
         
         $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
         $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
@@ -514,6 +547,15 @@ class LaporanKeuanganController extends Controller
                 if ($tanggal_akhir) $query->where('penjualan_pembayaran.tanggal', '<=', $tanggal_akhir);
                 if ($kode_sales) $query->where('penjualan_pembayaran.kode_sales', $kode_sales);
                 
+                if ($kategoriSales === 'canvas') {
+                    $query->where('sales.is_kanvas', 1);
+                } elseif ($kategoriSales === 'non_canvas') {
+                    $query->where(function ($q) {
+                        $q->where('sales.is_kanvas', 0)
+                          ->orWhereNull('penjualan_pembayaran.kode_sales');
+                    });
+                }
+                
                 $items = $items->concat($query->get());
             }
 
@@ -536,6 +578,15 @@ class LaporanKeuanganController extends Controller
                 if ($tanggal_mulai) $query->where('penjualan_pembayaran_transfer.tanggal', '>=', $tanggal_mulai);
                 if ($tanggal_akhir) $query->where('penjualan_pembayaran_transfer.tanggal', '<=', $tanggal_akhir);
                 if ($kode_sales) $query->where('penjualan_pembayaran_transfer.kode_sales', $kode_sales);
+                
+                if ($kategoriSales === 'canvas') {
+                    $query->where('sales.is_kanvas', 1);
+                } elseif ($kategoriSales === 'non_canvas') {
+                    $query->where(function ($q) {
+                        $q->where('sales.is_kanvas', 0)
+                          ->orWhereNull('penjualan_pembayaran_transfer.kode_sales');
+                    });
+                }
                 
                 $items = $items->concat($query->get());
             }
@@ -560,6 +611,15 @@ class LaporanKeuanganController extends Controller
                 if ($tanggal_akhir) $query->where('penjualan_pembayaran_giro.tanggal', '<=', $tanggal_akhir);
                 if ($kode_sales) $query->where('penjualan_pembayaran_giro.kode_sales', $kode_sales);
                 
+                if ($kategoriSales === 'canvas') {
+                    $query->where('sales.is_kanvas', 1);
+                } elseif ($kategoriSales === 'non_canvas') {
+                    $query->where(function ($q) {
+                        $q->where('sales.is_kanvas', 0)
+                          ->orWhereNull('penjualan_pembayaran_giro.kode_sales');
+                    });
+                }
+                
                 $items = $items->concat($query->get());
             }
 
@@ -570,14 +630,14 @@ class LaporanKeuanganController extends Controller
 
         if ($isExcel) {
             $filename = 'laporan_setoran_' . date('Ymd_His') . '.xls';
-            return response(view($view, compact('salesmen', 'items', 'tanggal_mulai', 'tanggal_akhir', 'kode_sales', 'jenis_bayar', 'isExcel')))
+            return response(view($view, compact('salesmen', 'items', 'tanggal_mulai', 'tanggal_akhir', 'kode_sales', 'jenis_bayar', 'isExcel', 'kategoriSales')))
             ->header('Content-Type', 'application/vnd-ms-excel')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
         }
 
-        return view($view, compact('salesmen', 'items', 'tanggal_mulai', 'tanggal_akhir', 'kode_sales', 'jenis_bayar'));
+        return view($view, compact('salesmen', 'items', 'tanggal_mulai', 'tanggal_akhir', 'kode_sales', 'jenis_bayar', 'kategoriSales'));
     }
 
     public function laporanLabaRugi(Request $request)
@@ -719,9 +779,19 @@ class LaporanKeuanganController extends Controller
     {
         $this->authorizeReport('piutang');
 
-        $salesmen = User::where(function ($q) {
+        $kategoriSales = $request->input('kategori_sales', 'non_canvas');
+
+        $salesmenQuery = User::where(function ($q) {
             $q->where('role', 'sales')->orWhere('role', 'Salesman');
-        })->where('status', '1')->orderBy('name')->get();
+        })->where('status', '1');
+
+        if ($kategoriSales === 'canvas') {
+            $salesmenQuery->where('is_kanvas', 1);
+        } elseif ($kategoriSales === 'non_canvas') {
+            $salesmenQuery->where('is_kanvas', 0);
+        }
+
+        $salesmen = $salesmenQuery->orderBy('name')->get();
 
         $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
         $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
@@ -804,6 +874,34 @@ class LaporanKeuanganController extends Controller
                 $cashQuery->where('kode_pelanggan', $kode_pelanggan);
                 $transferQuery->where('kode_pelanggan', $kode_pelanggan);
                 $giroQuery->where('kode_pelanggan', $kode_pelanggan);
+            }
+
+            if ($kategoriSales === 'canvas') {
+                $cashQuery->whereExists(function ($q) {
+                    $q->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran.kode_sales')->where('users.is_kanvas', 1);
+                });
+                $transferQuery->whereExists(function ($q) {
+                    $q->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_transfer.kode_sales')->where('users.is_kanvas', 1);
+                });
+                $giroQuery->whereExists(function ($q) {
+                    $q->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_giro.kode_sales')->where('users.is_kanvas', 1);
+                });
+            } elseif ($kategoriSales === 'non_canvas') {
+                $cashQuery->where(function ($q) {
+                    $q->whereExists(function ($sq) {
+                        $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran.kode_sales')->where('users.is_kanvas', 0);
+                    })->orWhereNull('penjualan_pembayaran.kode_sales');
+                });
+                $transferQuery->where(function ($q) {
+                    $q->whereExists(function ($sq) {
+                        $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_transfer.kode_sales')->where('users.is_kanvas', 0);
+                    })->orWhereNull('penjualan_pembayaran_transfer.kode_sales');
+                });
+                $giroQuery->where(function ($q) {
+                    $q->whereExists(function ($sq) {
+                        $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_giro.kode_sales')->where('users.is_kanvas', 0);
+                    })->orWhereNull('penjualan_pembayaran_giro.kode_sales');
+                });
             }
 
             // Fetch records
@@ -983,7 +1081,7 @@ class LaporanKeuanganController extends Controller
             $filename = 'laporan_pembayaran_piutang_' . date('Ymd_His') . '.xls';
             return response(view($view, compact(
                 'salesmen', 'items', 'tanggal_mulai', 'tanggal_akhir', 
-                'kode_sales', 'kode_pelanggan', 'jenis_laporan', 'status_pembayaran', 'status_faktur', 'isExcel', 'pelanggans'
+                'kode_sales', 'kode_pelanggan', 'jenis_laporan', 'status_pembayaran', 'status_faktur', 'isExcel', 'pelanggans', 'kategoriSales'
             )))
             ->header('Content-Type', 'application/vnd-ms-excel')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
@@ -993,7 +1091,7 @@ class LaporanKeuanganController extends Controller
 
         return view($view, compact(
             'salesmen', 'items', 'tanggal_mulai', 'tanggal_akhir', 
-            'kode_sales', 'kode_pelanggan', 'jenis_laporan', 'status_pembayaran', 'status_faktur', 'pelanggans'
+            'kode_sales', 'kode_pelanggan', 'jenis_laporan', 'status_pembayaran', 'status_faktur', 'pelanggans', 'kategoriSales'
         ));
     }
 

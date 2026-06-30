@@ -19,12 +19,21 @@
                         </div>
 
                         <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary mb-1">Kategori Sales</label>
+                            <select name="kategori_sales" id="kategori_sales" class="form-select form-select-sm">
+                                <option value="non_canvas" {{ request('kategori_sales', 'non_canvas') === 'non_canvas' ? 'selected' : '' }}>Sales Non-Kanvas</option>
+                                <option value="canvas" {{ request('kategori_sales') === 'canvas' ? 'selected' : '' }}>Sales Kanvas</option>
+                                <option value="all" {{ request('kategori_sales') === 'all' ? 'selected' : '' }}>Semua Kategori</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label fw-semibold text-secondary mb-1">Salesman</label>
                             <select name="kode_sales" class="form-select form-select-sm select2-init">
                                 <option value="">-- Semua Salesman --</option>
                                 @foreach ($salesmen as $s)
                                     <option value="{{ $s->nik }}"
-                                        {{ ($kode_sales ?? '') == $s->nik ? 'selected' : '' }}>
+                                        {{ ($kode_sales ?? request('kode_sales') ?? '') == $s->nik ? 'selected' : '' }}>
                                         {{ $s->name }} ({{ $s->nik }})
                                     </option>
                                 @endforeach
@@ -124,6 +133,20 @@
                     cache: true
                 },
                 minimumInputLength: 0
+            });
+
+            // Reload page on Kategori Sales change to refresh Salesman list
+            $('#kategori_sales').on('change', function() {
+                const val = $(this).val();
+                const url = new URL(window.location.href);
+                url.searchParams.set('kategori_sales', val);
+                url.searchParams.delete('kode_sales'); // reset selected salesman to avoid mismatch
+                
+                // Keep date if filled
+                const tgl = $('input[name="tanggal"]').val();
+                if (tgl) url.searchParams.set('tanggal', tgl);
+
+                window.location.href = url.toString();
             });
         });
     </script>
