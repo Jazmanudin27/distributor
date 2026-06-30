@@ -67,7 +67,7 @@
                                         <th width="50" class="text-center">No</th>
                                         <th>Nama Barang</th>
                                         <th width="150" class="text-center">Satuan</th>
-                                        <th width="240" class="text-center bg-primary-subtle text-primary fw-bold">Qty
+                                        <th width="340" class="text-center bg-primary-subtle text-primary fw-bold">Qty
                                             Ambil (Loading)</th>
                                         <th width="80" class="text-center">Aksi</th>
                                     </tr>
@@ -167,7 +167,8 @@
                                                 </div>
                                             </td>
                                             <td class="text-center">
-                                                <button type="button" class="btn btn-outline-danger btn-sm btn-delete-row" title="Hapus Barang">
+                                                <button type="button" class="btn btn-outline-danger btn-sm btn-delete-row"
+                                                    title="Hapus Barang">
                                                     <i class="fa-solid fa-trash"></i>
                                                 </button>
                                             </td>
