@@ -69,7 +69,6 @@
                                         <th width="150" class="text-center">Satuan</th>
                                         <th width="240" class="text-center bg-primary-subtle text-primary fw-bold">Qty
                                             Ambil (Loading)</th>
-                                        <th width="150" class="text-center">Diskon (%)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -164,16 +163,6 @@
                                                     <div class="text-center mt-1 fw-bold text-success font-monospace live-convert-display"
                                                         id="convert-display-{{ $index }}" style="font-size: 11px;">
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="input-group input-group-sm mx-auto" style="width: 100px;">
-                                                    <input type="number"
-                                                        name="details[{{ $index }}][diskon_persen]"
-                                                        class="form-control text-center"
-                                                        value="{{ (float) $detail->diskon_persen }}" min="0"
-                                                        max="100" step="any">
-                                                    <span class="input-group-text">%</span>
                                                 </div>
                                             </td>
                                         </tr>
