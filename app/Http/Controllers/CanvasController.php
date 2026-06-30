@@ -232,7 +232,7 @@ class CanvasController extends Controller
         if ($canvasSession->status === 'pending') {
             $request->validate([
                 'keterangan' => 'nullable|string',
-                'details' => 'required|array',
+                'details' => 'required|array|min:1',
                 'details.*.id' => 'required|integer|exists:canvas_session_details,id',
                 'details.*.qty_ambil' => 'required|numeric|min:0.01',
                 'details.*.diskon_persen' => 'nullable|numeric|min:0|max:100',
@@ -240,6 +240,11 @@ class CanvasController extends Controller
 
             try {
                 DB::transaction(function () use ($request, $canvasSession) {
+                    $submittedIds = collect($request->details)->pluck('id')->toArray();
+                    CanvasSessionDetail::where('canvas_session_id', $canvasSession->id)
+                        ->whereNotIn('id', $submittedIds)
+                        ->delete();
+
                     foreach ($request->details as $item) {
                         $detail = CanvasSessionDetail::findOrFail($item['id']);
                         $detail->qty_ambil = (float)$item['qty_ambil'];

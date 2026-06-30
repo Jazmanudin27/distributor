@@ -69,9 +69,10 @@
                                         <th width="150" class="text-center">Satuan</th>
                                         <th width="240" class="text-center bg-primary-subtle text-primary fw-bold">Qty
                                             Ambil (Loading)</th>
+                                        <th width="80" class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="details-table-body">
                                     @foreach ($canvasSession->details as $index => $detail)
                                         @php
                                             $qtyAmbilSmallest = $detail->qty_ambil * ($detail->barangSatuan->isi ?? 1);
@@ -164,6 +165,11 @@
                                                         id="convert-display-{{ $index }}" style="font-size: 11px;">
                                                     </div>
                                                 </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-outline-danger btn-sm btn-delete-row" title="Hapus Barang">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -391,6 +397,41 @@
 
             // Trigger on load
             updateAllConversions();
+
+            // Delete row handler
+            $(document).on('click', '.btn-delete-row', function() {
+                const $row = $(this).closest('tr');
+                const rowCount = $('#details-table-body tr').length;
+                if (rowCount <= 1) {
+                    Swal.fire({
+                        title: 'Minimal 1 Barang',
+                        text: 'Minimal harus ada 1 barang dalam DPB!',
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Hapus Barang?',
+                    text: 'Apakah Anda yakin ingin menghapus barang ini dari DPB?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $row.remove();
+                        // Re-index No column
+                        $('#details-table-body tr').each(function(index) {
+                            $(this).find('td:first').text(index + 1);
+                        });
+                        updateAllConversions();
+                    }
+                });
+            });
 
             // Store previous value on focus
             $(document).on('focus', '.input-unit-qty', function() {
