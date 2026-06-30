@@ -77,12 +77,12 @@
                                 </div>
                                 <div class="col-auto">
                                     <input type="date" id="filter_tanggal_mulai" class="form-control form-control-sm"
-                                        title="Tanggal Mulai">
+                                        title="Tanggal Mulai" value="{{ $isEdit ? '' : date('Y-m-d') }}">
                                 </div>
                                 <div class="col-auto text-secondary small">s/d</div>
                                 <div class="col-auto">
                                     <input type="date" id="filter_tanggal_akhir" class="form-control form-control-sm"
-                                        title="Tanggal Akhir">
+                                        title="Tanggal Akhir" value="{{ $isEdit ? '' : date('Y-m-d') }}">
                                 </div>
                                 <div class="col-auto">
                                     <div class="btn-group">
