@@ -508,8 +508,10 @@ class CanvasController extends Controller
             $q->where('role', 'sales')->orWhere('role', 'Salesman')->orWhere('role', 'Admin');
         })->where('status', '1')
           ->where('is_kanvas', 1)
-          ->whereHas('canvasSessions', function($q) {
-              $q->where('status', 'loading');
+          ->whereIn('nik', function($q) {
+              $q->select('kode_sales')
+                ->from('canvas_sessions')
+                ->where('status', 'loading');
           })
           ->orderBy('name')
           ->get();
