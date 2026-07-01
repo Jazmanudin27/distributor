@@ -92,6 +92,9 @@ class LaporanStokController extends Controller
                 if ($kode_supplier) {
                     $query->where('kode_supplier', $kode_supplier);
                 }
+                if ($kode_barang) {
+                    $query->where('kode_barang', $kode_barang);
+                }
                 if ($kategori) {
                     $query->where('kategori', $kategori);
                 }
@@ -206,7 +209,7 @@ class LaporanStokController extends Controller
                 $filename = 'laporan_persediaan_' . date('Ymd_His') . '.xls';
                 return response(view($view, compact(
                     'barangsList', 'kategoris', 'merks', 'suppliers', 'items', 
-                    'jenis_laporan', 'kategori', 'merk', 'kode_supplier', 'tanggal_mulai', 'tanggal_akhir', 'search', 'isExcel', 'tampilkan_stok_kosong'
+                    'jenis_laporan', 'kode_barang', 'kategori', 'merk', 'kode_supplier', 'tanggal_mulai', 'tanggal_akhir', 'search', 'isExcel', 'tampilkan_stok_kosong'
                 )))
                 ->header('Content-Type', 'application/vnd-ms-excel')
                 ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
@@ -216,7 +219,7 @@ class LaporanStokController extends Controller
 
             return view($view, compact(
                 'barangsList', 'kategoris', 'merks', 'suppliers', 'items', 
-                'jenis_laporan', 'kategori', 'merk', 'kode_supplier', 'tanggal_mulai', 'tanggal_akhir', 'search', 'tampilkan_stok_kosong'
+                'jenis_laporan', 'kode_barang', 'kategori', 'merk', 'kode_supplier', 'tanggal_mulai', 'tanggal_akhir', 'search', 'tampilkan_stok_kosong'
             ));
         } elseif ($jenis_laporan === 'margin') {
             $view = $isPrintOrExcel ? 'laporan.stok.margin' : 'laporan.stok.index';

@@ -955,7 +955,7 @@
                                 r.details.forEach(d => {
                                     if (qty >= (d.min_qty || 0) && (d.max_qty === null ||
                                             qty <= d.max_qty) && isSatuanMatch(d,
-                                        satuanId)) {
+                                            satuanId)) {
                                         checkRule(r, d);
                                     }
                                 });

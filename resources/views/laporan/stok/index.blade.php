@@ -131,30 +131,47 @@
             // Toggle filter visibility based on report type select
             function toggleFilters() {
                 const val = $('#jenis_laporan').val();
+
+                // Dynamic required attribute, label asterisk, and placeholder for kode_barang
+                if (val === 'detail') {
+                    $('.filter-barang label').html('Pilih Barang <span class="text-danger">*</span>');
+                    $('#kode_barang option[value=""]').text('-- Pilih Barang --');
+                    $('#kode_barang').prop('required', true);
+                } else {
+                    $('.filter-barang label').html('Pilih Barang');
+                    $('#kode_barang option[value=""]').text('-- Semua Barang --');
+                    $('#kode_barang').prop('required', false);
+                }
+
+                // Refresh select2 to display updated option text
+                if ($('#kode_barang').hasClass('select2-hidden-accessible')) {
+                    $('#kode_barang').select2('destroy');
+                }
+                $('#kode_barang').select2({
+                    theme: 'bootstrap-5',
+                    width: '100%'
+                });
+
                 if (val === 'rekap') {
                     $('.filter-rekap').removeClass('d-none');
                     $('.filter-barang').addClass('d-none');
                     $('.filter-supplier').addClass('d-none');
                     $('.filter-dates').addClass('d-none');
-                    $('#kode_barang').prop('required', false);
                 } else if (val === 'detail') {
                     $('.filter-rekap').addClass('d-none');
                     $('.filter-barang').removeClass('d-none');
                     $('.filter-supplier').addClass('d-none');
                     $('.filter-dates').removeClass('d-none');
-                    $('#kode_barang').prop('required', true);
                 } else if (val === 'rekap_persediaan') {
                     $('.filter-rekap').removeClass('d-none');
-                    $('.filter-barang').addClass('d-none');
+                    $('.filter-barang').removeClass('d-none');
                     $('.filter-supplier').removeClass('d-none');
                     $('.filter-dates').removeClass('d-none');
-                    $('#kode_barang').prop('required', false);
                 } else if (val === 'margin') {
                     $('.filter-rekap').removeClass('d-none');
                     $('.filter-barang').addClass('d-none');
                     $('.filter-supplier').removeClass('d-none');
                     $('.filter-dates').addClass('d-none');
-                    $('#kode_barang').prop('required', false);
                 }
             }
 

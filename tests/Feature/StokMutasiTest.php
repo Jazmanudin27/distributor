@@ -110,6 +110,25 @@ class StokMutasiTest extends TestCase
         ]));
         $response->assertStatus(200);
 
+        // Rekap persediaan report page with kode_barang filter
+        $response = $this->actingAs($user)->get(route('laporan.stok', [
+            'jenis_laporan' => 'rekap_persediaan',
+            'kode_barang' => $barang->kode_barang,
+            'tanggal_mulai' => date('Y-m-d'),
+            'tanggal_akhir' => date('Y-m-d'),
+        ]));
+        $response->assertStatus(200);
+
+        // Rekap persediaan cetak with kode_barang filter
+        $response = $this->actingAs($user)->get(route('laporan.stok.cetak', [
+            'jenis_laporan' => 'rekap_persediaan',
+            'kode_barang' => $barang->kode_barang,
+            'tanggal_mulai' => date('Y-m-d'),
+            'tanggal_akhir' => date('Y-m-d'),
+        ]));
+        $response->assertStatus(200);
+        $response->assertSee($barang->nama_barang);
+
         // Detail report page (requires print/excel to trigger calculation)
         $response = $this->actingAs($user)->get(route('laporan.stok.cetak', [
             'jenis_laporan' => 'detail',

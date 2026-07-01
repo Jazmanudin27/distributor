@@ -76,6 +76,15 @@
                         Semua
                     @endif
                 </strong>
+                &nbsp;|&nbsp; Barang:
+                <strong>
+                    @if ($kode_barang)
+                        @php $barangObj = $barangsList->firstWhere('kode_barang', $kode_barang); @endphp
+                        {{ $barangObj ? $barangObj->nama_barang : $kode_barang }}
+                    @else
+                        Semua
+                    @endif
+                </strong>
             </div>
             <div class=" text-muted">Tanggal Cetak: {{ date('d/m/Y H:i:s') }}</div>
             <hr style="border-top: 1px dashed #000; opacity: 1;">

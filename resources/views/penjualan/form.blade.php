@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', $item->exists ? 'Edit Penjualan' : 'Transaksi Penjualan Baru')
 @push('styles')
     <style>
@@ -290,7 +290,7 @@
                                 value="0">
                             <input type="hidden" id="quick_diskon1_percent" value="0">
                         </div>
-                        <div class="col-lg-1 col-md-3 col-4">
+                        <div class="col-lg-1 col-md-3 col-4" id="diskon2-quickadd-col">
                             <label class="form-label fs-8 fw-bold text-secondary mb-1">D2 <span
                                     class="badge bg-secondary cursor-pointer toggle-quick-type" id="quick_d2_type"
                                     style="user-select: none;">%</span></label>
@@ -347,7 +347,7 @@
                                     <th width="70" class="text-end">Qty</th>
                                     <th width="120" class="text-end">Harga Jual</th>
                                     <th width="85" class="text-end">D1</th>
-                                    <th width="85" class="text-end">D2</th>
+                                    <th width="85" class="text-end" id="diskon2-header-th">D2</th>
                                     <th width="85" class="text-end">D3</th>
                                     <th width="130" class="text-end">Subtotal</th>
                                     <th width="40" class="text-center">Aksi</th>
@@ -1364,7 +1364,7 @@
                                 <input type="hidden" name="items[${rowIndex}][diskon1_persen]" class="input-diskon1" value="${d1}">
                             </div>
                         </td>
-                        <td>
+                        <td class="td-diskon2">
                             <div class="input-group input-group-sm" style="min-width: 90px; max-width: 100px; margin-left: auto;">
                                 <span class="input-group-text cursor-pointer toggle-row-type text-primary fw-bold" style="padding: 0.1rem 0.3rem; font-size: 0.65rem; user-select: none;">%</span>
                                 <input type="text" class="form-control form-control-sm text-end input-diskon2-val" value="${formatPercentJS(d2)}" ${isPromo ? 'readonly' : ''}>
@@ -1387,6 +1387,8 @@
                     </tr>`;
                 $('#itemsTable tbody').append(html);
                 rowIndex++;
+                // Apply D2 visibility to newly appended row
+                if (typeof toggleDiskon2Visibility === 'function') toggleDiskon2Visibility();
             }
 
             // Remove row
@@ -1452,11 +1454,40 @@
                     $(this).closest('tr').attr('data-manual-discount', '1');
                 });
 
+            // Toggle Diskon 2 visibility based on jenis_transaksi
+            function toggleDiskon2Visibility() {
+                const isTunai = $('#jenis_transaksi').val() === 'T';
+                if (isTunai) {
+                    $('#diskon2-header-th').show();
+                    $('#diskon2-quickadd-col').show();
+                    $('.td-diskon2').show();
+                } else {
+                    // Zero out diskon2 on all rows
+                    $('#itemsTable tbody tr').each(function() {
+                        $(this).find('.input-diskon2-val').val('0');
+                        $(this).find('.input-diskon2').val('0');
+                    });
+                    // Zero out quick-add diskon2
+                    $('#quick_diskon2_input').val('0');
+                    $('#quick_diskon2_percent').val(0);
+                    // Hide D2 column
+                    $('#diskon2-header-th').hide();
+                    $('#diskon2-quickadd-col').hide();
+                    $('.td-diskon2').hide();
+                }
+            }
+
             // Trigger recalculation on jenis transaksi change
             $('#jenis_transaksi').on('change', function() {
+                // Reset manual-discount flag so strata is recalculated for all rows
+                $('#itemsTable tbody tr').removeAttr('data-manual-discount');
+                toggleDiskon2Visibility();
                 evaluateQuickStrata();
                 calculateTotals();
             });
+
+            // Run on page load
+            toggleDiskon2Visibility();
 
             // Check stock when quantity changes in table row
             $(document).on('change', '#itemsTable .input-qty', function() {
