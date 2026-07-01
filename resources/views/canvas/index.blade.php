@@ -105,8 +105,7 @@
                                     <div class="btn-group gap-1">
                                         @if ($item->status === 'pending')
                                             <a href="{{ route('canvas.edit', $item->id) }}"
-                                                class="btn btn-sm btn-outline-warning rounded"
-                                                title="Edit DPB">
+                                                class="btn btn-sm btn-outline-warning rounded" title="Edit DPB">
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </a>
                                             <form action="{{ route('canvas.approve', $item->id) }}" method="POST"
@@ -127,14 +126,6 @@
                                             class="btn btn-sm btn-outline-primary rounded" title="Cetak Laporan Penjualan">
                                             <i class="fa-solid fa-print"></i>
                                         </a>
-
-                                        @if ($item->status === 'loading')
-                                            <a href="{{ route('canvas.edit', $item->id) }}"
-                                                class="btn btn-sm btn-outline-warning rounded"
-                                                title="Selesaikan / Bongkar Muatan">
-                                                <i class="fa-solid fa-box-open"></i>
-                                            </a>
-                                        @endif
                                         <form action="{{ route('canvas.destroy', $item->id) }}" method="POST"
                                             class="d-inline"
                                             onsubmit="return confirm('Apakah Anda yakin ingin menghapus data DPB ini? Stok yang diambil akan dikembalikan ke gudang jika status belum selesai.')">

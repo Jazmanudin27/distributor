@@ -39,7 +39,7 @@
 
     $isTxPembelianActive = request()->routeIs('pembelian.*') || request()->routeIs('retur-pembelian.*');
 
-    $isTxGudangActive = request()->routeIs('stok-opname.*') || request()->routeIs('canvas.*');
+    $isTxGudangActive = request()->routeIs('stok-opname.*') || request()->routeIs('canvas.*') || request()->routeIs('canvas-returns.*') || request()->routeIs('canvas-report.*');
 
     $isTxKeuanganActive =
         request()->routeIs('ajuan-limit-kredit.*') ||
@@ -272,7 +272,11 @@
                             @endcan
                             @if ($user->hasRole('Super Admin') || $user->hasRole('Admin') || $user->can('view-canvas'))
                                 <a href="{{ route('canvas.index') }}"
-                                    class="{{ request()->routeIs('canvas.*') ? 'active' : '' }}">DPB </a>
+                                    class="{{ request()->routeIs('canvas.*') && !request()->routeIs('canvas.returns.*') && !request()->routeIs('canvas.report*') ? 'active' : '' }}">Pengambilan Barang (DPB)</a>
+                                <a href="{{ route('canvas-returns.index') }}"
+                                    class="{{ request()->routeIs('canvas-returns.*') ? 'active' : '' }}">Pengembalian Barang</a>
+                                <a href="{{ route('canvas-report') }}"
+                                    class="{{ request()->routeIs('canvas-report*') ? 'active' : '' }}">Laporan Barang Kanvas</a>
                             @endif
                         </div>
                     </div>

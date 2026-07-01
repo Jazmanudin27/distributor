@@ -459,4 +459,232 @@ class CanvasController extends Controller
 
         return view('canvas.print', compact('canvasSession', 'invoices'));
     }
+
+    /**
+     * Display a listing of canvas returns (completed sessions).
+     */
+    public function returnsIndex(Request $request)
+    {
+        $query = CanvasSession::with(['sales', 'details'])
+            ->where('status', 'completed')
+            ->orderBy('updated_at', 'desc')
+            ->orderBy('id', 'desc');
+
+        if ($request->filled('kode_sales')) {
+            $query->where('kode_sales', $request->kode_sales);
+        }
+
+        if ($request->filled('tanggal_mulai')) {
+            $query->whereDate('updated_at', '>=', $request->tanggal_mulai);
+        }
+
+        if ($request->filled('tanggal_akhir')) {
+            $query->whereDate('updated_at', '<=', $request->tanggal_akhir);
+        }
+
+        $canvasSessions = $query->paginate(15)->withQueryString();
+
+        $salesmen = User::where(function ($q) {
+            $q->where('role', 'sales')->orWhere('role', 'Salesman')->orWhere('role', 'Admin');
+        })->where('status', '1')
+          ->where('is_kanvas', 1)
+          ->orderBy('name')
+          ->get();
+
+        return view('canvas.returns_index', compact('canvasSessions', 'salesmen'));
+    }
+
+    /**
+     * Show the form for creating a new return.
+     */
+    public function returnsCreate(Request $request)
+    {
+        $selectedSales = $request->input('kode_sales');
+        $accumulatedDetails = collect();
+        $activeSessions = collect();
+
+        // Get list of sales who have active loading DPBs
+        $salesmen = User::where(function ($q) {
+            $q->where('role', 'sales')->orWhere('role', 'Salesman')->orWhere('role', 'Admin');
+        })->where('status', '1')
+          ->where('is_kanvas', 1)
+          ->whereHas('canvasSessions', function($q) {
+              $q->where('status', 'loading');
+          })
+          ->orderBy('name')
+          ->get();
+
+        if ($selectedSales) {
+            // Fetch all loading sessions for this salesman, ordered by tanggal
+            $activeSessions = CanvasSession::where('kode_sales', $selectedSales)
+                ->where('status', 'loading')
+                ->orderBy('tanggal', 'asc')
+                ->with(['details.barang.satuans', 'details.barangSatuan'])
+                ->get();
+
+            foreach ($activeSessions as $session) {
+                foreach ($session->details as $detail) {
+                    $key = $detail->kode_barang . '_' . $detail->satuan_id;
+                    if (!$accumulatedDetails->has($key)) {
+                        $accumulatedDetails->put($key, [
+                            'kode_barang' => $detail->kode_barang,
+                            'barang' => $detail->barang,
+                            'satuan_id' => $detail->satuan_id,
+                            'barangSatuan' => $detail->barangSatuan,
+                            'qty_ambil' => (float)$detail->qty_ambil,
+                            'qty_terjual' => (float)$detail->qty_terjual,
+                            'qty_kembali' => (float)$detail->qty_kembali,
+                            'detail_ids' => [$detail->id],
+                        ]);
+                    } else {
+                        $item = $accumulatedDetails->get($key);
+                        $item['qty_ambil'] += (float)$detail->qty_ambil;
+                        $item['qty_terjual'] += (float)$detail->qty_terjual;
+                        $item['qty_kembali'] += (float)$detail->qty_kembali;
+                        $item['detail_ids'][] = $detail->id;
+                        $accumulatedDetails->put($key, $item);
+                    }
+                }
+            }
+        }
+
+        return view('canvas.returns_create', compact('salesmen', 'selectedSales', 'activeSessions', 'accumulatedDetails'));
+    }
+
+    /**
+     * Store the return transaction and distribute returned quantities.
+     */
+    public function returnsStore(Request $request)
+    {
+        $request->validate([
+            'kode_sales' => 'required|string|exists:users,nik',
+            'keterangan' => 'nullable|string',
+            'details' => 'required|array',
+            'details.*.detail_ids' => 'required|string',
+            'details.*.qty_kembali' => 'required|numeric|min:0',
+        ]);
+
+        $selectedSales = $request->kode_sales;
+
+        try {
+            DB::transaction(function () use ($request, $selectedSales) {
+                $salesman = User::where('nik', $selectedSales)->first();
+                $salesName = $salesman ? $salesman->name : $selectedSales;
+
+                // Find all active loading sessions for this salesman
+                $activeSessions = CanvasSession::where('kode_sales', $selectedSales)
+                    ->where('status', 'loading')
+                    ->get();
+
+                if ($activeSessions->isEmpty()) {
+                    throw new \Exception("Tidak ada sesi DPB aktif untuk sales ini.");
+                }
+
+                foreach ($request->details as $item) {
+                    $qtyKembaliTotal = (float)$item['qty_kembali'];
+                    $detailIds = explode(',', $item['detail_ids']);
+
+                    $detailsToUpdate = CanvasSessionDetail::whereIn('id', $detailIds)->get();
+
+                    if ($detailsToUpdate->isEmpty()) {
+                        continue;
+                    }
+
+                    // Distribute returned qty across detail records
+                    $remainingReturn = $qtyKembaliTotal;
+
+                    foreach ($detailsToUpdate as $index => $detail) {
+                        $satuan = BarangSatuan::findOrFail($detail->satuan_id);
+                        $isi = $satuan->isi ?? 1;
+
+                        $qtyAmbil = (float)$detail->qty_ambil;
+                        $qtyTerjual = (float)$detail->qty_terjual;
+                        $maxReturnForThisDetail = max(0.0, $qtyAmbil - $qtyTerjual);
+
+                        $assignedReturn = min($remainingReturn, $maxReturnForThisDetail);
+                        
+                        // If it's the last detail in loop and there's still leftover return, force it all here
+                        if ($index === $detailsToUpdate->count() - 1 && $remainingReturn > 0) {
+                            $assignedReturn = $remainingReturn;
+                        }
+
+                        $qtyKembaliSmallest = $assignedReturn * $isi;
+
+                        // Replenish warehouse stock by returned quantity and log mutation
+                        if ($qtyKembaliSmallest > 0) {
+                            StokMutasi::log(
+                                $detail->kode_barang,
+                                now()->toDateString(),
+                                'Canvas Kembali',
+                                $detail->session->no_canvas ?? $activeSessions->first()->no_canvas,
+                                $qtyKembaliSmallest,
+                                0,
+                                Auth::id(),
+                                'Pengembalian Canvas: ' . $salesName
+                            );
+                        }
+
+                        // Update detail record
+                        $detail->qty_kembali = $assignedReturn;
+                        $detail->selisih = $qtyAmbil - $qtyTerjual - $assignedReturn;
+                        $detail->save();
+
+                        $remainingReturn -= $assignedReturn;
+                    }
+                }
+
+                // Update session headers to completed for all loading sessions of this salesman
+                foreach ($activeSessions as $session) {
+                    $session->status = 'completed';
+                    if ($request->filled('keterangan')) {
+                        $session->keterangan = $request->keterangan;
+                    }
+                    $session->save();
+                }
+            });
+
+            return redirect()->route('canvas.returns.index')->with('success', 'Pengembalian barang canvas berhasil diproses dan sisa barang dikembalikan ke gudang.');
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate canvas report (Dari tanggal s/d tanggal).
+     */
+    public function report(Request $request)
+    {
+        $tanggalMulai = $request->input('tanggal_mulai', now()->startOfMonth()->toDateString());
+        $tanggalAkhir = $request->input('tanggal_akhir', now()->toDateString());
+        $kodeSales = $request->input('kode_sales');
+
+        $query = CanvasSessionDetail::query()
+            ->join('canvas_sessions', 'canvas_session_details.canvas_session_id', '=', 'canvas_sessions.id')
+            ->whereBetween('canvas_sessions.tanggal', [$tanggalMulai, $tanggalAkhir]);
+
+        if ($kodeSales) {
+            $query->where('canvas_sessions.kode_sales', $kodeSales);
+        }
+
+        $reportData = $query->select(
+                'canvas_session_details.kode_barang',
+                'canvas_session_details.satuan_id',
+                DB::raw('SUM(canvas_session_details.qty_ambil) as total_ambil'),
+                DB::raw('SUM(canvas_session_details.qty_terjual) as total_terjual'),
+                DB::raw('SUM(canvas_session_details.qty_kembali) as total_kembali'),
+                DB::raw('SUM(canvas_session_details.selisih) as total_selisih')
+            )
+            ->groupBy('canvas_session_details.kode_barang', 'canvas_session_details.satuan_id')
+            ->with(['barang', 'barangSatuan'])
+            ->get();
+
+        $salesmen = User::where(function ($q) {
+            $q->where('role', 'sales')->orWhere('role', 'Salesman')->orWhere('role', 'Admin');
+        })->where('status', '1')
+          ->where('is_kanvas', 1)
+          ->orderBy('name')
+          ->get();
+
+        return view('canvas.report', compact('reportData', 'salesmen', 'tanggalMulai', 'tanggalAkhir', 'kodeSales'));
+    }
 }
