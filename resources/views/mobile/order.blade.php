@@ -690,7 +690,7 @@
                     const sortedSatuans = [...product.satuans].sort((a, b) => b.isi - a.isi);
                     const largestUnit = sortedSatuans[0];
                     const smallestUnit = sortedSatuans[sortedSatuans.length - 1];
-                    
+
                     const largestIsi = parseFloat(largestUnit.isi) || 1.0;
                     if (product.stok >= largestIsi) {
                         selectedSatuanId = largestUnit.id;
@@ -910,8 +910,9 @@
                     const isSatuanMatch = (d, rowSatuanId) => {
                         if (d.satuan_id === null || !d.satuan_id) return true;
                         if (d.satuan_id == rowSatuanId) return true;
-                        
-                        const ruleSatuanName = d.satuan && d.satuan.satuan ? d.satuan.satuan.toUpperCase().trim() : '';
+
+                        const ruleSatuanName = d.satuan && d.satuan.satuan ? d.satuan.satuan
+                            .toUpperCase().trim() : '';
                         let rowSatuanName = '';
                         if (b && b.satuans) {
                             const found = b.satuans.find(s => s.id == rowSatuanId);
@@ -919,7 +920,8 @@
                                 rowSatuanName = (found.satuan || '').toUpperCase().trim();
                             }
                         }
-                        return ruleSatuanName !== '' && rowSatuanName !== '' && ruleSatuanName === rowSatuanName;
+                        return ruleSatuanName !== '' && rowSatuanName !== '' && ruleSatuanName ===
+                            rowSatuanName;
                     };
 
                     const checkRule = (r, d) => {
@@ -936,7 +938,8 @@
                     rulesBarang.forEach(r => {
                         if (r.barangs && r.barangs.some(item => item.kode_barang === barangCode)) {
                             r.details.forEach(d => {
-                                if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d.max_qty) && isSatuanMatch(d, satuanId)) {
+                                if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <=
+                                        d.max_qty) && isSatuanMatch(d, satuanId)) {
                                     checkRule(r, d);
                                 }
                             });
@@ -950,7 +953,9 @@
                             if (r.barangs && r.barangs.some(item => item.kode_barang ===
                                     barangCode)) {
                                 r.details.forEach(d => {
-                                    if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d.max_qty) && isSatuanMatch(d, satuanId)) {
+                                    if (qty >= (d.min_qty || 0) && (d.max_qty === null ||
+                                            qty <= d.max_qty) && isSatuanMatch(d,
+                                        satuanId)) {
                                         checkRule(r, d);
                                     }
                                 });

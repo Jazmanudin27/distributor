@@ -355,7 +355,10 @@
     @else
         @foreach ($recentOrders as $order)
             <div class="mobile-card p-3 mb-2"
-                style="background: rgba(30, 41, 59, 0.45); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);">
+                style="background: {{ $order->batal === 1 ? 'rgba(239, 68, 68, 0.06)' : 'rgba(30, 41, 59, 0.45)' }};
+                       border: 1px solid {{ $order->batal === 1 ? 'rgba(239, 68, 68, 0.25)' : 'rgba(255, 255, 255, 0.08)' }};
+                       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+                       {{ $order->batal === 1 ? 'opacity: 0.85;' : '' }}">
                 <!-- Header: Customer and Transaction Type -->
                 <div
                     class="d-flex justify-content-between align-items-start mb-2 border-bottom border-secondary border-opacity-10 pb-2">
@@ -368,11 +371,18 @@
                         </span>
                     </div>
                     <div class="text-end">
-                        <span
-                            class="badge rounded-pill {{ $order->jenis_transaksi === 'Tunai' ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} px-2 py-1"
-                            style="font-size: 0.65rem; font-weight: 600;">
-                            {{ $order->jenis_transaksi }}
-                        </span>
+                        @if ($order->batal === 1)
+                            <span class="badge rounded-pill bg-danger text-white px-2 py-1 mb-1 d-inline-block"
+                                style="font-size: 0.6rem; font-weight: 600; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-ban me-1"></i>Batal
+                            </span>
+                        @else
+                            <span
+                                class="badge rounded-pill {{ $order->jenis_transaksi === 'Tunai' ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} px-2 py-1"
+                                style="font-size: 0.65rem; font-weight: 600;">
+                                {{ $order->jenis_transaksi }}
+                            </span>
+                        @endif
                         <div class="text-secondary mt-1" style="font-size: 0.65rem; font-weight: 500;">
                             <i class="fa-regular fa-calendar me-1"></i>{{ $order->tanggal->format('d M Y') }}
                         </div>
@@ -401,6 +411,11 @@
                             {{ $order->pelanggan->alamat_pelanggan }}
                         </div>
                     </div>
+                    @if ($order->batal === 1 && $order->alasan_batal)
+                        <div class="mt-2 p-2 rounded text-danger" style="background-color: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; font-size: 0.7rem;">
+                            <strong><i class="fa-solid fa-circle-info me-1"></i>Alasan Batal:</strong> {{ $order->alasan_batal }}
+                        </div>
+                    @endif
                 </div>
                 <div
                     class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-10 mt-2">

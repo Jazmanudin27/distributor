@@ -84,7 +84,12 @@
                     $allPembayarans = $order->getAllPembayarans();
                 @endphp
                 <!-- Order Card header (tappable for collapse) -->
-                <div class="mobile-card p-3 mb-2" style="cursor: pointer; position: relative;" data-bs-toggle="collapse"
+                <div class="mobile-card p-3 mb-2" 
+                    style="cursor: pointer; position: relative;
+                           background: {{ $order->batal === 1 ? 'rgba(239, 68, 68, 0.06)' : 'rgba(30, 41, 59, 0.45)' }};
+                           border: 1px solid {{ $order->batal === 1 ? 'rgba(239, 68, 68, 0.25)' : 'rgba(255, 255, 255, 0.08)' }};
+                           {{ $order->batal === 1 ? 'opacity: 0.85;' : '' }}" 
+                    data-bs-toggle="collapse"
                     data-bs-target="#details-{{ str_replace('-', '_', $order->no_faktur) }}" aria-expanded="false"
                     aria-controls="details-{{ str_replace('-', '_', $order->no_faktur) }}">
 
@@ -108,7 +113,9 @@
                         <div class="text-end">
                             <div class="mb-1 d-flex justify-content-end gap-1 flex-wrap">
                                 @if ($order->batal === 1)
-                                    <span class="badge bg-danger px-2 py-1" style="font-size: 0.6rem;">Batal</span>
+                                    <span class="badge bg-danger text-white px-2 py-1" style="font-size: 0.6rem; font-weight: 600; letter-spacing: 0.3px;">
+                                        <i class="fa-solid fa-ban me-1"></i>Batal
+                                    </span>
                                 @else
                                     <span
                                         class="badge {{ $order->jenis_transaksi === 'Tunai' ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} px-2 py-1"
@@ -172,6 +179,11 @@
                                 {{ $order->pelanggan->alamat_pelanggan }}
                             </div>
                         </div>
+                        @if ($order->batal === 1 && $order->alasan_batal)
+                            <div class="mt-2 p-2 rounded text-danger" style="background-color: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; font-size: 0.7rem;">
+                                <strong><i class="fa-solid fa-circle-info me-1"></i>Alasan Batal:</strong> {{ $order->alasan_batal }}
+                            </div>
+                        @endif
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-20 mt-2"

@@ -134,7 +134,10 @@
                             in_array($order->jenis_transaksi, ['K', 'Kredit']) &&
                             $dueDate->lt(\Carbon\Carbon::today());
                     @endphp
-                    <div class="mobile-card p-3 mb-3">
+                    <div class="mobile-card p-3 mb-3"
+                        style="background: {{ $order->batal === 1 ? 'rgba(239, 68, 68, 0.06)' : '' }};
+                               border: 1px solid {{ $order->batal === 1 ? 'rgba(239, 68, 68, 0.25)' : '' }};
+                               {{ $order->batal === 1 ? 'opacity: 0.85;' : '' }}">
                         <!-- Header -->
                         <div class="d-flex justify-content-between align-items-start mb-2 border-bottom border-secondary border-opacity-10 pb-2">
                             <div>
@@ -156,7 +159,9 @@
                                     {{ $order->jenis_transaksi }}
                                 </span>
                                 @if ($order->batal === 1)
-                                    <span class="badge bg-danger px-2 py-0.5 d-block mt-1" style="font-size: 0.6rem;">Batal</span>
+                                    <span class="badge bg-danger px-2 py-0.5 d-block mt-1 text-white" style="font-size: 0.6rem; font-weight: 600; letter-spacing: 0.3px;">
+                                        <i class="fa-solid fa-ban me-1"></i>Batal
+                                    </span>
                                 @else
                                     <span class="badge {{ $sisaBayar < 1 ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning' }} px-2 py-0.5 d-block mt-1" style="font-size: 0.65rem;">
                                         {{ $sisaBayar < 1 ? 'Lunas' : 'Belum Lunas' }}
@@ -175,6 +180,12 @@
                                 </div>
                             @endforeach
                         </div>
+
+                        @if ($order->batal === 1 && $order->alasan_batal)
+                            <div class="mb-2 p-2 rounded text-danger" style="background-color: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; font-size: 0.7rem; text-align: left;">
+                                <strong><i class="fa-solid fa-circle-info me-1"></i>Alasan Batal:</strong> {{ $order->alasan_batal }}
+                            </div>
+                        @endif
 
                         <!-- Totals Summary -->
                         <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-10" style="font-size: 0.75rem;">
