@@ -762,15 +762,15 @@
                     <div class="row g-2 align-items-center mb-2">
                         <div class="col-4">
                             <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Disc 1 (%)</label>
-                            <input type="number" name="items[${rowIndex}][diskon1_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon1 px-1" min="0" max="100" step="any" value="${initialD1}" style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important;">
+                            <input type="number" name="items[${rowIndex}][diskon1_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon1 px-1" min="0" max="100" step="any" value="${initialD1}" readonly style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important; background-color: rgba(255,255,255,0.05) !important;">
                         </div>
                         <div class="col-4">
                             <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Disc 2 (%)</label>
-                            <input type="number" name="items[${rowIndex}][diskon2_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon2 px-1" min="0" max="100" step="any" value="${initialD2}" style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important;">
+                            <input type="number" name="items[${rowIndex}][diskon2_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon2 px-1" min="0" max="100" step="any" value="${initialD2}" readonly style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important; background-color: rgba(255,255,255,0.05) !important;">
                         </div>
                         <div class="col-4">
                             <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Disc 3 (%)</label>
-                            <input type="number" name="items[${rowIndex}][diskon3_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon3 px-1" min="0" max="100" step="any" value="${initialD3}" style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important;">
+                            <input type="number" name="items[${rowIndex}][diskon3_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon3 px-1" min="0" max="100" step="any" value="${initialD3}" readonly style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important; background-color: rgba(255,255,255,0.05) !important;">
                         </div>
                     </div>
 

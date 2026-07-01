@@ -302,7 +302,8 @@
                     return;
                 }
                 const tgl = document.getElementById('tanggal').value || '';
-                fetch(`{{ route('barang.search') }}?q=${encodeURIComponent(q)}&kode_sales={{ Auth::user()->nik }}&tanggal=${tgl}`)
+                fetch(
+                        `{{ route('barang.search') }}?q=${encodeURIComponent(q)}&kode_sales={{ Auth::user()->nik }}&tanggal=${tgl}`)
                     .then(res => res.json())
                     .then(data => {
                         productSearchResults.innerHTML = '';
@@ -422,7 +423,7 @@
                     const sortedSatuans = [...product.satuans].sort((a, b) => b.isi - a.isi);
                     const largestUnit = sortedSatuans[0];
                     const smallestUnit = sortedSatuans[sortedSatuans.length - 1];
-                    
+
                     const largestIsi = parseFloat(largestUnit.isi) || 1.0;
                     if (product.stok >= largestIsi) {
                         selectedSatuanId = largestUnit.id;
@@ -466,27 +467,38 @@
                     </div>
 
                     <div class="row g-2 align-items-center mb-2">
-                        <div class="col-3">
+                        <div class="col-4">
                             <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Satuan</label>
                             <select name="items[${rowIndex}][satuan_id]" class="form-select form-select-sm bg-dark text-white border-secondary select-satuan" style="font-size: 0.75rem; border-radius: 8px; height: 32px; padding: 2px 4px;">
                                 ${unitOptions}
                             </select>
                             <input type="hidden" name="items[${rowIndex}][satuan]" class="hidden-satuan-name" value="${product.satuans.length > 0 ? product.satuans[0].satuan : ''}">
                         </div>
-                        <div class="col-3">
+                        <div class="col-4">
                             <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Qty</label>
                             <input type="number" name="items[${rowIndex}][qty]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-qty px-1" min="0.01" step="any" value="${initialQty}" required style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important;">
                         </div>
-                        <div class="col-3">
-                            <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Disc 1 (%)</label>
-                            <input type="number" name="items[${rowIndex}][diskon1_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon1 px-1" min="0" max="100" step="any" value="${initialD1}" style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important;">
-                        </div>
-                        <div class="col-3 text-end">
+                        <div class="col-4 text-end">
                             <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Harga</label>
                             <div class="fw-semibold text-white-50 price-display" style="font-size: 0.75rem; line-height: 32px; text-align: right;">
                                 Rp ${parseFloat(defaultPrice).toLocaleString('id-ID')}
                             </div>
                             <input type="hidden" name="items[${rowIndex}][harga]" class="input-harga" value="${defaultPrice}">
+                        </div>
+                    </div>
+
+                    <div class="row g-2 align-items-center mb-2">
+                        <div class="col-4">
+                            <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Disc 1 (%)</label>
+                            <input type="number" name="items[${rowIndex}][diskon1_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon1 px-1" min="0" max="100" step="any" value="${initialD1}" readonly style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important; background-color: rgba(255,255,255,0.05) !important;">
+                        </div>
+                        <div class="col-4">
+                            <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Disc 2 (%)</label>
+                            <input type="number" name="items[${rowIndex}][diskon2_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon2 px-1" min="0" max="100" step="any" value="${initialD2}" readonly style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important; background-color: rgba(255,255,255,0.05) !important;">
+                        </div>
+                        <div class="col-4">
+                            <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Disc 3 (%)</label>
+                            <input type="number" name="items[${rowIndex}][diskon3_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon3 px-1" min="0" max="100" step="any" value="${initialD3}" readonly style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important; background-color: rgba(255,255,255,0.05) !important;">
                         </div>
                     </div>
 
@@ -499,9 +511,6 @@
                             <span class="fw-bold text-info row-subtotal-display" style="font-size: 0.85rem;">Rp 0</span>
                         </div>
                     </div>
-
-                    <input type="hidden" name="items[${rowIndex}][diskon2_persen]" class="input-diskon2" value="${initialD2}">
-                    <input type="hidden" name="items[${rowIndex}][diskon3_persen]" class="input-diskon3" value="${initialD3}">
                 `;
 
                 emptyCartMessage.classList.add('d-none');

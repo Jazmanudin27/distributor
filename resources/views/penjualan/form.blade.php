@@ -1264,25 +1264,9 @@
 
             // Toggle Diskon 2 visibility based on jenis_transaksi
             function toggleDiskon2Visibility() {
-                const isTunai = $('#jenis_transaksi').val() === 'T';
-                if (isTunai) {
-                    $('#diskon2-header-th').show();
-                    $('#diskon2-quickadd-col').show();
-                    $('.td-diskon2').show();
-                } else {
-                    // Zero out diskon2 on all rows
-                    $('#itemsTable tbody tr').each(function() {
-                        $(this).find('.input-diskon2-val').val('0');
-                        $(this).find('.input-diskon2').val('0');
-                    });
-                    // Zero out quick-add diskon2
-                    $('#quick_diskon2_input').val('0');
-                    $('#quick_diskon2_percent').val(0);
-                    // Hide D2 column
-                    $('#diskon2-header-th').hide();
-                    $('#diskon2-quickadd-col').hide();
-                    $('.td-diskon2').hide();
-                }
+                $('#diskon2-header-th').show();
+                $('#diskon2-quickadd-col').show();
+                $('.td-diskon2').show();
             }
 
             // Trigger recalculation on jenis transaksi change
