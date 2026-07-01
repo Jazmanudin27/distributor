@@ -455,11 +455,9 @@ class MobileOrderController extends Controller
         foreach ($request->items as $row) {
             $barang = Barang::find($row['kode_barang']);
             $sub = $row['qty'] * $row['harga'];
-            $strata = $calculateStrata($row['kode_barang'], $row['qty'], $sub, $barang, $row['satuan_id'] ?? null);
-            
-            $d1_pct = $strata['d1'];
-            $d2_pct = $strata['d2'];
-            $d3_pct = 0; // Salesman cannot input manual D3 discount
+            $d1_pct = floatval($row['diskon1_persen'] ?? 0);
+            $d2_pct = floatval($row['diskon2_persen'] ?? 0);
+            $d3_pct = floatval($row['diskon3_persen'] ?? 0);
 
             $d1 = $sub * ($d1_pct / 100);
             $d2 = ($sub - $d1) * ($d2_pct / 100);
@@ -539,11 +537,9 @@ class MobileOrderController extends Controller
 
                     $subtotal    = $row['qty'] * $row['harga'];
                     
-                    // Recalculate strata discounts
-                    $strata      = $calculateStrata($row['kode_barang'], $row['qty'], $subtotal, $barang, $row['satuan_id'] ?? null);
-                    $d1_pct      = $strata['d1'];
-                    $d2_pct      = $strata['d2'];
-                    $d3_pct      = 0; // Salesman cannot input manual D3 discount
+                    $d1_pct      = floatval($row['diskon1_persen'] ?? 0);
+                    $d2_pct      = floatval($row['diskon2_persen'] ?? 0);
+                    $d3_pct      = floatval($row['diskon3_persen'] ?? 0);
 
                     $d1          = $subtotal * ($d1_pct / 100);
                     $d2          = ($subtotal - $d1) * ($d2_pct / 100);
