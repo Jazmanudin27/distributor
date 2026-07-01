@@ -8,57 +8,89 @@
     <!-- Summary Section -->
     <div class="row g-2 mb-3">
         <div class="col-6">
-            <div class="mobile-card m-0 p-3 text-center" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);">
-                <div class="text-secondary mb-1" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 600;">Hari Ini</div>
-                <h6 class="fw-bold text-success mb-0" style="font-size: 0.95rem;">Rp {{ number_format($todaySales, 0, ',', '.') }}</h6>
+            <div class="mobile-card m-0 p-3 text-center"
+                style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);">
+                <div class="text-secondary mb-1" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 600;">Hari
+                    Ini</div>
+                <h6 class="fw-bold text-success mb-0" style="font-size: 0.95rem;">Rp
+                    {{ number_format($todaySales, 0, ',', '.') }}</h6>
             </div>
         </div>
         <div class="col-6">
-            <div class="mobile-card m-0 p-3 text-center" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2);">
-                <div class="text-secondary mb-1" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 600;">Bulan Ini</div>
-                <h6 class="fw-bold text-indigo mb-0" style="font-size: 0.95rem; color: #818cf8;">Rp {{ number_format($monthSales, 0, ',', '.') }}</h6>
+            <div class="mobile-card m-0 p-3 text-center"
+                style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2);">
+                <div class="text-secondary mb-1" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 600;">
+                    Bulan Ini</div>
+                <h6 class="fw-bold text-indigo mb-0" style="font-size: 0.95rem; color: #818cf8;">Rp
+                    {{ number_format($monthSales, 0, ',', '.') }}</h6>
             </div>
         </div>
     </div>
 
     <!-- Filter Pills -->
     <div class="d-flex gap-2 mb-3 pb-1" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-        <a href="{{ route('mobile.order.index', ['filter' => 'all', 'q' => $q]) }}" 
-           class="btn btn-sm px-3 py-1.5 rounded-pill text-decoration-none fw-semibold {{ $filter === 'all' ? 'btn-mobile-primary' : 'bg-dark border-secondary text-secondary' }}" 
-           style="font-size: 0.75rem;">
+        <a href="{{ route('mobile.order.index', ['filter' => 'all', 'q' => $q, 'kode_sales' => $selectedSales, 'kategori_sales' => $kategoriSales]) }}"
+            class="btn btn-sm px-3 py-1.5 rounded-pill text-decoration-none fw-semibold {{ $filter === 'all' ? 'btn-mobile-primary' : 'bg-dark border-secondary text-secondary' }}"
+            style="font-size: 0.75rem;">
             Semua
         </a>
-        <a href="{{ route('mobile.order.index', ['filter' => 'today', 'q' => $q]) }}" 
-           class="btn btn-sm px-3 py-1.5 rounded-pill text-decoration-none fw-semibold {{ $filter === 'today' ? 'btn-mobile-primary' : 'bg-dark border-secondary text-secondary' }}" 
-           style="font-size: 0.75rem;">
+        <a href="{{ route('mobile.order.index', ['filter' => 'today', 'q' => $q, 'kode_sales' => $selectedSales, 'kategori_sales' => $kategoriSales]) }}"
+            class="btn btn-sm px-3 py-1.5 rounded-pill text-decoration-none fw-semibold {{ $filter === 'today' ? 'btn-mobile-primary' : 'bg-dark border-secondary text-secondary' }}"
+            style="font-size: 0.75rem;">
             Hari Ini
         </a>
-        <a href="{{ route('mobile.order.index', ['filter' => 'month', 'q' => $q]) }}" 
-           class="btn btn-sm px-3 py-1.5 rounded-pill text-decoration-none fw-semibold {{ $filter === 'month' ? 'btn-mobile-primary' : 'bg-dark border-secondary text-secondary' }}" 
-           style="font-size: 0.75rem;">
+        <a href="{{ route('mobile.order.index', ['filter' => 'month', 'q' => $q, 'kode_sales' => $selectedSales, 'kategori_sales' => $kategoriSales]) }}"
+            class="btn btn-sm px-3 py-1.5 rounded-pill text-decoration-none fw-semibold {{ $filter === 'month' ? 'btn-mobile-primary' : 'bg-dark border-secondary text-secondary' }}"
+            style="font-size: 0.75rem;">
             Bulan Ini
         </a>
     </div>
 
-    <!-- Search Box -->
+    <!-- Search Box & Dropdown Filters -->
     <div class="mobile-card mb-3">
         <form action="{{ route('mobile.order.index') }}" method="GET">
             <input type="hidden" name="filter" value="{{ $filter }}">
-            <div class="input-group input-group-sm">
+            <div class="input-group input-group-sm mb-2">
                 <span class="input-group-text bg-dark border-secondary text-secondary">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </span>
                 <input type="text" name="q" value="{{ $q }}"
                     class="form-control form-control-sm bg-dark text-white border-secondary"
                     placeholder="Cari nomor faktur atau pelanggan...">
-                @if ($q)
+                @if ($q || $selectedSales || $kategoriSales)
                     <a href="{{ route('mobile.order.index', ['filter' => $filter]) }}"
-                        class="btn btn-outline-secondary border-secondary text-secondary d-flex align-items-center">
+                        class="btn btn-outline-secondary border-secondary text-secondary d-flex align-items-center"
+                        title="Clear filters">
                         <i class="fa-solid fa-xmark"></i>
                     </a>
                 @endif
                 <button type="submit" class="btn btn-mobile-primary px-3 fs-7"
                     style="border-radius: 0 12px 12px 0 !important; font-size: 0.75rem;">Cari</button>
+            </div>
+            <div class="row g-2">
+                @if ($isSpv && count($salesList) > 0)
+                    <div class="col-6">
+                        <select name="kode_sales" class="form-select form-select-sm bg-dark text-white border-secondary"
+                            style="font-size: 0.75rem; border-radius: 8px;" onchange="this.form.submit()">
+                            <option value="">-- Semua Sales --</option>
+                            @foreach ($salesList as $sales)
+                                <option value="{{ $sales->nik }}"
+                                    {{ $selectedSales === $sales->nik ? 'selected' : '' }}>
+                                    {{ $sales->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
+                <div class="{{ $isSpv && count($salesList) > 0 ? 'col-6' : 'col-12' }}">
+                    <select name="kategori_sales" class="form-select form-select-sm bg-dark text-white border-secondary"
+                        style="font-size: 0.75rem; border-radius: 8px;" onchange="this.form.submit()">
+                        <option value="non_kanvas" {{ $kategoriSales === 'non_kanvas' ? 'selected' : '' }}>Non Kanvas
+                        </option>
+                        <option value="kanvas" {{ $kategoriSales === 'kanvas' ? 'selected' : '' }}>Kanvas</option>
+                        <option value="">-- Semua Kategori --</option>
+                    </select>
+                </div>
             </div>
         </form>
     </div>
@@ -84,14 +116,13 @@
                     $allPembayarans = $order->getAllPembayarans();
                 @endphp
                 <!-- Order Card header (tappable for collapse) -->
-                <div class="mobile-card p-3 mb-2" 
+                <div class="mobile-card p-3 mb-2"
                     style="cursor: pointer; position: relative;
                            background: {{ $order->batal === 1 ? 'rgba(239, 68, 68, 0.06)' : 'rgba(30, 41, 59, 0.45)' }};
                            border: 1px solid {{ $order->batal === 1 ? 'rgba(239, 68, 68, 0.25)' : 'rgba(255, 255, 255, 0.08)' }};
-                           {{ $order->batal === 1 ? 'opacity: 0.85;' : '' }}" 
-                    data-bs-toggle="collapse"
-                    data-bs-target="#details-{{ str_replace('-', '_', $order->no_faktur) }}" aria-expanded="false"
-                    aria-controls="details-{{ str_replace('-', '_', $order->no_faktur) }}">
+                           {{ $order->batal === 1 ? 'opacity: 0.85;' : '' }}"
+                    data-bs-toggle="collapse" data-bs-target="#details-{{ str_replace('-', '_', $order->no_faktur) }}"
+                    aria-expanded="false" aria-controls="details-{{ str_replace('-', '_', $order->no_faktur) }}">
 
                     <div
                         class="d-flex justify-content-between align-items-start mb-2 border-bottom border-secondary border-opacity-10 pb-2">
@@ -113,7 +144,8 @@
                         <div class="text-end">
                             <div class="mb-1 d-flex justify-content-end gap-1 flex-wrap">
                                 @if ($order->batal === 1)
-                                    <span class="badge bg-danger text-white px-2 py-1" style="font-size: 0.6rem; font-weight: 600; letter-spacing: 0.3px;">
+                                    <span class="badge bg-danger text-white px-2 py-1"
+                                        style="font-size: 0.6rem; font-weight: 600; letter-spacing: 0.3px;">
                                         <i class="fa-solid fa-ban me-1"></i>Batal
                                     </span>
                                 @else
@@ -180,15 +212,18 @@
                             </div>
                         </div>
                         @if ($order->batal === 1 && $order->alasan_batal)
-                            <div class="mt-2 p-2 rounded text-danger" style="background-color: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; font-size: 0.7rem;">
-                                <strong><i class="fa-solid fa-circle-info me-1"></i>Alasan Batal:</strong> {{ $order->alasan_batal }}
+                            <div class="mt-2 p-2 rounded text-danger"
+                                style="background-color: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; font-size: 0.7rem;">
+                                <strong><i class="fa-solid fa-circle-info me-1"></i>Alasan Batal:</strong>
+                                {{ $order->alasan_batal }}
                             </div>
                         @endif
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-20 mt-2"
                         style="font-size: 0.75rem;">
-                        <span class="text-secondary"><i class="fa-solid fa-angles-down me-1" style="font-size: 0.7rem;"></i>
+                        <span class="text-secondary"><i class="fa-solid fa-angles-down me-1"
+                                style="font-size: 0.7rem;"></i>
                             Ketuk untuk detail ({{ $order->details->count() }} item)</span>
                         <span class="fw-bold text-info">Rp {{ number_format($order->grand_total, 0, ',', '.') }}</span>
                     </div>
@@ -315,15 +350,18 @@
                             @endif
 
                             <!-- Info Sisa Tagihan (Sales tidak bisa input pembayaran) -->
-                             @if ($order->batal !== 1 && $sisaBayar >= 1)
+                            @if ($order->batal !== 1 && $sisaBayar >= 1)
                                 <div class="mt-3 pt-2 border-top border-secondary border-opacity-10">
                                     <div class="p-2 rounded-3 d-flex align-items-center gap-2"
                                         style="background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.2);">
-                                        <i class="fa-solid fa-clock-rotate-left text-warning" style="font-size: 0.75rem;"></i>
+                                        <i class="fa-solid fa-clock-rotate-left text-warning"
+                                            style="font-size: 0.75rem;"></i>
                                         <div>
-                                            <span class="text-warning fw-semibold d-block" style="font-size: 0.7rem;">Belum Lunas</span>
+                                            <span class="text-warning fw-semibold d-block"
+                                                style="font-size: 0.7rem;">Belum Lunas</span>
                                             <span class="text-secondary" style="font-size: 0.65rem;">
-                                                Sisa tagihan: <strong class="text-white font-monospace">Rp {{ number_format($sisaBayar, 0, ',', '.') }}</strong>
+                                                Sisa tagihan: <strong class="text-white font-monospace">Rp
+                                                    {{ number_format($sisaBayar, 0, ',', '.') }}</strong>
                                                 &bull; Pembayaran dilakukan oleh admin/kasir.
                                             </span>
                                         </div>

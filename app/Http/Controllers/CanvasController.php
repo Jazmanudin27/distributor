@@ -215,7 +215,44 @@ class CanvasController extends Controller
             return redirect()->route('canvas.show', $id)->with('error', 'Session kanvas ini sudah selesai.');
         }
 
-        return view('canvas.edit', compact('canvasSession'));
+        $activeSessions = collect();
+        $accumulatedDetails = collect();
+
+        if ($canvasSession->status === 'loading') {
+            // Fetch all loading sessions for this salesman, ordered by tanggal
+            $activeSessions = CanvasSession::where('kode_sales', $canvasSession->kode_sales)
+                ->where('status', 'loading')
+                ->orderBy('tanggal', 'asc')
+                ->with(['details.barang.satuans', 'details.barangSatuan'])
+                ->get();
+
+            foreach ($activeSessions as $session) {
+                foreach ($session->details as $detail) {
+                    $key = $detail->kode_barang . '_' . $detail->satuan_id;
+                    if (!$accumulatedDetails->has($key)) {
+                        $accumulatedDetails->put($key, [
+                            'kode_barang' => $detail->kode_barang,
+                            'barang' => $detail->barang,
+                            'satuan_id' => $detail->satuan_id,
+                            'barangSatuan' => $detail->barangSatuan,
+                            'qty_ambil' => (float)$detail->qty_ambil,
+                            'qty_terjual' => (float)$detail->qty_terjual,
+                            'qty_kembali' => (float)$detail->qty_kembali,
+                            'detail_ids' => [$detail->id],
+                        ]);
+                    } else {
+                        $item = $accumulatedDetails->get($key);
+                        $item['qty_ambil'] += (float)$detail->qty_ambil;
+                        $item['qty_terjual'] += (float)$detail->qty_terjual;
+                        $item['qty_kembali'] += (float)$detail->qty_kembali;
+                        $item['detail_ids'][] = $detail->id;
+                        $accumulatedDetails->put($key, $item);
+                    }
+                }
+            }
+        }
+
+        return view('canvas.edit', compact('canvasSession', 'activeSessions', 'accumulatedDetails'));
     }
 
     /**
@@ -270,7 +307,8 @@ class CanvasController extends Controller
         $request->validate([
             'keterangan' => 'nullable|string',
             'details' => 'required|array',
-            'details.*.id' => 'required|integer|exists:canvas_session_details,id',
+            'details.*.id' => 'nullable|integer|exists:canvas_session_details,id',
+            'details.*.detail_ids' => 'nullable|string',
             'details.*.qty_kembali' => 'required|numeric|min:0',
         ]);
 
@@ -280,47 +318,80 @@ class CanvasController extends Controller
                 $salesman = User::where('nik', $canvasSession->kode_sales)->first();
                 $salesName = $salesman ? $salesman->name : $canvasSession->kode_sales;
 
+                // Find all active loading sessions for this salesman
+                $activeSessions = CanvasSession::where('kode_sales', $canvasSession->kode_sales)
+                    ->where('status', 'loading')
+                    ->get();
+
                 foreach ($request->details as $item) {
-                    $detail = CanvasSessionDetail::findOrFail($item['id']);
-                    $qtyKembali = (float)$item['qty_kembali'];
+                    $qtyKembaliTotal = (float)$item['qty_kembali'];
 
-                    $satuan = BarangSatuan::findOrFail($detail->satuan_id);
-                    $qtyKembaliSmallest = $qtyKembali * ($satuan->isi ?? 1);
-
-                    // Check that returned qty doesn't exceed taken qty
-                    if ($qtyKembali > (float)$detail->qty_ambil) {
-                        $barang = Barang::find($detail->kode_barang);
-                        $barangName = $barang ? $barang->nama_barang : $detail->kode_barang;
-                        throw new \Exception("Jumlah kembali untuk '{$barangName}' ({$qtyKembali}) melebihi jumlah ambil ({$detail->qty_ambil})!");
+                    // Get detail records to update
+                    $detailIds = [];
+                    if (isset($item['detail_ids']) && !empty($item['detail_ids'])) {
+                        $detailIds = explode(',', $item['detail_ids']);
+                    } elseif (isset($item['id'])) {
+                        $detailIds = [$item['id']];
                     }
 
-                    // Replenish warehouse stock by returned quantity and log mutation
-                    if ($qtyKembaliSmallest > 0) {
-                        StokMutasi::log(
-                            $detail->kode_barang,
-                            now()->toDateString(),
-                            'Canvas Kembali',
-                            $canvasSession->no_canvas,
-                            $qtyKembaliSmallest,
-                            0,
-                            Auth::id(),
-                            'Pengembalian Canvas: ' . $salesName
-                        );
+                    $detailsToUpdate = CanvasSessionDetail::whereIn('id', $detailIds)->get();
+
+                    if ($detailsToUpdate->isEmpty()) {
+                        continue;
                     }
 
-                    // Update detail record
-                    $detail->qty_kembali = $qtyKembali;
-                    // Calculate discrepancy
-                    $detail->selisih = (float)$detail->qty_ambil - (float)$detail->qty_terjual - $qtyKembali;
-                    $detail->save();
+                    // Distribute returned qty across detail records
+                    $remainingReturn = $qtyKembaliTotal;
+
+                    foreach ($detailsToUpdate as $index => $detail) {
+                        $satuan = BarangSatuan::findOrFail($detail->satuan_id);
+                        $isi = $satuan->isi ?? 1;
+
+                        $qtyAmbil = (float)$detail->qty_ambil;
+                        $qtyTerjual = (float)$detail->qty_terjual;
+                        $maxReturnForThisDetail = max(0.0, $qtyAmbil - $qtyTerjual);
+
+                        $assignedReturn = min($remainingReturn, $maxReturnForThisDetail);
+                        
+                        // If it's the last detail in loop and there's still leftover return, force it all here
+                        if ($index === $detailsToUpdate->count() - 1 && $remainingReturn > 0) {
+                            $assignedReturn = $remainingReturn;
+                        }
+
+                        $qtyKembaliSmallest = $assignedReturn * $isi;
+
+                        // Replenish warehouse stock by returned quantity and log mutation
+                        if ($qtyKembaliSmallest > 0) {
+                            StokMutasi::log(
+                                $detail->kode_barang,
+                                now()->toDateString(),
+                                'Canvas Kembali',
+                                $detail->session->no_canvas ?? $canvasSession->no_canvas,
+                                $qtyKembaliSmallest,
+                                0,
+                                Auth::id(),
+                                'Pengembalian Canvas: ' . $salesName
+                            );
+                        }
+
+                        // Update detail record
+                        $detail->qty_kembali = $assignedReturn;
+                        // Calculate discrepancy
+                        $detail->selisih = $qtyAmbil - $qtyTerjual - $assignedReturn;
+                        $detail->save();
+
+                        $remainingReturn -= $assignedReturn;
+                    }
                 }
 
-                // Update session header
-                $canvasSession->status = 'completed';
-                if ($request->filled('keterangan')) {
-                    $canvasSession->keterangan = $request->keterangan;
+                // Update session headers to completed for all loading sessions of this salesman
+                foreach ($activeSessions as $session) {
+                    $session->status = 'completed';
+                    if ($session->id === $canvasSession->id && $request->filled('keterangan')) {
+                        $session->keterangan = $request->keterangan;
+                    }
+                    $session->save();
                 }
-                $canvasSession->save();
             });
 
             return redirect()->route('canvas.show', $id)->with('success', 'Session kanvas berhasil diselesaikan. Sisa barang telah dikembalikan ke gudang.');

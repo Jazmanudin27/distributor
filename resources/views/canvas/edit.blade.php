@@ -56,6 +56,23 @@
                     </div>
 
 
+                    @if (!$isPending && isset($activeSessions) && $activeSessions->count() > 1)
+                        <div class="alert alert-warning border border-warning rounded-3 mb-4 d-flex align-items-start" style="background-color: rgba(245, 158, 11, 0.08);">
+                            <i class="fa-solid fa-triangle-exclamation fs-4 text-warning me-3 mt-1"></i>
+                            <div>
+                                <h6 class="alert-heading fw-bold mb-1" style="color: #d97706;">Akumulasi Beberapa DPB Aktif</h6>
+                                <p class="mb-0 small text-dark">
+                                    Salesman ini memiliki <strong>{{ $activeSessions->count() }} DPB aktif</strong> yang belum diselesaikan:
+                                    <span class="font-monospace text-primary fw-semibold">
+                                        {{ implode(', ', $activeSessions->pluck('no_canvas')->toArray()) }}
+                                    </span>.
+                                    Kuantitas pengambilan dan penjualan di bawah ini merupakan akumulasi dari seluruh DPB aktif tersebut.
+                                    Penyelesaian ini akan menutup semua DPB aktif ini secara bersamaan.
+                                </p>
+                            </div>
+                        </div>
+                    @endif
+
                     <form action="{{ route('canvas.update', $canvasSession->id) }}" method="POST">
                         @csrf
                         @method('PUT')
@@ -191,61 +208,60 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($canvasSession->details as $index => $detail)
+                                    @php $index = 0; @endphp
+                                    @foreach ($accumulatedDetails as $key => $item)
                                         @php
+                                            $detailIds = implode(',', $item['detail_ids']);
                                             $expectedSisa = max(
                                                 0.0,
-                                                (float) $detail->qty_ambil - (float) $detail->qty_terjual,
+                                                (float) $item['qty_ambil'] - (float) $item['qty_terjual'],
                                             );
-                                            $qtyAmbilSmallest = $detail->qty_ambil * ($detail->barangSatuan->isi ?? 1);
+                                            $qtyAmbilSmallest = $item['qty_ambil'] * ($item['barangSatuan']->isi ?? 1);
                                             $qtyTerjualSmallest =
-                                                $detail->qty_terjual * ($detail->barangSatuan->isi ?? 1);
-                                            $qtyExpectedSmallest = $expectedSisa * ($detail->barangSatuan->isi ?? 1);
+                                                $item['qty_terjual'] * ($item['barangSatuan']->isi ?? 1);
+                                            $qtyExpectedSmallest = $expectedSisa * ($item['barangSatuan']->isi ?? 1);
+                                            $satuans = $item['barang']->satuans;
                                         @endphp
                                         <tr>
                                             <td class="text-center fw-semibold text-secondary">{{ $index + 1 }}</td>
                                             <td>
-                                                <div class="fw-bold text-dark">{{ $detail->barang->nama_barang }}</div>
+                                                <div class="fw-bold text-dark">{{ $item['barang']->nama_barang }}</div>
                                                 <span class="text-secondary small font-11">Kode:
-                                                    {{ $detail->kode_barang }}
-                                                    @if ($detail->diskon_persen > 0)
-                                                        | Diskon: {{ (float) $detail->diskon_persen }}%
-                                                    @endif
+                                                    {{ $item['kode_barang'] }}
                                                 </span>
                                             </td>
                                             <td class="text-center">
                                                 <span
                                                     class="badge bg-light text-secondary border fw-semibold font-11 py-1 px-2.5"
                                                     style="opacity: 0.85;">
-                                                    {{ $detail->barangSatuan->satuan ?? 'PCS' }}
+                                                    {{ $item['barangSatuan']->satuan ?? 'PCS' }}
                                                 </span>
                                             </td>
                                             <td class="text-end pe-3 bg-primary-subtle text-primary fw-bold">
-                                                <div class="fs-7">{{ $detail->barang->formatStok($qtyAmbilSmallest) }}
+                                                <div class="fs-7">{{ $item['barang']->formatStok($qtyAmbilSmallest) }}
                                                 </div>
                                                 <small
-                                                    class="text-secondary font-11 d-block">({{ (float) $detail->qty_ambil }}
-                                                    {{ $detail->barangSatuan->satuan ?? 'PCS' }})</small>
+                                                    class="text-secondary font-11 d-block">({{ (float) $item['qty_ambil'] }}
+                                                    {{ $item['barangSatuan']->satuan ?? 'PCS' }})</small>
                                             </td>
                                             <td class="text-end pe-3 bg-info-subtle text-info fw-bold">
-                                                <div class="fs-7">{{ $detail->barang->formatStok($qtyTerjualSmallest) }}
+                                                <div class="fs-7">{{ $item['barang']->formatStok($qtyTerjualSmallest) }}
                                                 </div>
                                                 <small
-                                                    class="text-secondary font-11 d-block">({{ (float) $detail->qty_terjual }}
-                                                    {{ $detail->barangSatuan->satuan ?? 'PCS' }})</small>
+                                                    class="text-secondary font-11 d-block">({{ (float) $item['qty_terjual'] }}
+                                                    {{ $item['barangSatuan']->satuan ?? 'PCS' }})</small>
                                             </td>
                                             <td class="bg-success-subtle px-3">
-                                                <input type="hidden" name="details[{{ $index }}][id]"
-                                                    value="{{ $detail->id }}">
+                                                <input type="hidden" name="details[{{ $index }}][detail_ids]"
+                                                    value="{{ $detailIds }}">
                                                 <input type="hidden" name="details[{{ $index }}][qty_kembali]"
                                                     id="qty-kembali-{{ $index }}" class="input-qty-kembali"
                                                     value="{{ $expectedSisa }}"
-                                                    data-isi="{{ $detail->barangSatuan->isi ?? 1 }}"
+                                                    data-isi="{{ $item['barangSatuan']->isi ?? 1 }}"
                                                     data-row-id="{{ $index }}"
                                                     data-max-smallest="{{ $qtyAmbilSmallest }}"
-                                                    data-satuans="{{ json_encode($detail->barang->satuans) }}">
+                                                    data-satuans="{{ json_encode($satuans) }}">
                                                 @php
-                                                    $satuans = $detail->barang->satuans;
                                                     $unitValues = [];
                                                     if ($satuans && $satuans->count() > 0) {
                                                         $sorted = $satuans->sortByDesc('isi');
@@ -256,12 +272,12 @@
                                                             $i++;
                                                             $factor = (float) ($sat->isi ?: 1);
                                                             if ($i === $count) {
-                                                                $unitQty = round($remaining / $factor, 4);
-                                                                $unitValues[$sat->id] = (float) $unitQty;
+                                                                 $unitQty = round($remaining / $factor, 4);
+                                                                 $unitValues[$sat->id] = (float) $unitQty;
                                                             } else {
-                                                                $unitQty = floor(round($remaining / $factor, 8));
-                                                                $unitValues[$sat->id] = (float) $unitQty;
-                                                                $remaining = round($remaining - $unitQty * $factor, 4);
+                                                                 $unitQty = floor(round($remaining / $factor, 8));
+                                                                 $unitValues[$sat->id] = (float) $unitQty;
+                                                                 $remaining = round($remaining - $unitQty * $factor, 4);
                                                             }
                                                         }
                                                     } else {
@@ -310,11 +326,12 @@
                                             </td>
                                             <td class="text-end pe-3 fw-bold">
                                                 <div class="fs-7 text-dark">
-                                                    {{ $detail->barang->formatStok($qtyExpectedSmallest) }}</div>
+                                                    {{ $item['barang']->formatStok($qtyExpectedSmallest) }}</div>
                                                 <small class="text-secondary font-11 d-block">({{ (float) $expectedSisa }}
-                                                    {{ $detail->barangSatuan->satuan ?? 'PCS' }})</small>
+                                                    {{ $item['barangSatuan']->satuan ?? 'PCS' }})</small>
                                             </td>
                                         </tr>
+                                        @php $index++; @endphp
                                     @endforeach
                                 </tbody>
                             @endif
@@ -337,7 +354,7 @@
                             </a>
                             <button type="submit" class="btn btn-success px-4 fw-semibold hover-scale text-white">
                                 <i class="fa-solid fa-circle-check me-1"></i>
-                                {{ $isPending ? 'Simpan Perubahan DPB' : 'Selesaikan DPB & Unload' }}
+                                {{ $isPending ? 'Simpan Perubahan DPB' : ((!$isPending && isset($activeSessions) && $activeSessions->count() > 1) ? 'Selesaikan Semua DPB Aktif' : 'Selesaikan DPB & Unload') }}
                             </button>
                         </div>
                     </form>

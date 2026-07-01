@@ -220,13 +220,12 @@ class BarangController extends Controller
         $salesmanNik = $request->input('kode_sales') ?: ($user ? $user->nik : null);
         $tanggal = $request->input('tanggal');
         $isCanvas = false;
-        $activeCanvasDetails = collect();
+        $accumulatedDetails = collect();
         if ($salesmanNik && \App\Services\CanvasService::isCanvasSalesman($salesmanNik)) {
             $isCanvas = true;
-            $session = \App\Services\CanvasService::getActiveSession($salesmanNik, $tanggal);
-            if ($session) {
-                $activeCanvasDetails = $session->details->keyBy('kode_barang');
-                $query->whereIn('kode_barang', $activeCanvasDetails->keys()->toArray());
+            $accumulatedDetails = \App\Services\CanvasService::getAccumulatedActiveDetails($salesmanNik);
+            if ($accumulatedDetails->isNotEmpty()) {
+                $query->whereIn('kode_barang', $accumulatedDetails->keys()->toArray());
             } else {
                 $query->whereIn('kode_barang', []);
             }
@@ -272,14 +271,8 @@ class BarangController extends Controller
             }
 
             $stokVal = (float)$b->stok;
-            if ($isCanvas && isset($activeCanvasDetails[$b->kode_barang])) {
-                $detail = $activeCanvasDetails[$b->kode_barang];
-                $stokVal = \App\Services\CanvasService::convertQuantity(
-                    (float)$detail->qty_ambil - (float)$detail->qty_terjual,
-                    $detail->satuan_id,
-                    null,
-                    $b->kode_barang
-                );
+            if ($isCanvas && isset($accumulatedDetails[$b->kode_barang])) {
+                $stokVal = (float)$accumulatedDetails[$b->kode_barang]['remaining_smallest'];
             }
 
             if ($request->input('has_stock') == 1 && $stokVal <= 0) {
@@ -287,8 +280,8 @@ class BarangController extends Controller
             }
 
             $canvasDiskon = 0;
-            if ($isCanvas && isset($activeCanvasDetails[$b->kode_barang])) {
-                $canvasDiskon = (float)($activeCanvasDetails[$b->kode_barang]->diskon_persen ?? 0);
+            if ($isCanvas && isset($accumulatedDetails[$b->kode_barang])) {
+                $canvasDiskon = (float)($accumulatedDetails[$b->kode_barang]['diskon_persen'] ?? 0);
             }
 
             $results[] = [

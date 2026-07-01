@@ -23,11 +23,27 @@ class MobileOrderController extends Controller
         $q = $request->input('q');
         $filter = $request->input('filter', 'all');
         $isSpv = strtolower(Auth::user()->role ?? '') === 'spv sales';
+        $selectedSales = $request->input('kode_sales');
+        $kategoriSales = $request->input('kategori_sales');
 
         $query = Penjualan::with(['pelanggan', 'details.barang', 'details.barangSatuan', 'pembayarans']);
 
         if (!$isSpv) {
             $query->where('kode_sales', $nik);
+        } else {
+            if ($selectedSales) {
+                $query->where('kode_sales', $selectedSales);
+            }
+        }
+
+        if ($kategoriSales === 'kanvas') {
+            $query->whereHas('sales', function ($sQuery) {
+                $sQuery->where('is_kanvas', 1);
+            });
+        } elseif ($kategoriSales === 'non_kanvas') {
+            $query->whereHas('sales', function ($sQuery) {
+                $sQuery->where('is_kanvas', 0);
+            });
         }
 
         if ($q) {
@@ -61,6 +77,27 @@ class MobileOrderController extends Controller
         if (!$isSpv) {
             $todaySalesQuery->where('kode_sales', $nik);
             $monthSalesQuery->where('kode_sales', $nik);
+        } else {
+            if ($selectedSales) {
+                $todaySalesQuery->where('kode_sales', $selectedSales);
+                $monthSalesQuery->where('kode_sales', $selectedSales);
+            }
+        }
+
+        if ($kategoriSales === 'kanvas') {
+            $todaySalesQuery->whereHas('sales', function ($sQuery) {
+                $sQuery->where('is_kanvas', 1);
+            });
+            $monthSalesQuery->whereHas('sales', function ($sQuery) {
+                $sQuery->where('is_kanvas', 1);
+            });
+        } elseif ($kategoriSales === 'non_kanvas') {
+            $todaySalesQuery->whereHas('sales', function ($sQuery) {
+                $sQuery->where('is_kanvas', 0);
+            });
+            $monthSalesQuery->whereHas('sales', function ($sQuery) {
+                $sQuery->where('is_kanvas', 0);
+            });
         }
 
         $todaySales = (float) $todaySalesQuery->sum('grand_total');
@@ -71,7 +108,15 @@ class MobileOrderController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('mobile.history', compact('orders', 'q', 'filter', 'todaySales', 'monthSales'));
+        $salesList = [];
+        if ($isSpv) {
+            $salesList = \App\Models\User::whereIn('role', ['sales', 'spv sales'])
+                ->where('status', 1)
+                ->orderBy('name')
+                ->get();
+        }
+
+        return view('mobile.history', compact('orders', 'q', 'filter', 'todaySales', 'monthSales', 'salesList', 'selectedSales', 'kategoriSales', 'isSpv'));
     }
 
     public function create(Request $request)
@@ -475,26 +520,17 @@ class MobileOrderController extends Controller
                     } else {
                         $barang = Barang::lockForUpdate()->findOrFail($row['kode_barang']);
 
-                        // Validate canvas stock level
-                        $session = \App\Services\CanvasService::getActiveSession(Auth::user()->nik, $request->tanggal);
-                        if (!$session) {
-                            throw new \Exception("Tidak ada sesi DPB (Data Pengambilan Barang) yang aktif untuk Anda pada tanggal tersebut.");
+                        // Validate canvas stock level across all active sessions
+                        $activeSessions = \App\Services\CanvasService::getActiveSessions(Auth::user()->nik);
+                        if ($activeSessions->isEmpty()) {
+                            throw new \Exception("Tidak ada sesi DPB (Data Pengambilan Barang) yang aktif untuk Anda.");
                         }
 
-                        $canvasDetail = $session->details()
-                            ->where('kode_barang', $row['kode_barang'])
-                            ->first();
-
-                        if (!$canvasDetail) {
+                        if (!\App\Services\CanvasService::hasItemInActiveSessions(Auth::user()->nik, $row['kode_barang'])) {
                             throw new \Exception("Barang '{$barang->nama_barang}' tidak ditemukan dalam daftar pengambilan barang (DPB) Anda.");
                         }
 
-                        $remainingCanvasQty = \App\Services\CanvasService::convertQuantity(
-                            (float)$canvasDetail->qty_ambil - (float)$canvasDetail->qty_terjual,
-                            $canvasDetail->satuan_id,
-                            null,
-                            $row['kode_barang']
-                        );
+                        $remainingCanvasQty = \App\Services\CanvasService::getAccumulatedStock(Auth::user()->nik, $row['kode_barang']);
 
                         if ($remainingCanvasQty < $qtySmallest) {
                             throw new \Exception("Stok DPB untuk barang '{$barang->nama_barang}' tidak mencukupi! Sisa stok DPB Anda: " . $barang->formatStok($remainingCanvasQty));
@@ -1075,24 +1111,17 @@ class MobileOrderController extends Controller
                     $satuan     = BarangSatuan::findOrFail($row['satuan_id']);
                     $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
 
-                    // Canvas: validate against DPB (canvas session) stock
-                    $barang  = Barang::lockForUpdate()->findOrFail($row['kode_barang']);
-                    $session = \App\Services\CanvasService::getActiveSession(Auth::user()->nik, $request->tanggal);
-                    if (!$session) {
-                        throw new \Exception("Tidak ada sesi DPB (Data Pengambilan Barang) yang aktif untuk Anda pada tanggal tersebut. Pastikan admin sudah membuat DPB.");
+                    // Canvas: validate against DPB (canvas session) stock across all active sessions
+                    $activeSessions = \App\Services\CanvasService::getActiveSessions(Auth::user()->nik);
+                    if ($activeSessions->isEmpty()) {
+                        throw new \Exception("Tidak ada sesi DPB (Data Pengambilan Barang) yang aktif untuk Anda. Pastikan admin sudah membuat DPB.");
                     }
 
-                    $canvasDetail = $session->details()->where('kode_barang', $row['kode_barang'])->first();
-                    if (!$canvasDetail) {
+                    if (!\App\Services\CanvasService::hasItemInActiveSessions(Auth::user()->nik, $row['kode_barang'])) {
                         throw new \Exception("Barang '{$barang->nama_barang}' tidak ditemukan dalam daftar DPB Anda.");
                     }
 
-                    $remainingCanvasQty = \App\Services\CanvasService::convertQuantity(
-                        (float)$canvasDetail->qty_ambil - (float)$canvasDetail->qty_terjual,
-                        $canvasDetail->satuan_id,
-                        null,
-                        $row['kode_barang']
-                    );
+                    $remainingCanvasQty = \App\Services\CanvasService::getAccumulatedStock(Auth::user()->nik, $row['kode_barang']);
 
                     if ($remainingCanvasQty < $qtySmallest) {
                         throw new \Exception("Stok DPB untuk barang '{$barang->nama_barang}' tidak mencukupi! Sisa: " . $barang->formatStok($remainingCanvasQty));
