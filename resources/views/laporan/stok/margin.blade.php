@@ -121,18 +121,24 @@
                             <td class="fw-bold">{{ $item['nama_barang'] }}</td>
                             <td class="text-center">{{ $item['kategori'] ?? '-' }}</td>
                             <td class="text-center">{{ $item['merk'] ?? '-' }}</td>
-                            <td class="text-end font-monospace fw-semibold">{{ $item['barang']->formatStok($item['stok']) }}</td>
+                            <td class="text-end font-monospace fw-semibold">
+                                {{ number_format($item['stok'], $item['stok'] == (int) $item['stok'] ? 0 : 2, ',', '.') }}
+                            </td>
                             <td class="text-center">{{ $item['satuan'] }}</td>
-                            <td class="text-end font-monospace">Rp {{ number_format($item['harga_pokok'], 0, ',', '.') }}</td>
-                            <td class="text-end font-monospace">Rp {{ number_format($item['harga_jual'], 0, ',', '.') }}</td>
+                            <td class="text-end font-monospace">Rp
+                                {{ number_format($item['harga_pokok'], 0, ',', '.') }}</td>
+                            <td class="text-end font-monospace">Rp
+                                {{ number_format($item['harga_jual'], 0, ',', '.') }}</td>
                             <td class="text-end font-monospace text-success fw-semibold">
                                 Rp {{ number_format($item['margin_rp'], 0, ',', '.') }}
                             </td>
                             <td class="text-center font-monospace text-success fw-bold">
                                 {{ number_format($item['margin_persen'], 1, ',', '.') }}%
                             </td>
-                            <td class="text-end font-monospace">Rp {{ number_format($item['total_pokok'], 0, ',', '.') }}</td>
-                            <td class="text-end font-monospace">Rp {{ number_format($item['total_jual'], 0, ',', '.') }}</td>
+                            <td class="text-end font-monospace">Rp
+                                {{ number_format($item['total_pokok'], 0, ',', '.') }}</td>
+                            <td class="text-end font-monospace">Rp
+                                {{ number_format($item['total_jual'], 0, ',', '.') }}</td>
                             <td class="text-end font-monospace fw-bold text-success">
                                 Rp {{ number_format($item['total_margin'], 0, ',', '.') }}
                             </td>
@@ -149,12 +155,16 @@
                     <tfoot>
                         <tr>
                             <td colspan="12" class="text-end fw-bold">TOTAL NILAI:</td>
-                            <td class="text-end font-monospace text-dark">Rp {{ number_format($grandTotalPokok, 0, ',', '.') }}</td>
-                            <td class="text-end font-monospace text-dark">Rp {{ number_format($grandTotalJual, 0, ',', '.') }}</td>
-                            <td class="text-end font-monospace text-success">Rp {{ number_format($grandTotalMargin, 0, ',', '.') }}</td>
+                            <td class="text-end font-monospace text-dark">Rp
+                                {{ number_format($grandTotalPokok, 0, ',', '.') }}</td>
+                            <td class="text-end font-monospace text-dark">Rp
+                                {{ number_format($grandTotalJual, 0, ',', '.') }}</td>
+                            <td class="text-end font-monospace text-success">Rp
+                                {{ number_format($grandTotalMargin, 0, ',', '.') }}</td>
                         </tr>
                         <tr>
-                            <td colspan="15" class="text-center fw-bold text-muted py-2" style="background-color: #f8fafc !important;">
+                            <td colspan="15" class="text-center fw-bold text-muted py-2"
+                                style="background-color: #f8fafc !important;">
                                 &mdash; Akhir Laporan &mdash;
                             </td>
                         </tr>

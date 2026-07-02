@@ -252,33 +252,83 @@ class LaporanStokController extends Controller
                 $barangs = $query->orderBy('nama_barang', 'asc')->get();
                 
                 foreach ($barangs as $b) {
-                    $baseSatuan = $b->satuans->sortBy('isi')->first();
-                    $baseSatuanName = $baseSatuan ? $baseSatuan->satuan : 'PCS';
-                    $hargaPokok = $baseSatuan ? (float)$baseSatuan->harga_pokok : 0;
-                    $hargaJual = $baseSatuan ? (float)$baseSatuan->harga_jual : 0;
-                    $stok = (float)$b->stok;
+                    $stokRemaining = (float)$b->stok;
+                    $isNegative = $stokRemaining < 0;
+                    $absRemaining = abs($stokRemaining);
                     
-                    $margin_rp = $hargaJual - $hargaPokok;
-                    $margin_persen = $hargaJual > 0 ? ($margin_rp / $hargaJual) * 100 : 0;
+                    $satuans = $b->satuans;
+                    
+                    if ($satuans->isEmpty()) {
+                        // Fallback if no unit is defined
+                        $items->push([
+                            'barang'              => $b,
+                            'kode_barang'         => $b->kode_barang,
+                            'kode_item'           => $b->kode_item,
+                            'nama_barang'         => $b->nama_barang,
+                            'satuan'              => 'PCS',
+                            'jenis'               => $b->jenis,
+                            'kategori'            => $b->kategori,
+                            'merk'                => $b->merk,
+                            'stok'                => $stokRemaining,
+                            'harga_pokok'         => 0,
+                            'harga_jual'          => 0,
+                            'margin_rp'           => 0,
+                            'margin_persen'       => 0,
+                            'total_pokok'         => 0,
+                            'total_jual'          => 0,
+                            'total_margin'        => 0,
+                        ]);
+                        continue;
+                    }
 
-                    $items->push([
-                        'barang'              => $b,
-                        'kode_barang'         => $b->kode_barang,
-                        'kode_item'           => $b->kode_item,
-                        'nama_barang'         => $b->nama_barang,
-                        'satuan'              => $baseSatuanName,
-                        'jenis'               => $b->jenis,
-                        'kategori'            => $b->kategori,
-                        'merk'                => $b->merk,
-                        'stok'                => $stok,
-                        'harga_pokok'         => $hargaPokok,
-                        'harga_jual'          => $hargaJual,
-                        'margin_rp'           => $margin_rp,
-                        'margin_persen'       => $margin_persen,
-                        'total_pokok'         => $stok * $hargaPokok,
-                        'total_jual'          => $stok * $hargaJual,
-                        'total_margin'        => $stok * $margin_rp,
-                    ]);
+                    // Sort units by isi descending (largest unit first)
+                    $sortedSatuans = $satuans->sortByDesc('isi');
+                    $count = $sortedSatuans->count();
+                    $i = 0;
+
+                    foreach ($sortedSatuans as $sat) {
+                        $i++;
+                        $factor = (float)($sat->isi ?: 1);
+
+                        if ($i === $count) {
+                            // Smallest unit gets the remaining stock
+                            $unitQty = round($absRemaining / $factor, 4);
+                        } else {
+                            $unitQty = floor(round($absRemaining / $factor, 8));
+                            $absRemaining = round($absRemaining - ($unitQty * $factor), 4);
+                        }
+
+                        $qty = $isNegative ? -$unitQty : $unitQty;
+
+                        // Skip rows with 0 stock if tampilkan_stok_kosong is false
+                        if (!$tampilkan_stok_kosong && $qty == 0) {
+                            continue;
+                        }
+
+                        $hargaPokok = (float)$sat->harga_pokok;
+                        $hargaJual = (float)$sat->harga_jual;
+                        $margin_rp = $hargaJual - $hargaPokok;
+                        $margin_persen = $hargaJual > 0 ? ($margin_rp / $hargaJual) * 100 : 0;
+
+                        $items->push([
+                            'barang'              => $b,
+                            'kode_barang'         => $b->kode_barang,
+                            'kode_item'           => $b->kode_item,
+                            'nama_barang'         => $b->nama_barang,
+                            'satuan'              => $sat->satuan,
+                            'jenis'               => $b->jenis,
+                            'kategori'            => $b->kategori,
+                            'merk'                => $b->merk,
+                            'stok'                => $qty,
+                            'harga_pokok'         => $hargaPokok,
+                            'harga_jual'          => $hargaJual,
+                            'margin_rp'           => $margin_rp,
+                            'margin_persen'       => $margin_persen,
+                            'total_pokok'         => $qty * $hargaPokok,
+                            'total_jual'          => $qty * $hargaJual,
+                            'total_margin'        => $qty * $margin_rp,
+                        ]);
+                    }
                 }
             }
 
