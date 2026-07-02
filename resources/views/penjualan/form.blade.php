@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', $item->exists ? 'Edit Penjualan' : 'Transaksi Penjualan Baru')
 @push('styles')
     <style>
@@ -102,12 +102,17 @@
                                             <span class="text-danger">*</span></label>
                                         <select name="jenis_transaksi" id="jenis_transaksi"
                                             class="form-select form-select-sm" required>
+
                                             <option value="K"
-                                                {{ old('jenis_transaksi', $item->jenis_transaksi) === 'K' ? 'selected' : '' }}>
-                                                Kredit / Tempo</option>
+                                                {{ in_array(old('jenis_transaksi', $item->jenis_transaksi), ['K', 'Kredit']) ? 'selected' : '' }}>
+                                                Kredit / Tempo
+                                            </option>
+
                                             <option value="T"
-                                                {{ old('jenis_transaksi', $item->jenis_transaksi) === 'T' ? 'selected' : '' }}>
-                                                Tunai / Cash</option>
+                                                {{ in_array(old('jenis_transaksi', $item->jenis_transaksi), ['T', 'Tunai']) ? 'selected' : '' }}>
+                                                Tunai / Cash
+                                            </option>
+
                                         </select>
                                     </div>
                                 </div>
