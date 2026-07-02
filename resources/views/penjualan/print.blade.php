@@ -233,10 +233,13 @@
                     </tr>
                     <tr>
                         <td>Jenis Transaksi</td>
-                        <td>: @if ($item->jenis_transaksi == 'T')
+                        <td>:
+                            @if (in_array($item->jenis_transaksi, ['T', 'Tunai']))
                                 <b style="zoom: 180%">TUNAI</b>
-                            @else
+                            @elseif (in_array($item->jenis_transaksi, ['K', 'Kredit']))
                                 <b style="zoom: 180%">KREDIT</b>
+                            @else
+                                <b style="zoom: 180%">{{ strtoupper($item->jenis_transaksi) }}</b>
                             @endif
                         </td>
                     </tr>
