@@ -274,7 +274,7 @@
                                 <a href="{{ route('canvas.index') }}"
                                     class="{{ request()->routeIs('canvas.*') && !request()->routeIs('canvas.returns.*') && !request()->routeIs('canvas.report*') ? 'active' : '' }}">Pengambilan Barang (DPB)</a>
                                 <a href="{{ route('canvas.returns.index') }}"
-                                    class="{{ request()->routeIs('canvas.returns.*') ? 'active' : '' }}">Pengembalian Barang</a>
+                                    class="{{ request()->routeIs('canvas.returns.*') ? 'active' : '' }}">Setoran Penjualan</a>
                                 <a href="{{ route('canvas.report') }}"
                                     class="{{ request()->routeIs('canvas.report*') ? 'active' : '' }}">Laporan Barang Kanvas</a>
                             @endif

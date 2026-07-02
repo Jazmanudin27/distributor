@@ -1,11 +1,11 @@
 @extends('layouts.app')
-@section('title', 'Input Pengembalian Barang')
+@section('title', 'Input Setoran Penjualan')
 @section('content')
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-header card-premium-header text-white d-flex justify-content-between align-items-center py-3">
             <div>
-                <h5 class="mb-0 fw-bold"><i class="fa-solid fa-box-open me-2"></i> Input Pengembalian Barang Kanvas</h5>
-                <small class="text-white-50 font-12">Bongkar muatan sisa barang kanvas salesman ke gudang</small>
+                <h5 class="mb-0 fw-bold"><i class="fa-solid fa-box-open me-2"></i> Input Setoran Penjualan Kanvas</h5>
+                <small class="text-white-50 font-12">Bongkar muatan sisa barang & rekonsiliasi setoran uang hasil penjualan kanvas salesman</small>
             </div>
             <a href="{{ route('canvas.returns.index') }}" class="btn btn-primary btn-sm fw-bold hover-scale">
                 <i class="fa-solid fa-arrow-left me-1 text-white"></i> Kembali
@@ -32,7 +32,7 @@
             @if ($selectedSales)
                 @if ($activeSessions->isEmpty())
                     <div class="alert alert-info border-info rounded-3">
-                        <i class="fa-solid fa-circle-info me-2"></i> Salesman ini tidak memiliki sesi DPB aktif (loading) yang perlu dikembalikan.
+                        <i class="fa-solid fa-circle-info me-2"></i> Salesman ini tidak memiliki sesi DPB aktif (loading) untuk diproses setorannya.
                     </div>
                 @else
                     {{-- Alert Info of Active DPBs --}}
@@ -45,7 +45,7 @@
                                 <span class="font-monospace text-primary fw-semibold">
                                     {{ implode(', ', $activeSessions->pluck('no_canvas')->toArray()) }}
                                 </span>.
-                                Proses pengembalian ini akan menutup semua sesi DPB tersebut secara bersamaan.
+                                Proses setoran penjualan ini akan menutup semua sesi DPB tersebut secara bersamaan.
                             </p>
                         </div>
                     </div>
@@ -54,6 +54,7 @@
                         @csrf
                         <input type="hidden" name="kode_sales" value="{{ $selectedSales }}">
 
+                        <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-box-open me-2 text-primary"></i> I. Rekap Mutasi & Rekonsiliasi Barang</h6>
                         <table class="table table-bordered table-sm align-middle">
                             <thead class="table-light text-secondary text-uppercase fs-7 font-11">
                                 <tr>
@@ -169,11 +170,92 @@
                             </tbody>
                         </table>
 
+                        <!-- Section II: Rincian Faktur Penjualan yang Dihasilkan -->
+                        <h5 class="fw-bold text-dark mt-5 mb-3"><i class="fa-solid fa-file-invoice-dollar me-2 text-primary"></i> II. Rincian Faktur Penjualan yang Dihasilkan</h5>
+                        <div class="table-responsive mb-4 shadow-sm border rounded">
+                            <table class="table table-bordered table-sm align-middle mb-0">
+                                <thead class="table-light text-secondary text-uppercase fs-7 font-11">
+                                    <tr>
+                                        <th width="30" class="text-center py-2">No</th>
+                                        <th width="120" class="py-2">No. Faktur</th>
+                                        <th class="py-2">Nama Pelanggan</th>
+                                        <th class="py-2">Nama Barang</th>
+                                        <th width="80" class="text-center py-2">Satuan</th>
+                                        <th width="60" class="text-center py-2">Jml</th>
+                                        <th width="100" class="text-end py-2">Harga</th>
+                                        <th width="50" class="text-center py-2">D1</th>
+                                        <th width="50" class="text-center py-2">D2</th>
+                                        <th width="50" class="text-center py-2">D3</th>
+                                        <th width="120" class="text-end py-2">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php
+                                        $totalItemSales = 0;
+                                        $totalGlobalDiscounts = 0;
+                                        $rowNumber = 1;
+                                    @endphp
+                                    @forelse ($invoices as $inv)
+                                        @php
+                                            $totalGlobalDiscounts += (float) $inv->diskon;
+                                        @endphp
+                                        @foreach ($inv->details as $det)
+                                            @php
+                                                $subTotalDet = $det->qty * $det->harga - $det->total_diskon;
+                                                $totalItemSales += $subTotalDet;
+                                            @endphp
+                                            <tr>
+                                                <td class="text-center text-secondary small py-1.5">{{ $rowNumber++ }}</td>
+                                                <td class="text-center font-monospace small py-1.5">{{ $inv->no_faktur }}</td>
+                                                <td class="small py-1.5">{{ $inv->pelanggan->nama_pelanggan ?? '-' }}</td>
+                                                <td class="small py-1.5">{{ $det->barang->nama_barang ?? 'Barang Terhapus' }}</td>
+                                                <td class="text-center small py-1.5">{{ $det->barangSatuan->satuan ?? '-' }}</td>
+                                                <td class="text-center small py-1.5">{{ floatval($det->qty) }}</td>
+                                                <td class="text-end small py-1.5">Rp {{ number_format((float) $det->harga, 0, ',', '.') }}</td>
+                                                <td class="text-center small py-1.5">
+                                                    {{ floatval($det->diskon1_persen) > 0 ? floatval($det->diskon1_persen) . '%' : '-' }}
+                                                </td>
+                                                <td class="text-center small py-1.5">
+                                                    {{ floatval($det->diskon2_persen) > 0 ? floatval($det->diskon2_persen) . '%' : '-' }}
+                                                </td>
+                                                <td class="text-center small py-1.5">
+                                                    {{ floatval($det->diskon3_persen) > 0 ? floatval($det->diskon3_persen) . '%' : '-' }}
+                                                </td>
+                                                <td class="text-end fw-bold small py-1.5">
+                                                    Rp {{ number_format($subTotalDet, 0, ',', '.') }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="11" class="text-center text-muted py-4">Belum ada faktur penjualan tercatat selama sesi kanvas aktif.</td>
+                                        </tr>
+                                    @endforelse
+                                    @if ($invoices->count() > 0)
+                                        <tr class="fw-bold table-light">
+                                            <td colspan="10" class="text-end py-2">TOTAL ITEM:</td>
+                                            <td class="text-end py-2">Rp {{ number_format($totalItemSales, 0, ',', '.') }}</td>
+                                        </tr>
+                                        @if ($totalGlobalDiscounts > 0)
+                                            <tr class="fw-bold text-danger table-light">
+                                                <td colspan="10" class="text-end py-2">TOTAL POTONGAN FAKTUR:</td>
+                                                <td class="text-end py-2">-Rp {{ number_format($totalGlobalDiscounts, 0, ',', '.') }}</td>
+                                            </tr>
+                                        @endif
+                                        <tr class="fw-bold table-secondary">
+                                            <td colspan="10" class="text-end py-2">GRAND TOTAL PENJUALAN KANVAS:</td>
+                                            <td class="text-end py-2">Rp {{ number_format($totalItemSales - $totalGlobalDiscounts, 0, ',', '.') }}</td>
+                                        </tr>
+                                    @endif
+                                </tbody>
+                            </table>
+                        </div>
+
                         <div class="row mt-4">
                             <div class="col-md-6 mb-3">
-                                <label for="keterangan" class="form-label fs-7 fw-bold text-secondary">Catatan Akhir Pengembalian</label>
+                                <label for="keterangan" class="form-label fs-7 fw-bold text-secondary">Catatan Akhir Setoran Penjualan</label>
                                 <textarea name="keterangan" id="keterangan" rows="2" class="form-control form-control-sm"
-                                    placeholder="Catatan unloading, misal: sisa barang kembali utuh..."></textarea>
+                                    placeholder="Catatan setoran, misal: sisa barang kembali utuh, uang setoran klop..."></textarea>
                             </div>
                         </div>
 
@@ -182,7 +264,7 @@
                                 <i class="fa-solid fa-arrow-left me-1"></i> Batal
                             </a>
                             <button type="submit" class="btn btn-success px-4 fw-semibold hover-scale text-white">
-                                <i class="fa-solid fa-circle-check me-1"></i> Proses Pengembalian
+                                <i class="fa-solid fa-circle-check me-1"></i> Proses Setoran Penjualan
                             </button>
                         </div>
                     </form>

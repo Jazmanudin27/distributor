@@ -505,6 +505,7 @@ class CanvasController extends Controller
         $selectedSales = $request->input('kode_sales');
         $accumulatedDetails = collect();
         $activeSessions = collect();
+        $invoices = collect();
 
         // Get list of sales who have active loading DPBs
         $salesmen = User::where(function ($q) {
@@ -551,9 +552,20 @@ class CanvasController extends Controller
                     }
                 }
             }
+
+            if (!$activeSessions->isEmpty()) {
+                $minCreatedAt = $activeSessions->min('created_at');
+                $maxUpdatedAt = now();
+
+                $invoices = \App\Models\Penjualan::where('kode_sales', $selectedSales)
+                    ->whereBetween('created_at', [$minCreatedAt, $maxUpdatedAt])
+                    ->where('batal', 0)
+                    ->with(['pelanggan', 'details.barang', 'details.barangSatuan'])
+                    ->get();
+            }
         }
 
-        return view('canvas.returns_create', compact('salesmen', 'selectedSales', 'activeSessions', 'accumulatedDetails'));
+        return view('canvas.returns_create', compact('salesmen', 'selectedSales', 'activeSessions', 'accumulatedDetails', 'invoices'));
     }
 
     /**

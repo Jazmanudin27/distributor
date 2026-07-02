@@ -1,14 +1,14 @@
 @extends('layouts.app')
-@section('title', 'Pengembalian Barang Kanvas')
+@section('title', 'Setoran Penjualan Kanvas')
 @section('content')
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-header card-premium-header text-white d-flex justify-content-between align-items-center py-3">
             <div>
-                <h5 class="mb-0 fw-bold"><i class="fa-solid fa-box-open me-2"></i> Pengembalian Barang Kanvas</h5>
-                <small class="text-white-50 font-12">Kelola pengembalian sisa barang kanvas salesman ke gudang</small>
+                <h5 class="mb-0 fw-bold"><i class="fa-solid fa-box-open me-2"></i> Setoran Penjualan Kanvas</h5>
+                <small class="text-white-50 font-12">Kelola setoran hasil penjualan & pengembalian sisa barang kanvas salesman ke gudang</small>
             </div>
             <a href="{{ route('canvas.returns.create') }}" class="btn btn-primary btn-sm fw-bold hover-scale">
-                <i class="fa-solid fa-circle-plus me-1 text-white"></i> Input Pengembalian Baru
+                <i class="fa-solid fa-circle-plus me-1 text-white"></i> Input Setoran Penjualan Baru
             </a>
         </div>
         <div class="card-body p-4">
@@ -55,7 +55,7 @@
                             <th width="50" class="text-center">No</th>
                             <th>No. DPB</th>
                             <th>Tanggal Pengambilan</th>
-                            <th>Tanggal Pengembalian</th>
+                            <th>Tanggal Setoran</th>
                             <th>Salesman</th>
                             <th>Keterangan</th>
                             <th width="120" class="text-center">Aksi</th>
@@ -92,7 +92,7 @@
                             <tr>
                                 <td colspan="7" class="text-center py-5 text-muted">
                                     <i class="fa-solid fa-box-open d-block fs-3 mb-2 opacity-50"></i>
-                                    Belum ada data pengembalian barang.
+                                    Belum ada data setoran penjualan.
                                 </td>
                             </tr>
                         @endforelse
