@@ -68,9 +68,9 @@
                     <div class="col-md-2">
                         <label class="form-label fs-7 fw-semibold text-secondary mb-1">Status</label>
                         <select name="status" class="form-select form-select-sm">
+                            <option value="">Semua</option>
                             <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Aktif</option>
                             <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Non-Aktif</option>
-                            <option value="">Semua</option>
                         </select>
                     </div>
                     <div class="col-md-1">
