@@ -451,8 +451,11 @@ class CanvasController extends Controller
         $canvasSession = CanvasSession::with(['sales', 'details.barang', 'details.barangSatuan'])
             ->findOrFail($id);
 
+        $startDate = $canvasSession->created_at;
+        $endDate = $canvasSession->status === 'completed' ? $canvasSession->updated_at : now();
+
         $invoices = \App\Models\Penjualan::where('kode_sales', $canvasSession->kode_sales)
-            ->where('tanggal', $canvasSession->tanggal)
+            ->whereBetween('created_at', [$startDate, $endDate])
             ->where('batal', 0)
             ->with(['pelanggan', 'details.barang', 'details.barangSatuan'])
             ->get();

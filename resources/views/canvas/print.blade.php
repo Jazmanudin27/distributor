@@ -117,8 +117,8 @@
                         <td>: <b>{{ $canvasSession->no_canvas }}</b></td>
                     </tr>
                     <tr>
-                        <td>Tanggal Loading</td>
-                        <td>: {{ \Carbon\Carbon::parse($canvasSession->tanggal)->format('d/m/Y') }}</td>
+                        <td>Periode Sesi</td>
+                        <td>: {{ \Carbon\Carbon::parse($canvasSession->tanggal)->format('d/m/Y') }} s.d. {{ $canvasSession->status === 'completed' ? \Carbon\Carbon::parse($canvasSession->updated_at)->format('d/m/Y') : 'Sekarang' }}</td>
                     </tr>
                     <tr>
                         <td>Salesman</td>
