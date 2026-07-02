@@ -10,7 +10,8 @@
             </div>
             <div class="d-flex gap-2">
                 @can('edit-barang')
-                    <button type="button" id="btn-bulk-deactivate" class="btn btn-danger btn-sm fw-bold hover-scale d-none" onclick="submitBulkDeactivate()">
+                    <button type="button" id="btn-bulk-deactivate" class="btn btn-danger btn-sm fw-bold hover-scale d-none"
+                        onclick="submitBulkDeactivate()">
                         <i class="fa-solid fa-thumbs-down me-1"></i> Nonaktifkan Masal
                     </button>
                 @endcan
@@ -67,9 +68,9 @@
                     <div class="col-md-2">
                         <label class="form-label fs-7 fw-semibold text-secondary mb-1">Status</label>
                         <select name="status" class="form-select form-select-sm">
-                            <option value="">Semua</option>
                             <option value="1" {{ request('status') === '1' ? 'selected' : '' }}>Aktif</option>
                             <option value="0" {{ request('status') === '0' ? 'selected' : '' }}>Non-Aktif</option>
+                            <option value="">Semua</option>
                         </select>
                     </div>
                     <div class="col-md-1">
@@ -105,7 +106,8 @@
                             <tr class="hover-row">
                                 @can('edit-barang')
                                     <td class="text-center">
-                                        <input type="checkbox" value="{{ $item->kode_barang }}" class="form-check-input barang-checkbox">
+                                        <input type="checkbox" value="{{ $item->kode_barang }}"
+                                            class="form-check-input barang-checkbox">
                                     </td>
                                 @endcan
                                 <td class="text-center text-secondary small fw-bold">{{ $items->firstItem() + $index }}
@@ -160,9 +162,12 @@
                                                 class="btn btn-sm btn-outline-primary rounded" title="Edit">
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </a>
-                                            <form action="{{ route('barang.toggle-status', $item->kode_barang) }}" method="POST" class="d-inline">
+                                            <form action="{{ route('barang.toggle-status', $item->kode_barang) }}"
+                                                method="POST" class="d-inline">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-{{ $item->status ? 'success' : 'secondary' }} rounded" title="{{ $item->status ? 'Non-aktifkan' : 'Aktifkan' }}">
+                                                <button type="submit"
+                                                    class="btn btn-sm btn-outline-{{ $item->status ? 'success' : 'secondary' }} rounded"
+                                                    title="{{ $item->status ? 'Non-aktifkan' : 'Aktifkan' }}">
                                                     <i class="fa-{{ $item->status ? 'solid' : 'regular' }} fa-thumbs-up"></i>
                                                 </button>
                                             </form>
@@ -172,8 +177,8 @@
                                                 class="d-inline delete-form">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button" class="btn btn-sm btn-outline-danger btn-delete rounded"
-                                                    title="Hapus">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-danger btn-delete rounded" title="Hapus">
                                                     <i class="fa-solid fa-trash"></i>
                                                 </button>
                                             </form>
@@ -183,7 +188,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ auth()->user()->can('edit-barang') ? 10 : 9 }}" class="text-center py-4 text-muted">
+                                <td colspan="{{ auth()->user()->can('edit-barang') ? 10 : 9 }}"
+                                    class="text-center py-4 text-muted">
                                     <i class="fa-solid fa-box-open d-block fs-3 mb-2 opacity-50"></i>
                                     Tidak ada data barang.
                                 </td>
@@ -202,7 +208,8 @@
     </div>
 
     @can('edit-barang')
-        <form id="bulk-deactivate-form" action="{{ route('barang.bulk-deactivate') }}" method="POST" style="display: none;">
+        <form id="bulk-deactivate-form" action="{{ route('barang.bulk-deactivate') }}" method="POST"
+            style="display: none;">
             @csrf
             <div id="bulk-deactivate-inputs"></div>
         </form>
@@ -233,7 +240,7 @@
             $(document).on('change', '.barang-checkbox', function() {
                 const checkedCount = $('.barang-checkbox:checked').length;
                 const totalCount = $('.barang-checkbox').length;
-                
+
                 if (checkedCount === 0) {
                     selectAll.prop('checked', false);
                 } else if (checkedCount === totalCount) {
@@ -262,7 +269,9 @@
                         const container = $('#bulk-deactivate-inputs');
                         container.empty();
                         checked.each(function() {
-                            container.append(`<input type="hidden" name="selected_ids[]" value="${$(this).val()}">`);
+                            container.append(
+                                `<input type="hidden" name="selected_ids[]" value="${$(this).val()}">`
+                            );
                         });
                         $('#bulk-deactivate-form').submit();
                     }
