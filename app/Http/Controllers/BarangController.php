@@ -300,4 +300,27 @@ class BarangController extends Controller
 
         return response()->json($results);
     }
+
+    public function toggleStatus($id)
+    {
+        $item = Barang::findOrFail($id);
+        $item->status = $item->status ? 0 : 1;
+        $item->save();
+
+        $statusStr = $item->status ? 'aktif' : 'non-aktif';
+        return redirect()->back()->with('success', "Status barang {$item->nama_barang} berhasil diubah menjadi {$statusStr}.");
+    }
+
+    public function bulkDeactivate(Request $request)
+    {
+        $request->validate([
+            'selected_ids' => 'required|array',
+            'selected_ids.*' => 'exists:barang,kode_barang',
+        ]);
+
+        $selectedIds = $request->input('selected_ids');
+        Barang::whereIn('kode_barang', $selectedIds)->update(['status' => 0]);
+
+        return redirect()->back()->with('success', 'Berhasil menonaktifkan masal barang yang dipilih.');
+    }
 }

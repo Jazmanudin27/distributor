@@ -8,11 +8,18 @@
                 </h5>
                 <small class="text-white-50">Daftar produk, jenis, kategori, dan status stok saat ini</small>
             </div>
-            @can('create-barang')
-                <a href="{{ route('barang.create') }}" class="btn btn-light btn-sm fw-bold hover-scale">
-                    <i class="fa-solid fa-circle-plus me-1 text-primary"></i> Tambah Barang
-                </a>
-            @endcan
+            <div class="d-flex gap-2">
+                @can('edit-barang')
+                    <button type="button" id="btn-bulk-deactivate" class="btn btn-danger btn-sm fw-bold hover-scale d-none" onclick="submitBulkDeactivate()">
+                        <i class="fa-solid fa-thumbs-down me-1"></i> Nonaktifkan Masal
+                    </button>
+                @endcan
+                @can('create-barang')
+                    <a href="{{ route('barang.create') }}" class="btn btn-light btn-sm fw-bold hover-scale">
+                        <i class="fa-solid fa-circle-plus me-1 text-primary"></i> Tambah Barang
+                    </a>
+                @endcan
+            </div>
         </div>
         {{-- CARD BODY --}}
         <div class="card-body p-4">
@@ -76,6 +83,11 @@
                 <table class="table table-sm table-hover align-middle">
                     <thead class="table-light text-secondary text-uppercase fs-7 tracking-wider">
                         <tr>
+                            @can('edit-barang')
+                                <th width="40" class="text-center">
+                                    <input type="checkbox" id="select-all-barang" class="form-check-input">
+                                </th>
+                            @endcan
                             <th width="60" class="text-center">No</th>
                             <th width="120">Kode</th>
                             <th width="120">Kode Item</th>
@@ -91,6 +103,11 @@
                     <tbody>
                         @forelse($items as $index => $item)
                             <tr class="hover-row">
+                                @can('edit-barang')
+                                    <td class="text-center">
+                                        <input type="checkbox" value="{{ $item->kode_barang }}" class="form-check-input barang-checkbox">
+                                    </td>
+                                @endcan
                                 <td class="text-center text-secondary small fw-bold">{{ $items->firstItem() + $index }}
                                 </td>
                                 <td>
@@ -143,6 +160,12 @@
                                                 class="btn btn-sm btn-outline-primary rounded" title="Edit">
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </a>
+                                            <form action="{{ route('barang.toggle-status', $item->kode_barang) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-outline-{{ $item->status ? 'success' : 'secondary' }} rounded" title="{{ $item->status ? 'Non-aktifkan' : 'Aktifkan' }}">
+                                                    <i class="fa-{{ $item->status ? 'solid' : 'regular' }} fa-thumbs-up"></i>
+                                                </button>
+                                            </form>
                                         @endcan
                                         @can('delete-barang')
                                             <form action="{{ route('barang.destroy', $item) }}" method="POST"
@@ -160,7 +183,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="text-center py-4 text-muted">
+                                <td colspan="{{ auth()->user()->can('edit-barang') ? 10 : 9 }}" class="text-center py-4 text-muted">
                                     <i class="fa-solid fa-box-open d-block fs-3 mb-2 opacity-50"></i>
                                     Tidak ada data barang.
                                 </td>
@@ -177,4 +200,74 @@
             @endif
         </div>
     </div>
+
+    @can('edit-barang')
+        <form id="bulk-deactivate-form" action="{{ route('barang.bulk-deactivate') }}" method="POST" style="display: none;">
+            @csrf
+            <div id="bulk-deactivate-inputs"></div>
+        </form>
+    @endcan
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            const selectAll = $('#select-all-barang');
+            const checkboxes = $('.barang-checkbox');
+            const btnBulk = $('#btn-bulk-deactivate');
+
+            function toggleBulkButton() {
+                const checkedCount = $('.barang-checkbox:checked').length;
+                if (checkedCount > 0) {
+                    btnBulk.removeClass('d-none');
+                } else {
+                    btnBulk.addClass('d-none');
+                }
+            }
+
+            selectAll.on('change', function() {
+                checkboxes.prop('checked', this.checked);
+                toggleBulkButton();
+            });
+
+            $(document).on('change', '.barang-checkbox', function() {
+                const checkedCount = $('.barang-checkbox:checked').length;
+                const totalCount = $('.barang-checkbox').length;
+                
+                if (checkedCount === 0) {
+                    selectAll.prop('checked', false);
+                } else if (checkedCount === totalCount) {
+                    selectAll.prop('checked', true);
+                } else {
+                    selectAll.prop('checked', false);
+                }
+                toggleBulkButton();
+            });
+
+            window.submitBulkDeactivate = function() {
+                const checked = $('.barang-checkbox:checked');
+                if (checked.length === 0) return;
+
+                Swal.fire({
+                    title: 'Apakah Anda yakin?',
+                    text: `Anda akan menonaktifkan ${checked.length} barang secara masal!`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Ya, Nonaktifkan!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const container = $('#bulk-deactivate-inputs');
+                        container.empty();
+                        checked.each(function() {
+                            container.append(`<input type="hidden" name="selected_ids[]" value="${$(this).val()}">`);
+                        });
+                        $('#bulk-deactivate-form').submit();
+                    }
+                });
+            };
+        });
+    </script>
+@endpush
