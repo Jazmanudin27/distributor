@@ -84,13 +84,20 @@ class PenjualanKirimanController extends Controller
         $current_kirimanke = $request->input('current_kirimanke');
 
         $query = Penjualan::with(['pelanggan.wilayah', 'sales'])
-            ->where('batal', 0);
+            ->where('batal', 0)
+            ->where(function ($q) {
+                $q->whereDoesntHave('sales')
+                  ->orWhereHas('sales', function ($sq) {
+                      $sq->where('is_kanvas', '!=', 1)->orWhereNull('is_kanvas');
+                  });
+            });
 
         if ($kode_wilayah) {
             $query->whereHas('pelanggan', function ($q) use ($kode_wilayah) {
                 $q->where('kode_wilayah', $kode_wilayah);
             });
         }
+
 
         $currentInvoices = [];
         if ($is_edit) {

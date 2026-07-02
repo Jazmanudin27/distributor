@@ -766,11 +766,11 @@
                         </div>
                         <div class="col-4">
                             <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Disc 2 (%)</label>
-                            <input type="number" name="items[${rowIndex}][diskon2_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon2 px-1" min="0" max="100" step="any" value="${initialD2}" readonly style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important; background-color: rgba(255,255,255,0.05) !important;">
+                            <input type="number" name="items[${rowIndex}][diskon2_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon2 px-1" min="0" max="100" step="any" value="${initialD2}" style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important;">
                         </div>
                         <div class="col-4">
                             <label class="text-secondary d-block mb-0.5" style="font-size: 0.6rem; font-weight: 500;">Disc 3 (%)</label>
-                            <input type="number" name="items[${rowIndex}][diskon3_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon3 px-1" min="0" max="100" step="any" value="${initialD3}" readonly style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important; background-color: rgba(255,255,255,0.05) !important;">
+                            <input type="number" name="items[${rowIndex}][diskon3_persen]" class="form-control form-control-sm bg-dark text-white border-secondary text-center input-diskon3 px-1" min="0" max="100" step="any" value="${initialD3}" style="font-size: 0.75rem; border-color: rgba(255,255,255,0.15); height: 32px; border-radius: 8px !important;">
                         </div>
                     </div>
 
@@ -876,12 +876,184 @@
                 calculateTotals();
             }
 
-            jenisTransaksiEl.addEventListener('change', calculateTotals);
+jenisTransaksiEl.addEventListener('change', calculateTotals);
             diskonGlobalEl.addEventListener('input', calculateTotals);
 
             // --- 4. Strata Discount & Totals Calculation ---
             function calculateStrataDiscounts() {
-                // Disabled automatic calculation - discounts are entered manually
+                const jenisTransaksi = jenisTransaksiEl.value; // 'Tunai' or 'Kredit'
+
+                // Group subtotal by supplier code
+                const supplierSubtotals = {};
+                cartContainer.querySelectorAll('.cart-item-card').forEach(card => {
+                    const barangCode = card.getAttribute('data-code');
+                    const qty = parseFloat(card.querySelector('.input-qty').value) || 0;
+                    const harga = parseCleanNumber(card.querySelector('.input-harga').value) || 0;
+                    const sub = qty * harga;
+
+                    const b = barangsCache[barangCode];
+                    if (b && b.kode_supplier) {
+                        supplierSubtotals[b.kode_supplier] = (supplierSubtotals[b.kode_supplier] || 0) +
+                            sub;
+                    }
+                });
+
+                // Evaluate rules
+                cartContainer.querySelectorAll('.cart-item-card').forEach(card => {
+                    const barangCode = card.getAttribute('data-code');
+                    const qty = parseFloat(card.querySelector('.input-qty').value) || 0;
+                    const harga = parseCleanNumber(card.querySelector('.input-harga').value) || 0;
+                    const sub = qty * harga;
+                    const selectSatuan = card.querySelector('.select-satuan');
+                    const satuanId = selectSatuan ? selectSatuan.value : null;
+
+                    const b = barangsCache[barangCode];
+                    if (!b) return;
+
+                    const inputDis1 = card.querySelector('.input-diskon1');
+
+                    const isSatuanMatch = (d, rowSatuanId) => {
+                        if (d.satuan_id === null || !d.satuan_id) return true;
+                        if (d.satuan_id == rowSatuanId) return true;
+
+                        const ruleSatuanName = d.satuan && d.satuan.satuan ? d.satuan.satuan
+                            .toUpperCase().trim() : '';
+                        let rowSatuanName = '';
+                        if (b && b.satuans) {
+                            const found = b.satuans.find(s => s.id == rowSatuanId);
+                            if (found) {
+                                rowSatuanName = (found.satuan || '').toUpperCase().trim();
+                            }
+                        }
+                        return ruleSatuanName !== '' && rowSatuanName !== '' && ruleSatuanName ===
+                            rowSatuanName;
+                    };
+
+                    let bestRate = 0;
+                    let bestRule = null;
+                    let bestDetail = null;
+
+                    const findRule = (tipe) => {
+                        return diskonStrata.filter(r => r.tipe === tipe && r.is_active);
+                    };
+
+                    const checkRule = (r, d) => {
+                        const rate = parseFloat(d.dis1) || 0;
+                        if (rate >= bestRate) {
+                            bestRule = r;
+                            bestDetail = d;
+                            bestRate = rate;
+                        }
+                    };
+
+                    // Priority 1: Per Barang
+                    const rulesBarang = findRule('barang');
+                    rulesBarang.forEach(r => {
+                        if (r.barangs && r.barangs.some(item => item.kode_barang === barangCode)) {
+                            r.details.forEach(d => {
+                                if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <=
+                                        d.max_qty) && isSatuanMatch(d, satuanId)) {
+                                    checkRule(r, d);
+                                }
+                            });
+                        }
+                    });
+
+                    // Priority 2: Per Beberapa Barang
+                    if (!bestRule) {
+                        const rulesBeberapa = findRule('beberapa_barang');
+                        rulesBeberapa.forEach(r => {
+                            if (r.barangs && r.barangs.some(item => item.kode_barang ===
+                                    barangCode)) {
+                                r.details.forEach(d => {
+                                    if (qty >= (d.min_qty || 0) && (d.max_qty === null ||
+                                            qty <= d.max_qty) && isSatuanMatch(d,
+                                            satuanId)) {
+                                        checkRule(r, d);
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    // Priority 3: Per Kategori
+                    if (!bestRule && b.kategori) {
+                        const rulesKategori = findRule('kategori');
+                        rulesKategori.forEach(r => {
+                            if (r.kategori && r.kategori.nama_kategori === b.kategori) {
+                                r.details.forEach(d => {
+                                    if (qty >= (d.min_qty || 0) && (d.max_qty === null ||
+                                            qty <= d.max_qty)) {
+                                        checkRule(r, d);
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    // Priority 4: Per Merk
+                    if (!bestRule && b.merk) {
+                        const rulesMerk = findRule('merk');
+                        rulesMerk.forEach(r => {
+                            if (r.merk && r.merk.nama_merk === b.merk) {
+                                r.details.forEach(d => {
+                                    if (qty >= (d.min_qty || 0) && (d.max_qty === null ||
+                                            qty <= d.max_qty)) {
+                                        checkRule(r, d);
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    // Priority 5: Per Supplier
+                    if (!bestRule && b.kode_supplier) {
+                        const rulesSupplier = findRule('supplier');
+                        const totalSupplierNominal = supplierSubtotals[b.kode_supplier] || 0;
+                        rulesSupplier.forEach(r => {
+                            if (r.kode_supplier === b.kode_supplier) {
+                                r.details.forEach(d => {
+                                    const minNom = parseFloat(d.min_nominal) || 0;
+                                    const maxNom = d.max_nominal ? parseFloat(d
+                                        .max_nominal) : null;
+                                    if (totalSupplierNominal >= minNom && (maxNom ===
+                                            null || totalSupplierNominal <= maxNom)) {
+                                        checkRule(r, d);
+                                    }
+                                });
+                            }
+                        });
+                    }
+
+                    // Apply diskon1 values
+                    if (bestRule && bestDetail) {
+                        let d1_pct = 0;
+                        const rawDis1 = parseFloat(bestDetail.dis1) || 0;
+
+                        if (bestDetail.tipe_nilai === 'persen') {
+                            d1_pct = rawDis1;
+                        } else {
+                            if (bestRule.tipe === 'supplier') {
+                                const totalSupplierNominal = supplierSubtotals[b.kode_supplier] || 1;
+                                d1_pct = (rawDis1 / totalSupplierNominal) * 100;
+                            } else {
+                                if (sub > 0) {
+                                    d1_pct = (rawDis1 / sub) * 100;
+                                }
+                            }
+                        }
+
+                        // Apply Diskon 1
+                        inputDis1.value = d1_pct.toFixed(2);
+                    } else {
+                        // Fallback to default product discount if no strata matches
+                        if (b.diskon_persen !== undefined && parseFloat(b.diskon_persen) > 0) {
+                            inputDis1.value = parseFloat(b.diskon_persen).toFixed(2);
+                        } else {
+                            inputDis1.value = '0';
+                        }
+                    }
+                });
             }
 
             function calculateTotals() {

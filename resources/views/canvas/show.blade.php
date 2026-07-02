@@ -32,12 +32,6 @@
                                 </button>
                             </form>
                         @endif
-                        @if ($canvasSession->status === 'loading')
-                            <a href="{{ route('canvas.edit', $canvasSession->id) }}"
-                                class="btn btn-primary btn-sm fw-bold hover-scale me-1 text-dark shadow-sm">
-                                <i class="fa-solid fa-box-open"></i> Selesaikan & Bongkar
-                            </a>
-                        @endif
                         <a href="{{ route('canvas.print', $canvasSession->id) }}" target="_blank"
                             class="btn btn-info btn-sm fw-bold hover-scale me-1 text-white shadow-sm">
                             <i class="fa-solid fa-print me-1"></i> Cetak Laporan
