@@ -97,6 +97,8 @@ class DashboardController extends Controller
 
         $targetPenjualan = (float)Setting::getVal('target_penjualan_bulan_ini', 5000000000);
         $progressPenjualan = $targetPenjualan > 0 ? ($totalPenjualanBulanIni / $targetPenjualan) * 100 : 0;
+        $lockAdmin = Setting::getVal('lock_penjualan_admin', '0') === '1';
+        $lockSales = Setting::getVal('lock_penjualan_sales', '0') === '1';
 
         return view('welcome', compact(
             'totalPenjualanHariIni',
@@ -111,7 +113,9 @@ class DashboardController extends Controller
             'lowStockItems',
             'latestLimitRequests',
             'targetPenjualan',
-            'progressPenjualan'
+            'progressPenjualan',
+            'lockAdmin',
+            'lockSales'
         ));
     }
 
@@ -124,5 +128,17 @@ class DashboardController extends Controller
         Setting::setVal('target_penjualan_bulan_ini', $request->target_penjualan);
 
         return redirect()->back()->with('success', 'Target penjualan bulan ini berhasil diperbarui.');
+    }
+
+    public function setLockPenjualan(Request $request)
+    {
+        if (!auth()->user()->hasRole('Super Admin') && !auth()->user()->hasRole('Admin') && !auth()->user()->hasRole('Owner')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        Setting::setVal('lock_penjualan_admin', $request->has('lock_penjualan_admin') ? '1' : '0');
+        Setting::setVal('lock_penjualan_sales', $request->has('lock_penjualan_sales') ? '1' : '0');
+
+        return redirect()->back()->with('success', 'Pengaturan kunci input penjualan berhasil diperbarui.');
     }
 }

@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'sales' => \App\Http\Middleware\SalesMiddleware::class,
             'owner.mobile' => \App\Http\Middleware\OwnerMobileMiddleware::class,
+            'check.penjualan.lock' => \App\Http\Middleware\CheckPenjualanLock::class,
         ]);
 
         // Auto-sync role lama (kolom users.role) ke Spatie Permission

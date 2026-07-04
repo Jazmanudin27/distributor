@@ -77,13 +77,18 @@ Route::middleware('auth')->group(function () {
 
         // Orders (Sales Regular)
         Route::get('/order', [MobileOrderController::class, 'index'])->name('order.index');
-        Route::get('/order/create', [MobileOrderController::class, 'create'])->name('order.create');
-        Route::post('/order/store', [MobileOrderController::class, 'store'])->name('order.store');
         Route::post('/order/{no_faktur}/payment', [MobileOrderController::class, 'storePayment'])->name('order.payment');
 
-        // Orders (Sales Canvas) — tanpa check-in, pelanggan otomatis dari user
-        Route::get('/order/canvas', [MobileOrderController::class, 'createCanvas'])->name('order.canvas.create');
-        Route::post('/order/canvas', [MobileOrderController::class, 'storeCanvas'])->name('order.canvas.store');
+        // Lock Sales Input Routes
+        Route::middleware('check.penjualan.lock:sales')->group(function () {
+            Route::get('/order/create', [MobileOrderController::class, 'create'])->name('order.create');
+            Route::post('/order/store', [MobileOrderController::class, 'store'])->name('order.store');
+
+            // Orders (Sales Canvas) — tanpa check-in, pelanggan otomatis dari user
+            Route::get('/order/canvas', [MobileOrderController::class, 'createCanvas'])->name('order.canvas.create');
+            Route::post('/order/canvas', [MobileOrderController::class, 'storeCanvas'])->name('order.canvas.store');
+        });
+
         Route::get('/order/canvas/dpb', [MobileOrderController::class, 'canvasDpb'])->name('order.canvas.dpb');
         Route::get('/order/canvas/dpb/create', [MobileOrderController::class, 'createCanvasDpb'])->name('order.canvas.dpb.create');
         Route::post('/order/canvas/dpb', [MobileOrderController::class, 'storeCanvasDpb'])->name('order.canvas.dpb.store');
@@ -144,6 +149,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('admin')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
         Route::post('/dashboard/set-target', [DashboardController::class, 'setTarget'])->name('dashboard.set-target');
+        Route::post('/dashboard/set-lock-penjualan', [DashboardController::class, 'setLockPenjualan'])->name('dashboard.set-lock-penjualan');
 
         Route::resource('kategori', KategoriController::class);
         Route::resource('merk', MerkController::class);
@@ -171,10 +177,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/penjualan/{no_faktur}/restore', [PenjualanController::class, 'restore'])->name('penjualan.restore');
         Route::get('/penjualan/{no_faktur}/print', [PenjualanController::class, 'print'])->name('penjualan.print');
         Route::get('/retur-penjualan/{no_retur}/print', [ReturPenjualanController::class, 'print'])->name('retur-penjualan.print');
-        Route::get('/penjualan/{penjualan}/edit', [PenjualanController::class, 'edit'])->name('penjualan.edit');
+        Route::middleware('check.penjualan.lock:admin')->group(function () {
+            Route::get('/penjualan/{penjualan}/edit', [PenjualanController::class, 'edit'])->name('penjualan.edit');
+            Route::resource('penjualan', PenjualanController::class)->only(['create', 'store', 'update']);
+        });
+        Route::resource('penjualan', PenjualanController::class)->except(['create', 'store', 'edit', 'update']);
         Route::get('/retur-penjualan/{retur_penjualan}/edit', [ReturPenjualanController::class, 'edit'])->name('retur-penjualan.edit');
-
-        Route::resource('penjualan', PenjualanController::class);
         Route::resource('retur-penjualan', ReturPenjualanController::class);
         Route::get('/canvas-returns', [CanvasController::class, 'returnsIndex'])->name('canvas.returns.index');
         Route::get('/canvas-returns/create', [CanvasController::class, 'returnsCreate'])->name('canvas.returns.create');

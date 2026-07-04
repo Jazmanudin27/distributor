@@ -178,7 +178,8 @@
             </div>
         </div>
         <div class="row g-4 mb-4">
-            <div class="col-xl-12 col-md-12 col-12">
+            <!-- Target Penjualan -->
+            <div class="col-xl-6 col-md-6 col-12">
                 <div class="card stat-card shadow-sm h-100 p-3"
                     style="background: linear-gradient(135deg, rgba(26, 29, 39, 0.9) 0%, rgba(236, 72, 153, 0.05) 100%);">
                     <div class="d-flex justify-content-between align-items-start">
@@ -210,6 +211,56 @@
                                 style="width: {{ min(100, $progressPenjualan) }}%; background-color: #ec4899; transition: width 0.8s ease;"
                                 aria-valuenow="{{ $progressPenjualan }}" aria-valuemin="0" aria-valuemax="100">
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kunci Input Penjualan -->
+            <div class="col-xl-6 col-md-6 col-12">
+                <div class="card stat-card shadow-sm h-100 p-3"
+                    style="background: linear-gradient(135deg, rgba(26, 29, 39, 0.9) 0%, rgba(239, 68, 68, 0.05) 100%);">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="text-secondary small fw-semibold tracking-wider text-uppercase"
+                                style="font-size: 0.7rem;">Kunci Input Penjualan</span>
+                            <h3 class="fw-bold text-white mt-1 mb-0" style="font-size: 1.4rem;">
+                                @if($lockAdmin && $lockSales)
+                                    <span class="badge bg-danger text-white">Semua Dikunci</span>
+                                @elseif($lockAdmin)
+                                    <span class="badge bg-warning text-dark">Admin Dikunci</span>
+                                @elseif($lockSales)
+                                    <span class="badge bg-warning text-dark">Sales Dikunci</span>
+                                @else
+                                    <span class="badge bg-success text-white">Aktif (Terbuka)</span>
+                                @endif
+
+                                @if(Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Owner'))
+                                    <a href="#" class="ms-2" data-bs-toggle="modal" data-bs-target="#editLockModal"
+                                        title="Ubah Status Kunci" style="color: #ef4444;">
+                                        <i class="fa-solid fa-gears" style="font-size: 0.95rem;"></i>
+                                    </a>
+                                @endif
+                            </h3>
+                        </div>
+                        <div class="stat-icon-box" style="background-color: rgba(239, 68, 68, 0.15); color: #ef4444;">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2 border-top border-white-10 pt-2 text-secondary small">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Kunci Input Admin (Desktop):</span>
+                            <strong class="{{ $lockAdmin ? 'text-danger' : 'text-success' }}">
+                                <i class="fa-solid {{ $lockAdmin ? 'fa-circle-check text-danger' : 'fa-circle-xmark text-success' }} me-1"></i>
+                                {{ $lockAdmin ? 'YA' : 'TIDAK' }}
+                            </strong>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <span>Kunci Input Sales (Mobile):</span>
+                            <strong class="{{ $lockSales ? 'text-danger' : 'text-success' }}">
+                                <i class="fa-solid {{ $lockSales ? 'fa-circle-check text-danger' : 'fa-circle-xmark text-success' }} me-1"></i>
+                                {{ $lockSales ? 'YA' : 'TIDAK' }}
+                            </strong>
                         </div>
                     </div>
                 </div>
@@ -450,6 +501,54 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Edit Kunci Penjualan -->
+    @if(Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Owner'))
+    <div class="modal fade" id="editLockModal" tabindex="-1" aria-labelledby="editLockModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content text-white rounded-4 shadow-lg"
+                style="background: #1A1D27; border: 1px solid rgba(255, 255, 255, 0.1);">
+                <div class="modal-header py-3" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                    <h5 class="modal-title fw-bold" id="editLockModalLabel">
+                        <i class="fa-solid fa-lock text-danger me-2"></i>Pengaturan Kunci Input Penjualan
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <form action="{{ route('dashboard.set-lock-penjualan') }}" method="POST">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <p class="text-secondary small mb-4">Aktifkan opsi di bawah untuk mengunci sementara penginputan atau pengeditan transaksi penjualan baru.</p>
+
+                        <!-- Kunci Admin -->
+                        <div class="form-check form-switch mb-3 p-3 rounded-3" style="background: #151821; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; align-items: center;">
+                            <input class="form-check-input ms-0 me-3" type="checkbox" name="lock_penjualan_admin" id="lock_penjualan_admin" value="1" {{ $lockAdmin ? 'checked' : '' }} style="width: 2.5em; height: 1.25em; cursor: pointer; flex-shrink: 0;">
+                            <label class="form-check-label fw-semibold text-white" for="lock_penjualan_admin" style="cursor: pointer;">
+                                Kunci Input Penjualan Admin
+                                <span class="d-block text-secondary fw-normal mt-1" style="font-size: 0.75rem;">Mencegah Admin dan staff kantor membuat/mengedit transaksi penjualan di desktop.</span>
+                            </label>
+                        </div>
+
+                        <!-- Kunci Sales -->
+                        <div class="form-check form-switch mb-2 p-3 rounded-3" style="background: #151821; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; align-items: center;">
+                            <input class="form-check-input ms-0 me-3" type="checkbox" name="lock_penjualan_sales" id="lock_penjualan_sales" value="1" {{ $lockSales ? 'checked' : '' }} style="width: 2.5em; height: 1.25em; cursor: pointer; flex-shrink: 0;">
+                            <label class="form-check-label fw-semibold text-white" for="lock_penjualan_sales" style="cursor: pointer;">
+                                Kunci Input Penjualan Sales (Mobile)
+                                <span class="d-block text-secondary fw-normal mt-1" style="font-size: 0.75rem;">Mencegah salesman lapangan membuat order/canvas baru melalui aplikasi mobile.</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer py-3" style="border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-3 rounded-3"
+                            data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger btn-sm px-3 rounded-3">Simpan Pengaturan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
 @endsection
 
 @push('scripts')
