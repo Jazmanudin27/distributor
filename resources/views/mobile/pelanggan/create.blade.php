@@ -39,6 +39,12 @@
             display: none;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
+
+        /* Force input text to be uppercase visually */
+        input[type="text"],
+        textarea {
+            text-transform: uppercase;
+        }
     </style>
 @endpush
 
@@ -284,6 +290,11 @@
             $('select[name="metode_bayar"]').select2({
                 placeholder: "-- Pilih Metode Pembayaran --",
                 minimumResultsForSearch: Infinity
+            });
+
+            // Force typed text to be uppercase in the input/textarea value
+            $('input[type="text"], textarea').on('input', function() {
+                this.value = this.value.toUpperCase();
             });
 
             // Geolocation Capturing
