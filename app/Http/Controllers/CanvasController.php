@@ -173,17 +173,6 @@ class CanvasController extends Controller
                 // Update session status to loading
                 $canvasSession->status = 'loading';
                 $canvasSession->save();
-
-                // Sync any already recorded sales for this day and salesman
-                $invoices = \App\Models\Penjualan::where('kode_sales', $canvasSession->kode_sales)
-                    ->where('tanggal', $canvasSession->tanggal)
-                    ->where('batal', 0)
-                    ->with('details')
-                    ->get();
-
-                foreach ($invoices as $invoice) {
-                    \App\Services\CanvasService::trackSale($invoice);
-                }
             });
 
             return redirect()->route('canvas.show', $id)->with('success', 'DPB berhasil disetujui dan stok gudang telah dipotong.');
