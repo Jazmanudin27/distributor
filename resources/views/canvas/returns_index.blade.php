@@ -5,7 +5,8 @@
         <div class="card-header card-premium-header text-white d-flex justify-content-between align-items-center py-3">
             <div>
                 <h5 class="mb-0 fw-bold"><i class="fa-solid fa-box-open me-2"></i> Setoran Penjualan Kanvas</h5>
-                <small class="text-white-50 font-12">Kelola setoran hasil penjualan & pengembalian sisa barang kanvas salesman ke gudang</small>
+                <small class="text-white-50 font-12">Kelola setoran hasil penjualan & pengembalian sisa barang kanvas
+                    salesman ke gudang</small>
             </div>
             <a href="{{ route('canvas.returns.create') }}" class="btn btn-primary btn-sm fw-bold hover-scale">
                 <i class="fa-solid fa-circle-plus me-1 text-white"></i> Input Setoran Penjualan Baru
@@ -80,6 +81,10 @@
                                         <a href="{{ route('canvas.show', $item->id) }}"
                                             class="btn btn-sm btn-outline-info rounded" title="Detail Pengembalian">
                                             <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                        <a href="{{ route('canvas.returns.edit', $item->id) }}"
+                                            class="btn btn-sm btn-outline-warning rounded" title="Edit Setoran">
+                                            <i class="fa-solid fa-pen-to-square"></i>
                                         </a>
                                         <a href="{{ route('canvas.print', $item->id) }}" target="_blank"
                                             class="btn btn-sm btn-outline-primary rounded" title="Cetak Laporan">

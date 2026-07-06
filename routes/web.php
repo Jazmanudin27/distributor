@@ -188,6 +188,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/canvas-returns/create', [CanvasController::class, 'returnsCreate'])->name('canvas.returns.create');
         Route::post('/canvas-returns', [CanvasController::class, 'returnsStore'])->name('canvas.returns.store');
         Route::delete('/canvas-returns/{id}', [CanvasController::class, 'returnsDestroy'])->name('canvas.returns.destroy');
+        Route::get('/canvas-returns/{id}/edit', [CanvasController::class, 'returnsEdit'])->name('canvas.returns.edit');
+        Route::put('/canvas-returns/{id}', [CanvasController::class, 'returnsUpdate'])->name('canvas.returns.update');
         Route::get('/canvas-report', [CanvasController::class, 'report'])->name('canvas.report');
         Route::get('/canvas/{canvas}/print', [CanvasController::class, 'print'])->name('canvas.print');
         Route::post('/canvas/{id}/approve', [CanvasController::class, 'approve'])->name('canvas.approve');
