@@ -814,9 +814,9 @@ class CanvasController extends Controller
                     if ($qtyKembaliSmallest > 0) {
                         // Validate warehouse stock
                         $barang = Barang::lockForUpdate()->findOrFail($detail->kode_barang);
-                        if ($barang->stok < $qtyKembaliSmallest) {
-                            throw new \Exception("Stok gudang tidak mencukupi untuk membatalkan pengembalian barang '{$barang->nama_barang}'! Sisa stok gudang: " . $barang->formatStok($barang->stok) . " (Dibutuhkan: " . $barang->formatStok($qtyKembaliSmallest) . ")");
-                        }
+                        // if ($barang->stok < $qtyKembaliSmallest) {
+                        //     throw new \Exception("Stok gudang tidak mencukupi untuk membatalkan pengembalian barang '{$barang->nama_barang}'! Sisa stok gudang: " . $barang->formatStok($barang->stok) . " (Dibutuhkan: " . $barang->formatStok($qtyKembaliSmallest) . ")");
+                        // }
 
                         // Revert: deduct returned stock from warehouse
                         StokMutasi::log(
