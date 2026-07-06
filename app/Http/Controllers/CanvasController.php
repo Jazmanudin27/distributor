@@ -172,6 +172,7 @@ class CanvasController extends Controller
 
                 // Update session status to loading
                 $canvasSession->status = 'loading';
+                $canvasSession->approved_at = now();
                 $canvasSession->save();
             });
 
@@ -525,7 +526,8 @@ class CanvasController extends Controller
         $canvasSession = CanvasSession::with(['sales', 'details.barang', 'details.barangSatuan'])
             ->findOrFail($id);
 
-        $startDate = $canvasSession->created_at;
+        // Gunakan approved_at sebagai start (jika ada), fallback ke created_at
+        $startDate = $canvasSession->approved_at ?? $canvasSession->created_at;
         $endDate = $canvasSession->status === 'completed' ? $canvasSession->updated_at : now();
 
         $invoices = \App\Models\Penjualan::where('kode_sales', $canvasSession->kode_sales)
@@ -628,11 +630,17 @@ class CanvasController extends Controller
             }
 
             if (!$activeSessions->isEmpty()) {
-                $minCreatedAt = $activeSessions->min('created_at');
-                $maxUpdatedAt = now();
+                // Gunakan approved_at (waktu DPB di-approve/mulai loading) sebagai patokan awal,
+                // bukan created_at (waktu DPB dibuat/masih pending).
+                // trackSale() hanya berjalan saat ada session berstatus 'loading',
+                // sehingga faktur sebelum approval tidak masuk ke qty_terjual (Section I).
+                // Dengan approved_at, Section II (faktur) sinkron dengan Section I (qty_terjual).
+                $minStartAt = $activeSessions
+                    ->map(fn($s) => $s->approved_at ?? $s->created_at)
+                    ->min();
 
                 $invoices = \App\Models\Penjualan::where('kode_sales', $selectedSales)
-                    ->whereBetween('created_at', [$minCreatedAt, $maxUpdatedAt])
+                    ->where('created_at', '>=', $minStartAt)
                     ->where('batal', 0)
                     ->with(['pelanggan', 'details.barang', 'details.barangSatuan'])
                     ->get();

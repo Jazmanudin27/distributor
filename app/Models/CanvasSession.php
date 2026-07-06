@@ -16,11 +16,13 @@ class CanvasSession extends Model
         'kode_sales',
         'tanggal',
         'status',
-        'keterangan'
+        'keterangan',
+        'approved_at',
     ];
 
     protected $casts = [
-        'tanggal' => 'date'
+        'tanggal'     => 'date',
+        'approved_at' => 'datetime',
     ];
 
     public function sales()
