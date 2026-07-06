@@ -1103,9 +1103,20 @@ class MobileOrderController extends Controller
 
                 $subtotalSum = 0; $totalDiskon = 0; $details = [];
 
+                // Accumulate total requested quantity for each product code to prevent stock limit bypass
+                $requestedQtySmallest = [];
                 foreach ($request->items as $row) {
+                    $sat = BarangSatuan::findOrFail($row['satuan_id']);
+                    $qSmallest = $row['qty'] * ($sat->isi ?? 1);
+                    $kodeBarang = $row['kode_barang'];
+                    $requestedQtySmallest[$kodeBarang] = ($requestedQtySmallest[$kodeBarang] ?? 0) + $qSmallest;
+                }
+
+                foreach ($request->items as $row) {
+                    $barang     = Barang::findOrFail($row['kode_barang']);
                     $satuan     = BarangSatuan::findOrFail($row['satuan_id']);
                     $qtySmallest = $row['qty'] * ($satuan->isi ?? 1);
+                    $kodeBarang = $row['kode_barang'];
 
                     // Canvas: validate against DPB (canvas session) stock across all active sessions
                     $activeSessions = \App\Services\CanvasService::getActiveSessions(Auth::user()->nik);
@@ -1113,14 +1124,15 @@ class MobileOrderController extends Controller
                         throw new \Exception("Tidak ada sesi DPB (Data Pengambilan Barang) yang aktif untuk Anda. Pastikan admin sudah membuat DPB.");
                     }
 
-                    if (!\App\Services\CanvasService::hasItemInActiveSessions(Auth::user()->nik, $row['kode_barang'])) {
+                    if (!\App\Services\CanvasService::hasItemInActiveSessions(Auth::user()->nik, $kodeBarang)) {
                         throw new \Exception("Barang '{$barang->nama_barang}' tidak ditemukan dalam daftar DPB Anda.");
                     }
 
-                    $remainingCanvasQty = \App\Services\CanvasService::getAccumulatedStock(Auth::user()->nik, $row['kode_barang']);
+                    $remainingCanvasQty = \App\Services\CanvasService::getAccumulatedStock(Auth::user()->nik, $kodeBarang);
+                    $totalRequested = $requestedQtySmallest[$kodeBarang];
 
-                    if ($remainingCanvasQty < $qtySmallest) {
-                        throw new \Exception("Stok DPB untuk barang '{$barang->nama_barang}' tidak mencukupi! Sisa: " . $barang->formatStok($remainingCanvasQty));
+                    if ($remainingCanvasQty < $totalRequested) {
+                        throw new \Exception("Stok DPB untuk barang '{$barang->nama_barang}' tidak mencukupi! Sisa: " . $barang->formatStok($remainingCanvasQty) . " (Dibutuhkan: " . $barang->formatStok($totalRequested) . ")");
                     }
 
                     $subtotal = $row['qty'] * $row['harga'];

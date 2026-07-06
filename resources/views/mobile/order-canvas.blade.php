@@ -343,26 +343,56 @@
                 const code = card.getAttribute('data-code');
                 const product = barangsCache[code];
                 if (!product) return true;
-                const qtyInput = card.querySelector('.input-qty');
-                const selectSatuan = card.querySelector('.select-satuan');
-                const selectedOpt = selectSatuan.options[selectSatuan.selectedIndex];
-                const qty = parseFloat(qtyInput.value) || 0;
-                const isi = parseFloat(selectedOpt.getAttribute('data-isi')) || 1;
-                const qtySmallest = qty * isi;
-                if (qtySmallest > product.stok) {
+
+                // Sum smallest units for this product across all cards in the cart
+                let totalSmallest = 0;
+                cartContainer.querySelectorAll(`.cart-item-card[data-code="${code}"]`).forEach(c => {
+                    const qInput = c.querySelector('.input-qty');
+                    const selSat = c.querySelector('.select-satuan');
+                    if (qInput && selSat) {
+                        const q = parseFloat(qInput.value) || 0;
+                        const opt = selSat.options[selSat.selectedIndex];
+                        const factor = opt ? (parseFloat(opt.getAttribute('data-isi')) || 1) : 1;
+                        totalSmallest += q * factor;
+                    }
+                });
+
+                if (totalSmallest > product.stok) {
                     const formattedStok = formatStokJS(product.stok, product.satuans);
                     if (!suppressAlert) {
                         Swal.fire({
                             title: 'Stok Tidak Mencukupi',
-                            html: `Stok barang <b>${product.nama_barang}</b> tidak mencukupi!<br><br>Stok tersedia: <b>${formattedStok}</b><br>Jumlah diinput: <b>${qty} ${selectedOpt.getAttribute('data-name')}</b>`,
+                            html: `Total stok barang <b>${product.nama_barang}</b> di keranjang melebihi stok yang tersedia!<br><br>Stok tersedia: <b>${formattedStok}</b><br>Total diinput: <b>${formatStokJS(totalSmallest, product.satuans)}</b>`,
                             icon: 'error',
                             background: '#161e31',
                             color: '#f8fafc',
                             confirmButtonColor: '#6366f1'
                         });
                     }
-                    const maxQtyInUnit = Math.floor(product.stok / isi);
-                    qtyInput.value = maxQtyInUnit;
+
+                    // Revert the value on this card
+                    const qtyInput = card.querySelector('.input-qty');
+                    const selectSatuan = card.querySelector('.select-satuan');
+                    const selectedOpt = selectSatuan.options[selectSatuan.selectedIndex];
+                    const isi = selectedOpt ? (parseFloat(selectedOpt.getAttribute('data-isi')) || 1) : 1;
+
+                    let otherSmallest = 0;
+                    cartContainer.querySelectorAll(`.cart-item-card[data-code="${code}"]`).forEach(c => {
+                        if (c !== card) {
+                            const qInput = c.querySelector('.input-qty');
+                            const selSat = c.querySelector('.select-satuan');
+                            if (qInput && selSat) {
+                                const q = parseFloat(qInput.value) || 0;
+                                const opt = selSat.options[selSat.selectedIndex];
+                                const factor = opt ? (parseFloat(opt.getAttribute('data-isi')) || 1) : 1;
+                                otherSmallest += q * factor;
+                            }
+                        }
+                    });
+
+                    const allowedSmallest = Math.max(0, product.stok - otherSmallest);
+                    const allowedQty = Math.floor(allowedSmallest / isi);
+                    qtyInput.value = allowedQty;
                     return false;
                 }
                 return true;
@@ -394,18 +424,7 @@
                     satuans: product.satuans
                 };
 
-                const existingCard = document.querySelector(`.cart-item-card[data-code="${product.kode_barang}"]`);
-                if (existingCard && !savedValues) {
-                    const qtyInput = existingCard.querySelector('.input-qty');
-                    qtyInput.value = (parseFloat(qtyInput.value) || 0) + 1;
-                    if (!checkStockLimit(existingCard)) {
-                        calculateTotals();
-                        return;
-                    }
-                    qtyInput.dispatchEvent(new Event('change'));
-                    calculateTotals();
-                    return;
-                }
+                // Do not merge items to allow inputting same item with different units
 
                 const card = document.createElement('div');
                 card.className =
