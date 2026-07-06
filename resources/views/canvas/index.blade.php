@@ -117,6 +117,11 @@
                                                     <i class="fa-solid fa-circle-check"></i>
                                                 </button>
                                             </form>
+                                        @elseif ($item->status === 'loading')
+                                            <a href="{{ route('canvas.edit', [$item->id, 'mode' => 'edit']) }}"
+                                                class="btn btn-sm btn-outline-warning rounded" title="Edit Qty Loading DPB">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                            </a>
                                         @endif
                                         <a href="{{ route('canvas.show', $item->id) }}"
                                             class="btn btn-sm btn-outline-info rounded" title="Detail / Rekonsiliasi">

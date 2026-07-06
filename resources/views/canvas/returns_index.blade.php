@@ -85,6 +85,16 @@
                                             class="btn btn-sm btn-outline-primary rounded" title="Cetak Laporan">
                                             <i class="fa-solid fa-print"></i>
                                         </a>
+                                        <form action="{{ route('canvas.returns.destroy', $item->id) }}" method="POST"
+                                            class="d-inline"
+                                            onsubmit="return confirm('Apakah Anda yakin ingin membatalkan setoran/pengembalian ini? Sisa barang yang dikembalikan akan dipotong kembali dari stok gudang dan status DPB akan kembali menjadi Loading.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded"
+                                                title="Batalkan Setoran">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

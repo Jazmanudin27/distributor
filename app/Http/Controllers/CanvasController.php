@@ -266,7 +266,9 @@ class CanvasController extends Controller
             return redirect()->route('canvas.show', $id)->with('error', 'Session kanvas ini sudah selesai.');
         }
 
-        if ($canvasSession->status === 'pending') {
+        $isEditingLoading = $canvasSession->status === 'pending' || ($canvasSession->status === 'loading' && $request->input('mode') === 'edit');
+
+        if ($isEditingLoading) {
             $request->validate([
                 'keterangan' => 'nullable|string',
                 'details' => 'required|array|min:1',
@@ -277,16 +279,98 @@ class CanvasController extends Controller
 
             try {
                 DB::transaction(function () use ($request, $canvasSession) {
-                    $submittedIds = collect($request->details)->pluck('id')->toArray();
-                    CanvasSessionDetail::where('canvas_session_id', $canvasSession->id)
-                        ->whereNotIn('id', $submittedIds)
-                        ->delete();
+                    $salesman = User::where('nik', $canvasSession->kode_sales)->first();
+                    $salesName = $salesman ? $salesman->name : $canvasSession->kode_sales;
 
+                    // 1. Revert stock and delete removed items
+                    $submittedIds = collect($request->details)->pluck('id')->toArray();
+                    $removedDetails = CanvasSessionDetail::where('canvas_session_id', $canvasSession->id)
+                         ->whereNotIn('id', $submittedIds)
+                         ->get();
+
+                    foreach ($removedDetails as $detail) {
+                        if ($canvasSession->status === 'loading') {
+                            // Validate that this removed detail has not been sold or returned yet
+                            if ($detail->qty_terjual > 0 || $detail->qty_kembali > 0) {
+                                throw new \Exception("Barang '{$detail->barang->nama_barang}' tidak dapat dihapus karena sudah memiliki catatan penjualan atau pengembalian!");
+                            }
+
+                            $satuan = BarangSatuan::find($detail->satuan_id);
+                            $qtyAmbilSmallest = (float)$detail->qty_ambil * ($satuan->isi ?? 1);
+
+                            if ($qtyAmbilSmallest > 0) {
+                                StokMutasi::log(
+                                    $detail->kode_barang,
+                                    now()->toDateString(),
+                                    'Batal Canvas Ambil',
+                                    $canvasSession->no_canvas,
+                                    $qtyAmbilSmallest,
+                                    0,
+                                    Auth::id(),
+                                    'Batal Loading (Edit Hapus): ' . $salesName
+                                );
+                            }
+                        }
+                        $detail->delete();
+                    }
+
+                    // 2. Update existing items
                     foreach ($request->details as $item) {
-                        $detail = CanvasSessionDetail::findOrFail($item['id']);
-                        $detail->qty_ambil = (float)$item['qty_ambil'];
-                        $detail->diskon_persen = isset($item['diskon_persen']) ? (float)$item['diskon_persen'] : 0;
-                        $detail->selisih = (float)$item['qty_ambil'];
+                        $detail = CanvasSessionDetail::where('canvas_session_id', $canvasSession->id)
+                            ->findOrFail($item['id']);
+
+                        $newQtyAmbil = (float)$item['qty_ambil'];
+                        $newDiskonPersen = isset($item['diskon_persen']) ? (float)$item['diskon_persen'] : 0;
+
+                        // Validation: new loading qty must be >= sold + returned qty
+                        if ($newQtyAmbil < ($detail->qty_terjual + $detail->qty_kembali)) {
+                            $satuan = BarangSatuan::find($detail->satuan_id);
+                            $satuanName = $satuan ? $satuan->satuan : 'PCS';
+                            throw new \Exception("Kuantitas loading baru untuk barang '{$detail->barang->nama_barang}' ({$newQtyAmbil} {$satuanName}) tidak boleh lebih kecil dari jumlah yang sudah terjual & dikembalikan ({$detail->qty_terjual} + {$detail->qty_kembali} {$satuanName})!");
+                        }
+
+                        if ($canvasSession->status === 'loading') {
+                            $satuan = BarangSatuan::findOrFail($detail->satuan_id);
+                            $oldQtySmallest = (float)$detail->qty_ambil * ($satuan->isi ?? 1);
+                            $newQtySmallest = $newQtyAmbil * ($satuan->isi ?? 1);
+
+                            $diff = $newQtySmallest - $oldQtySmallest;
+
+                            if ($diff > 0) {
+                                // Validate and deduct warehouse stock for additional quantity
+                                $barang = Barang::lockForUpdate()->findOrFail($detail->kode_barang);
+                                if ($barang->stok < $diff) {
+                                    throw new \Exception("Stok barang '{$barang->nama_barang}' tidak mencukupi untuk penambahan loading! Sisa stok: " . $barang->formatStok($barang->stok) . " (Dibutuhkan: " . $barang->formatStok($diff) . ")");
+                                }
+
+                                StokMutasi::log(
+                                    $detail->kode_barang,
+                                    $canvasSession->tanggal,
+                                    'Canvas Ambil (Edit)',
+                                    $canvasSession->no_canvas,
+                                    0,
+                                    $diff,
+                                    Auth::id(),
+                                    'Penambahan Loading Canvas (Edit): ' . $salesName
+                                );
+                            } elseif ($diff < 0) {
+                                // Return the decreased quantity back to warehouse
+                                StokMutasi::log(
+                                    $detail->kode_barang,
+                                    now()->toDateString(),
+                                    'Batal Canvas Ambil (Edit)',
+                                    $canvasSession->no_canvas,
+                                    -$diff,
+                                    0,
+                                    Auth::id(),
+                                    'Pengurangan Loading Canvas (Edit): ' . $salesName
+                                );
+                            }
+                        }
+
+                        $detail->qty_ambil = $newQtyAmbil;
+                        $detail->diskon_persen = $newDiskonPersen;
+                        $detail->selisih = $newQtyAmbil - $detail->qty_terjual - $detail->qty_kembali;
                         $detail->save();
                     }
 
@@ -703,5 +787,64 @@ class CanvasController extends Controller
           ->get();
 
         return view('canvas.report', compact('reportData', 'salesmen', 'tanggalMulai', 'tanggalAkhir', 'kodeSales'));
+    }
+
+    /**
+     * Cancel/delete a completed canvas session return.
+     * Reverts status to loading and deducts returned stock from warehouse.
+     */
+    public function returnsDestroy($id)
+    {
+        $canvasSession = CanvasSession::with('details')->findOrFail($id);
+
+        if ($canvasSession->status !== 'completed') {
+            return redirect()->back()->with('error', 'Sesi kanvas ini belum selesai.');
+        }
+
+        try {
+            DB::transaction(function () use ($canvasSession) {
+                $salesman = User::where('nik', $canvasSession->kode_sales)->first();
+                $salesName = $salesman ? $salesman->name : $canvasSession->kode_sales;
+
+                foreach ($canvasSession->details as $detail) {
+                    $satuan = BarangSatuan::findOrFail($detail->satuan_id);
+                    $isi = $satuan->isi ?? 1;
+                    $qtyKembaliSmallest = (float)$detail->qty_kembali * $isi;
+
+                    if ($qtyKembaliSmallest > 0) {
+                        // Validate warehouse stock
+                        $barang = Barang::lockForUpdate()->findOrFail($detail->kode_barang);
+                        if ($barang->stok < $qtyKembaliSmallest) {
+                            throw new \Exception("Stok gudang tidak mencukupi untuk membatalkan pengembalian barang '{$barang->nama_barang}'! Sisa stok gudang: " . $barang->formatStok($barang->stok) . " (Dibutuhkan: " . $barang->formatStok($qtyKembaliSmallest) . ")");
+                        }
+
+                        // Revert: deduct returned stock from warehouse
+                        StokMutasi::log(
+                            $detail->kode_barang,
+                            now()->toDateString(),
+                            'Batal Canvas Kembali',
+                            $canvasSession->no_canvas,
+                            0,
+                            $qtyKembaliSmallest,
+                            Auth::id(),
+                            'Batal Pengembalian Canvas: ' . $salesName
+                        );
+                    }
+
+                    // Reset details
+                    $detail->qty_kembali = 0;
+                    $detail->selisih = (float)$detail->qty_ambil - (float)$detail->qty_terjual;
+                    $detail->save();
+                }
+
+                // Revert status to loading
+                $canvasSession->status = 'loading';
+                $canvasSession->save();
+            });
+
+            return redirect()->route('canvas.returns.index')->with('success', 'Setoran penjualan kanvas berhasil dibatalkan dan status kembali menjadi Loading.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 }

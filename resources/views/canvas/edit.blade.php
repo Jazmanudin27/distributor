@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @php
-    $isPending = $canvasSession->status === 'pending';
+    $isEditingLoading = $canvasSession->status === 'pending' || ($canvasSession->status === 'loading' && request('mode') === 'edit');
+    $isPending = $isEditingLoading;
 @endphp
 @section('title', $isPending ? 'Edit DPB' : 'Selesaikan DPB')
 @section('content')
@@ -76,6 +77,9 @@
                     <form action="{{ route('canvas.update', $canvasSession->id) }}" method="POST">
                         @csrf
                         @method('PUT')
+                        @if ($canvasSession->status === 'loading' && request('mode') === 'edit')
+                            <input type="hidden" name="mode" value="edit">
+                        @endif
 
                         <table class="table table-bordered table-sm align-middle">
                             @if ($isPending)

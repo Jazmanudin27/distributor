@@ -31,6 +31,11 @@
                                     <i class="fa-solid fa-circle-check me-1"></i> Setujui & Potong Stok
                                 </button>
                             </form>
+                        @elseif ($canvasSession->status === 'loading')
+                            <a href="{{ route('canvas.edit', [$canvasSession->id, 'mode' => 'edit']) }}"
+                                class="btn btn-warning btn-sm fw-bold hover-scale me-1 text-dark shadow-sm">
+                                <i class="fa-solid fa-pen-to-square me-1"></i> Edit Qty Loading
+                            </a>
                         @endif
                         <a href="{{ route('canvas.print', $canvasSession->id) }}" target="_blank"
                             class="btn btn-info btn-sm fw-bold hover-scale me-1 text-white shadow-sm">
