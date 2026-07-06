@@ -415,8 +415,9 @@ class CanvasController extends Controller
 
                     // Distribute returned qty across detail records
                     $remainingReturn = $qtyKembaliTotal;
+                    $lastDetail = $detailsToUpdate->last();
 
-                    foreach ($detailsToUpdate as $index => $detail) {
+                    foreach ($detailsToUpdate as $detail) {
                         $satuan = BarangSatuan::findOrFail($detail->satuan_id);
                         $isi = $satuan->isi ?? 1;
 
@@ -425,9 +426,9 @@ class CanvasController extends Controller
                         $maxReturnForThisDetail = max(0.0, $qtyAmbil - $qtyTerjual);
 
                         $assignedReturn = min($remainingReturn, $maxReturnForThisDetail);
-                        
-                        // If it's the last detail in loop and there's still leftover return, force it all here
-                        if ($index === $detailsToUpdate->count() - 1 && $remainingReturn > 0) {
+
+                        // Jika ini detail terakhir dan masih ada sisa, force assign semua sisa
+                        if ($detail->id === $lastDetail->id && $remainingReturn > 0) {
                             $assignedReturn = $remainingReturn;
                         }
 
@@ -682,8 +683,9 @@ class CanvasController extends Controller
 
                     // Distribute returned qty across detail records
                     $remainingReturn = $qtyKembaliTotal;
+                    $lastDetail = $detailsToUpdate->last();
 
-                    foreach ($detailsToUpdate as $index => $detail) {
+                    foreach ($detailsToUpdate as $detail) {
                         $satuan = BarangSatuan::findOrFail($detail->satuan_id);
                         $isi = $satuan->isi ?? 1;
 
@@ -692,9 +694,9 @@ class CanvasController extends Controller
                         $maxReturnForThisDetail = max(0.0, $qtyAmbil - $qtyTerjual);
 
                         $assignedReturn = min($remainingReturn, $maxReturnForThisDetail);
-                        
-                        // If it's the last detail in loop and there's still leftover return, force it all here
-                        if ($index === $detailsToUpdate->count() - 1 && $remainingReturn > 0) {
+
+                        // Jika ini detail terakhir dan masih ada sisa, force assign semua sisa
+                        if ($detail->id === $lastDetail->id && $remainingReturn > 0) {
                             $assignedReturn = $remainingReturn;
                         }
 
