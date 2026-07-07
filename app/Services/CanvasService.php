@@ -304,6 +304,7 @@ class CanvasService
                         $qtySmallest -= $toRestoreSmallest;
                     }
                 }
+            }
         }
     }
 
