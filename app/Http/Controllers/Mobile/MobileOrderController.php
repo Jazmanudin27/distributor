@@ -25,6 +25,7 @@ class MobileOrderController extends Controller
         $isSpv = strtolower(Auth::user()->role ?? '') === 'spv sales';
         $selectedSales = $request->input('kode_sales');
         $kategoriSales = $request->input('kategori_sales');
+        $statusBatal = $request->input('status_batal');
 
         $query = Penjualan::with(['pelanggan', 'details.barang', 'details.barangSatuan', 'pembayarans']);
 
@@ -34,6 +35,10 @@ class MobileOrderController extends Controller
             if ($selectedSales) {
                 $query->where('kode_sales', $selectedSales);
             }
+        }
+
+        if ($statusBatal !== null && $statusBatal !== '') {
+            $query->where('batal', $statusBatal);
         }
 
         if ($kategoriSales === 'kanvas') {
@@ -128,7 +133,7 @@ class MobileOrderController extends Controller
                 ->get();
         }
 
-        return view('mobile.history', compact('orders', 'q', 'filter', 'todaySales', 'monthSales', 'salesList', 'selectedSales', 'kategoriSales', 'isSpv', 'startDate', 'endDate'));
+        return view('mobile.history', compact('orders', 'q', 'filter', 'todaySales', 'monthSales', 'salesList', 'selectedSales', 'kategoriSales', 'isSpv', 'startDate', 'endDate', 'statusBatal'));
     }
 
     public function create(Request $request)

@@ -29,23 +29,23 @@
 
     <!-- Filter Pills -->
     <div class="d-flex gap-2 mb-3 pb-1" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-        <a href="{{ route('mobile.order.index', ['filter' => 'all', 'q' => $q, 'kode_sales' => $selectedSales, 'kategori_sales' => $kategoriSales]) }}"
+        <a href="{{ route('mobile.order.index', ['filter' => 'all', 'q' => $q, 'kode_sales' => $selectedSales, 'kategori_sales' => $kategoriSales, 'status_batal' => $statusBatal]) }}"
             class="btn btn-sm px-3 py-1.5 rounded-pill text-decoration-none fw-semibold {{ $filter === 'all' ? 'btn-mobile-primary' : 'bg-dark border-secondary text-secondary' }}"
             style="font-size: 0.75rem;">
             Semua
         </a>
-        <a href="{{ route('mobile.order.index', ['filter' => 'today', 'q' => $q, 'kode_sales' => $selectedSales, 'kategori_sales' => $kategoriSales]) }}"
+        <a href="{{ route('mobile.order.index', ['filter' => 'today', 'q' => $q, 'kode_sales' => $selectedSales, 'kategori_sales' => $kategoriSales, 'status_batal' => $statusBatal]) }}"
             class="btn btn-sm px-3 py-1.5 rounded-pill text-decoration-none fw-semibold {{ $filter === 'today' ? 'btn-mobile-primary' : 'bg-dark border-secondary text-secondary' }}"
             style="font-size: 0.75rem;">
             Hari Ini
         </a>
-        <a href="{{ route('mobile.order.index', ['filter' => 'month', 'q' => $q, 'kode_sales' => $selectedSales, 'kategori_sales' => $kategoriSales]) }}"
+        <a href="{{ route('mobile.order.index', ['filter' => 'month', 'q' => $q, 'kode_sales' => $selectedSales, 'kategori_sales' => $kategoriSales, 'status_batal' => $statusBatal]) }}"
             class="btn btn-sm px-3 py-1.5 rounded-pill text-decoration-none fw-semibold {{ $filter === 'month' ? 'btn-mobile-primary' : 'bg-dark border-secondary text-secondary' }}"
             style="font-size: 0.75rem;">
             Bulan Ini
         </a>
         @if ($filter === 'custom' || $startDate || $endDate)
-            <a href="{{ route('mobile.order.index', ['filter' => 'custom', 'q' => $q, 'kode_sales' => $selectedSales, 'kategori_sales' => $kategoriSales, 'start_date' => $startDate, 'end_date' => $endDate]) }}"
+            <a href="{{ route('mobile.order.index', ['filter' => 'custom', 'q' => $q, 'kode_sales' => $selectedSales, 'kategori_sales' => $kategoriSales, 'start_date' => $startDate, 'end_date' => $endDate, 'status_batal' => $statusBatal]) }}"
                 class="btn btn-sm px-3 py-1.5 rounded-pill text-decoration-none fw-semibold btn-mobile-primary"
                 style="font-size: 0.75rem;">
                 Kustom
@@ -64,7 +64,7 @@
                 <input type="text" name="q" value="{{ $q }}"
                     class="form-control form-control-sm bg-dark text-white border-secondary"
                     placeholder="Cari nomor faktur atau pelanggan...">
-                @if ($q || $selectedSales || $kategoriSales || $startDate || $endDate)
+                @if ($q || $selectedSales || $kategoriSales || $startDate || $endDate || ($statusBatal !== null && $statusBatal !== ''))
                     <a href="{{ route('mobile.order.index', ['filter' => 'all']) }}"
                         class="btn btn-outline-secondary border-secondary text-secondary d-flex align-items-center"
                         title="Clear filters">
@@ -107,16 +107,46 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="col-6">
+                        <select name="kategori_sales" class="form-select form-select-sm bg-dark text-white border-secondary"
+                            style="font-size: 0.75rem; border-radius: 8px;" onchange="this.form.submit()">
+                            <option value="non_kanvas" {{ $kategoriSales === 'non_kanvas' ? 'selected' : '' }}>Non Kanvas
+                            </option>
+                            <option value="kanvas" {{ $kategoriSales === 'kanvas' ? 'selected' : '' }}>Kanvas</option>
+                            <option value="">-- Semua Kategori --</option>
+                        </select>
+                    </div>
+                    <div class="col-12 mt-2">
+                        <select name="status_batal" class="form-select form-select-sm bg-dark text-white border-secondary"
+                            style="font-size: 0.75rem; border-radius: 8px;" onchange="this.form.submit()">
+                            <option value="" {{ $statusBatal === '' || $statusBatal === null ? 'selected' : '' }}>--
+                                Semua Status Faktur --</option>
+                            <option value="0" {{ $statusBatal === '0' ? 'selected' : '' }}>Faktur Aktif (Tidak Batal)
+                            </option>
+                            <option value="1" {{ $statusBatal === '1' ? 'selected' : '' }}>Faktur Batal</option>
+                        </select>
+                    </div>
+                @else
+                    <div class="col-6">
+                        <select name="kategori_sales" class="form-select form-select-sm bg-dark text-white border-secondary"
+                            style="font-size: 0.75rem; border-radius: 8px;" onchange="this.form.submit()">
+                            <option value="non_kanvas" {{ $kategoriSales === 'non_kanvas' ? 'selected' : '' }}>Non Kanvas
+                            </option>
+                            <option value="kanvas" {{ $kategoriSales === 'kanvas' ? 'selected' : '' }}>Kanvas</option>
+                            <option value="">-- Semua Kategori --</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <select name="status_batal" class="form-select form-select-sm bg-dark text-white border-secondary"
+                            style="font-size: 0.75rem; border-radius: 8px;" onchange="this.form.submit()">
+                            <option value="" {{ $statusBatal === '' || $statusBatal === null ? 'selected' : '' }}>--
+                                Status Faktur --</option>
+                            <option value="0" {{ $statusBatal === '0' ? 'selected' : '' }}>Faktur Aktif (Tidak Batal)
+                            </option>
+                            <option value="1" {{ $statusBatal === '1' ? 'selected' : '' }}>Faktur Batal</option>
+                        </select>
+                    </div>
                 @endif
-                <div class="{{ $isSpv && count($salesList) > 0 ? 'col-6' : 'col-12' }}">
-                    <select name="kategori_sales" class="form-select form-select-sm bg-dark text-white border-secondary"
-                        style="font-size: 0.75rem; border-radius: 8px;" onchange="this.form.submit()">
-                        <option value="non_kanvas" {{ $kategoriSales === 'non_kanvas' ? 'selected' : '' }}>Non Kanvas
-                        </option>
-                        <option value="kanvas" {{ $kategoriSales === 'kanvas' ? 'selected' : '' }}>Kanvas</option>
-                        <option value="">-- Semua Kategori --</option>
-                    </select>
-                </div>
             </div>
         </form>
     </div>
