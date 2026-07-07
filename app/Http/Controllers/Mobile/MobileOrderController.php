@@ -724,6 +724,8 @@ class MobileOrderController extends Controller
         $session = \App\Services\CanvasService::getActiveSession($user->nik);
 
         if ($session) {
+            // Auto-correct / sync actual sales before showing the details
+            \App\Services\CanvasService::syncActualSales($user->nik);
             // Load details with barang and satuan
             $session->load(['details.barang', 'details.barangSatuan']);
         }

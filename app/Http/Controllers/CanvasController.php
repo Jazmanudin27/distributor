@@ -205,6 +205,10 @@ class CanvasController extends Controller
             return redirect()->route('canvas.show', $id)->with('error', 'Session kanvas ini sudah selesai.');
         }
 
+        // Auto-correct / sync actual sales before viewing the form
+        \App\Services\CanvasService::syncActualSales($canvasSession->kode_sales);
+        $canvasSession->load(['details.barang.satuans', 'details.barangSatuan']);
+
         $activeSessions = collect();
         $accumulatedDetails = collect();
 
@@ -385,6 +389,9 @@ class CanvasController extends Controller
             'details.*.detail_ids' => 'nullable|string',
             'details.*.qty_kembali' => 'required|numeric|min:0',
         ]);
+
+        // Auto-correct / sync actual sales before processing returns
+        \App\Services\CanvasService::syncActualSales($canvasSession->kode_sales);
 
         try {
             DB::transaction(function () use ($request, $canvasSession) {
@@ -579,6 +586,10 @@ class CanvasController extends Controller
     public function returnsCreate(Request $request)
     {
         $selectedSales = $request->input('kode_sales');
+        if ($selectedSales) {
+            // Auto-correct / sync actual sales before viewing the form
+            \App\Services\CanvasService::syncActualSales($selectedSales);
+        }
         $accumulatedDetails = collect();
         $activeSessions = collect();
         $invoices = collect();
@@ -614,14 +625,14 @@ class CanvasController extends Controller
                             'satuan_id' => $detail->satuan_id,
                             'barangSatuan' => $detail->barangSatuan,
                             'qty_ambil' => (float)$detail->qty_ambil,
-                            'qty_terjual' => (float)$detail->qty_terjual,
+                            'qty_terjual' => 0.0, // Will be recalculated from actual invoices below
                             'qty_kembali' => (float)$detail->qty_kembali,
                             'detail_ids' => [$detail->id],
                         ]);
                     } else {
                         $item = $accumulatedDetails->get($key);
                         $item['qty_ambil'] += (float)$detail->qty_ambil;
-                        $item['qty_terjual'] += (float)$detail->qty_terjual;
+                        // qty_terjual stays 0 here, recalculated below
                         $item['qty_kembali'] += (float)$detail->qty_kembali;
                         $item['detail_ids'][] = $detail->id;
                         $accumulatedDetails->put($key, $item);
@@ -644,6 +655,36 @@ class CanvasController extends Controller
                     ->where('batal', 0)
                     ->with(['pelanggan', 'details.barang', 'details.barangSatuan'])
                     ->get();
+
+                // --- FIX: Hitung qty_terjual DARI FAKTUR NYATA (Section II) ---
+                // qty_terjual di canvas_session_details bisa corrupt karena trackSale
+                // dipanggil berkali-kali untuk faktur yang sama (double submit, dll).
+                // Solusi: hitung langsung dari penjualan_details yang terpercaya.
+                foreach ($invoices as $inv) {
+                    foreach ($inv->details as $det) {
+                        $detSatuan = $det->barangSatuan;
+                        $detIsi = $detSatuan ? (float)$detSatuan->isi : 1.0;
+                        $qtySmallest = (float)$det->qty * $detIsi;
+
+                        // Cari key yang cocok di accumulatedDetails berdasarkan kode_barang
+                        $matchedKey = null;
+                        foreach ($accumulatedDetails as $k => $accItem) {
+                            if ($accItem['kode_barang'] === $det->kode_barang) {
+                                $matchedKey = $k;
+                                break;
+                            }
+                        }
+
+                        if ($matchedKey !== null) {
+                            $accItem = $accumulatedDetails->get($matchedKey);
+                            $canvasIsi = $accItem['barangSatuan'] ? (float)$accItem['barangSatuan']->isi : 1.0;
+                            // Konversi dari smallest ke satuan canvas
+                            $qtyInCanvasUnit = $canvasIsi > 0 ? ($qtySmallest / $canvasIsi) : $qtySmallest;
+                            $accItem['qty_terjual'] += $qtyInCanvasUnit;
+                            $accumulatedDetails->put($matchedKey, $accItem);
+                        }
+                    }
+                }
             }
         }
 
@@ -664,6 +705,9 @@ class CanvasController extends Controller
         ]);
 
         $selectedSales = $request->kode_sales;
+
+        // Auto-correct / sync actual sales before processing return
+        \App\Services\CanvasService::syncActualSales($selectedSales);
 
         try {
             DB::transaction(function () use ($request, $selectedSales) {

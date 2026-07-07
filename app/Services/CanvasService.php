@@ -304,6 +304,63 @@ class CanvasService
                         $qtySmallest -= $toRestoreSmallest;
                     }
                 }
+        }
+    }
+
+    /**
+     * Automatically recalculate and sync qty_terjual for active loading sessions of a sales rep
+     * based on their actual non-cancelled invoices since the loading session started.
+     * This fixes any corrupted/double-counted entries dynamically.
+     */
+    public static function syncActualSales(string $kodeSales): void
+    {
+        $activeSessions = CanvasSession::where('kode_sales', $kodeSales)
+            ->where('status', 'loading')
+            ->orderBy('tanggal', 'asc')
+            ->get();
+
+        if ($activeSessions->isEmpty()) {
+            return;
+        }
+
+        $minStartAt = $activeSessions
+            ->map(fn($s) => $s->approved_at ?? $s->created_at)
+            ->min();
+
+        $invoices = \App\Models\Penjualan::where('kode_sales', $kodeSales)
+            ->where('created_at', '>=', $minStartAt)
+            ->where('batal', 0)
+            ->with(['details.barangSatuan'])
+            ->get();
+
+        $salesSmallest = [];
+        foreach ($invoices as $inv) {
+            foreach ($inv->details as $det) {
+                $detSatuan = $det->barangSatuan;
+                $detIsi = $detSatuan ? (float)$detSatuan->isi : 1.0;
+                $qtySmallest = (float)$det->qty * $detIsi;
+                $salesSmallest[$det->kode_barang] = ($salesSmallest[$det->kode_barang] ?? 0.0) + $qtySmallest;
+            }
+        }
+
+        foreach ($activeSessions as $session) {
+            foreach ($session->details as $detail) {
+                $canvasSatuan = BarangSatuan::find($detail->satuan_id);
+                $canvasIsi = $canvasSatuan ? (float)$canvasSatuan->isi : 1.0;
+                
+                $qtyAmbilSmallest = (float)$detail->qty_ambil * $canvasIsi;
+                $qtyLeft = $salesSmallest[$detail->kode_barang] ?? 0.0;
+                
+                $toDeductSmallest = min($qtyLeft, $qtyAmbilSmallest);
+                $actualQtyTerjual = $toDeductSmallest / $canvasIsi;
+                
+                if (isset($salesSmallest[$detail->kode_barang])) {
+                    $salesSmallest[$detail->kode_barang] -= $toDeductSmallest;
+                }
+                
+                $detail->qty_terjual = $actualQtyTerjual;
+                $detail->selisih = (float)$detail->qty_ambil - $detail->qty_terjual - (float)$detail->qty_kembali;
+                $detail->save();
             }
         }
     }
