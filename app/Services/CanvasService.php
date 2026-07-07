@@ -239,14 +239,11 @@ class CanvasService
                 }
             }
 
-            // If there's still quantity remaining, force it into the last active session detail we found
-            if ($qtySmallest > 0.0001 && $lastDetailToUpdate) {
-                $remainingCanvas = $qtySmallest / $lastIsi;
-                $lastDetailToUpdate->qty_terjual = (float)$lastDetailToUpdate->qty_terjual + $remainingCanvas;
-                $lastDetailToUpdate->selisih = (float)$lastDetailToUpdate->qty_ambil - $lastDetailToUpdate->qty_terjual - (float)$lastDetailToUpdate->qty_kembali;
-                $lastDetailToUpdate->save();
-
-                \Log::info("trackSale: Remaining " . $remainingCanvas . " units forced into session " . $lastDetailToUpdate->canvas_session_id);
+            // If there's still quantity remaining after exhausting all active sessions,
+            // do NOT force-inject beyond what was loaded (qty_ambil).
+            // Log a warning instead so it can be investigated.
+            if ($qtySmallest > 0.0001) {
+                \Log::warning("trackSale: " . $qtySmallest . " units (smallest) of kode_barang=" . $detail->kode_barang . " could not be matched to any active canvas session for sales " . $penjualan->kode_sales . ". No_faktur: " . $penjualan->no_faktur);
             }
         }
     }
