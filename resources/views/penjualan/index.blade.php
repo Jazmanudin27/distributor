@@ -165,8 +165,8 @@
                                 </td>
                                 <td class="text-center">
                                     <span
-                                        class="badge {{ $item->jenis_transaksi === 'T' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning border border-warning-subtle' }} px-2 py-1 fw-bold fs-8">
-                                        {{ $item->jenis_transaksi }}
+                                        class="badge {{ in_array($item->jenis_transaksi, ['T', 'Tunai']) ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning border border-warning-subtle' }} px-2 py-1 fw-bold fs-8">
+                                        {{ in_array($item->jenis_transaksi, ['T', 'Tunai']) ? 'Tunai' : 'Kredit' }}
                                     </span>
                                 </td>
                                 <td class="text-end fw-semibold text-dark">

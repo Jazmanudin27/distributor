@@ -139,8 +139,8 @@
                                     <td class="text-secondary fw-semibold py-1">Jenis Transaksi</td>
                                     <td class="py-1">:
                                         <span
-                                            class="badge ms-2 {{ $item->jenis_transaksi === 'Tunai' ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning border border-warning-subtle' }} px-2 py-1 fw-bold">
-                                            {{ $item->jenis_transaksi }}
+                                            class="badge ms-2 {{ in_array($item->jenis_transaksi, ['T', 'Tunai']) ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-warning-subtle text-warning border border-warning-subtle' }} px-2 py-1 fw-bold">
+                                            {{ in_array($item->jenis_transaksi, ['T', 'Tunai']) ? 'Tunai' : 'Kredit' }}
                                         </span>
                                     </td>
                                 </tr>
