@@ -198,7 +198,7 @@
                     <label class="form-label text-secondary small mb-1">Metode Bayar</label>
                     <select name="jenis_transaksi" id="jenis_transaksi"
                         class="form-select form-select-sm bg-dark text-white border-secondary" required>
-                        <option value="Tunai" selected>Tunai (Cash)</option>
+                        <option value="T" selected>Tunai (Cash)</option>
                     </select>
                 </div>
             </div>
@@ -748,7 +748,7 @@
                     });
 
                     if (jenisTransaksiEl) {
-                        jenisTransaksiEl.value = data.jenis_transaksi || 'Tunai';
+                        jenisTransaksiEl.value = data.jenis_transaksi || 'T';
                     }
                     const keteranganEl = document.querySelector('input[name="keterangan"]');
                     if (keteranganEl) {

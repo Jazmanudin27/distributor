@@ -61,7 +61,19 @@ class MobileOrderController extends Controller
         $startOfMonth = now()->startOfMonth()->toDateString();
         $endOfMonth = now()->endOfMonth()->toDateString();
 
-        if ($filter === 'today') {
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('tanggal', [$startDate, $endDate]);
+            $filter = 'custom';
+        } elseif ($startDate) {
+            $query->where('tanggal', '>=', $startDate);
+            $filter = 'custom';
+        } elseif ($endDate) {
+            $query->where('tanggal', '<=', $endDate);
+            $filter = 'custom';
+        } elseif ($filter === 'today') {
             $query->whereDate('tanggal', $todayStr);
         } elseif ($filter === 'month') {
             $query->whereBetween('tanggal', [$startOfMonth, $endOfMonth]);
@@ -116,7 +128,7 @@ class MobileOrderController extends Controller
                 ->get();
         }
 
-        return view('mobile.history', compact('orders', 'q', 'filter', 'todaySales', 'monthSales', 'salesList', 'selectedSales', 'kategoriSales', 'isSpv'));
+        return view('mobile.history', compact('orders', 'q', 'filter', 'todaySales', 'monthSales', 'salesList', 'selectedSales', 'kategoriSales', 'isSpv', 'startDate', 'endDate'));
     }
 
     public function create(Request $request)
@@ -226,9 +238,9 @@ class MobileOrderController extends Controller
             'kode_pelanggan'    => 'required|string|exists:pelanggan,kode_pelanggan',
             'jenis_transaksi'   => [
                 'required',
-                'in:Tunai,Kredit',
+                'in:T,K',
                 function ($attribute, $value, $fail) {
-                    if (Auth::user()->jenis_sales == '1' && $value === 'Kredit') {
+                    if (Auth::user()->jenis_sales == '1' && $value === 'K') {
                         $fail('Salesman dengan tipe ini tidak diizinkan untuk melakukan transaksi Kredit.');
                     }
                 }
@@ -438,7 +450,7 @@ class MobileOrderController extends Controller
                 }
 
                 // D2 only if Tunai
-                if ($request->jenis_transaksi !== 'Tunai') {
+                if ($request->jenis_transaksi !== 'T') {
                     $d2_pct = 0;
                 }
             }
@@ -469,7 +481,7 @@ class MobileOrderController extends Controller
 
         // 2. Verify Credit Limit
         $isCanvas = (bool)(Auth::user()->is_kanvas ?? false);
-        if (in_array($request->jenis_transaksi, ['Kredit', 'Tunai']) && !$isCanvas && ($pelanggan->jenis_pelanggan == '0' || empty($pelanggan->jenis_pelanggan))) {
+        if (in_array($request->jenis_transaksi, ['K', 'T']) && !$isCanvas && ($pelanggan->jenis_pelanggan == '0' || empty($pelanggan->jenis_pelanggan))) {
             $sisaLimit = $pelanggan->getSisaLimitKredit();
             if ($tempGrandTotal > $sisaLimit) {
                 return redirect()->back()->withInput()->with('error', "Limit kredit terlampaui! Sisa limit: Rp " . number_format($sisaLimit, 0, ',', '.'));
@@ -577,7 +589,7 @@ class MobileOrderController extends Controller
                     'kode_pelanggan'  => $request->kode_pelanggan,
                     'kode_sales'      => Auth::user()->nik, // Sales NIK
                     'jenis_transaksi' => $request->jenis_transaksi,
-                    'jenis_bayar'     => $request->jenis_transaksi === 'Tunai' ? 'Tunai' : 'Kredit',
+                    'jenis_bayar'     => $request->jenis_transaksi === 'T' ? 'Tunai' : 'Kredit',
                     'total'           => $subtotalSum,
                     'diskon'          => $totalDiskon + $diskonGlobal,
                     'grand_total'     => $grandTotal,
@@ -909,7 +921,7 @@ class MobileOrderController extends Controller
             'kode_pelanggan'       => 'required_if:is_new_pelanggan,0|nullable|string|exists:pelanggan,kode_pelanggan',
             'new_nama_pelanggan'   => 'required_if:is_new_pelanggan,1|nullable|string|max:100',
             'new_alamat_pelanggan' => 'required_if:is_new_pelanggan,1|nullable|string|max:150',
-            'jenis_transaksi'      => 'required|in:Tunai',
+            'jenis_transaksi'      => 'required|in:T',
             'keterangan'           => 'nullable|string',
             'items'                => 'required|array|min:1',
             'items.*.kode_barang'  => 'required|exists:barang,kode_barang',
@@ -1037,7 +1049,7 @@ class MobileOrderController extends Controller
                         if ($sub > 0) { $d1_pct = ($rawDis1 / $sub) * 100; $d2_pct = ($rawDis2 / $sub) * 100; }
                     }
                 }
-                if ($request->jenis_transaksi !== 'Tunai') { $d2_pct = 0; }
+                if ($request->jenis_transaksi !== 'T') { $d2_pct = 0; }
             }
             return ['d1' => round($d1_pct, 5), 'd2' => round($d2_pct, 5)];
         };
@@ -1177,7 +1189,7 @@ class MobileOrderController extends Controller
                     'kode_pelanggan'  => $pelanggan->kode_pelanggan,
                     'kode_sales'      => Auth::user()->nik,
                     'jenis_transaksi' => $request->jenis_transaksi,
-                    'jenis_bayar'     => $request->jenis_transaksi === 'Tunai' ? 'Tunai' : 'Kredit',
+                    'jenis_bayar'     => $request->jenis_transaksi === 'T' ? 'Tunai' : 'Kredit',
                     'total'           => $subtotalSum,
                     'diskon'          => $totalDiskon,
                     'grand_total'     => $grandTotal,

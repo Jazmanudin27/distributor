@@ -286,12 +286,12 @@
                     <select name="jenis_transaksi" id="jenis_transaksi"
                         class="form-select form-select-sm bg-dark text-white border-secondary" required>
                         @if (Auth::user()->jenis_sales != '1')
-                            <option value="Kredit"
+                            <option value="K"
                                 {{ $pelanggan && in_array($pelanggan->metode_bayar, ['K', 'Kredit']) ? 'selected' : '' }}>
                                 Kredit (Tempo)
                             </option>
                         @endif
-                        <option value="Tunai"
+                        <option value="T"
                             {{ Auth::user()->jenis_sales == '1' || ($pelanggan && in_array($pelanggan->metode_bayar, ['T', 'Tunai'])) ? 'selected' : '' }}>
                             Tunai (Cash)
                         </option>
@@ -1162,7 +1162,7 @@ jenisTransaksiEl.addEventListener('change', calculateTotals);
 
                 // 2. Double check credit limit
                 const paymentMode = jenisTransaksiEl.value;
-                if (paymentMode === 'Kredit' || paymentMode === 'Tunai') {
+                if (paymentMode === 'K' || paymentMode === 'T') {
                     const jenisPelanggan = hiddenKodePelanggan.getAttribute('data-jenis-pelanggan') || '0';
                     if (jenisPelanggan === '0') {
                         const sisaLimit = parseFloat(hiddenKodePelanggan.getAttribute('data-sisa-limit')) ||
@@ -1236,12 +1236,12 @@ jenisTransaksiEl.addEventListener('change', calculateTotals);
                 // Set default payment mode
                 const isRestrictedSales = @json(Auth::user()->jenis_sales == '1');
                 if (mockCustomer.metode === 'Tunai' || mockCustomer.metode === 'T') {
-                    jenisTransaksiEl.value = 'Tunai';
+                    jenisTransaksiEl.value = 'T';
                 } else if ((mockCustomer.metode === 'Kredit' || mockCustomer.metode === 'K') && !
                     isRestrictedSales) {
-                    jenisTransaksiEl.value = 'Kredit';
+                    jenisTransaksiEl.value = 'K';
                 } else if (isRestrictedSales) {
-                    jenisTransaksiEl.value = 'Tunai';
+                    jenisTransaksiEl.value = 'T';
                 }
             @endif
 
@@ -1310,7 +1310,7 @@ jenisTransaksiEl.addEventListener('change', calculateTotals);
                     });
 
                     if (jenisTransaksiEl) {
-                        jenisTransaksiEl.value = data.jenis_transaksi || 'Tunai';
+                        jenisTransaksiEl.value = data.jenis_transaksi || 'T';
                     }
                     const keteranganEl = document.querySelector('input[name="keterangan"]');
                     if (keteranganEl) {

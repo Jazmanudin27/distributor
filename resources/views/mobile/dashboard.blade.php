@@ -378,9 +378,9 @@
                             </span>
                         @else
                             <span
-                                class="badge rounded-pill {{ $order->jenis_transaksi === 'Tunai' ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} px-2 py-1"
+                                class="badge rounded-pill {{ in_array($order->jenis_transaksi, ['T', 'Tunai']) ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} px-2 py-1"
                                 style="font-size: 0.65rem; font-weight: 600;">
-                                {{ $order->jenis_transaksi }}
+                                {{ in_array($order->jenis_transaksi, ['T', 'Tunai']) ? 'Tunai' : 'Kredit' }}
                             </span>
                         @endif
                         <div class="text-secondary mt-1" style="font-size: 0.65rem; font-weight: 500;">

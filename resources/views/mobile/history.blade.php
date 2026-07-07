@@ -44,6 +44,13 @@
             style="font-size: 0.75rem;">
             Bulan Ini
         </a>
+        @if ($filter === 'custom' || $startDate || $endDate)
+            <a href="{{ route('mobile.order.index', ['filter' => 'custom', 'q' => $q, 'kode_sales' => $selectedSales, 'kategori_sales' => $kategoriSales, 'start_date' => $startDate, 'end_date' => $endDate]) }}"
+                class="btn btn-sm px-3 py-1.5 rounded-pill text-decoration-none fw-semibold btn-mobile-primary"
+                style="font-size: 0.75rem;">
+                Kustom
+            </a>
+        @endif
     </div>
 
     <!-- Search Box & Dropdown Filters -->
@@ -57,8 +64,8 @@
                 <input type="text" name="q" value="{{ $q }}"
                     class="form-control form-control-sm bg-dark text-white border-secondary"
                     placeholder="Cari nomor faktur atau pelanggan...">
-                @if ($q || $selectedSales || $kategoriSales)
-                    <a href="{{ route('mobile.order.index', ['filter' => $filter]) }}"
+                @if ($q || $selectedSales || $kategoriSales || $startDate || $endDate)
+                    <a href="{{ route('mobile.order.index', ['filter' => 'all']) }}"
                         class="btn btn-outline-secondary border-secondary text-secondary d-flex align-items-center"
                         title="Clear filters">
                         <i class="fa-solid fa-xmark"></i>
@@ -67,6 +74,25 @@
                 <button type="submit" class="btn btn-mobile-primary px-3 fs-7"
                     style="border-radius: 0 12px 12px 0 !important; font-size: 0.75rem;">Cari</button>
             </div>
+
+            <!-- Date Range Filter -->
+            <div class="row g-2 mb-2">
+                <div class="col-6">
+                    <label class="form-label text-secondary small fw-semibold mb-1" style="font-size: 0.65rem;">Dari
+                        Tanggal</label>
+                    <input type="date" name="start_date" value="{{ $startDate ?? '' }}"
+                        class="form-control form-control-sm bg-dark text-white border-secondary"
+                        style="font-size: 0.75rem; border-radius: 8px;" onchange="this.form.submit()">
+                </div>
+                <div class="col-6">
+                    <label class="form-label text-secondary small fw-semibold mb-1" style="font-size: 0.65rem;">Sampai
+                        Tanggal</label>
+                    <input type="date" name="end_date" value="{{ $endDate ?? '' }}"
+                        class="form-control form-control-sm bg-dark text-white border-secondary"
+                        style="font-size: 0.75rem; border-radius: 8px;" onchange="this.form.submit()">
+                </div>
+            </div>
+
             <div class="row g-2">
                 @if ($isSpv && count($salesList) > 0)
                     <div class="col-6">
@@ -150,9 +176,9 @@
                                     </span>
                                 @else
                                     <span
-                                        class="badge {{ $order->jenis_transaksi === 'Tunai' ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} px-2 py-1"
+                                        class="badge {{ in_array($order->jenis_transaksi, ['T', 'Tunai']) ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} px-2 py-1"
                                         style="font-size: 0.65rem; font-weight: 600;">
-                                        {{ $order->jenis_transaksi }}
+                                        {{ in_array($order->jenis_transaksi, ['T', 'Tunai']) ? 'Tunai' : 'Kredit' }}
                                     </span>
                                     @if ($sisaBayar < 1)
                                         <span class="badge bg-success-subtle text-success px-2 py-1"

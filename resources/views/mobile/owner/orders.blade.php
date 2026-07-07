@@ -155,8 +155,8 @@
                                 </div>
                             </div>
                             <div class="text-end">
-                                <span class="badge {{ $order->jenis_transaksi === 'Tunai' ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} px-2 py-0.5" style="font-size: 0.65rem;">
-                                    {{ $order->jenis_transaksi }}
+                                <span class="badge {{ in_array($order->jenis_transaksi, ['T', 'Tunai']) ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} px-2 py-0.5" style="font-size: 0.65rem;">
+                                    {{ in_array($order->jenis_transaksi, ['T', 'Tunai']) ? 'Tunai' : 'Kredit' }}
                                 </span>
                                 @if ($order->batal === 1)
                                     <span class="badge bg-danger px-2 py-0.5 d-block mt-1 text-white" style="font-size: 0.6rem; font-weight: 600; letter-spacing: 0.3px;">

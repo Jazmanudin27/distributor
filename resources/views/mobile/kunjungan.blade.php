@@ -416,9 +416,9 @@
                                     </span>
                                 @else
                                     <span
-                                        class="badge {{ $order->jenis_transaksi === 'Tunai' ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} px-2 py-1"
+                                        class="badge {{ in_array($order->jenis_transaksi, ['T', 'Tunai']) ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary' }} px-2 py-1"
                                         style="font-size: 0.65rem; font-weight: 600;">
-                                        {{ $order->jenis_transaksi }}
+                                        {{ in_array($order->jenis_transaksi, ['T', 'Tunai']) ? 'Tunai' : 'Kredit' }}
                                     </span>
                                     @if ($sisaBayar < 1)
                                         <span class="badge bg-success-subtle text-success px-2 py-1"

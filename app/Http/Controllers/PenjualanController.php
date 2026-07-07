@@ -728,6 +728,85 @@ class PenjualanController extends Controller
                 $diskonGlobal = floatval($request->diskon_global ?? 0);
                 $grandTotal = round($subtotalSum - $totalDiskon - $diskonGlobal, 2);
 
+                // Change detection for ActivityLog
+                $changes = [];
+                $origTanggal = $penjualan->tanggal ? \Carbon\Carbon::parse($penjualan->tanggal)->format('Y-m-d') : null;
+                if ($origTanggal !== $request->tanggal) {
+                    $changes[] = "Tanggal: " . ($origTanggal ?: '-') . " -> " . $request->tanggal;
+                }
+                $origTanggalKirim = $penjualan->tanggal_kirim ? \Carbon\Carbon::parse($penjualan->tanggal_kirim)->format('Y-m-d') : null;
+                $reqTanggalKirim = $request->tanggal_kirim ? \Carbon\Carbon::parse($request->tanggal_kirim)->format('Y-m-d') : null;
+                if ($origTanggalKirim !== $reqTanggalKirim) {
+                    $changes[] = "Jatuh Tempo: " . ($origTanggalKirim ?: '-') . " -> " . ($reqTanggalKirim ?: '-');
+                }
+                $newJenis = $isKredit ? 'K' : 'T';
+                if ($penjualan->jenis_transaksi !== $newJenis) {
+                    $oldJenisText = $penjualan->jenis_transaksi === 'K' ? 'Kredit' : 'Tunai';
+                    $newJenisText = $newJenis === 'K' ? 'Kredit' : 'Tunai';
+                    $changes[] = "Jenis Transaksi: {$oldJenisText} -> {$newJenisText}";
+                }
+                if ($penjualan->kode_pelanggan !== $request->kode_pelanggan) {
+                    $changes[] = "Pelanggan: " . $penjualan->kode_pelanggan . " -> " . $request->kode_pelanggan;
+                }
+                if ($penjualan->kode_sales !== $request->kode_sales) {
+                    $changes[] = "Sales: " . ($penjualan->kode_sales ?: '-') . " -> " . $request->kode_sales;
+                }
+                if ($penjualan->keterangan !== $request->keterangan) {
+                    $changes[] = "Keterangan: '" . ($penjualan->keterangan ?: '') . "' -> '" . ($request->keterangan ?: '') . "'";
+                }
+                if (round($penjualan->grand_total, 2) !== round($grandTotal, 2)) {
+                    $changes[] = "Grand Total: Rp " . number_format($penjualan->grand_total, 0, ',', '.') . " -> Rp " . number_format($grandTotal, 0, ',', '.');
+                }
+
+                // Compare items
+                $oldItems = [];
+                foreach ($penjualan->details as $oldDetail) {
+                    $oldItems[$oldDetail->kode_barang] = [
+                        'qty' => floatval($oldDetail->qty),
+                        'harga' => floatval($oldDetail->harga),
+                    ];
+                }
+                $newItems = [];
+                foreach ($request->items as $row) {
+                    $newItems[$row['kode_barang']] = [
+                        'qty' => floatval($row['qty']),
+                        'harga' => floatval($row['harga']),
+                    ];
+                }
+
+                $itemChanges = [];
+                foreach ($newItems as $kode => $newItem) {
+                    if (!isset($oldItems[$kode])) {
+                        $itemChanges[] = "Tambah {$kode} (Qty: {$newItem['qty']})";
+                    } else {
+                        $oldItem = $oldItems[$kode];
+                        $itemDiff = [];
+                        if ($oldItem['qty'] !== $newItem['qty']) {
+                            $itemDiff[] = "Qty: {$oldItem['qty']} -> {$newItem['qty']}";
+                        }
+                        if ($oldItem['harga'] !== $newItem['harga']) {
+                            $itemDiff[] = "Harga: Rp " . number_format($oldItem['harga'], 0, ',', '.') . " -> Rp " . number_format($newItem['harga'], 0, ',', '.');
+                        }
+                        if (!empty($itemDiff)) {
+                            $itemChanges[] = "Ubah {$kode} (" . implode(', ', $itemDiff) . ")";
+                        }
+                    }
+                }
+                foreach ($oldItems as $kode => $oldItem) {
+                    if (!isset($newItems[$kode])) {
+                        $itemChanges[] = "Hapus {$kode}";
+                    }
+                }
+
+                if (!empty($itemChanges)) {
+                    $changes[] = "Detail Barang: [" . implode('; ', $itemChanges) . "]";
+                }
+
+                $logDescription = $penjualan->no_faktur;
+                if (!empty($changes)) {
+                    $logDescription .= ". Detail Perubahan: " . implode(', ', $changes);
+                }
+
                 $penjualan->update([
                     'tanggal' => $request->tanggal,
                     'tanggal_kirim' => $request->tanggal_kirim,
@@ -756,7 +835,7 @@ class PenjualanController extends Controller
                 ActivityLog::create([
                     'user_id' => Auth::id() ?? 1,
                     'action' => 'Edit Penjualan',
-                    'description' => $penjualan->no_faktur,
+                    'description' => $logDescription,
                     'ip_address' => $request->ip(),
                     'no_faktur' => $penjualan->no_faktur,
                 ]);

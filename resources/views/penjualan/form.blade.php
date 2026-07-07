@@ -758,11 +758,17 @@
             });
 
             function updateJatuhTempo(opt) {
-                const ljt = parseInt(opt.attr('data-ljt') || opt.data('ljt')) || 30;
+                const jtType = $('#jenis_transaksi').val();
                 const tglVal = $('#tanggal').val();
                 if (tglVal) {
                     const date = new Date(tglVal);
-                    date.setDate(date.getDate() + ljt);
+                    if (jtType === 'K' || jtType === 'Kredit') {
+                        let ljt = 30;
+                        if (opt && opt.val()) {
+                            ljt = parseInt(opt.attr('data-ljt') || opt.data('ljt')) || 30;
+                        }
+                        date.setDate(date.getDate() + ljt);
+                    }
                     const yyyy = date.getFullYear();
                     const mm = String(date.getMonth() + 1).padStart(2, '0');
                     const dd = String(date.getDate()).padStart(2, '0');
