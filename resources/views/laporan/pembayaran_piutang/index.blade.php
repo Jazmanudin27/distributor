@@ -57,6 +57,18 @@
                         </div>
 
                         <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary mb-1">Supplier</label>
+                            <select name="kode_supplier" class="form-select form-select-sm select2-init">
+                                <option value="">-- Semua Supplier --</option>
+                                @foreach ($suppliers as $sup)
+                                    <option value="{{ $sup->kode_supplier }}" {{ request('kode_supplier') == $sup->kode_supplier ? 'selected' : '' }}>
+                                        {{ $sup->nama_supplier }} ({{ $sup->kode_supplier }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label fw-semibold text-secondary mb-1">Pilih Jenis Laporan</label>
                             <select name="jenis_laporan" class="form-select form-select-sm">
                                 <option value="detail">Format 1: Detail Pembayaran (Per Transaksi)</option>

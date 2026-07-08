@@ -74,6 +74,10 @@
                 <div class="small">Pelanggan: {{ $items->first()['pelanggan']->nama_pelanggan ?? $kode_pelanggan }}
                 </div>
             @endif
+            @if (isset($kode_supplier) && $kode_supplier)
+                @php $supplierName = $suppliers->firstWhere('kode_supplier', $kode_supplier)->nama_supplier ?? $kode_supplier; @endphp
+                <div class="small">Supplier: <strong>{{ strtoupper($supplierName) }}</strong></div>
+            @endif
             <div class="small">Wilayah: <strong>{{ $selectedWilayah }}</strong></div>
             <div class="small text-muted">Tanggal Cetak: {{ date('d/m/Y H:i:s') }}</div>
             <hr>

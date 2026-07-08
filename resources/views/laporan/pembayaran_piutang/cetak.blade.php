@@ -86,6 +86,10 @@
                     @php $pelangganName = $pelanggans->firstWhere('kode_pelanggan', $kode_pelanggan)->nama_pelanggan ?? $kode_pelanggan; @endphp
                     <div class="small">Pelanggan: {{ $pelangganName }}</div>
                 @endif
+                @if (isset($kode_supplier) && $kode_supplier)
+                    @php $supplierName = $suppliers->firstWhere('kode_supplier', $kode_supplier)->nama_supplier ?? $kode_supplier; @endphp
+                    <div class="small">Supplier: {{ $supplierName }}</div>
+                @endif
                 <div class="small text-muted">Tanggal Cetak: {{ date('d/m/Y H:i:s') }}</div>
                 <hr>
             </div>
@@ -110,6 +114,12 @@
                     @php $pelangganName = $pelanggans->firstWhere('kode_pelanggan', $kode_pelanggan)->nama_pelanggan ?? $kode_pelanggan; @endphp
                     <tr>
                         <td colspan="15" style="text-align: center;">Pelanggan: {{ $pelangganName }}</td>
+                    </tr>
+                @endif
+                @if (isset($kode_supplier) && $kode_supplier)
+                    @php $supplierName = $suppliers->firstWhere('kode_supplier', $kode_supplier)->nama_supplier ?? $kode_supplier; @endphp
+                    <tr>
+                        <td colspan="15" style="text-align: center;">Supplier: {{ $supplierName }}</td>
                     </tr>
                 @endif
                 <tr>

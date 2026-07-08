@@ -151,6 +151,14 @@
                 }
             }
 
+            $selectedSupplier = 'SEMUA SUPPLIER';
+            if (isset($kode_supplier) && $kode_supplier) {
+                $supModel = isset($suppliers) ? $suppliers->where('kode_supplier', $kode_supplier)->first() : null;
+                if ($supModel) {
+                    $selectedSupplier = strtoupper($supModel->nama_supplier);
+                }
+            }
+
             // Count overdue invoices relative to selected $tanggal
             $overdueCount = 0;
             $reportDate = \Carbon\Carbon::parse($tanggal);
@@ -195,6 +203,9 @@
                 <td>FAKTUR OVERDUE</td>
                 <td style="text-align:center;">:</td>
                 <td>{{ $overdueCount }}</td>
+                <td>SUPPLIER</td>
+                <td style="text-align:center;">:</td>
+                <td colspan="4">{{ $selectedSupplier }}</td>
             </tr>
         </table>
 

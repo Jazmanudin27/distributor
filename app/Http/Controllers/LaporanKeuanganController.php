@@ -19,6 +19,8 @@ class LaporanKeuanganController extends Controller
 
         $kode_pelanggan = $request->input('kode_pelanggan');
         $jenis_laporan = $request->input('jenis_laporan', 'rekap');
+        $kode_supplier = $request->input('kode_supplier');
+        $suppliers = \App\Models\Supplier::orderBy('nama_supplier', 'asc')->get();
 
         $pelanggans = collect();
         if ($kode_pelanggan) {
@@ -40,11 +42,20 @@ class LaporanKeuanganController extends Controller
                 $customerIds = $customers->pluck('kode_pelanggan')->toArray();
 
                 // Pre-aggregate all unpaid/outstanding invoices and payments
-                $invoices = DB::table('penjualan')
+                $invoicesQuery = DB::table('penjualan')
                     ->select('no_faktur', 'tanggal', 'kode_pelanggan', 'grand_total', 'jenis_transaksi')
                     ->where('batal', 0)
-                    ->whereIn('kode_pelanggan', $customerIds)
-                    ->get();
+                    ->whereIn('kode_pelanggan', $customerIds);
+                if ($kode_supplier) {
+                    $invoicesQuery->whereExists(function ($q) use ($kode_supplier) {
+                        $q->select(DB::raw(1))
+                            ->from('penjualan_detail')
+                            ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                            ->whereColumn('penjualan_detail.no_faktur', 'penjualan.no_faktur')
+                            ->where('barang.kode_supplier', $kode_supplier);
+                    });
+                }
+                $invoices = $invoicesQuery->get();
 
                 $cashPayments = DB::table('penjualan_pembayaran')
                     ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
@@ -127,11 +138,20 @@ class LaporanKeuanganController extends Controller
                 $customerIds = $customers->pluck('kode_pelanggan')->toArray();
 
                 // Pre-aggregate all unpaid/outstanding invoices and payments
-                $invoices = DB::table('penjualan')
+                $invoicesQuery = DB::table('penjualan')
                     ->select('no_faktur', 'tanggal', 'kode_pelanggan', 'grand_total', 'jenis_transaksi')
                     ->where('batal', 0)
-                    ->whereIn('kode_pelanggan', $customerIds)
-                    ->get();
+                    ->whereIn('kode_pelanggan', $customerIds);
+                if ($kode_supplier) {
+                    $invoicesQuery->whereExists(function ($q) use ($kode_supplier) {
+                        $q->select(DB::raw(1))
+                            ->from('penjualan_detail')
+                            ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                            ->whereColumn('penjualan_detail.no_faktur', 'penjualan.no_faktur')
+                            ->where('barang.kode_supplier', $kode_supplier);
+                    });
+                }
+                $invoices = $invoicesQuery->get();
 
                 $cashPayments = DB::table('penjualan_pembayaran')
                     ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
@@ -229,8 +249,14 @@ class LaporanKeuanganController extends Controller
                     ->whereIn('jenis_transaksi', ['K', 'Kredit'])
                     ->where('batal', 0);
                 
-                if ($kode_pelanggan) {
-                    $query->where('kode_pelanggan', $kode_pelanggan);
+                if ($kode_supplier) {
+                    $query->whereExists(function ($q) use ($kode_supplier) {
+                        $q->select(DB::raw(1))
+                            ->from('penjualan_detail')
+                            ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                            ->whereColumn('penjualan_detail.no_faktur', 'penjualan.no_faktur')
+                            ->where('barang.kode_supplier', $kode_supplier);
+                    });
                 }
 
                 $invoices = $query->orderBy('tanggal', 'asc')
@@ -311,14 +337,14 @@ class LaporanKeuanganController extends Controller
 
         if ($isExcel) {
             $filename = 'laporan_piutang_' . date('Ymd_His') . '.xls';
-            return response(view($view, compact('pelanggans', 'items', 'kode_pelanggan', 'jenis_laporan', 'isExcel')))
+            return response(view($view, compact('pelanggans', 'items', 'kode_pelanggan', 'jenis_laporan', 'isExcel', 'suppliers', 'kode_supplier')))
             ->header('Content-Type', 'application/vnd-ms-excel')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
         }
 
-        return view($view, compact('pelanggans', 'items', 'kode_pelanggan', 'jenis_laporan'));
+        return view($view, compact('pelanggans', 'items', 'kode_pelanggan', 'jenis_laporan', 'suppliers', 'kode_supplier'));
     }
 
     public function laporanRekapSisaPiutang(Request $request)
@@ -332,6 +358,8 @@ class LaporanKeuanganController extends Controller
         $wilayah_id = $request->input('wilayah_id');
         $sub_wilayah_id = $request->input('sub_wilayah_id');
         $kode_sales = $request->input('kode_sales');
+        $kode_supplier = $request->input('kode_supplier');
+        $suppliers = \App\Models\Supplier::orderBy('nama_supplier', 'asc')->get();
 
         // Fetch master data for dropdown filters
         $wilayahs = Wilayah::orderBy('nama_wilayah')->get();
@@ -370,6 +398,15 @@ class LaporanKeuanganController extends Controller
             }
             if ($kode_pelanggan) {
                 $query->where('kode_pelanggan', $kode_pelanggan);
+            }
+            if ($kode_supplier) {
+                $query->whereExists(function ($q) use ($kode_supplier) {
+                    $q->select(DB::raw(1))
+                        ->from('penjualan_detail')
+                        ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                        ->whereColumn('penjualan_detail.no_faktur', 'penjualan.no_faktur')
+                        ->where('barang.kode_supplier', $kode_supplier);
+                });
             }
             if ($wilayah_id) {
                 $query->whereHas('pelanggan', function($q) use ($wilayah_id) {
@@ -482,7 +519,8 @@ class LaporanKeuanganController extends Controller
         $compactData = compact(
             'pelanggans', 'items', 'kode_pelanggan',
             'tanggal', 'wilayah_id', 'sub_wilayah_id', 'kode_sales',
-            'wilayahs', 'subWilayahs', 'salesmen', 'kategoriSales'
+            'wilayahs', 'subWilayahs', 'salesmen', 'kategoriSales',
+            'suppliers', 'kode_supplier'
         );
 
         if ($isExcel) {
@@ -800,6 +838,8 @@ class LaporanKeuanganController extends Controller
         $jenis_laporan = $request->input('jenis_laporan', 'detail'); // detail
         $status_pembayaran = $request->input('status_pembayaran', 'semua'); // lunas, belum_lunas, semua
         $status_faktur = $request->input('status_faktur', 'aktif'); // aktif, batal, semua
+        $kode_supplier = $request->input('kode_supplier');
+        $suppliers = \App\Models\Supplier::orderBy('nama_supplier', 'asc')->get();
 
         $pelanggans = collect();
         if ($kode_pelanggan) {
@@ -874,6 +914,30 @@ class LaporanKeuanganController extends Controller
                 $cashQuery->where('kode_pelanggan', $kode_pelanggan);
                 $transferQuery->where('kode_pelanggan', $kode_pelanggan);
                 $giroQuery->where('kode_pelanggan', $kode_pelanggan);
+            }
+
+            if ($kode_supplier) {
+                $cashQuery->whereExists(function ($q) use ($kode_supplier) {
+                    $q->select(DB::raw(1))
+                        ->from('penjualan_detail')
+                        ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                        ->whereColumn('penjualan_detail.no_faktur', 'penjualan_pembayaran.no_faktur')
+                        ->where('barang.kode_supplier', $kode_supplier);
+                });
+                $transferQuery->whereExists(function ($q) use ($kode_supplier) {
+                    $q->select(DB::raw(1))
+                        ->from('penjualan_detail')
+                        ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                        ->whereColumn('penjualan_detail.no_faktur', 'penjualan_pembayaran_transfer.no_faktur')
+                        ->where('barang.kode_supplier', $kode_supplier);
+                });
+                $giroQuery->whereExists(function ($q) use ($kode_supplier) {
+                    $q->select(DB::raw(1))
+                        ->from('penjualan_detail')
+                        ->join('barang', 'penjualan_detail.kode_barang', '=', 'barang.kode_barang')
+                        ->whereColumn('penjualan_detail.no_faktur', 'penjualan_pembayaran_giro.no_faktur')
+                        ->where('barang.kode_supplier', $kode_supplier);
+                });
             }
 
             if ($kategoriSales === 'canvas') {
@@ -1081,7 +1145,7 @@ class LaporanKeuanganController extends Controller
             $filename = 'laporan_pembayaran_piutang_' . date('Ymd_His') . '.xls';
             return response(view($view, compact(
                 'salesmen', 'items', 'tanggal_mulai', 'tanggal_akhir', 
-                'kode_sales', 'kode_pelanggan', 'jenis_laporan', 'status_pembayaran', 'status_faktur', 'isExcel', 'pelanggans', 'kategoriSales'
+                'kode_sales', 'kode_pelanggan', 'jenis_laporan', 'status_pembayaran', 'status_faktur', 'isExcel', 'pelanggans', 'kategoriSales', 'suppliers', 'kode_supplier'
             )))
             ->header('Content-Type', 'application/vnd-ms-excel')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
@@ -1091,7 +1155,7 @@ class LaporanKeuanganController extends Controller
 
         return view($view, compact(
             'salesmen', 'items', 'tanggal_mulai', 'tanggal_akhir', 
-            'kode_sales', 'kode_pelanggan', 'jenis_laporan', 'status_pembayaran', 'status_faktur', 'pelanggans', 'kategoriSales'
+            'kode_sales', 'kode_pelanggan', 'jenis_laporan', 'status_pembayaran', 'status_faktur', 'pelanggans', 'kategoriSales', 'suppliers', 'kode_supplier'
         ));
     }
 
