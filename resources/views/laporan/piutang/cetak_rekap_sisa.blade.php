@@ -247,8 +247,6 @@
                             <td class="text-center">{{ $item['pelanggan']->wilayah->nama_wilayah ?? '-' }}</td>
                         @endif
                         <td>{{ $item['sales']->name ?? '-' }}</td>
-                        <td>{{ $item['nama_supplier'] ?? '-' }}</td>
-                        <td>{{ $item['merk'] ?? '-' }}</td>
                         <td style="text-align: right">{{ number_format($item['sisa_piutang'], 0, ',', '.') }}</td>
                         <td style="text-align: right"></td>
                         <td style="text-align: right"></td>
