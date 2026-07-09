@@ -1,6 +1,37 @@
 @extends('layouts.app')
 @section('title', 'Detail Stok Opname: ' . $item->no_opname)
 @section('content')
+@php
+if (!function_exists('convertStockToText')) {
+    function convertStockToText($qty, $satuans) {
+        $isNegative = $qty < 0;
+        $absQty = abs($qty);
+        $breakdowns = [];
+        
+        $satuansColl = $satuans ?? collect();
+        if ($satuansColl->count() > 0) {
+            $sorted = $satuansColl->sortByDesc('isi');
+            $remaining = (float)$absQty;
+            foreach ($sorted as $sat) {
+                $factor = (float)($sat->isi ?: 1);
+                $unitQty = floor(round($remaining / $factor, 8));
+                if ($unitQty > 0) {
+                    $breakdowns[] = ($isNegative ? '-' : '') . $unitQty . ' ' . $sat->satuan;
+                    $remaining = round($remaining - ($unitQty * $factor), 4);
+                }
+            }
+            if ($remaining > 0) {
+                $last = $sorted->last();
+                $breakdowns[] = ($isNegative ? '-' : '') . $remaining . ' ' . $last->satuan;
+            }
+        } else {
+            $breakdowns[] = ($isNegative ? '-' : '') . $absQty . ' PCS';
+        }
+        
+        return implode(', ', $breakdowns) ?: '0 ' . ($satuansColl->count() > 0 ? $satuansColl->sortBy('isi')->first()->satuan : 'PCS');
+    }
+}
+@endphp
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-header card-premium-header text-white d-flex justify-content-between align-items-center py-3">
             <div>
@@ -98,40 +129,25 @@
                                     <td class="text-center text-secondary font-monospace fw-bold">{{ $index + 1 }}</td>
                                     <td><span class="badge bg-light text-secondary border font-monospace">{{ $detail->kode_barang }}</span></td>
                                     <td class="fw-semibold text-dark">{{ $detail->barang->nama_barang ?? '-' }}</td>
-                                    <td class="text-end font-monospace">{{ number_format($detail->stok_sistem, 2, ',', '.') }}</td>
-                                    <td class="text-end font-monospace fw-bold text-dark">
-                                        <div>{{ number_format($detail->stok_fisik, 2, ',', '.') }}</div>
-                                        @php
-                                            $satuans = $detail->barang->satuans ?? collect();
-                                            $breakdowns = [];
-                                            if ($satuans->count() > 0) {
-                                                $sorted = $satuans->sortByDesc('isi');
-                                                $remaining = (float)$detail->stok_fisik;
-                                                foreach ($sorted as $sat) {
-                                                    $factor = (float)($sat->isi ?: 1);
-                                                    $unitQty = floor($remaining / $factor);
-                                                    if ($unitQty > 0) {
-                                                        $breakdowns[] = $unitQty . ' ' . $sat->satuan;
-                                                        $remaining = fmod($remaining, $factor);
-                                                    }
-                                                }
-                                                if ($remaining > 0 && $sorted->count() > 0) {
-                                                    $last = $sorted->last();
-                                                    $breakdowns[] = $remaining . ' ' . $last->satuan;
-                                                }
-                                            } else {
-                                                $breakdowns[] = $detail->stok_fisik . ' PCS';
-                                            }
-                                            $breakdownText = implode(', ', $breakdowns) ?: '0 PCS';
-                                        @endphp
+                                    <td class="text-end font-monospace">
+                                        <div>{{ number_format($detail->stok_sistem, 2, ',', '.') }}</div>
                                         <div class="text-muted small fw-normal mt-0.5" style="font-size: 0.73rem;">
-                                            ({{ $breakdownText }})
+                                            ({{ convertStockToText($detail->stok_sistem, $detail->barang->satuans) }})
                                         </div>
                                     </td>
-                                    <td class="text-center">
+                                    <td class="text-end font-monospace fw-bold text-dark">
+                                        <div>{{ number_format($detail->stok_fisik, 2, ',', '.') }}</div>
+                                        <div class="text-muted small fw-normal mt-0.5" style="font-size: 0.73rem;">
+                                            ({{ convertStockToText($detail->stok_fisik, $detail->barang->satuans) }})
+                                        </div>
+                                    </td>
+                                    <td class="text-center font-monospace">
                                         <span class="badge {{ $badge }} px-2.5 py-1.5 fw-bold font-monospace fs-8">
                                             {{ $sign }}{{ number_format($detail->selisih, 2, ',', '.') }}
                                         </span>
+                                        <div class="text-muted small fw-normal mt-1" style="font-size: 0.73rem;">
+                                            ({{ convertStockToText($detail->selisih, $detail->barang->satuans) }})
+                                        </div>
                                     </td>
                                     <td class="text-muted small">{{ $detail->keterangan ?? '-' }}</td>
                                 </tr>
