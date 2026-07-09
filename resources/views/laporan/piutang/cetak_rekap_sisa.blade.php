@@ -222,8 +222,6 @@
                         <th style="width: 8%">WILAYAH</th>
                     @endif
                     <th style="width: 7%">SALES</th>
-                    <th>SUPPLIER</th>
-                    <th>MERK</th>
                     <th style="width: 7%">JUMLAH</th>
                     <th style="width: 14%">TITIP</th>
                     <th style="width: 12%">RETUR/POT.</th>
