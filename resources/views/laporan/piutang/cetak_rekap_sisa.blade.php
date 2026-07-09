@@ -222,6 +222,8 @@
                         <th style="width: 8%">WILAYAH</th>
                     @endif
                     <th style="width: 7%">SALES</th>
+                    <th>SUPPLIER</th>
+                    <th>MERK</th>
                     <th style="width: 7%">JUMLAH</th>
                     <th style="width: 14%">TITIP</th>
                     <th style="width: 12%">RETUR/POT.</th>
@@ -245,13 +247,15 @@
                             <td class="text-center">{{ $item['pelanggan']->wilayah->nama_wilayah ?? '-' }}</td>
                         @endif
                         <td>{{ $item['sales']->name ?? '-' }}</td>
+                        <td>{{ $item['nama_supplier'] ?? '-' }}</td>
+                        <td>{{ $item['merk'] ?? '-' }}</td>
                         <td style="text-align: right">{{ number_format($item['sisa_piutang'], 0, ',', '.') }}</td>
                         <td style="text-align: right"></td>
                         <td style="text-align: right"></td>
                     </tr>
                 @endforeach
                 <tr class="highlight">
-                    <td colspan="{{ $colspanVal }}" class="text-center fw-bold">TOTAL</td>
+                    <td colspan="{{ $colspanVal + 2 }}" class="text-center fw-bold">TOTAL</td>
                     <td class="text-right fw-bold">
                         {{ number_format($totalJumlah, 0, ',', '.') }}
                     </td>

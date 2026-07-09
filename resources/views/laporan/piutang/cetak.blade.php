@@ -97,6 +97,8 @@
                             <th>Kode</th>
                             <th>Nama Pelanggan</th>
                             <th>Wilayah</th>
+                            <th>Supplier</th>
+                            <th>Merk</th>
                             <th class="text-end">Limit Kredit</th>
                             <th class="text-end">Outstanding Piutang</th>
                             <th class="text-end">Sisa Limit</th>
@@ -124,6 +126,8 @@
                                 <td>{{ $item['pelanggan']->kode_pelanggan }}</td>
                                 <td>{{ $item['pelanggan']->nama_pelanggan }}</td>
                                 <td>{{ $item['pelanggan']->wilayah->nama_wilayah ?? '-' }}</td>
+                                <td>{{ $item['nama_supplier'] ?? '-' }}</td>
+                                <td>{{ $item['merk'] ?? '-' }}</td>
                                 <td class="text-end">{{ number_format($item['limit_kredit'], 0, ',', '.') }}</td>
                                 <td class="text-end fw-bold text-danger">
                                     {{ number_format($item['outstanding'], 0, ',', '.') }}</td>
@@ -137,7 +141,7 @@
                     </tbody>
                     <tfoot class="fw-bold">
                         <tr class="table-light">
-                            <td colspan="4" class="text-end">TOTAL KESELURUHAN:</td>
+                            <td colspan="6" class="text-end">TOTAL KESELURUHAN:</td>
                             <td class="text-end">{{ number_format($totLimit, 0, ',', '.') }}</td>
                             <td class="text-end text-danger">{{ number_format($totOutstanding, 0, ',', '.') }}</td>
                             <td class="text-end text-success">{{ number_format($totSisaLimit, 0, ',', '.') }}</td>
@@ -153,6 +157,8 @@
                                 <th>Kode</th>
                                 <th>Nama Pelanggan</th>
                                 <th>Wilayah</th>
+                                <th>Supplier</th>
+                                <th>Merk</th>
                                 <th class="text-end">Total Piutang</th>
                                 <th class="text-end">Belum JT</th>
                                 <th class="text-end">1 - 30 Hari</th>
@@ -185,6 +191,8 @@
                                     <td>{{ $item['pelanggan']->kode_pelanggan }}</td>
                                     <td>{{ $item['pelanggan']->nama_pelanggan }}</td>
                                     <td>{{ $item['pelanggan']->wilayah->nama_wilayah ?? '-' }}</td>
+                                    <td>{{ $item['nama_supplier'] ?? '-' }}</td>
+                                    <td>{{ $item['merk'] ?? '-' }}</td>
                                     <td class="text-end fw-bold">
                                         {{ number_format($item['total_piutang'], 0, ',', '.') }}</td>
                                     <td class="text-end text-success">
@@ -202,7 +210,7 @@
                         </tbody>
                         <tfoot class="fw-bold">
                             <tr class="table-light">
-                                <td colspan="4" class="text-end">TOTAL KESELURUHAN:</td>
+                                <td colspan="6" class="text-end">TOTAL KESELURUHAN:</td>
                                 <td class="text-end">{{ number_format($totPiutang, 0, ',', '.') }}</td>
                                 <td class="text-end text-success">{{ number_format($totBelumJt, 0, ',', '.') }}</td>
                                 <td class="text-end text-danger">{{ number_format($tot1_30, 0, ',', '.') }}</td>
@@ -220,6 +228,8 @@
                                 <th>No Faktur</th>
                                 <th>Tanggal</th>
                                 <th>Pelanggan</th>
+                                <th>Supplier</th>
+                                <th>Merk</th>
                                 <th>Jatuh Tempo</th>
                                 <th class="text-center">Umur Piutang</th>
                                 <th class="text-end">Grand Total</th>
@@ -251,6 +261,8 @@
                                     <td>{{ $item['pelanggan']->nama_pelanggan }}
                                         ({{ $item['pelanggan']->kode_pelanggan }})
                                     </td>
+                                    <td>{{ $item['nama_supplier'] ?? '-' }}</td>
+                                    <td>{{ $item['merk'] ?? '-' }}</td>
                                     <td>{{ \Carbon\Carbon::parse($item['jatuh_tempo'])->format('d/m/Y') }}</td>
                                     <td class="text-center">{{ $item['umur_piutang'] }} Hari</td>
                                     <td class="text-end">{{ number_format($item['grand_total'], 0, ',', '.') }}</td>
@@ -272,7 +284,7 @@
                         </tbody>
                         <tfoot class="fw-bold">
                             <tr class="table-light">
-                                <td colspan="6" class="text-end">TOTAL KESELURUHAN:</td>
+                                <td colspan="8" class="text-end">TOTAL KESELURUHAN:</td>
                                 <td class="text-end">{{ number_format($totGrand, 0, ',', '.') }}</td>
                                 <td class="text-end text-success">{{ number_format($totBayar, 0, ',', '.') }}</td>
                                 <td class="text-end text-warning">{{ number_format($totRetur, 0, ',', '.') }}</td>

@@ -81,6 +81,16 @@ class LaporanKeuanganController extends Controller
                     ->pluck('total', 'no_faktur')
                     ->toArray();
 
+                $invoiceIds = $invoices->pluck('no_faktur')->toArray();
+                $details = DB::table('penjualan_detail as pd')
+                    ->join('barang as b', 'pd.kode_barang', '=', 'b.kode_barang')
+                    ->leftJoin('supplier as s', 'b.kode_supplier', '=', 's.kode_supplier')
+                    ->join('penjualan as p', 'pd.no_faktur', '=', 'p.no_faktur')
+                    ->whereIn('pd.no_faktur', $invoiceIds)
+                    ->select('pd.no_faktur', 'p.kode_pelanggan', 'b.merk', 's.nama_supplier')
+                    ->get();
+                $detailsByCustomer = $details->groupBy('kode_pelanggan');
+
                 $invoicesByCustomer = [];
                 foreach ($invoices as $inv) {
                     $paid = ($cashPayments[$inv->no_faktur] ?? 0) + ($transferPayments[$inv->no_faktur] ?? 0) + ($giroPayments[$inv->no_faktur] ?? 0);
@@ -119,6 +129,10 @@ class LaporanKeuanganController extends Controller
                     $sisa_limit = max(0, (float)$c->limit_pelanggan - $outstanding);
 
                     if ($outstanding > 0 || $kode_pelanggan) {
+                        $custDetails = $detailsByCustomer->get($c->kode_pelanggan) ?? collect();
+                        $merkStr = $custDetails->pluck('merk')->unique()->filter()->implode(', ') ?: '-';
+                        $supplierStr = $custDetails->pluck('nama_supplier')->unique()->filter()->implode(', ') ?: '-';
+
                         $items->push([
                             'pelanggan' => $c,
                             'limit_kredit' => $c->limit_pelanggan,
@@ -126,6 +140,8 @@ class LaporanKeuanganController extends Controller
                             'sisa_limit' => $sisa_limit,
                             'total_overdue' => $total_overdue,
                             'overdue_count' => $overdue_count,
+                            'merk' => $merkStr,
+                            'nama_supplier' => $supplierStr,
                         ]);
                     }
                 }
@@ -176,6 +192,16 @@ class LaporanKeuanganController extends Controller
                     ->groupBy('no_faktur')
                     ->pluck('total', 'no_faktur')
                     ->toArray();
+
+                $invoiceIds = $invoices->pluck('no_faktur')->toArray();
+                $details = DB::table('penjualan_detail as pd')
+                    ->join('barang as b', 'pd.kode_barang', '=', 'b.kode_barang')
+                    ->leftJoin('supplier as s', 'b.kode_supplier', '=', 's.kode_supplier')
+                    ->join('penjualan as p', 'pd.no_faktur', '=', 'p.no_faktur')
+                    ->whereIn('pd.no_faktur', $invoiceIds)
+                    ->select('pd.no_faktur', 'p.kode_pelanggan', 'b.merk', 's.nama_supplier')
+                    ->get();
+                $detailsByCustomer = $details->groupBy('kode_pelanggan');
 
                 $invoicesByCustomer = [];
                 foreach ($invoices as $inv) {
@@ -232,6 +258,10 @@ class LaporanKeuanganController extends Controller
                     }
 
                     if ($total_piutang > 0 || $kode_pelanggan) {
+                        $custDetails = $detailsByCustomer->get($c->kode_pelanggan) ?? collect();
+                        $merkStr = $custDetails->pluck('merk')->unique()->filter()->implode(', ') ?: '-';
+                        $supplierStr = $custDetails->pluck('nama_supplier')->unique()->filter()->implode(', ') ?: '-';
+
                         $items->push([
                             'pelanggan' => $c,
                             'total_piutang' => $total_piutang,
@@ -240,6 +270,8 @@ class LaporanKeuanganController extends Controller
                             'overdue_31_60' => $overdue_31_60,
                             'overdue_61_90' => $overdue_61_90,
                             'overdue_90' => $overdue_90,
+                            'merk' => $merkStr,
+                            'nama_supplier' => $supplierStr,
                         ]);
                     }
                 }
@@ -300,6 +332,14 @@ class LaporanKeuanganController extends Controller
                     ->pluck('total', 'no_faktur')
                     ->toArray();
 
+                $details = DB::table('penjualan_detail as pd')
+                    ->join('barang as b', 'pd.kode_barang', '=', 'b.kode_barang')
+                    ->leftJoin('supplier as s', 'b.kode_supplier', '=', 's.kode_supplier')
+                    ->whereIn('pd.no_faktur', $invoiceIds)
+                    ->select('pd.no_faktur', 'b.merk', 's.nama_supplier')
+                    ->get()
+                    ->groupBy('no_faktur');
+
                 foreach ($invoices as $inv) {
                     $cashPaid = $cashPayments[$inv->no_faktur] ?? 0;
                     $transferPaid = $transferPayments[$inv->no_faktur] ?? 0;
@@ -316,6 +356,10 @@ class LaporanKeuanganController extends Controller
                         $umur_piutang = (int) round(Carbon::parse($inv->tanggal)->diffInDays(Carbon::now()));
                         $status = Carbon::now()->greaterThan($jatuh_tempo) ? 'OVERDUE' : 'LANCAR';
 
+                        $invDetails = $details->get($inv->no_faktur) ?? collect();
+                        $merkStr = $invDetails->pluck('merk')->unique()->filter()->implode(', ') ?: '-';
+                        $supplierStr = $invDetails->pluck('nama_supplier')->unique()->filter()->implode(', ') ?: '-';
+
                         $items->push([
                             'no_faktur' => $inv->no_faktur,
                             'tanggal' => $inv->tanggal,
@@ -327,6 +371,8 @@ class LaporanKeuanganController extends Controller
                             'sisa_piutang' => $sisa_piutang,
                             'umur_piutang' => $umur_piutang,
                             'status' => $status,
+                            'merk' => $merkStr,
+                            'nama_supplier' => $supplierStr,
                         ]);
                     }
                 }
@@ -485,6 +531,14 @@ class LaporanKeuanganController extends Controller
                 ->pluck('total', 'no_faktur')
                 ->toArray();
 
+            $details = DB::table('penjualan_detail as pd')
+                ->join('barang as b', 'pd.kode_barang', '=', 'b.kode_barang')
+                ->leftJoin('supplier as s', 'b.kode_supplier', '=', 's.kode_supplier')
+                ->whereIn('pd.no_faktur', $invoiceIds)
+                ->select('pd.no_faktur', 'b.merk', 's.nama_supplier')
+                ->get()
+                ->groupBy('no_faktur');
+
             foreach ($invoices as $inv) {
                 $cashPaid = $cashPayments[$inv->no_faktur] ?? 0;
                 $transferPaid = $transferPayments[$inv->no_faktur] ?? 0;
@@ -497,6 +551,10 @@ class LaporanKeuanganController extends Controller
                 $sisa_piutang = $sisa < 1 ? 0.0 : $sisa;
 
                 if ($sisa_piutang >= 1) {
+                    $invDetails = $details->get($inv->no_faktur) ?? collect();
+                    $merkStr = $invDetails->pluck('merk')->unique()->filter()->implode(', ') ?: '-';
+                    $supplierStr = $invDetails->pluck('nama_supplier')->unique()->filter()->implode(', ') ?: '-';
+
                     $items->push([
                         'no_faktur' => $inv->no_faktur,
                         'tanggal' => $inv->tanggal,
@@ -506,6 +564,8 @@ class LaporanKeuanganController extends Controller
                         'total_bayar' => $paid,
                         'total_retur' => $returPaid + $pfRetur,
                         'sisa_piutang' => $sisa_piutang,
+                        'merk' => $merkStr,
+                        'nama_supplier' => $supplierStr,
                     ]);
                 }
             }
@@ -1073,6 +1133,14 @@ class LaporanKeuanganController extends Controller
                     ->pluck('total', 'no_faktur')
                     ->toArray();
 
+                $details = DB::table('penjualan_detail as pd')
+                    ->join('barang as b', 'pd.kode_barang', '=', 'b.kode_barang')
+                    ->leftJoin('supplier as s', 'b.kode_supplier', '=', 's.kode_supplier')
+                    ->whereIn('pd.no_faktur', $noFakturs)
+                    ->select('pd.no_faktur', 'b.merk', 's.nama_supplier')
+                    ->get()
+                    ->groupBy('no_faktur');
+
                 // Map payments into final report objects
                 foreach ($allPayments as $p) {
                     $no_faktur = $p['no_faktur'];
@@ -1117,6 +1185,10 @@ class LaporanKeuanganController extends Controller
                         continue;
                     }
 
+                    $invDetails = $details->get($no_faktur) ?? collect();
+                    $merkStr = $invDetails->pluck('merk')->unique()->filter()->implode(', ') ?: '-';
+                    $supplierStr = $invDetails->pluck('nama_supplier')->unique()->filter()->implode(', ') ?: '-';
+
                     $item = new \stdClass();
                     $item->tgl_bayar = $p['tgl_bayar'];
                     $item->tgl_faktur = $inv->tanggal;
@@ -1133,6 +1205,8 @@ class LaporanKeuanganController extends Controller
                     $item->total_bayar = $total_bayar;
                     $item->sisa_bayar = $sisa_bayar;
                     $item->status_lunas = $status_lunas;
+                    $item->merk = $merkStr;
+                    $item->nama_supplier = $supplierStr;
 
                     $items->push($item);
                 }

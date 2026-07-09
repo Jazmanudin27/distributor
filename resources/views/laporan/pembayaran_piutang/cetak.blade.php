@@ -164,6 +164,12 @@
                             style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">
                             Wilayah</th>
                         <th
+                            style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">
+                            Supplier</th>
+                        <th
+                            style="border: 1px solid #000; padding: 6px; text-align: left; background-color: #0d6efd; color: #ffffff;">
+                            Merk</th>
+                        <th
                             style="border: 1px solid #000; padding: 6px; text-align: right; background-color: #0d6efd; color: #ffffff;">
                             Total</th>
                         <th
@@ -223,6 +229,10 @@
                                 {{ $item->sales_name ?? '-' }}</td>
                             <td style="border: 1px solid #000; padding: 4px; text-align: left;">
                                 {{ $item->nama_wilayah ?? '-' }}</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: left;">
+                                {{ $item->nama_supplier ?? '-' }}</td>
+                            <td style="border: 1px solid #000; padding: 4px; text-align: left;">
+                                {{ $item->merk ?? '-' }}</td>
                             <td class="num-format" style="border: 1px solid #000; padding: 4px; text-align: right;">
                                 {{ number_format($item->total_bruto, 0, ',', '.') }}</td>
                             <td class="num-format" style="border: 1px solid #000; padding: 4px; text-align: right;">
@@ -247,7 +257,7 @@
                 </tbody>
                 <tfoot class="fw-bold" style="font-weight: bold; background-color: #f2f2f2;">
                     <tr style="background-color: #f2f2f2; font-weight: bold;">
-                        <td colspan="8"
+                        <td colspan="10"
                             style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">TOTAL:
                         </td>
                         <td class="num-format"
