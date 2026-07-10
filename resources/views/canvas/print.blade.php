@@ -118,7 +118,9 @@
                     </tr>
                     <tr>
                         <td>Periode Sesi</td>
-                        <td>: {{ \Carbon\Carbon::parse($canvasSession->tanggal)->format('d/m/Y') }} s.d. {{ $canvasSession->status === 'completed' ? \Carbon\Carbon::parse($canvasSession->updated_at)->format('d/m/Y') : 'Sekarang' }}</td>
+                        <td>: {{ \Carbon\Carbon::parse($canvasSession->tanggal)->format('d/m/Y') }} s.d.
+                            {{ $canvasSession->status === 'completed' ? \Carbon\Carbon::parse($canvasSession->updated_at)->format('d/m/Y') : 'Sekarang' }}
+                        </td>
                     </tr>
                     <tr>
                         <td>Salesman</td>
@@ -263,18 +265,6 @@
                 <tr class="fw-bold" style="background-color: #fafafa; font-size: 11px;">
                     <td colspan="10" class="text-end py-1">TOTAL ITEM:</td>
                     <td class="text-end py-1">Rp {{ number_format($totalItemSales, 0, ',', '.') }}</td>
-                </tr>
-                @if ($totalGlobalDiscounts > 0)
-                    <tr class="fw-bold" style="background-color: #fafafa; font-size: 11px;">
-                        <td colspan="10" class="text-end py-1 text-danger">TOTAL POTONGAN FAKTUR:</td>
-                        <td class="text-end py-1 text-danger">-Rp
-                            {{ number_format($totalGlobalDiscounts, 0, ',', '.') }}</td>
-                    </tr>
-                @endif
-                <tr class="fw-bold" style="background-color: #f2f2f2; font-size: 12px;">
-                    <td colspan="10" class="text-end py-1.5">GRAND TOTAL PENJUALAN KANVAS:</td>
-                    <td class="text-end py-1.5" style="border-double: 3px double #000;">Rp
-                        {{ number_format($totalItemSales - $totalGlobalDiscounts, 0, ',', '.') }}</td>
                 </tr>
             @endif
         </tbody>
