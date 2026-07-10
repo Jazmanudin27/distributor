@@ -261,6 +261,13 @@
                         tercatat pada sesi kanvas ini.</td>
                 </tr>
             @endforelse
+            @if ($totalGlobalDiscounts > 0)
+                <tr class="fw-bold" style="background-color: #fafafa; font-size: 11px;">
+                    <td colspan="10" class="text-end py-1 text-danger">TOTAL POTONGAN FAKTUR:</td>
+                    <td class="text-end py-1 text-danger">-Rp
+                        {{ number_format($totalGlobalDiscounts, 0, ',', '.') }}</td>
+                </tr>
+            @endif
             @if ($invoices->count() > 0)
                 <tr class="fw-bold" style="background-color: #fafafa; font-size: 11px;">
                     <td colspan="10" class="text-end py-1">TOTAL ITEM:</td>
