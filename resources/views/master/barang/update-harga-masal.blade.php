@@ -187,7 +187,7 @@
                                                     $hargaPokok = (float) $satuan->harga_pokok;
                                                     $hargaJual = (float) $satuan->harga_jual;
                                                     $marginRp = $hargaJual - $hargaPokok;
-                                                    $marginPct = $hargaJual > 0 ? ($marginRp / $hargaJual) * 100 : 0;
+                                                    $marginPct = $hargaPokok > 0 ? ($marginRp / $hargaPokok) * 100 : 0;
                                                     $colorClass =
                                                         $marginRp < 0
                                                             ? 'text-danger'
@@ -323,7 +323,7 @@
                 let jual = parseFloat(cleanNumber(jualInput.val())) || 0;
 
                 let marginRp = jual - pokok;
-                let marginPct = jual > 0 ? (marginRp / jual) * 100 : 0;
+                let marginPct = pokok > 0 ? (marginRp / pokok) * 100 : 0;
 
                 marginRpSpan.text(formatRupiah(marginRp));
                 marginPctSpan.text(marginPct.toFixed(2) + '%');

@@ -308,7 +308,7 @@ class LaporanStokController extends Controller
                         $hargaPokok = (float)$sat->harga_pokok;
                         $hargaJual = (float)$sat->harga_jual;
                         $margin_rp = $hargaJual - $hargaPokok;
-                        $margin_persen = $hargaJual > 0 ? ($margin_rp / $hargaJual) * 100 : 0;
+                        $margin_persen = $hargaPokok > 0 ? ($margin_rp / $hargaPokok) * 100 : 0;
 
                         $items->push([
                             'barang'              => $b,

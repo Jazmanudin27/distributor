@@ -67,9 +67,11 @@ class LaporanMarginTest extends TestCase
         // Assert DUS line
         $response->assertSee('2');
         $response->assertSee('DUS');
+        $response->assertSee('20,0%');
         
         // Assert PCS line
         $response->assertSee('5');
         $response->assertSee('PCS');
+        $response->assertSee('18,2%');
     }
 }
