@@ -568,4 +568,89 @@ class CanvasSalesTest extends TestCase
         ]);
         $responseAdminStoreSuccess->assertSessionHasNoErrors();
     }
+
+    /**
+     * Test that invoice is paid off automatically when canvas returns are saved,
+     * and that the payments are deleted when the returns are deleted.
+     */
+    public function test_automatic_invoice_payment_on_canvas_return_and_reversion(): void
+    {
+        // 1. First, load 10 units onto canvas
+        $this->actingAs($this->admin)->post(route('canvas.store'), [
+            'kode_sales' => $this->salesman->nik,
+            'tanggal' => date('Y-m-d'),
+            'items' => [
+                [
+                    'kode_barang' => $this->barang->kode_barang,
+                    'satuan_id' => $this->satuan->id,
+                    'qty_ambil' => 10
+                ]
+            ]
+        ]);
+
+        $session = CanvasSession::where('kode_sales', $this->salesman->nik)->first();
+        $this->actingAs($this->admin)->post(route('canvas.approve', $session->id));
+
+        // 2. Create invoice as Kredit (not paid yet)
+        $response = $this->actingAs($this->admin)->post(route('penjualan.store'), [
+            'tanggal' => date('Y-m-d'),
+            'kode_pelanggan' => $this->pelanggan->kode_pelanggan,
+            'kode_sales' => $this->salesman->nik,
+            'diskon_global' => 0,
+            'jenis_transaksi' => 'Kredit',
+            'items' => [
+                [
+                    'kode_barang' => $this->barang->kode_barang,
+                    'satuan_id' => $this->satuan->id,
+                    'satuan' => 'PCS',
+                    'qty' => 7,
+                    'harga' => 1500,
+                    'diskon1_persen' => 0,
+                    'diskon2_persen' => 0,
+                    'diskon3_persen' => 0,
+                ]
+            ]
+        ]);
+        $response->assertSessionHasNoErrors();
+
+        $invoice = Penjualan::where('kode_sales', $this->salesman->nik)->first();
+        $this->assertNotNull($invoice);
+        $this->assertGreaterThan(0, $invoice->getSisaPiutang());
+
+        // 3. Process canvas returns (setoran)
+        $detail = CanvasSessionDetail::where('canvas_session_id', $session->id)->first();
+        $responseStore = $this->actingAs($this->admin)->post(route('canvas.returns.store'), [
+            'kode_sales' => $this->salesman->nik,
+            'keterangan' => 'Setoran Penjualan',
+            'details' => [
+                [
+                    'detail_ids' => $detail->id,
+                    'qty_kembali' => 3
+                ]
+            ]
+        ]);
+        $responseStore->assertRedirect();
+
+        // 4. Verify invoice is fully paid off (outstanding = 0)
+        $invoice = $invoice->fresh();
+        $this->assertEquals(0, $invoice->getSisaPiutang());
+        $this->assertDatabaseHas('penjualan_pembayaran', [
+            'no_faktur' => $invoice->no_faktur,
+            'keterangan' => 'Pelunasan Otomatis Setoran Sales',
+            'status' => 'disetujui'
+        ]);
+
+        // 5. Cancel canvas returns (destroy/delete the completed return)
+        $responseDestroy = $this->actingAs($this->admin)->delete(route('canvas.returns.destroy', $session->id));
+        $responseDestroy->assertRedirect();
+
+        // 6. Verify payments are deleted and invoice has outstanding again
+        $invoice = $invoice->fresh();
+        $this->assertGreaterThan(0, $invoice->getSisaPiutang());
+        $this->assertDatabaseMissing('penjualan_pembayaran', [
+            'no_faktur' => $invoice->no_faktur,
+            'keterangan' => 'Pelunasan Otomatis Setoran Sales'
+        ]);
+    }
 }
+

@@ -785,6 +785,52 @@ class CanvasController extends Controller
                     }
                     $session->save();
                 }
+
+                // Pelunasan otomatis faktur penjualan (Tunai)
+                $minStartAt = $activeSessions
+                    ->map(fn($s) => $s->approved_at ?? $s->created_at)
+                    ->min();
+
+                $invoices = \App\Models\Penjualan::where('kode_sales', $selectedSales)
+                    ->where('created_at', '>=', $minStartAt)
+                    ->where('batal', 0)
+                    ->get();
+
+                foreach ($invoices as $invoice) {
+                    $sisa = $invoice->getSisaPiutang();
+                    if ($sisa > 0) {
+                        $prefix = date('my');
+                        // Generate atomic no_bukti
+                        $lastBukti = \App\Models\PenjualanPembayaran::where('no_bukti', 'like', $prefix . '%')
+                            ->lockForUpdate()
+                            ->orderBy('no_bukti', 'desc')
+                            ->first();
+                        $nextNo = $lastBukti ? (intval(substr($lastBukti->no_bukti, 4)) + 1) : 1;
+                        $noBukti = $prefix . str_pad($nextNo, 4, '0', STR_PAD_LEFT);
+
+                        \App\Models\PenjualanPembayaran::create([
+                            'no_bukti' => $noBukti,
+                            'tanggal' => now(),
+                            'no_faktur' => $invoice->no_faktur,
+                            'kode_pelanggan' => $invoice->kode_pelanggan,
+                            'kode_sales' => $invoice->kode_sales,
+                            'jenis_bayar' => 'Cash',
+                            'jumlah' => $sisa,
+                            'keterangan' => 'Pelunasan Otomatis Setoran Sales',
+                            'id_user' => Auth::id() ?? 1,
+                            'status' => 'disetujui',
+                        ]);
+
+                        // Add Activity Log
+                        \App\Models\ActivityLog::create([
+                            'user_id' => Auth::id() ?? 1,
+                            'action' => 'Input Pembayaran Tunai Otomatis',
+                            'description' => $noBukti . ' (Disetujui)',
+                            'ip_address' => $request->ip(),
+                            'no_faktur' => $invoice->no_faktur,
+                        ]);
+                    }
+                }
             });
 
             return redirect()->route('canvas.returns.index')->with('success', 'Pengembalian barang canvas berhasil diproses dan sisa barang dikembalikan ke gudang.');
@@ -878,6 +924,30 @@ class CanvasController extends Controller
                     $detail->qty_kembali = 0;
                     $detail->selisih = (float)$detail->qty_ambil - (float)$detail->qty_terjual;
                     $detail->save();
+                }
+
+                // Hapus pembayaran otomatis setoran sales jika ada
+                $startAt = $canvasSession->approved_at ?? $canvasSession->created_at;
+                $invoices = \App\Models\Penjualan::where('kode_sales', $canvasSession->kode_sales)
+                    ->where('created_at', '>=', $startAt)
+                    ->where('batal', 0)
+                    ->get();
+
+                foreach ($invoices as $invoice) {
+                    $autoPayments = \App\Models\PenjualanPembayaran::where('no_faktur', $invoice->no_faktur)
+                        ->where('keterangan', 'Pelunasan Otomatis Setoran Sales')
+                        ->get();
+
+                    foreach ($autoPayments as $payment) {
+                        \App\Models\ActivityLog::create([
+                            'user_id' => Auth::id() ?? 1,
+                            'action' => 'Hapus Pembayaran Tunai Otomatis',
+                            'description' => 'Menghapus Pembayaran Otomatis ' . $payment->no_bukti . ' untuk Faktur ' . $invoice->no_faktur . ' karena pembatalan setoran',
+                            'ip_address' => request()->ip(),
+                            'no_faktur' => $invoice->no_faktur,
+                        ]);
+                        $payment->delete();
+                    }
                 }
 
                 // Revert status to loading
