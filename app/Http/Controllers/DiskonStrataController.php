@@ -44,7 +44,17 @@ class DiskonStrataController extends Controller
         $suppliers = Supplier::where('status', 1)->orderBy('nama_supplier')->get();
         $barangs = Barang::with('satuans')->where('status', 1)->orderBy('nama_barang')->get();
 
-        return view('master.diskon_strata.form', compact('item', 'kategoris', 'merks', 'suppliers', 'barangs'));
+        $allUnits = \App\Models\BarangSatuan::selectRaw('MIN(id) as id, satuan')
+            ->groupBy('satuan')
+            ->get()
+            ->map(function ($u) {
+                return [
+                    'id' => $u->id,
+                    'name' => trim($u->satuan)
+                ];
+            });
+
+        return view('master.diskon_strata.form', compact('item', 'kategoris', 'merks', 'suppliers', 'barangs', 'allUnits'));
     }
 
     /**
@@ -94,7 +104,7 @@ class DiskonStrataController extends Controller
             // Save tiers details
             foreach ($request->details as $detail) {
                 $header->details()->create([
-                    'satuan_id' => in_array($request->tipe, ['barang', 'beberapa_barang']) ? ($detail['satuan_id'] ?? null) : null,
+                    'satuan_id' => $request->tipe !== 'supplier' ? ($detail['satuan_id'] ?? null) : null,
                     'min_qty' => $request->tipe !== 'supplier' ? ($detail['min_qty'] ?? null) : null,
                     'max_qty' => $request->tipe !== 'supplier' ? ($detail['max_qty'] ?? null) : null,
                     'min_nominal' => $request->tipe === 'supplier' ? ($detail['min_nominal'] ?? null) : null,
@@ -129,7 +139,17 @@ class DiskonStrataController extends Controller
         $suppliers = Supplier::where('status', 1)->orderBy('nama_supplier')->get();
         $barangs = Barang::with('satuans')->where('status', 1)->orderBy('nama_barang')->get();
 
-        return view('master.diskon_strata.form', compact('item', 'kategoris', 'merks', 'suppliers', 'barangs'));
+        $allUnits = \App\Models\BarangSatuan::selectRaw('MIN(id) as id, satuan')
+            ->groupBy('satuan')
+            ->get()
+            ->map(function ($u) {
+                return [
+                    'id' => $u->id,
+                    'name' => trim($u->satuan)
+                ];
+            });
+
+        return view('master.diskon_strata.form', compact('item', 'kategoris', 'merks', 'suppliers', 'barangs', 'allUnits'));
     }
 
     /**
@@ -183,7 +203,7 @@ class DiskonStrataController extends Controller
             $header->details()->delete();
             foreach ($request->details as $detail) {
                 $header->details()->create([
-                    'satuan_id' => in_array($request->tipe, ['barang', 'beberapa_barang']) ? ($detail['satuan_id'] ?? null) : null,
+                    'satuan_id' => $request->tipe !== 'supplier' ? ($detail['satuan_id'] ?? null) : null,
                     'min_qty' => $request->tipe !== 'supplier' ? ($detail['min_qty'] ?? null) : null,
                     'max_qty' => $request->tipe !== 'supplier' ? ($detail['max_qty'] ?? null) : null,
                     'min_nominal' => $request->tipe === 'supplier' ? ($detail['min_nominal'] ?? null) : null,

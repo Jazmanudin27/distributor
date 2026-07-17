@@ -231,6 +231,7 @@
             let detailIndex = 0;
             const existingDetails = {!! json_encode($item->details ?? []) !!};
             const barangsData = {!! json_encode($barangs->keyBy('kode_barang')) !!};
+            const allDatabaseUnits = {!! json_encode($allUnits ?? []) !!};
 
             // Initialize select2 multiple
             $('#barang_ids').select2({
@@ -259,17 +260,18 @@
                             });
                         }
                     });
+                    return Array.from(unitsMap.values());
                 }
-                return Array.from(unitsMap.values());
+                return allDatabaseUnits;
             }
 
             // Update all unit select dropdown options in the table
             function updateUnitDropdowns() {
                 const units = getAvailableUnits();
                 const type = $('#tipe').val();
-                const isBarangType = type === 'barang' || type === 'beberapa_barang';
+                const isSupplier = type === 'supplier';
 
-                if (isBarangType) {
+                if (!isSupplier) {
                     $('.col-satuan').show();
                     $('#tiersTable tbody tr').each(function() {
                         const row = $(this);
@@ -279,8 +281,8 @@
                         const currentValue = select.val() || savedValue;
 
                         td.show();
-                        select.prop('disabled', false).prop('required', true);
-                        select.empty().append('<option value="">-- Pilih Satuan --</option>');
+                        select.prop('disabled', false).prop('required', false);
+                        select.empty().append('<option value="">-- Semua Satuan --</option>');
                         units.forEach(u => {
                             const selectedAttr = currentValue == u.id ? 'selected' : '';
                             select.append(`<option value="${u.id}" ${selectedAttr}>${u.name}</option>`);

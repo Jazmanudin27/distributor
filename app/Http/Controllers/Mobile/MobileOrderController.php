@@ -214,7 +214,7 @@ class MobileOrderController extends Controller
             ->where(function($q) {
                 $q->whereNull('berlaku_sampai')->orWhere('berlaku_sampai', '>=', now());
             })
-            ->with(['details', 'barangs', 'kategori', 'merk'])
+            ->with(['details.satuan', 'barangs', 'kategori', 'merk'])
             ->get();
 
         return view('mobile.order', compact('noFaktur', 'pelanggan', 'diskonStrata'));
@@ -297,7 +297,7 @@ class MobileOrderController extends Controller
             ->where(function($q) {
                 $q->whereNull('berlaku_sampai')->orWhere('berlaku_sampai', '>=', now());
             })
-            ->with(['details', 'barangs', 'kategori', 'merk'])
+            ->with(['details.satuan', 'barangs', 'kategori', 'merk'])
             ->get();
 
         // Calculate supplier subtotals for supplier-level strata
@@ -723,7 +723,7 @@ class MobileOrderController extends Controller
             ->where(function ($q) {
                 $q->whereNull('berlaku_sampai')->orWhere('berlaku_sampai', '>=', now());
             })
-            ->with(['details', 'barangs', 'kategori', 'merk'])
+            ->with(['details.satuan', 'barangs', 'kategori', 'merk'])
             ->get();
 
         return view('mobile.order-canvas', compact('noFaktur', 'pelanggan', 'diskonStrata'));
@@ -954,7 +954,7 @@ class MobileOrderController extends Controller
             ->where(function ($q) {
                 $q->whereNull('berlaku_sampai')->orWhere('berlaku_sampai', '>=', now());
             })
-            ->with(['details', 'barangs', 'kategori', 'merk'])
+            ->with(['details.satuan', 'barangs', 'kategori', 'merk'])
             ->get();
 
         // Calculate supplier subtotals

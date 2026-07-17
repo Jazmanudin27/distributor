@@ -193,7 +193,7 @@ class PenjualanController extends Controller
             ->where(function ($q) {
                 $q->whereNull('berlaku_sampai')->orWhere('berlaku_sampai', '>=', now());
             })
-            ->with(['details', 'barangs', 'kategori', 'merk'])
+            ->with(['details.satuan', 'barangs', 'kategori', 'merk'])
             ->get();
 
         $salesmen = User::where('role', 'sales')->where('status', 1)->orderBy('name')->get();
@@ -541,7 +541,7 @@ class PenjualanController extends Controller
             ->where(function ($q) {
                 $q->whereNull('berlaku_sampai')->orWhere('berlaku_sampai', '>=', now());
             })
-            ->with(['details', 'barangs', 'kategori', 'merk'])
+            ->with(['details.satuan', 'barangs', 'kategori', 'merk'])
             ->get();
 
         $salesmen = User::where('role', 'sales')->where('status', 1)->orderBy('name')->get();
