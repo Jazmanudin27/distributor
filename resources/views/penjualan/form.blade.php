@@ -180,7 +180,7 @@
                                             data-sisa-limit="{{ $sisaLimit }}"
                                             data-has-overdue="{{ $hasOverdue ? 1 : 0 }}" data-ljt="{{ $p->ljt ?? 30 }}"
                                             {{ old('kode_pelanggan', $item->kode_pelanggan) == $p->kode_pelanggan ? 'selected' : '' }}>
-                                            {{ $p->nama_pelanggan }}
+                                            {{ $p->nama_pelanggan }} - {{ $p->wilayah?->nama_wilayah ?? '-' }}
                                         </option>
                                     @endforeach
                                 </select>

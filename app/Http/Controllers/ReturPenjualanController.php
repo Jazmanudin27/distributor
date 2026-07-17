@@ -50,7 +50,7 @@ class ReturPenjualanController extends Controller
         
         $selectedKode = old('kode_pelanggan');
         if ($selectedKode) {
-            $pelanggans = Pelanggan::where('kode_pelanggan', $selectedKode)->get();
+            $pelanggans = Pelanggan::with(['wilayah'])->where('kode_pelanggan', $selectedKode)->get();
             $penjualans = Penjualan::where('kode_pelanggan', $selectedKode)
                 ->where('batal', 0)
                 ->orderBy('tanggal', 'desc')
@@ -211,7 +211,7 @@ class ReturPenjualanController extends Controller
         $item = ReturPenjualan::with(['details.barang', 'details.barangSatuan'])->findOrFail($no_retur);
         
         $selectedKode = old('kode_pelanggan', $item->kode_pelanggan);
-        $pelanggans = Pelanggan::where('kode_pelanggan', $selectedKode)->get();
+        $pelanggans = Pelanggan::with(['wilayah'])->where('kode_pelanggan', $selectedKode)->get();
         $penjualans = Penjualan::where('kode_pelanggan', $selectedKode)
             ->where('batal', 0)
             ->orderBy('tanggal', 'desc')

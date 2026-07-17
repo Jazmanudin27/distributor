@@ -123,7 +123,7 @@
                                         <option value="{{ $p->kode_pelanggan }}" data-kode="{{ $p->kode_pelanggan }}"
                                             data-hp="{{ $p->no_hp_pelanggan }}" data-alamat="{{ $p->alamat_pelanggan }}"
                                             {{ old('kode_pelanggan', $item->kode_pelanggan) == $p->kode_pelanggan ? 'selected' : '' }}>
-                                            {{ $p->nama_pelanggan }}
+                                            {{ $p->nama_pelanggan }} - {{ $p->wilayah?->nama_wilayah ?? '-' }}
                                         </option>
                                     @endforeach
                                 </select>

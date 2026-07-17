@@ -279,7 +279,7 @@ class PelangganController extends Controller
 
             $results[] = [
                 'id' => $p->kode_pelanggan,
-                'text' => $p->nama_pelanggan . ' (' . $p->kode_pelanggan . ')',
+                'text' => $p->nama_pelanggan . ' (' . $p->kode_pelanggan . ') - ' . $wilayahText,
                 'nama' => $p->nama_pelanggan,
                 'kode' => $p->kode_pelanggan,
                 'hp' => $p->no_hp_pelanggan ?: '-',
