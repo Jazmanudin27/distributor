@@ -983,7 +983,8 @@ jenisTransaksiEl.addEventListener('change', calculateTotals);
                             if (r.kategori && r.kategori.nama_kategori === b.kategori) {
                                 r.details.forEach(d => {
                                     if (qty >= (d.min_qty || 0) && (d.max_qty === null ||
-                                            qty <= d.max_qty)) {
+                                            qty <= d.max_qty) && isSatuanMatch(d,
+                                            satuanId)) {
                                         checkRule(r, d);
                                     }
                                 });
@@ -998,7 +999,8 @@ jenisTransaksiEl.addEventListener('change', calculateTotals);
                             if (r.merk && r.merk.nama_merk === b.merk) {
                                 r.details.forEach(d => {
                                     if (qty >= (d.min_qty || 0) && (d.max_qty === null ||
-                                            qty <= d.max_qty)) {
+                                            qty <= d.max_qty) && isSatuanMatch(d,
+                                            satuanId)) {
                                         checkRule(r, d);
                                     }
                                 });

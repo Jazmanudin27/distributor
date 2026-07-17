@@ -953,7 +953,7 @@
                         if (r.kategori && r.kategori.nama_kategori === barang.kategori) {
                             r.details.forEach(d => {
                                 if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d
-                                        .max_qty)) {
+                                        .max_qty) && isSatuanMatch(d, satuanId)) {
                                     checkRule(r, d);
                                 }
                             });
@@ -968,7 +968,7 @@
                         if (r.merk && r.merk.nama_merk === barang.merk) {
                             r.details.forEach(d => {
                                 if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d
-                                        .max_qty)) {
+                                        .max_qty) && isSatuanMatch(d, satuanId)) {
                                     checkRule(r, d);
                                 }
                             });
@@ -1628,7 +1628,7 @@
                             if (r.kategori && r.kategori.nama_kategori === b.kategori) {
                                 r.details.forEach(d => {
                                     if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d
-                                            .max_qty)) {
+                                            .max_qty) && isSatuanMatch(d, satuanId)) {
                                         checkRule(r, d);
                                     }
                                 });
@@ -1643,7 +1643,7 @@
                             if (r.merk && r.merk.nama_merk === b.merk) {
                                 r.details.forEach(d => {
                                     if (qty >= (d.min_qty || 0) && (d.max_qty === null || qty <= d
-                                            .max_qty)) {
+                                            .max_qty) && isSatuanMatch(d, satuanId)) {
                                         checkRule(r, d);
                                     }
                                 });
