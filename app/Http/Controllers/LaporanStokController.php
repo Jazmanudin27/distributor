@@ -112,32 +112,25 @@ class LaporanStokController extends Controller
                 $barangs = $query->orderBy('nama_barang', 'asc')->get();
                 $barangIds = $barangs->pluck('kode_barang')->toArray();
 
-                // 1. Get latest mutation saldo_akhir on or before tanggal_akhir
-                $latestMutations = DB::table('stok_mutasi')
+                // 1. Get latest mutation BEFORE tanggal_mulai for each product
+                $lastMutationsBefore = DB::table('stok_mutasi')
                     ->whereIn('kode_barang', $barangIds)
-                    ->where('tanggal', '<=', $tanggal_akhir)
-                    ->whereIn('id', function($q) use ($tanggal_akhir, $barangIds) {
+                    ->where('tanggal', '<', $tanggal_mulai)
+                    ->whereIn('id', function($q) use ($tanggal_mulai, $barangIds) {
                         $q->selectRaw('MAX(id)')
                           ->from('stok_mutasi')
                           ->whereIn('kode_barang', $barangIds)
-                          ->where('tanggal', '<=', $tanggal_akhir)
+                          ->where('tanggal', '<', $tanggal_mulai)
                           ->groupBy('kode_barang');
                     })
-                    ->select('kode_barang', 'saldo_akhir')
-                    ->get()
                     ->pluck('saldo_akhir', 'kode_barang');
 
-                // 2. Get mutations in period grouped by kode_barang & jenis_transaksi
-                $mutationsInRange = DB::table('stok_mutasi')
+                // 2. Get all mutations in period ordered by date & id
+                $rawMutationsAll = DB::table('stok_mutasi')
                     ->whereIn('kode_barang', $barangIds)
                     ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
-                    ->select(
-                        'kode_barang',
-                        'jenis_transaksi',
-                        DB::raw('SUM(qty_masuk) as total_masuk'),
-                        DB::raw('SUM(qty_keluar) as total_keluar')
-                    )
-                    ->groupBy('kode_barang', 'jenis_transaksi')
+                    ->orderBy('tanggal', 'asc')
+                    ->orderBy('id', 'asc')
                     ->get()
                     ->groupBy('kode_barang');
 
@@ -148,25 +141,46 @@ class LaporanStokController extends Controller
                     $hargaPokok = $baseSatuan ? (float)$baseSatuan->harga_pokok : 0;
                     $hargaJual = $baseSatuan ? (float)$baseSatuan->harga_jual : 0;
 
-                    $stokAkhir = (float)($latestMutations->get($kb) ?? 0);
+                    $stokAwal = (float)($lastMutationsBefore->get($kb) ?? 0);
 
-                    $pPeriod = $mutationsInRange->get($kb) ?? collect();
+                    $rawMutationsItem = $rawMutationsAll->get($kb) ?? collect();
 
-                    // PENERIMAAN
-                    $pembelianPeriod = (float)$pPeriod->where('jenis_transaksi', 'Pembelian')->sum('total_masuk');
-                    $returJualPeriod = (float)$pPeriod->where('jenis_transaksi', 'Retur Penjualan')->sum('total_masuk');
-                    $batalSalesPeriod = (float)$pPeriod->whereIn('jenis_transaksi', ['Batal Penjualan', 'Batal Penjualan (Edit)', 'Batal Jual'])->sum('total_masuk');
-                    $opnameMasukPeriod = (float)$pPeriod->whereNotIn('jenis_transaksi', ['Pembelian', 'Retur Penjualan', 'Batal Penjualan', 'Batal Penjualan (Edit)', 'Batal Jual'])->sum('total_masuk');
+                    $pembelianPeriod = 0;
+                    $returJualPeriod = 0;
+                    $batalSalesPeriod = 0;
+                    $opnameMasukPeriod = 0;
+                    $penjualanPeriod = 0;
+                    $returBeliPeriod = 0;
+                    $opnameKeluarPeriod = 0;
 
-                    // PENGELUARAN
-                    $penjualanPeriod = (float)$pPeriod->where('jenis_transaksi', 'Penjualan')->sum('total_keluar');
-                    $returBeliPeriod = (float)$pPeriod->where('jenis_transaksi', 'Retur Pembelian')->sum('total_keluar');
-                    $opnameKeluarPeriod = (float)$pPeriod->whereNotIn('jenis_transaksi', ['Penjualan', 'Retur Pembelian'])->sum('total_keluar');
+                    $running = $stokAwal;
+                    foreach ($rawMutationsItem as $m) {
+                        $qtyMasuk = (float)$m->qty_masuk;
+                        $qtyKeluar = (float)$m->qty_keluar;
 
-                    $penerimaanTotal = $pembelianPeriod + $returJualPeriod + $batalSalesPeriod + $opnameMasukPeriod;
-                    $pengeluaranTotal = $penjualanPeriod + $returBeliPeriod + $opnameKeluarPeriod;
+                        if ($m->jenis_transaksi === 'Pembelian') {
+                            $pembelianPeriod += $qtyMasuk;
+                        } elseif ($m->jenis_transaksi === 'Retur Penjualan') {
+                            $returJualPeriod += $qtyMasuk;
+                        } elseif (in_array($m->jenis_transaksi, ['Batal Penjualan', 'Batal Penjualan (Edit)', 'Batal Jual'])) {
+                            $batalSalesPeriod += $qtyMasuk;
+                        } elseif ($m->jenis_transaksi === 'Penjualan') {
+                            $penjualanPeriod += $qtyKeluar;
+                        } elseif ($m->jenis_transaksi === 'Retur Pembelian') {
+                            $returBeliPeriod += $qtyKeluar;
+                        } else {
+                            if ($qtyMasuk > 0) $opnameMasukPeriod += $qtyMasuk;
+                            if ($qtyKeluar > 0) $opnameKeluarPeriod += $qtyKeluar;
+                        }
 
-                    $stokAwal = $stokAkhir - $penerimaanTotal + $pengeluaranTotal;
+                        if (in_array($m->jenis_transaksi, ['Stok Opname', 'Batal Stok Opname', 'Batal Stok Opname (Edit)']) && isset($m->saldo_akhir)) {
+                            $running = (float)$m->saldo_akhir;
+                        } else {
+                            $running = $running + $qtyMasuk - $qtyKeluar;
+                        }
+                    }
+
+                    $stokAkhir = $running;
 
                     // Add computed properties
                     $items->push([
@@ -482,7 +496,11 @@ class LaporanStokController extends Controller
                             }
                         }
 
-                        $running = $running + $m->qty_masuk - $m->qty_keluar;
+                        if (in_array($m->jenis_transaksi, ['Stok Opname', 'Batal Stok Opname', 'Batal Stok Opname (Edit)']) && isset($m->saldo_akhir)) {
+                            $running = (float)$m->saldo_akhir;
+                        } else {
+                            $running = $running + $m->qty_masuk - $m->qty_keluar;
+                        }
 
                         $movements->push([
                             'class' => 'class',
