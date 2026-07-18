@@ -155,6 +155,14 @@ class LaporanStokController extends Controller
                         $validMovements = $rawMutationsItem;
                     }
 
+                    $pembelianPeriod = 0;
+                    $returJualPeriod = 0;
+                    $batalSalesPeriod = 0;
+                    $opnameMasukPeriod = 0;
+                    $penjualanPeriod = 0;
+                    $returBeliPeriod = 0;
+                    $opnameKeluarPeriod = 0;
+
                     foreach ($validMovements as $m) {
                         $qtyMasuk = (float)$m->qty_masuk;
                         $qtyKeluar = (float)$m->qty_keluar;
