@@ -195,8 +195,8 @@
                         <div class="col-lg-1 col-md-3">
                             <label class="form-label fs-8 fw-bold text-secondary mb-1">Kondisi</label>
                             <select id="quick_kondisi" class="form-select form-select-sm">
-                                <option value="Bagus">Bagus</option>
                                 <option value="Jelek">Jelek</option>
+                                <option value="Bagus">Bagus</option>
                             </select>
                         </div>
                         <div class="col-lg-1 col-md-3">

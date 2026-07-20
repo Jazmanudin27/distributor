@@ -30,6 +30,10 @@
             color: #000;
         }
 
+        .wrap-text {
+            white-space: normal;
+        }
+
         .text-center {
             text-align: center;
         }
@@ -143,7 +147,7 @@
                     <tr class="text-center">
                         <th class="col-no">No</th>
                         <th class="col-kode">Kode</th>
-                        <th>Nama Barang</th>
+                        <th class="wrap-text">Nama Barang</th>
                         <th class="col-qty">Jumlah</th>
                     </tr>
                 </thead>
@@ -164,7 +168,7 @@
                         <tr>
                             <td class="text-center">{{ $no++ }}</td>
                             <td>{{ $kodeBarang }}</td>
-                            <td>{{ strtoupper($first->nama_barang) }}</td>
+                            <td class="wrap-text">{{ strtoupper($first->nama_barang) }}</td>
                             <td class="text-start">
                                 {{ $qtyDisplay }}
                             </td>
@@ -182,7 +186,7 @@
                         <th>No</th>
                         <th>No Faktur</th>
                         <th>Tanggal</th>
-                        <th>Pelanggan</th>
+                        <th class="wrap-text">Pelanggan</th>
                         <th>Total</th>
                     </tr>
                 </thead>
@@ -198,7 +202,7 @@
                             <td>{{ $idx + 1 }}</td>
                             <td>{{ $inv->no_faktur }}</td>
                             <td>{{ \Carbon\Carbon::parse($inv->tanggal)->format('d-M-Y') }}</td>
-                            <td>{{ strtoupper($inv->nama_pelanggan) }}</td>
+                            <td class="wrap-text">{{ strtoupper($inv->nama_pelanggan) }}</td>
                             <td class="text-end">{{ number_format((float) $inv->grand_total, 0, ',', '.') }}</td>
                         </tr>
                     @endforeach
