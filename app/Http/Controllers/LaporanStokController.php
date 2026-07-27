@@ -60,7 +60,7 @@ class LaporanStokController extends Controller
                 }
 
                 if (!$tampilkan_stok_kosong) {
-                    $query->where('stok', '>', 0);
+                    $query->where('stok', '!=', 0);
                 }
 
                 $items = $query->orderBy('nama_barang', 'asc')->get();
@@ -217,7 +217,7 @@ class LaporanStokController extends Controller
 
                 if (!$tampilkan_stok_kosong) {
                     $items = $items->filter(function($item) {
-                        return $item['stok_akhir'] > 0;
+                        return $item['stok_akhir'] != 0;
                     });
                 }
             }
@@ -263,7 +263,7 @@ class LaporanStokController extends Controller
                 }
 
                 if (!$tampilkan_stok_kosong) {
-                    $query->where('stok', '>', 0);
+                    $query->where('stok', '!=', 0);
                 }
 
                 $barangs = $query->orderBy('nama_barang', 'asc')->get();

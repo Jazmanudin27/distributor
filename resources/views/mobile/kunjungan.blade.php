@@ -477,7 +477,7 @@
                                 <div style="max-width: 70%;">
                                     <div class="fw-semibold text-white">{{ $detail->barang->nama_barang }}</div>
                                     <div class="text-secondary font-monospace mt-1" style="font-size: 0.65rem;">
-                                        {{ $detail->qty }} {{ $detail->barangSatuan->satuan }} x Rp
+                                        {{ $detail->qty }} {{ $detail->barangSatuan->satuan ?? 'PCS' }} x Rp
                                         {{ number_format($detail->harga, 0, ',', '.') }}
                                     </div>
                                     @if ($detail->diskon1_persen > 0 || $detail->diskon2_persen > 0 || $detail->diskon3_persen > 0)
