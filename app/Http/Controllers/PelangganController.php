@@ -395,4 +395,53 @@ class PelangganController extends Controller
             'faktur'         => $fakturBelumLunas,
         ]);
     }
+
+    public function exportExcel(Request $request)
+    {
+        $query = Pelanggan::with(['wilayah', 'subWilayah', 'sales']);
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_pelanggan', 'like', '%' . $request->search . '%')
+                    ->orWhere('kode_pelanggan', 'like', '%' . $request->search . '%')
+                    ->orWhere('no_hp_pelanggan', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->filled('kode_wilayah')) {
+            $query->where('kode_wilayah', $request->kode_wilayah);
+        }
+
+        if ($request->filled('sub_wilayah')) {
+            $query->where('sub_wilayah', $request->sub_wilayah);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('kode_sales')) {
+            $query->where('kode_sales', $request->kode_sales);
+        }
+
+        if ($request->filled('approve')) {
+            if ($request->approve === 'pending') {
+                $query->where(function ($q) {
+                    $q->whereNull('approve')->orWhere('approve', 0);
+                });
+            } else {
+                $query->where('approve', $request->approve);
+            }
+        }
+
+        $pelanggans = $query->orderBy('nama_pelanggan', 'asc')->get();
+
+        $filename = 'data_master_pelanggan_' . date('Ymd_His') . '.xls';
+
+        return response(view('master.pelanggan.excel', compact('pelanggans')))
+            ->header('Content-Type', 'application/vnd-ms-excel')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
+    }
 }

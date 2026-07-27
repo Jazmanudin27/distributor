@@ -9,6 +9,9 @@
                 <small class="text-white-50">Daftar produk, jenis, kategori, dan status stok saat ini</small>
             </div>
             <div class="d-flex gap-2">
+                <a href="{{ route('barang.excel', request()->query()) }}" class="btn btn-success btn-sm fw-bold hover-scale" title="Export Excel sesuai filter">
+                    <i class="fa-solid fa-file-excel me-1"></i> Export Excel
+                </a>
                 @can('edit-barang')
                     <button type="button" id="btn-bulk-deactivate" class="btn btn-danger btn-sm fw-bold hover-scale d-none"
                         onclick="submitBulkDeactivate()">

@@ -154,12 +154,14 @@ Route::middleware('auth')->group(function () {
         Route::resource('kategori', KategoriController::class);
         Route::resource('merk', MerkController::class);
         Route::resource('supplier', SupplierController::class);
+        Route::get('/barang/export-excel', [BarangController::class, 'exportExcel'])->name('barang.excel');
         Route::get('/barang/update-harga-masal', [BarangController::class, 'editHargaMasal'])->name('barang.edit-harga-masal');
         Route::post('/barang/update-harga-masal', [BarangController::class, 'updateHargaMasal'])->name('barang.update-harga-masal');
         Route::post('/barang/bulk-deactivate', [BarangController::class, 'bulkDeactivate'])->name('barang.bulk-deactivate');
         Route::post('/barang/{id}/toggle-status', [BarangController::class, 'toggleStatus'])->name('barang.toggle-status');
         Route::resource('barang', BarangController::class);
         Route::resource('barang_satuan', BarangSatuanController::class);
+        Route::get('/pelanggan/export-excel', [PelangganController::class, 'exportExcel'])->name('pelanggan.excel');
         Route::resource('pelanggan', PelangganController::class);
         Route::get('/pelanggan-map', [PelangganController::class, 'map'])->name('pelanggan.map');
         Route::post('/pelanggan/{id}/toggle-status', [PelangganController::class, 'toggleStatus'])->name('pelanggan.toggle-status');

@@ -10,11 +10,16 @@
                 </h5>
                 <small class="text-white-50">Daftar pelanggan / customer terdaftar</small>
             </div>
-            @can('create-pelanggan')
-                <a href="{{ route('pelanggan.create') }}" class="btn btn-light btn-sm fw-bold hover-scale">
-                    <i class="fa-solid fa-circle-plus me-1 text-primary"></i> Tambah Pelanggan
+            <div class="d-flex gap-2">
+                <a href="{{ route('pelanggan.excel', request()->query()) }}" class="btn btn-success btn-sm fw-bold hover-scale" title="Export Excel sesuai filter">
+                    <i class="fa-solid fa-file-excel me-1"></i> Export Excel
                 </a>
-            @endcan
+                @can('create-pelanggan')
+                    <a href="{{ route('pelanggan.create') }}" class="btn btn-light btn-sm fw-bold hover-scale">
+                        <i class="fa-solid fa-circle-plus me-1 text-primary"></i> Tambah Pelanggan
+                    </a>
+                @endcan
+            </div>
         </div>
 
         <div class="card-body p-4">

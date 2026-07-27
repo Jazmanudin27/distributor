@@ -323,4 +323,43 @@ class BarangController extends Controller
 
         return redirect()->back()->with('success', 'Berhasil menonaktifkan masal barang yang dipilih.');
     }
+
+    public function exportExcel(Request $request)
+    {
+        $query = Barang::query()->with(['supplier', 'satuans']);
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_barang', 'like', '%' . $request->search . '%')
+                    ->orWhere('kode_barang', 'like', '%' . $request->search . '%')
+                    ->orWhere('kode_item', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->filled('kategori')) {
+            $query->where('kategori', $request->kategori);
+        }
+
+        if ($request->filled('merk')) {
+            $query->where('merk', $request->merk);
+        }
+
+        if ($request->filled('kode_supplier')) {
+            $query->where('kode_supplier', $request->kode_supplier);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $items = $query->orderBy('nama_barang', 'asc')->get();
+
+        $filename = 'data_master_barang_' . date('Ymd_His') . '.xls';
+
+        return response(view('master.barang.excel', compact('items')))
+            ->header('Content-Type', 'application/vnd-ms-excel')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
+    }
 }
