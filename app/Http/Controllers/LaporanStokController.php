@@ -87,7 +87,7 @@ class LaporanStokController extends Controller
             $items = collect();
 
             if ($isPrintOrExcel) {
-                $query = Barang::where('status', 1)->with(['satuans', 'supplier']);
+                $query = Barang::with(['satuans', 'supplier']);
                 
                 if ($kode_supplier) {
                     $query->where('kode_supplier', $kode_supplier);
@@ -100,6 +100,9 @@ class LaporanStokController extends Controller
                 }
                 if ($merk) {
                     $query->where('merk', $merk);
+                }
+                if ($request->filled('status')) {
+                    $query->where('status', $request->status);
                 }
                 if ($search) {
                     $query->where(function($q) use ($search) {
@@ -142,7 +145,7 @@ class LaporanStokController extends Controller
                     $hargaJual = $baseSatuan ? (float)$baseSatuan->harga_jual : 0;
 
                     $rawMutationsItem = $rawMutationsAll->get($kb) ?? collect();
-                    $opnameInRange = $rawMutationsItem->whereIn('jenis_transaksi', ['Stok Opname', 'Batal Stok Opname', 'Batal Stok Opname (Edit)'])->last();
+                    $opnameInRange = $rawMutationsItem->where('jenis_transaksi', 'Stok Opname')->last();
 
                     if ($opnameInRange && isset($opnameInRange->saldo_akhir)) {
                         $stokAwal = (float)$opnameInRange->saldo_akhir;
@@ -151,7 +154,17 @@ class LaporanStokController extends Controller
                             return $m->id > $opnameId;
                         });
                     } else {
-                        $stokAwal = (float)($lastMutationsBefore->get($kb) ?? 0);
+                        $lastBefore = $lastMutationsBefore->get($kb);
+                        if ($lastBefore !== null) {
+                            $stokAwal = (float)$lastBefore;
+                        } else {
+                            if ($rawMutationsItem->isNotEmpty()) {
+                                $firstM = $rawMutationsItem->first();
+                                $stokAwal = (float)$firstM->saldo_akhir - (float)$firstM->qty_masuk + (float)$firstM->qty_keluar;
+                            } else {
+                                $stokAwal = (float)$b->stok;
+                            }
+                        }
                         $validMovements = $rawMutationsItem;
                     }
 
@@ -217,7 +230,15 @@ class LaporanStokController extends Controller
 
                 if (!$tampilkan_stok_kosong) {
                     $items = $items->filter(function($item) {
-                        return $item['stok_akhir'] != 0;
+                        return $item['stok_awal'] != 0 
+                            || $item['stok_akhir'] != 0 
+                            || $item['pembelian'] > 0 
+                            || $item['retur_jual'] > 0 
+                            || $item['batal_jual'] > 0 
+                            || $item['penyesuaian_masuk'] > 0 
+                            || $item['penjualan'] > 0 
+                            || $item['retur_beli'] > 0 
+                            || $item['penyesuaian_keluar'] > 0;
                     });
                 }
             }

@@ -15,14 +15,14 @@
         body {
             background-color: #fff;
             font-family: "Inter", sans-serif;
-            font-size: 11px;
+            font-size: 12px;
             color: #000;
         }
 
         .table-sm th,
         .table-sm td {
-            font-size: 11px !important;
-            padding: 4px 6px !important;
+            font-size: 12px !important;
+            padding: 5px 7px !important;
             border: 1px solid #000 !important;
         }
 

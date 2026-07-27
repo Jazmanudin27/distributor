@@ -6,7 +6,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            font-size: 12px;
+            font-size: 13px;
         }
         table {
             width: 100%;
@@ -14,7 +14,7 @@
         }
         th, td {
             border: 1px solid #000000;
-            padding: 6px 8px;
+            padding: 7px 9px;
             vertical-align: top;
         }
         th {
@@ -29,7 +29,7 @@
             text-align: right;
         }
         .title {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             text-align: center;
             margin-bottom: 5px;
