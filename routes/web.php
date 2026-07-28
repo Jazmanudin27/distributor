@@ -28,6 +28,8 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\KeuanganMutasiController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CanvasController;
+use App\Http\Controllers\WilayahController;
+use App\Http\Controllers\SubWilayahController;
 
 // Mobile Controllers
 use App\Http\Controllers\Mobile\MobileAuthController;
@@ -154,6 +156,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('kategori', KategoriController::class);
         Route::resource('merk', MerkController::class);
         Route::resource('supplier', SupplierController::class);
+        Route::resource('wilayah', WilayahController::class);
+        Route::resource('sub-wilayah', SubWilayahController::class);
         Route::get('/barang/export-excel', [BarangController::class, 'exportExcel'])->name('barang.excel');
         Route::get('/barang/update-harga-masal', [BarangController::class, 'editHargaMasal'])->name('barang.edit-harga-masal');
         Route::post('/barang/update-harga-masal', [BarangController::class, 'updateHargaMasal'])->name('barang.update-harga-masal');

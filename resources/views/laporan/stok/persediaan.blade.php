@@ -14,15 +14,15 @@
         body {
             background-color: #fff;
             font-family: "Inter", sans-serif;
-            font-size: 12px;
+            font-size: 11px;
             color: #000;
-            width: 160%;
+            width: 150%;
         }
 
         .table-sm th,
         .table-sm td {
-            font-size: 12px !important;
-            padding: 5px 7px !important;
+            font-size: 11px !important;
+            padding: 4px 6px !important;
             border: 1px solid #000 !important;
         }
 
@@ -91,7 +91,7 @@
         </div>
 
         {{-- TABEL --}}
-        <div style="font-family: 'Inter', sans-serif; font-size: 14px; color: #000; margin: 5px;">
+        <div style="font-family: 'Inter', sans-serif; font-size: 13px; color: #000; margin: 5px;">
             <table class="table table-sm align-middle w-100">
                 <thead>
                     <tr>

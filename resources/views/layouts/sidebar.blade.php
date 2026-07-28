@@ -27,6 +27,8 @@
         request()->routeIs('kategori.*') ||
         request()->routeIs('merk.*') ||
         request()->routeIs('supplier.*') ||
+        request()->routeIs('wilayah.*') ||
+        request()->routeIs('sub-wilayah.*') ||
         request()->routeIs('barang.*') ||
         request()->routeIs('barang_satuan.*') ||
         request()->routeIs('pelanggan.*') ||
@@ -106,6 +108,8 @@
             $user->can('view-kategori') ||
                 $user->can('view-merk') ||
                 $user->can('view-supplier') ||
+                $user->can('view-wilayah') ||
+                $user->can('view-sub_wilayah') ||
                 $user->can('view-barang') ||
                 $user->can('view-satuan') ||
                 $user->can('view-pelanggan') ||
@@ -136,6 +140,14 @@
                         @can('view-supplier')
                             <a href="{{ route('supplier.index') }}"
                                 class="{{ request()->routeIs('supplier.*') ? 'active' : '' }}">Data Supplier</a>
+                        @endcan
+                        @can('view-wilayah')
+                            <a href="{{ route('wilayah.index') }}"
+                                class="{{ request()->routeIs('wilayah.*') ? 'active' : '' }}">Data Wilayah</a>
+                        @endcan
+                        @can('view-sub_wilayah')
+                            <a href="{{ route('sub-wilayah.index') }}"
+                                class="{{ request()->routeIs('sub-wilayah.*') ? 'active' : '' }}">Data Sub Wilayah</a>
                         @endcan
                         @can('view-barang')
                             <a href="{{ route('barang.index') }}"
