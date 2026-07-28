@@ -78,4 +78,14 @@ class SubWilayahController extends Controller
         $row->delete();
         return redirect()->route('sub-wilayah.index')->with('success', 'Data Sub Wilayah berhasil dihapus');
     }
+
+    public function toggleStatus($id)
+    {
+        $item = SubWilayah::findOrFail($id);
+        $item->status = ($item->status == 1) ? 0 : 1;
+        $item->save();
+
+        $statusText = $item->status == 1 ? 'diaktifkan' : 'dinonaktifkan';
+        return redirect()->back()->with('success', "Status Sub Wilayah '{$item->nama_wilayah}' berhasil {$statusText}");
+    }
 }

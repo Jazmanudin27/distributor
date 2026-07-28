@@ -78,4 +78,14 @@ class WilayahController extends Controller
         $row->delete();
         return redirect()->route('wilayah.index')->with('success', 'Data Wilayah berhasil dihapus');
     }
+
+    public function toggleStatus($id)
+    {
+        $item = Wilayah::findOrFail($id);
+        $item->status = ($item->status == 1) ? 0 : 1;
+        $item->save();
+
+        $statusText = $item->status == 1 ? 'diaktifkan' : 'dinonaktifkan';
+        return redirect()->back()->with('success', "Status Wilayah '{$item->nama_wilayah}' berhasil {$statusText}");
+    }
 }

@@ -15,5 +15,5 @@ class SubWilayah extends Model
     protected $keyType = 'int';
     public $timestamps = false;
 
-    protected $fillable = ['kode_wilayah', 'nama_wilayah'];
+    protected $fillable = ['kode_wilayah', 'nama_wilayah', 'status'];
 }

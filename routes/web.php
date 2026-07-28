@@ -156,7 +156,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('kategori', KategoriController::class);
         Route::resource('merk', MerkController::class);
         Route::resource('supplier', SupplierController::class);
+        Route::post('/wilayah/{id}/toggle-status', [WilayahController::class, 'toggleStatus'])->name('wilayah.toggle-status');
         Route::resource('wilayah', WilayahController::class);
+        Route::post('/sub-wilayah/{id}/toggle-status', [SubWilayahController::class, 'toggleStatus'])->name('sub-wilayah.toggle-status');
         Route::resource('sub-wilayah', SubWilayahController::class);
         Route::get('/barang/export-excel', [BarangController::class, 'exportExcel'])->name('barang.excel');
         Route::get('/barang/update-harga-masal', [BarangController::class, 'editHargaMasal'])->name('barang.edit-harga-masal');

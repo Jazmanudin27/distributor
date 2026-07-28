@@ -40,6 +40,7 @@
                             <th width="60" class="text-center">No</th>
                             <th width="140" class="text-center">Kode Wilayah</th>
                             <th>Nama Wilayah</th>
+                            <th width="140" class="text-center">Status</th>
                             <th width="150" class="text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -49,6 +50,22 @@
                                 <td class="text-center text-secondary small fw-bold">{{ $wilayahs->firstItem() + $index }}</td>
                                 <td class="text-center"><span class="badge bg-light text-dark border fw-mono fs-7">{{ $item->kode_wilayah }}</span></td>
                                 <td class="fw-bold text-dark">{{ $item->nama_wilayah }}</td>
+                                <td class="text-center">
+                                    <form action="{{ route('wilayah.toggle-status', $item->kode_wilayah) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @if (($item->status ?? 1) == 1)
+                                            <button type="submit" class="btn btn-sm btn-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-bold fs-7 hover-scale"
+                                                style="cursor: pointer;" title="Klik untuk menonaktifkan">
+                                                <i class="fa-solid fa-thumbs-up me-1"></i> Aktif
+                                            </button>
+                                        @else
+                                            <button type="submit" class="btn btn-sm btn-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1 fw-bold fs-7 hover-scale"
+                                                style="cursor: pointer;" title="Klik untuk mengaktifkan">
+                                                <i class="fa-solid fa-thumbs-down me-1"></i> Non-Aktif
+                                            </button>
+                                        @endif
+                                    </form>
+                                </td>
                                 <td class="text-center">
                                     <div class="btn-group gap-1">
                                         @can('edit-wilayah')
@@ -73,7 +90,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center py-4 text-muted">
+                                <td colspan="5" class="text-center py-4 text-muted">
                                     <i class="fa-solid fa-map-location-dot d-block fs-3 mb-2 opacity-50"></i>
                                     Tidak ada data wilayah.
                                 </td>
