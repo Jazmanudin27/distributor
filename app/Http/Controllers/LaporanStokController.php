@@ -402,7 +402,7 @@ class LaporanStokController extends Controller
             $stokAwal = 0;
             $stokAkhir = 0;
 
-            if ($kode_barang) {
+            if ($isPrintOrExcel && $kode_barang) {
                 $barang = Barang::with('satuans')->find($kode_barang);
                 if ($barang) {
                     // Check if there is a Stok Opname or Saldo Awal within [tanggal_mulai, tanggal_akhir]
@@ -802,6 +802,94 @@ class LaporanStokController extends Controller
 
         return redirect()->route('laporan.stok.saldo-awal.index')
             ->with('success', 'Stok real-time fisik barang berhasil dipulihkan & disinkronkan kembali dari mutasi transaksi!');
+    }
+
+    public function mutasiIndex(Request $request)
+    {
+        $this->authorizeReport('stok');
+
+        $query = DB::table('stok_mutasi')
+            ->leftJoin('barang', 'stok_mutasi.kode_barang', '=', 'barang.kode_barang')
+            ->leftJoin('users', 'stok_mutasi.id_user', '=', 'users.id')
+            ->select(
+                'stok_mutasi.*',
+                'barang.nama_barang',
+                'barang.kategori',
+                'barang.merk',
+                'users.name as nama_user'
+            );
+
+        if ($request->filled('kode_barang')) {
+            $query->where('stok_mutasi.kode_barang', $request->kode_barang);
+        }
+
+        if ($request->filled('jenis_transaksi')) {
+            $query->where('stok_mutasi.jenis_transaksi', $request->jenis_transaksi);
+        }
+
+        if ($request->filled('tanggal_mulai')) {
+            $query->where('stok_mutasi.tanggal', '>=', $request->tanggal_mulai);
+        }
+
+        if ($request->filled('tanggal_akhir')) {
+            $query->where('stok_mutasi.tanggal', '<=', $request->tanggal_akhir);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('stok_mutasi.no_referensi', 'like', "%$search%")
+                  ->orWhere('stok_mutasi.kode_barang', 'like', "%$search%")
+                  ->orWhere('barang.nama_barang', 'like', "%$search%")
+                  ->orWhere('stok_mutasi.keterangan', 'like', "%$search%");
+            });
+        }
+
+        $mutasis = $query->orderBy('stok_mutasi.tanggal', 'desc')
+            ->orderBy('stok_mutasi.id', 'desc')
+            ->paginate(25)
+            ->appends($request->query());
+
+        $kodeBarangs = collect($mutasis->items())->pluck('kode_barang')->unique()->toArray();
+        $barangsMap = Barang::with('satuans')->whereIn('kode_barang', $kodeBarangs)->get()->keyBy('kode_barang');
+
+        $barangsList = Barang::where('status', 1)->orderBy('nama_barang', 'asc')->get();
+
+        $jenisTransaksis = DB::table('stok_mutasi')
+            ->distinct()
+            ->pluck('jenis_transaksi')
+            ->filter();
+
+        return view('laporan.stok.mutasi_index', compact(
+            'mutasis', 'barangsMap', 'barangsList', 'jenisTransaksis'
+        ));
+    }
+
+    public function mutasiDestroy(Request $request, $id)
+    {
+        $this->authorizeReport('stok');
+
+        $mutasi = DB::table('stok_mutasi')->where('id', $id)->first();
+        if (!$mutasi) {
+            return redirect()->back()->with('error', 'Data mutasi tidak ditemukan.');
+        }
+
+        $adjustStok = $request->has('adjust_stok') && $request->adjust_stok == '1';
+
+        DB::transaction(function() use ($mutasi, $id, $adjustStok) {
+            if ($adjustStok && $mutasi->jenis_transaksi !== 'Saldo Awal') {
+                $barang = Barang::lockForUpdate()->find($mutasi->kode_barang);
+                if ($barang) {
+                    $netEffect = (float)$mutasi->qty_masuk - (float)$mutasi->qty_keluar;
+                    $barang->stok = (float)$barang->stok - $netEffect;
+                    $barang->save();
+                }
+            }
+
+            DB::table('stok_mutasi')->where('id', $id)->delete();
+        });
+
+        return redirect()->back()->with('success', "Data mutasi ({$mutasi->jenis_transaksi} - {$mutasi->no_referensi}) berhasil dihapus!");
     }
 
     private function authorizeReport($type)

@@ -458,6 +458,9 @@
                             <a href="{{ route('laporan.stok') }}?jenis_laporan=margin"
                                 class="{{ request()->routeIs('laporan.stok') && request('jenis_laporan') === 'margin' ? 'active' : '' }}">Margin
                                 Barang</a>
+                            <a href="{{ route('laporan.stok.mutasi.index') }}"
+                                class="{{ request()->routeIs('laporan.stok.mutasi.*') ? 'active' : '' }}">Riwayat
+                                Mutasi Stok</a>
                             <a href="{{ route('laporan.stok.saldo-awal.index') }}"
                                 class="{{ request()->routeIs('laporan.stok.saldo-awal.*') ? 'active' : '' }}">Setting
                                 Saldo Awal</a>

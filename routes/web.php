@@ -247,6 +247,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/laporan/stok/saldo-awal', [LaporanStokController::class, 'saldoAwalIndex'])->name('laporan.stok.saldo-awal.index');
         Route::post('/laporan/stok/saldo-awal', [LaporanStokController::class, 'saldoAwalStore'])->name('laporan.stok.saldo-awal.store');
         Route::post('/laporan/stok/saldo-awal/recalculate', [LaporanStokController::class, 'recalculateRealStok'])->name('laporan.stok.saldo-awal.recalculate');
+        Route::get('/laporan/stok/mutasi', [LaporanStokController::class, 'mutasiIndex'])->name('laporan.stok.mutasi.index');
+        Route::delete('/laporan/stok/mutasi/{id}', [LaporanStokController::class, 'mutasiDestroy'])->name('laporan.stok.mutasi.destroy');
         
         Route::get('/laporan/penjualan', [LaporanPenjualanController::class, 'laporanPenjualan'])->name('laporan.penjualan');
         Route::get('/laporan/penjualan/cetak', [LaporanPenjualanController::class, 'laporanPenjualan'])->name('laporan.penjualan.cetak');
