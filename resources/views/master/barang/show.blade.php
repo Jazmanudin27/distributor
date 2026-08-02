@@ -81,8 +81,12 @@
                                 </tr>
                                 <tr>
                                     <td class="text-secondary fw-semibold py-2">Stok Saat Ini</td>
-                                    <td class="py-2">: <span
-                                            class="badge bg-info-subtle text-info-emphasis px-2.5 py-1.5 ms-2 border border-info-subtle fw-extrabold fs-7 font-monospace">{{ number_format((float) ($item->stok ?? 0), 2, ',', '.') }}</span></td>
+                                    <td class="py-2">: 
+                                        <span class="badge bg-info-subtle text-info-emphasis px-2.5 py-1.5 ms-2 border border-info-subtle fw-extrabold fs-7 font-monospace">
+                                            {{ $item->formatStok($item->stok) }}
+                                        </span>
+                                        <span class="text-muted small ms-1">({{ number_format((float) ($item->stok ?? 0), 0, ',', '.') }} Base Qty)</span>
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="text-secondary fw-semibold py-2">Stok Minimal</td>

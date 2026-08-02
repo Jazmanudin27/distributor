@@ -143,8 +143,13 @@
                                     {{ $item->merk ?? '-' }}
                                 </td>
 
-                                <td class="text-end pe-3 fw-bold font-monospace text-dark">
-                                    {{ number_format((float) ($item->stok ?? 0), 2, ',', '.') }}
+                                <td class="text-end pe-3 font-monospace">
+                                    <div class="fw-bold text-dark fs-7">
+                                        {{ $item->formatStok($item->stok) }}
+                                    </div>
+                                    <div class="text-muted small fw-normal" style="font-size: 0.72rem;">
+                                        ({{ number_format((float) ($item->stok ?? 0), 0, ',', '.') }} Base Qty)
+                                    </div>
                                 </td>
 
                                 <td>

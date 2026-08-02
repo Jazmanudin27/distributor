@@ -14,7 +14,7 @@ class BarangController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Barang::query();
+        $query = Barang::query()->with(['supplier', 'satuans']);
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
