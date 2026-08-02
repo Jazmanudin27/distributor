@@ -96,6 +96,43 @@
                             </div>
                         </div>
 
+                        {{-- BULAN & TAHUN FILTER FOR REKAP PERSEDIAAN --}}
+                        <div class="row g-2 filter-bulan-tahun d-none mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-semibold text-secondary mb-1">Pilih Bulan</label>
+                                <select name="bulan" id="bulan" class="form-select form-select-sm select2-init">
+                                    @php
+                                        $namaBulan = [
+                                            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                                            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                                            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                                        ];
+                                        $currentMonth = (int)request('bulan', date('n'));
+                                    @endphp
+                                    @foreach ($namaBulan as $mNum => $mName)
+                                        <option value="{{ $mNum }}" {{ $currentMonth === $mNum ? 'selected' : '' }}>
+                                            {{ $mName }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-semibold text-secondary mb-1">Pilih Tahun</label>
+                                <select name="tahun" id="tahun" class="form-select form-select-sm select2-init">
+                                    @php
+                                        $currentYear = (int)request('tahun', date('Y'));
+                                        $startYear = $currentYear - 3;
+                                        $endYear = $currentYear + 2;
+                                    @endphp
+                                    @for ($y = $startYear; $y <= $endYear; $y++)
+                                        <option value="{{ $y }}" {{ $currentYear === $y ? 'selected' : '' }}>
+                                            {{ $y }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="row g-2">
                             <div class="col-6">
                                 <button type="submit" onclick="this.form.action='{{ route('laporan.stok.cetak') }}'; this.form.target='_blank';"
@@ -165,21 +202,25 @@
                     $('.filter-barang').addClass('d-none');
                     $('.filter-supplier').addClass('d-none');
                     $('.filter-dates').addClass('d-none');
+                    $('.filter-bulan-tahun').addClass('d-none');
                 } else if (val === 'detail') {
                     $('.filter-rekap').addClass('d-none');
                     $('.filter-barang').removeClass('d-none');
                     $('.filter-supplier').addClass('d-none');
                     $('.filter-dates').removeClass('d-none');
+                    $('.filter-bulan-tahun').addClass('d-none');
                 } else if (val === 'rekap_persediaan') {
                     $('.filter-rekap').removeClass('d-none');
                     $('.filter-barang').removeClass('d-none');
                     $('.filter-supplier').removeClass('d-none');
-                    $('.filter-dates').removeClass('d-none');
+                    $('.filter-dates').addClass('d-none');
+                    $('.filter-bulan-tahun').removeClass('d-none');
                 } else if (val === 'margin') {
                     $('.filter-rekap').removeClass('d-none');
                     $('.filter-barang').addClass('d-none');
                     $('.filter-supplier').removeClass('d-none');
                     $('.filter-dates').addClass('d-none');
+                    $('.filter-bulan-tahun').addClass('d-none');
                 }
             }
 

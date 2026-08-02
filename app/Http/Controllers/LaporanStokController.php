@@ -26,8 +26,17 @@ class LaporanStokController extends Controller
         $suppliers = Supplier::orderBy('nama_supplier', 'asc')->get();
 
         $jenis_laporan = $request->input('jenis_laporan', 'rekap');
-        $tanggal_mulai = $request->input('tanggal_mulai', date('Y-m-01'));
-        $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
+        $bulan = (int)$request->input('bulan', date('n'));
+        $tahun = (int)$request->input('tahun', date('Y'));
+
+        if ($jenis_laporan === 'rekap_persediaan') {
+            $tanggal_mulai = sprintf('%04d-%02d-01', $tahun, $bulan);
+            $tanggal_akhir = Carbon::parse($tanggal_mulai)->endOfMonth()->toDateString();
+        } else {
+            $tanggal_mulai = $request->input('tanggal_mulai', date('Y-01-01'));
+            $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
+        }
+
         $kode_barang = $request->input('kode_barang');
         $kategori = $request->input('kategori');
         $merk = $request->input('merk');
@@ -70,7 +79,7 @@ class LaporanStokController extends Controller
                 $filename = 'laporan_stok_rekap_' . date('Ymd_His') . '.xls';
                 return response(view($view, compact(
                     'barangsList', 'kategoris', 'merks', 'suppliers', 'items', 
-                    'jenis_laporan', 'kategori', 'merk', 'kode_supplier', 'tanggal_mulai', 'tanggal_akhir', 'search', 'isExcel', 'tampilkan_stok_kosong'
+                    'jenis_laporan', 'kategori', 'merk', 'kode_supplier', 'tanggal_mulai', 'tanggal_akhir', 'bulan', 'tahun', 'search', 'isExcel', 'tampilkan_stok_kosong'
                 )))
                 ->header('Content-Type', 'application/vnd-ms-excel')
                 ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
@@ -80,7 +89,7 @@ class LaporanStokController extends Controller
 
             return view($view, compact(
                 'barangsList', 'kategoris', 'merks', 'suppliers', 'items', 
-                'jenis_laporan', 'kategori', 'merk', 'kode_supplier', 'tanggal_mulai', 'tanggal_akhir', 'search', 'tampilkan_stok_kosong'
+                'jenis_laporan', 'kategori', 'merk', 'kode_supplier', 'tanggal_mulai', 'tanggal_akhir', 'bulan', 'tahun', 'search', 'tampilkan_stok_kosong'
             ));
         } elseif ($jenis_laporan === 'rekap_persediaan') {
             $view = $isPrintOrExcel ? 'laporan.stok.persediaan' : 'laporan.stok.index';
@@ -113,29 +122,6 @@ class LaporanStokController extends Controller
                 }
 
                 $barangs = $query->orderBy('nama_barang', 'asc')->get();
-                $barangIds = $barangs->pluck('kode_barang')->toArray();
-
-                // 1. Get latest mutation BEFORE tanggal_mulai for each product
-                $lastMutationsBefore = DB::table('stok_mutasi')
-                    ->whereIn('kode_barang', $barangIds)
-                    ->where('tanggal', '<', $tanggal_mulai)
-                    ->whereIn('id', function($q) use ($tanggal_mulai, $barangIds) {
-                        $q->selectRaw('MAX(id)')
-                          ->from('stok_mutasi')
-                          ->whereIn('kode_barang', $barangIds)
-                          ->where('tanggal', '<', $tanggal_mulai)
-                          ->groupBy('kode_barang');
-                    })
-                    ->pluck('saldo_akhir', 'kode_barang');
-
-                // 2. Get all mutations in period ordered by date & id
-                $rawMutationsAll = DB::table('stok_mutasi')
-                    ->whereIn('kode_barang', $barangIds)
-                    ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
-                    ->orderBy('tanggal', 'asc')
-                    ->orderBy('id', 'asc')
-                    ->get()
-                    ->groupBy('kode_barang');
 
                 foreach ($barangs as $b) {
                     $kb = $b->kode_barang;
@@ -144,37 +130,84 @@ class LaporanStokController extends Controller
                     $hargaPokok = $baseSatuan ? (float)$baseSatuan->harga_pokok : 0;
                     $hargaJual = $baseSatuan ? (float)$baseSatuan->harga_jual : 0;
 
-                    $rawMutationsItem = $rawMutationsAll->get($kb) ?? collect();
-                    $opnameInRange = $rawMutationsItem->whereIn('jenis_transaksi', ['Stok Opname', 'Saldo Awal'])->last();
+                    // 1. Find latest Saldo Awal or Stok Opname baseline on or before $tanggal_mulai
+                    $refBaseline = DB::table('stok_mutasi')
+                        ->where('kode_barang', $kb)
+                        ->whereIn('jenis_transaksi', ['Saldo Awal', 'Stok Opname', 'Batal Stok Opname', 'Batal Stok Opname (Edit)'])
+                        ->where('tanggal', '<=', $tanggal_mulai)
+                        ->orderBy('tanggal', 'desc')
+                        ->orderBy('id', 'desc')
+                        ->first();
 
-                    if ($opnameInRange && isset($opnameInRange->saldo_akhir)) {
-                        $stokAwal = (float)$opnameInRange->saldo_akhir;
-                        $opnameId = $opnameInRange->id;
-                        $validMovements = $rawMutationsItem->filter(function($m) use ($opnameId) {
-                            return $m->id > $opnameId;
-                        });
-                    } else {
-                        $lastBefore = $lastMutationsBefore->get($kb);
-                        if ($lastBefore !== null) {
-                            $stokAwal = (float)$lastBefore;
-                        } else {
-                            $saRecord = DB::table('stok_mutasi')
+                    if (!$refBaseline) {
+                        // Fallback: search for Saldo Awal mutation on or before $tanggal_akhir
+                        $refBaseline = DB::table('stok_mutasi')
+                            ->where('kode_barang', $kb)
+                            ->where('jenis_transaksi', 'Saldo Awal')
+                            ->where('tanggal', '<=', $tanggal_akhir)
+                            ->orderBy('tanggal', 'asc')
+                            ->orderBy('id', 'asc')
+                            ->first();
+                    }
+
+                    if ($refBaseline) {
+                        $baseStock = (float)$refBaseline->saldo_akhir;
+                        $baseId = $refBaseline->id;
+                        $baseDate = $refBaseline->tanggal;
+
+                        if ($baseDate < $tanggal_mulai) {
+                            $movementsToStart = DB::table('stok_mutasi')
                                 ->where('kode_barang', $kb)
-                                ->where('jenis_transaksi', 'Saldo Awal')
-                                ->orderBy('tanggal', 'desc')
-                                ->orderBy('id', 'desc')
-                                ->first();
+                                ->where('id', '>', $baseId)
+                                ->where('tanggal', '<', $tanggal_mulai)
+                                ->get();
 
-                            if ($saRecord) {
-                                $stokAwal = (float)$saRecord->saldo_akhir;
-                            } elseif ($rawMutationsItem->isNotEmpty()) {
-                                $firstM = $rawMutationsItem->first();
-                                $stokAwal = (float)$firstM->saldo_akhir - (float)$firstM->qty_masuk + (float)$firstM->qty_keluar;
-                            } else {
-                                $stokAwal = (float)$b->stok;
-                            }
+                            $netToStart = $movementsToStart->sum(function($m) {
+                                return (float)$m->qty_masuk - (float)$m->qty_keluar;
+                            });
+
+                            $stokAwal = $baseStock + $netToStart;
+
+                            $validMovements = DB::table('stok_mutasi')
+                                ->where('kode_barang', $kb)
+                                ->where('tanggal', '>=', $tanggal_mulai)
+                                ->where('tanggal', '<=', $tanggal_akhir)
+                                ->orderBy('tanggal', 'asc')
+                                ->orderBy('id', 'asc')
+                                ->get();
+                        } else {
+                            // Baseline is on $tanggal_mulai (e.g. Saldo Awal set for 1st of month)
+                            $stokAwal = $baseStock;
+
+                            $validMovements = DB::table('stok_mutasi')
+                                ->where('kode_barang', $kb)
+                                ->where('id', '>', $baseId)
+                                ->where('tanggal', '<=', $tanggal_akhir)
+                                ->orderBy('tanggal', 'asc')
+                                ->orderBy('id', 'asc')
+                                ->get();
                         }
-                        $validMovements = $rawMutationsItem;
+                    } else {
+                        // No Saldo Awal or Opname found at all
+                        $firstMutation = DB::table('stok_mutasi')
+                            ->where('kode_barang', $kb)
+                            ->orderBy('tanggal', 'asc')
+                            ->orderBy('id', 'asc')
+                            ->first();
+
+                        if ($firstMutation) {
+                            $stokAwal = (float)$firstMutation->saldo_awal;
+                            $validMovements = DB::table('stok_mutasi')
+                                ->where('kode_barang', $kb)
+                                ->where('tanggal', '>=', $tanggal_mulai)
+                                ->where('tanggal', '<=', $tanggal_akhir)
+                                ->orderBy('tanggal', 'asc')
+                                ->orderBy('id', 'asc')
+                                ->get();
+                        } else {
+                            $stokAwal = (float)$b->stok;
+                            $validMovements = collect();
+                        }
                     }
 
                     $pembelianPeriod = 0;
@@ -256,7 +289,7 @@ class LaporanStokController extends Controller
                 $filename = 'laporan_persediaan_' . date('Ymd_His') . '.xls';
                 return response(view($view, compact(
                     'barangsList', 'kategoris', 'merks', 'suppliers', 'items', 
-                    'jenis_laporan', 'kode_barang', 'kategori', 'merk', 'kode_supplier', 'tanggal_mulai', 'tanggal_akhir', 'search', 'isExcel', 'tampilkan_stok_kosong'
+                    'jenis_laporan', 'kode_barang', 'kategori', 'merk', 'kode_supplier', 'tanggal_mulai', 'tanggal_akhir', 'bulan', 'tahun', 'search', 'isExcel', 'tampilkan_stok_kosong'
                 )))
                 ->header('Content-Type', 'application/vnd-ms-excel')
                 ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
@@ -266,7 +299,7 @@ class LaporanStokController extends Controller
 
             return view($view, compact(
                 'barangsList', 'kategoris', 'merks', 'suppliers', 'items', 
-                'jenis_laporan', 'kode_barang', 'kategori', 'merk', 'kode_supplier', 'tanggal_mulai', 'tanggal_akhir', 'search', 'tampilkan_stok_kosong'
+                'jenis_laporan', 'kode_barang', 'kategori', 'merk', 'kode_supplier', 'tanggal_mulai', 'tanggal_akhir', 'bulan', 'tahun', 'search', 'tampilkan_stok_kosong'
             ));
         } elseif ($jenis_laporan === 'margin') {
             $view = $isPrintOrExcel ? 'laporan.stok.margin' : 'laporan.stok.index';
