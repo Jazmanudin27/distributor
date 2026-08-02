@@ -114,10 +114,16 @@
 
                 {{-- DYNAMIC LIST TABLE --}}
                 <div class="card border shadow-sm rounded">
-                    <div class="card-header bg-white py-3">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <h6 class="fw-bold mb-0 text-dark">
                             <i class="fa-solid fa-list me-1 text-primary"></i> Daftar Penyesuaian Barang
                         </h6>
+                        <div class="form-check form-switch mb-0">
+                            <input class="form-check-input" type="checkbox" id="tampilkan_stok_kosong" checked style="cursor: pointer;">
+                            <label class="form-check-label fw-semibold text-secondary user-select-none" for="tampilkan_stok_kosong" style="cursor: pointer;">
+                                <i class="fa-solid fa-eye me-1 text-primary"></i> Tampilkan / Muat Barang Stok 0
+                            </label>
+                        </div>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-sm table-hover align-middle mb-0" id="table-items">
@@ -228,10 +234,47 @@
                 return result;
             }
 
+            function filterTableRows() {
+                const showZero = $('#tampilkan_stok_kosong').is(':checked');
+                $('#table-items tbody tr').each(function() {
+                    const stokSistem = parseFloat($(this).find('.sistem-input').val()) || 0;
+                    const selisihVal = $(this).find('.selisih-val').val();
+                    const selisih = selisihVal !== '' && selisihVal !== null ? (parseFloat(selisihVal) || 0) : 0;
+
+                    if (!showZero && stokSistem <= 0 && selisih === 0) {
+                        $(this).hide();
+                    } else {
+                        $(this).show();
+                    }
+                });
+                reorderRows();
+            }
+
+            function updateManualSelectOptions() {
+                const showZero = $('#tampilkan_stok_kosong').is(':checked');
+                const $select = $('#select_barang_manual');
+                const currentVal = $select.val();
+
+                $select.empty().append('<option value="">-- Cari Barang --</option>');
+                barangs.forEach(function(b) {
+                    const stok = parseFloat(b.stok) || 0;
+                    if (showZero || stok > 0) {
+                        $select.append(new Option(`${b.kode_barang} - ${b.nama_barang} (Stok: ${b.stok})`, b.kode_barang));
+                    }
+                });
+                $select.val(currentVal).trigger('change');
+            }
+
+            $('#tampilkan_stok_kosong').on('change', function() {
+                filterTableRows();
+                updateManualSelectOptions();
+            });
+
             // Bulk Loader Button Click
             $('#btn-load-filtered').on('click', function() {
                 const cat = $('#filter_kategori').val();
                 const merk = $('#filter_merk').val();
+                const showZero = $('#tampilkan_stok_kosong').is(':checked');
 
                 let filtered = barangs;
                 if (cat) {
@@ -239,6 +282,9 @@
                 }
                 if (merk) {
                     filtered = filtered.filter(b => b.merk === merk);
+                }
+                if (!showZero) {
+                    filtered = filtered.filter(b => (parseFloat(b.stok) || 0) > 0);
                 }
 
                 if (filtered.length === 0) {
@@ -433,12 +479,12 @@
 
                 $('#table-items tbody').append(rowHtml);
                 rowIndex++;
-                reorderRows();
+                filterTableRows();
             }
 
             function reorderRows() {
                 let num = 1;
-                $('#table-items tbody tr').each(function() {
+                $('#table-items tbody tr:visible').each(function() {
                     $(this).find('.row-number').text(num++);
                 });
             }
@@ -467,6 +513,7 @@
                     );
                     span.addClass('bg-secondary-subtle text-secondary border');
                     span.text('-');
+                    filterTableRows();
                     return;
                 }
 
@@ -501,6 +548,7 @@
                     span.addClass('bg-secondary-subtle text-secondary border');
                 }
                 span.text(sign + selisih);
+                filterTableRows();
             });
 
             // Delete row

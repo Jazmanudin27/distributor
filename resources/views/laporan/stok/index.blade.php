@@ -112,6 +112,14 @@
                                 </button>
                             </div>
                         </div>
+
+                        <div class="mt-3">
+                            <a href="{{ route('laporan.stok.saldo-awal.index') }}" 
+                               class="btn btn-outline-primary w-100 py-2 fw-bold hover-scale shadow-sm d-flex align-items-center justify-content-center gap-2"
+                               style="height: 38px;">
+                                <i class="fa-solid fa-calculator"></i> Setting / Generate Saldo Awal
+                            </a>
+                        </div>
                     </form>
                 </div>
             </div>

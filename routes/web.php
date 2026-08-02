@@ -244,6 +244,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/laporan/stok', [LaporanStokController::class, 'laporanStok'])->name('laporan.stok');
         Route::get('/laporan/stok/cetak', [LaporanStokController::class, 'laporanStok'])->name('laporan.stok.cetak');
         Route::get('/laporan/stok/excel', [LaporanStokController::class, 'laporanStok'])->name('laporan.stok.excel');
+        Route::get('/laporan/stok/saldo-awal', [LaporanStokController::class, 'saldoAwalIndex'])->name('laporan.stok.saldo-awal.index');
+        Route::post('/laporan/stok/saldo-awal', [LaporanStokController::class, 'saldoAwalStore'])->name('laporan.stok.saldo-awal.store');
         
         Route::get('/laporan/penjualan', [LaporanPenjualanController::class, 'laporanPenjualan'])->name('laporan.penjualan');
         Route::get('/laporan/penjualan/cetak', [LaporanPenjualanController::class, 'laporanPenjualan'])->name('laporan.penjualan.cetak');

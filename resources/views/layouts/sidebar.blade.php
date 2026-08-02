@@ -57,7 +57,7 @@
 
     $isLapPembelianActive = request()->routeIs('laporan.pembelian') || request()->routeIs('laporan.retur-pembelian');
 
-    $isLapGudangActive = request()->routeIs('laporan.stok');
+    $isLapGudangActive = request()->routeIs('laporan.stok') || request()->routeIs('laporan.stok.*');
 
     $isLapKeuanganActive =
         request()->routeIs('laporan.piutang') ||
@@ -453,11 +453,14 @@
                     <div class="collapse {{ $isLapGudangActive ? 'show' : '' }}" id="collapseLapGudang">
                         <div class="submenu-container">
                             <a href="{{ route('laporan.stok') }}"
-                                class="{{ request()->routeIs('laporan.stok') && request('jenis_laporan') !== 'margin' ? 'active' : '' }}">Stok
+                                class="{{ request()->routeIs('laporan.stok') && !request()->routeIs('laporan.stok.saldo-awal.*') && request('jenis_laporan') !== 'margin' ? 'active' : '' }}">Stok
                                 Barang</a>
                             <a href="{{ route('laporan.stok') }}?jenis_laporan=margin"
                                 class="{{ request()->routeIs('laporan.stok') && request('jenis_laporan') === 'margin' ? 'active' : '' }}">Margin
                                 Barang</a>
+                            <a href="{{ route('laporan.stok.saldo-awal.index') }}"
+                                class="{{ request()->routeIs('laporan.stok.saldo-awal.*') ? 'active' : '' }}">Setting
+                                Saldo Awal</a>
                         </div>
                     </div>
                 </div>
