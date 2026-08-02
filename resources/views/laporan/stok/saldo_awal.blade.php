@@ -132,10 +132,11 @@
                                             $totalMasuk = $m ? (float)$m->total_masuk : 0;
                                             $totalKeluar = $m ? (float)$m->total_keluar : 0;
                                             $stokSaatIni = (float)$b->stok;
-                                            $estimasiSaldoAwal = $stokSaatIni - $totalMasuk + $totalKeluar;
+                                            $estimasiCalculated = $stokSaatIni - $totalMasuk + $totalKeluar;
+                                            $estimasiSaldoAwal = max(0, $estimasiCalculated);
 
                                             $lastSA = $lastSaldoAwals->get($b->kode_barang);
-                                            $defaultValue = old('items.' . $index . '.saldo_awal', $lastSA !== null ? (float)$lastSA : $estimasiSaldoAwal);
+                                            $defaultValue = max(0, (float)old('items.' . $index . '.saldo_awal', $lastSA !== null ? (float)$lastSA : $estimasiSaldoAwal));
 
                                             $satuans = $b->satuans->sortByDesc('isi');
                                             $breakdown = [];
@@ -296,8 +297,8 @@
             $('#btnAutoGenerateHitungMundur').on('click', function() {
                 $('.sa-row-container').each(function() {
                     const container = $(this);
-                    const hiddenInput = container.find('.saldo-awal-total-hidden');
-                    const estimasi = parseFloat(hiddenInput.data('estimasi')) || 0;
+                    const rawEstimasi = parseFloat(hiddenInput.data('estimasi')) || 0;
+                    const estimasi = Math.max(0, rawEstimasi);
 
                     let remaining = Math.round(Math.abs(estimasi) * 10000) / 10000;
                     const inputs = container.find('.uom-sa-input');

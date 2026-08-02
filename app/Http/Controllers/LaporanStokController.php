@@ -710,7 +710,7 @@ class LaporanStokController extends Controller
             'tanggal' => 'required|date',
             'items' => 'nullable|array',
             'items.*.kode_barang' => 'required|exists:barang,kode_barang',
-            'items.*.saldo_awal' => 'nullable|numeric|min:0',
+            'items.*.saldo_awal' => 'nullable|numeric',
         ]);
 
         if (empty($request->items)) {
@@ -728,7 +728,8 @@ class LaporanStokController extends Controller
                 }
 
                 $kb = $item['kode_barang'];
-                $targetSaldoAwal = (isset($item['saldo_awal']) && $item['saldo_awal'] !== '' && $item['saldo_awal'] !== null) ? (float)$item['saldo_awal'] : 0.0;
+                $rawVal = (isset($item['saldo_awal']) && $item['saldo_awal'] !== '' && $item['saldo_awal'] !== null) ? (float)$item['saldo_awal'] : 0.0;
+                $targetSaldoAwal = max(0, $rawVal);
 
                 // Save strictly into 'saldo_awal_gs' table without touching stok_mutasi or barang.stok
                 DB::table('saldo_awal_gs')->updateOrInsert(
