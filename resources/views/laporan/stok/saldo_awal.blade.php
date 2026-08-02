@@ -117,8 +117,26 @@
                                         @php
                                             $lastSA = $lastSaldoAwals->get($b->kode_barang);
                                             $defaultValue = $lastSA ? (float)$lastSA->saldo_akhir : (float)$b->stok;
+
+                                            $satuans = $b->satuans->sortByDesc('isi');
+                                            $breakdown = [];
+                                            $remaining = (float)$defaultValue;
+                                            $count = $satuans->count();
+                                            $i = 0;
+                                            foreach ($satuans as $sat) {
+                                                $i++;
+                                                $factor = (float)($sat->isi ?: 1);
+                                                if ($i === $count) {
+                                                    $unitQty = round($remaining / $factor, 4);
+                                                    $breakdown[$sat->id] = $unitQty > 0 ? $unitQty : '';
+                                                } else {
+                                                    $unitQty = floor(round($remaining / $factor, 8));
+                                                    $breakdown[$sat->id] = $unitQty > 0 ? $unitQty : '';
+                                                    $remaining = round($remaining - ($unitQty * $factor), 4);
+                                                }
+                                            }
                                         @endphp
-                                        <tr>
+                                        <tr data-stok-available="{{ (float)$b->stok }}" data-satuans="{{ json_encode($satuans->values()) }}">
                                             <td class="text-center">{{ ($barangs->currentPage() - 1) * $barangs->perPage() + $index + 1 }}</td>
                                             <td class="font-monospace text-secondary text-center">{{ $b->kode_barang }}</td>
                                             <td class="font-monospace text-center">{{ $b->kode_item ?? '-' }}</td>
@@ -134,9 +152,12 @@
                                             </td>
                                             <td class="text-center small">
                                                 @if ($lastSA)
-                                                    <span class="text-success fw-semibold font-monospace">
-                                                        {{ number_format($lastSA->saldo_akhir, 0, ',', '.') }}
+                                                    <span class="text-success fw-bold font-monospace">
+                                                        {{ $b->formatStok($lastSA->saldo_akhir) }}
                                                     </span>
+                                                    <div class="text-muted font-monospace" style="font-size: 10px;">
+                                                        ({{ number_format($lastSA->saldo_akhir, 0, ',', '.') }} PCS)
+                                                    </div>
                                                     <div class="text-muted" style="font-size: 10px;">
                                                         Tgl: {{ \Carbon\Carbon::parse($lastSA->tanggal)->format('d/m/Y') }}
                                                     </div>
@@ -144,14 +165,36 @@
                                                     <span class="text-muted opacity-50">&mdash; Belum ada &mdash;</span>
                                                 @endif
                                             </td>
-                                            <td>
+                                            <td class="text-end">
                                                 <input type="hidden" name="items[{{ $index }}][kode_barang]" value="{{ $b->kode_barang }}">
-                                                <div class="input-group input-group-sm">
-                                                    <input type="number" step="any" name="items[{{ $index }}][saldo_awal]" 
-                                                           class="form-control form-control-sm text-end fw-bold font-monospace input-saldo-awal" 
-                                                           data-stok-available="{{ (float)$b->stok }}"
-                                                           value="{{ old('items.' . $index . '.saldo_awal', $defaultValue) }}" min="0">
-                                                    <span class="input-group-text bg-light small">{{ $b->satuans->sortBy('isi')->first()->satuan ?? 'PCS' }}</span>
+                                                <input type="hidden" name="items[{{ $index }}][saldo_awal]" class="input-saldo-awal" value="{{ $defaultValue }}">
+
+                                                <div class="d-flex flex-wrap gap-1 justify-content-end align-items-center uom-container">
+                                                    @if ($satuans->count() > 0)
+                                                        @foreach ($satuans as $sat)
+                                                            <div class="input-group input-group-sm" style="width: 85px;">
+                                                                <input type="number" step="any" min="0"
+                                                                       class="form-control form-control-sm text-end fw-bold font-monospace uom-input p-1"
+                                                                       data-isi="{{ $sat->isi }}"
+                                                                       value="{{ $breakdown[$sat->id] ?? '' }}"
+                                                                       placeholder="0">
+                                                                <span class="input-group-text px-1 text-secondary fw-semibold" style="font-size: 9px; line-height: 1.2;">{{ $sat->satuan }}</span>
+                                                            </div>
+                                                        @endforeach
+                                                    @else
+                                                        <div class="input-group input-group-sm" style="width: 100px;">
+                                                            <input type="number" step="any" min="0"
+                                                                   class="form-control form-control-sm text-end fw-bold font-monospace uom-input"
+                                                                   data-isi="1"
+                                                                   value="{{ $defaultValue > 0 ? $defaultValue : '' }}"
+                                                                   placeholder="0">
+                                                            <span class="input-group-text bg-light small">PCS</span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+
+                                                <div class="text-end text-muted small mt-1 font-monospace fw-semibold konversi-label" style="font-size: 0.73rem;">
+                                                    Konversi: <span class="total-qty-val fw-bold text-primary">{{ $b->formatStok($defaultValue) }}</span>
                                                 </div>
                                             </td>
                                         </tr>
@@ -199,14 +242,92 @@
                 width: '100%'
             });
 
+            function formatStokJS(stok, satuans) {
+                let qtyFloat = parseFloat(stok) || 0;
+                let isNegative = qtyFloat < 0;
+                let remaining = Math.round(Math.abs(qtyFloat) * 10000) / 10000;
+                let breakdowns = [];
+                if (satuans && satuans.length > 0) {
+                    let sorted = [...satuans].sort((a, b) => b.isi - a.isi);
+                    let count = sorted.length;
+                    sorted.forEach((sat, index) => {
+                        let factor = parseFloat(sat.isi) || 1;
+                        if (index === count - 1) {
+                            let unitQty = Math.round((remaining / factor) * 10000) / 10000;
+                            if (unitQty > 0) {
+                                breakdowns.push(`${unitQty} ${sat.satuan}`);
+                            }
+                        } else {
+                            let unitQty = Math.floor(Math.round((remaining / factor) * 100000000) / 100000000);
+                            if (unitQty > 0) {
+                                breakdowns.push(`${unitQty} ${sat.satuan}`);
+                                remaining = Math.round((remaining - (unitQty * factor)) * 10000) / 10000;
+                            }
+                        }
+                    });
+                } else {
+                    breakdowns.push(`${remaining} PCS`);
+                }
+                let formatted = breakdowns.join(' ') || '0 PCS';
+                return isNegative ? '-' + formatted : formatted;
+            }
+
+            // Input changes in UOM inputs
+            $(document).on('input change', '.uom-input', function() {
+                const tr = $(this).closest('tr');
+                let totalQty = 0;
+                let isAnyFilled = false;
+
+                tr.find('.uom-input').each(function() {
+                    const val = $(this).val();
+                    if (val !== '') {
+                        isAnyFilled = true;
+                    }
+                    const qty = parseFloat(val) || 0;
+                    const factor = parseFloat($(this).data('isi')) || 1;
+                    totalQty += qty * factor;
+                });
+
+                const hiddenVal = isAnyFilled ? totalQty : 0;
+                tr.find('.input-saldo-awal').val(hiddenVal);
+
+                const satuans = tr.data('satuans') || [];
+                const formatted = formatStokJS(hiddenVal, satuans);
+                tr.find('.total-qty-val').text(formatted);
+            });
+
             // Auto Generate Button Logic
             $('#btnAutoGenerate').on('click', function() {
                 if (confirm('Apakah Anda yakin ingin mengisi nilai Saldo Awal secara otomatis dari stok yang tersedia saat ini untuk semua barang di daftar?')) {
-                    $('.input-saldo-awal').each(function() {
-                        const stokAvailable = $(this).data('stok-available');
-                        $(this).val(stokAvailable);
+                    $('table tbody tr').each(function() {
+                        const tr = $(this);
+                        const availableStok = parseFloat(tr.data('stok-available')) || 0;
+                        const satuans = tr.data('satuans') || [];
+
+                        let remaining = availableStok;
+                        if (satuans && satuans.length > 0) {
+                            let sorted = [...satuans].sort((a, b) => b.isi - a.isi);
+                            let count = sorted.length;
+                            sorted.forEach(function(sat, idx) {
+                                let factor = parseFloat(sat.isi) || 1;
+                                let inputEl = tr.find(`.uom-input[data-isi="${sat.isi}"]`);
+                                if (idx === count - 1) {
+                                    let unitQty = Math.round((remaining / factor) * 10000) / 10000;
+                                    inputEl.val(unitQty > 0 ? unitQty : '');
+                                } else {
+                                    let unitQty = Math.floor(Math.round((remaining / factor) * 100000000) / 100000000);
+                                    inputEl.val(unitQty > 0 ? unitQty : '');
+                                    remaining = Math.round((remaining - (unitQty * factor)) * 10000) / 10000;
+                                }
+                            });
+                        } else {
+                            tr.find('.uom-input').val(availableStok > 0 ? availableStok : '');
+                        }
+
+                        tr.find('.input-saldo-awal').val(availableStok);
+                        tr.find('.total-qty-val').text(formatStokJS(availableStok, satuans));
                     });
-                </div>
+                }
             });
         });
     </script>
