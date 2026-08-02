@@ -111,7 +111,7 @@
                                             $defaultValue = $lastSA ? (float)$lastSA->saldo_akhir : (float)$b->stok;
                                         @endphp
                                         <tr>
-                                            <td class="text-center">{{ $index + 1 }}</td>
+                                            <td class="text-center">{{ ($barangs->currentPage() - 1) * $barangs->perPage() + $index + 1 }}</td>
                                             <td class="font-monospace text-secondary text-center">{{ $b->kode_barang }}</td>
                                             <td class="font-monospace text-center">{{ $b->kode_item ?? '-' }}</td>
                                             <td class="fw-bold">{{ $b->nama_barang }}</td>
@@ -142,7 +142,7 @@
                                                     <input type="number" step="any" name="items[{{ $index }}][saldo_awal]" 
                                                            class="form-control form-control-sm text-end fw-bold font-monospace input-saldo-awal" 
                                                            data-stok-available="{{ (float)$b->stok }}"
-                                                           value="{{ old('items.' . $index . '.saldo_awal', $defaultValue) }}" required min="0">
+                                                           value="{{ old('items.' . $index . '.saldo_awal', $defaultValue) }}" min="0">
                                                     <span class="input-group-text bg-light small">{{ $b->satuans->sortBy('isi')->first()->satuan ?? 'PCS' }}</span>
                                                 </div>
                                             </td>
@@ -157,6 +157,17 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        @if ($barangs->hasPages())
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3 gap-2">
+                                <div class="small text-muted">
+                                    Menampilkan {{ $barangs->firstItem() }} - {{ $barangs->lastItem() }} dari {{ $barangs->total() }} barang
+                                </div>
+                                <div>
+                                    {{ $barangs->links() }}
+                                </div>
+                            </div>
+                        @endif
 
                         @if ($barangs->isNotEmpty())
                             <div class="d-flex justify-content-end mt-3">

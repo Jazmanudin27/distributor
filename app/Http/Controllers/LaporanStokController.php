@@ -661,7 +661,7 @@ class LaporanStokController extends Controller
             });
         }
 
-        $barangs = $query->orderBy('nama_barang', 'asc')->get();
+        $barangs = $query->orderBy('nama_barang', 'asc')->paginate(100)->appends($request->query());
 
         // Get latest 'Saldo Awal' mutation for each product if exists
         $lastSaldoAwals = DB::table('stok_mutasi')
@@ -686,11 +686,13 @@ class LaporanStokController extends Controller
     {
         $this->authorizeReport('stok');
 
+        @ini_set('max_input_vars', 5000);
+
         $request->validate([
             'tanggal' => 'required|date',
             'items' => 'required|array|min:1',
             'items.*.kode_barang' => 'required|exists:barang,kode_barang',
-            'items.*.saldo_awal' => 'required|numeric|min:0',
+            'items.*.saldo_awal' => 'nullable|numeric|min:0',
         ]);
 
         DB::transaction(function() use ($request) {
@@ -698,8 +700,12 @@ class LaporanStokController extends Controller
             $noRef = 'SA-' . date('Ymd', strtotime($tanggal));
 
             foreach ($request->items as $item) {
+                if (!isset($item['kode_barang'])) {
+                    continue;
+                }
+
                 $kb = $item['kode_barang'];
-                $targetSaldoAwal = (float)$item['saldo_awal'];
+                $targetSaldoAwal = (isset($item['saldo_awal']) && $item['saldo_awal'] !== '' && $item['saldo_awal'] !== null) ? (float)$item['saldo_awal'] : 0.0;
 
                 $barang = Barang::lockForUpdate()->findOrFail($kb);
 
