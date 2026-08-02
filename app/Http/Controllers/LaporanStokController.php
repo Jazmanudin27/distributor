@@ -646,6 +646,10 @@ class LaporanStokController extends Controller
 
         $query = Barang::where('status', 1)->with('satuans');
 
+        if ($request->get('tampilkan_stok_kosong') !== '1') {
+            $query->where('stok', '>', 0);
+        }
+
         if ($request->filled('kategori')) {
             $query->where('kategori', $request->kategori);
         }

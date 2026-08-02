@@ -60,9 +60,17 @@
                             <label class="form-label fw-semibold text-secondary mb-1">Cari Barang</label>
                             <div class="input-group input-group-sm">
                                 <input type="text" name="search" class="form-control" placeholder="Kode / Nama barang..." value="{{ request('search') }}">
-                                <button type="submit" class="btn btn-secondary fw-semibold">
+                                <button type="submit" class="btn btn-primary fw-semibold">
                                     <i class="fa-solid fa-search"></i>
                                 </button>
+                            </div>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="tampilkan_stok_kosong" id="tampilkan_stok_kosong" value="1" {{ request('tampilkan_stok_kosong') == '1' ? 'checked' : '' }} onchange="this.form.submit()">
+                                <label class="form-check-label fw-semibold text-secondary small" for="tampilkan_stok_kosong">
+                                    Tampilkan Barang Stok 0
+                                </label>
                             </div>
                         </div>
                     </form>
