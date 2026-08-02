@@ -632,9 +632,7 @@ class LaporanStokController extends Controller
                             }
                         }
 
-                        if (in_array($m->jenis_transaksi, ['Stok Opname', 'Batal Stok Opname', 'Batal Stok Opname (Edit)']) && isset($m->saldo_akhir)) {
-                            $running = (float)$m->saldo_akhir;
-                        } elseif ($m->jenis_transaksi === 'Saldo Awal') {
+                        if ($m->jenis_transaksi === 'Saldo Awal') {
                             // Saldo Awal is already the baseline ($stokAwal); do not alter $running
                         } else {
                             $running = $running + (float)$m->qty_masuk - (float)$m->qty_keluar;
