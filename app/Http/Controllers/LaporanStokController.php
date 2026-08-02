@@ -130,85 +130,62 @@ class LaporanStokController extends Controller
                     $hargaPokok = $baseSatuan ? (float)$baseSatuan->harga_pokok : 0;
                     $hargaJual = $baseSatuan ? (float)$baseSatuan->harga_jual : 0;
 
-                    // 1. Find latest Saldo Awal or Stok Opname baseline on or before $tanggal_mulai
-                    $refBaseline = DB::table('stok_mutasi')
+                    // 1. Get Saldo Awal baseline from Setting Saldo Awal
+                    $saRecord = DB::table('stok_mutasi')
                         ->where('kode_barang', $kb)
-                        ->whereIn('jenis_transaksi', ['Saldo Awal', 'Stok Opname', 'Batal Stok Opname', 'Batal Stok Opname (Edit)'])
-                        ->where('tanggal', '<=', $tanggal_mulai)
+                        ->where('jenis_transaksi', 'Saldo Awal')
+                        ->where('tanggal', '<=', $tanggal_akhir)
                         ->orderBy('tanggal', 'desc')
                         ->orderBy('id', 'desc')
                         ->first();
 
-                    if (!$refBaseline) {
-                        // Fallback: search for Saldo Awal mutation on or before $tanggal_akhir
-                        $refBaseline = DB::table('stok_mutasi')
-                            ->where('kode_barang', $kb)
-                            ->where('jenis_transaksi', 'Saldo Awal')
-                            ->where('tanggal', '<=', $tanggal_akhir)
-                            ->orderBy('tanggal', 'asc')
-                            ->orderBy('id', 'asc')
-                            ->first();
-                    }
-
-                    if ($refBaseline) {
-                        $baseStock = (float)$refBaseline->saldo_akhir;
-                        $baseId = $refBaseline->id;
-                        $baseDate = $refBaseline->tanggal;
-
-                        if ($baseDate < $tanggal_mulai) {
+                    if ($saRecord) {
+                        if ($saRecord->tanggal <= $tanggal_mulai) {
+                            $baseStock = (float)$saRecord->saldo_akhir;
+                            $baseId = $saRecord->id;
                             $movementsToStart = DB::table('stok_mutasi')
                                 ->where('kode_barang', $kb)
                                 ->where('id', '>', $baseId)
                                 ->where('tanggal', '<', $tanggal_mulai)
                                 ->get();
-
                             $netToStart = $movementsToStart->sum(function($m) {
                                 return (float)$m->qty_masuk - (float)$m->qty_keluar;
                             });
-
                             $stokAwal = $baseStock + $netToStart;
-
-                            $validMovements = DB::table('stok_mutasi')
-                                ->where('kode_barang', $kb)
-                                ->where('tanggal', '>=', $tanggal_mulai)
-                                ->where('tanggal', '<=', $tanggal_akhir)
-                                ->orderBy('tanggal', 'asc')
-                                ->orderBy('id', 'asc')
-                                ->get();
                         } else {
-                            // Baseline is on $tanggal_mulai (e.g. Saldo Awal set for 1st of month)
-                            $stokAwal = $baseStock;
-
-                            $validMovements = DB::table('stok_mutasi')
-                                ->where('kode_barang', $kb)
-                                ->where('id', '>', $baseId)
-                                ->where('tanggal', '<=', $tanggal_akhir)
-                                ->orderBy('tanggal', 'asc')
-                                ->orderBy('id', 'asc')
-                                ->get();
+                            // Saldo Awal set during the month (e.g. date 2 of month) -> use its value directly as Stok Awal column
+                            $stokAwal = (float)$saRecord->saldo_akhir;
                         }
                     } else {
-                        // No Saldo Awal or Opname found at all
-                        $firstMutation = DB::table('stok_mutasi')
+                        // Check latest Stok Opname <= $tanggal_mulai or first mutation
+                        $opnameRecord = DB::table('stok_mutasi')
                             ->where('kode_barang', $kb)
-                            ->orderBy('tanggal', 'asc')
-                            ->orderBy('id', 'asc')
+                            ->whereIn('jenis_transaksi', ['Stok Opname', 'Batal Stok Opname', 'Batal Stok Opname (Edit)'])
+                            ->where('tanggal', '<=', $tanggal_mulai)
+                            ->orderBy('tanggal', 'desc')
+                            ->orderBy('id', 'desc')
                             ->first();
 
-                        if ($firstMutation) {
-                            $stokAwal = (float)$firstMutation->saldo_awal;
-                            $validMovements = DB::table('stok_mutasi')
+                        if ($opnameRecord) {
+                            $stokAwal = (float)$opnameRecord->saldo_akhir;
+                        } else {
+                            $firstMutation = DB::table('stok_mutasi')
                                 ->where('kode_barang', $kb)
-                                ->where('tanggal', '>=', $tanggal_mulai)
-                                ->where('tanggal', '<=', $tanggal_akhir)
                                 ->orderBy('tanggal', 'asc')
                                 ->orderBy('id', 'asc')
-                                ->get();
-                        } else {
-                            $stokAwal = (float)$b->stok;
-                            $validMovements = collect();
+                                ->first();
+                            $stokAwal = $firstMutation ? (float)$firstMutation->saldo_awal : (float)$b->stok;
                         }
                     }
+
+                    // 2. Fetch all movements in current month [tanggal_mulai, tanggal_akhir] excluding 'Saldo Awal'
+                    $validMovements = DB::table('stok_mutasi')
+                        ->where('kode_barang', $kb)
+                        ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
+                        ->where('jenis_transaksi', '!=', 'Saldo Awal')
+                        ->orderBy('tanggal', 'asc')
+                        ->orderBy('id', 'asc')
+                        ->get();
 
                     $pembelianPeriod = 0;
                     $returJualPeriod = 0;
@@ -232,9 +209,6 @@ class LaporanStokController extends Controller
                             $penjualanPeriod += $qtyKeluar;
                         } elseif ($m->jenis_transaksi === 'Retur Pembelian') {
                             $returBeliPeriod += $qtyKeluar;
-                        } elseif ($m->jenis_transaksi === 'Saldo Awal') {
-                            // Saldo Awal is the baseline stock, NOT an in-period Penyesuaian (+)
-                            continue;
                         } else {
                             if ($qtyMasuk > 0) $opnameMasukPeriod += $qtyMasuk;
                             if ($qtyKeluar > 0) $opnameKeluarPeriod += $qtyKeluar;
