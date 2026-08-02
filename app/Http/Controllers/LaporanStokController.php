@@ -887,22 +887,52 @@ class LaporanStokController extends Controller
             return redirect()->back()->with('error', 'Data mutasi tidak ditemukan.');
         }
 
-        $adjustStok = $request->has('adjust_stok') && $request->adjust_stok == '1';
+        $kb = $mutasi->kode_barang;
+        $adjustStok = !$request->has('adjust_stok') || $request->adjust_stok == '1';
 
-        DB::transaction(function() use ($mutasi, $id, $adjustStok) {
-            if ($adjustStok && $mutasi->jenis_transaksi !== 'Saldo Awal') {
-                $barang = Barang::lockForUpdate()->find($mutasi->kode_barang);
-                if ($barang) {
-                    $netEffect = (float)$mutasi->qty_masuk - (float)$mutasi->qty_keluar;
-                    $barang->stok = (float)$barang->stok - $netEffect;
-                    $barang->save();
+        DB::transaction(function() use ($mutasi, $id, $kb, $adjustStok) {
+            // Delete mutation record
+            DB::table('stok_mutasi')->where('id', $id)->delete();
+
+            if ($adjustStok) {
+                // Recalculate genuine stock balance for this product from remaining valid transactions & opname
+                $b = Barang::lockForUpdate()->find($kb);
+                if ($b) {
+                    $opname = DB::table('stok_mutasi')
+                        ->where('kode_barang', $kb)
+                        ->where('jenis_transaksi', 'Stok Opname')
+                        ->orderBy('id', 'desc')
+                        ->first();
+
+                    if ($opname) {
+                        $opnameId = $opname->id;
+                        $stokBase = (float)$opname->saldo_akhir;
+                        $movements = DB::table('stok_mutasi')
+                            ->where('kode_barang', $kb)
+                            ->where('id', '>', $opnameId)
+                            ->where('jenis_transaksi', '!=', 'Saldo Awal')
+                            ->get();
+                        $net = $movements->sum(function($m) {
+                            return (float)$m->qty_masuk - (float)$m->qty_keluar;
+                        });
+                        $b->stok = $stokBase + $net;
+                        $b->save();
+                    } else {
+                        $movements = DB::table('stok_mutasi')
+                            ->where('kode_barang', $kb)
+                            ->where('jenis_transaksi', '!=', 'Saldo Awal')
+                            ->get();
+                        $net = $movements->sum(function($m) {
+                            return (float)$m->qty_masuk - (float)$m->qty_keluar;
+                        });
+                        $b->stok = $net;
+                        $b->save();
+                    }
                 }
             }
-
-            DB::table('stok_mutasi')->where('id', $id)->delete();
         });
 
-        return redirect()->back()->with('success', "Data mutasi ({$mutasi->jenis_transaksi} - {$mutasi->no_referensi}) berhasil dihapus!");
+        return redirect()->back()->with('success', "Data mutasi ({$mutasi->jenis_transaksi} - {$mutasi->no_referensi}) berhasil dihapus dan stok barang telah dipulihkan!");
     }
 
     private function authorizeReport($type)

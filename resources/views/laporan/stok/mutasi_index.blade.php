@@ -298,12 +298,7 @@
                 $('#delMutasiBarang').text(barang);
                 $('#delMutasiQty').text(qtyText);
 
-                // Disable adjust_stok for Saldo Awal since Saldo Awal doesn't affect real-time stock
-                if (jenis === 'Saldo Awal') {
-                    $('#delAdjustStok').prop('checked', false).prop('disabled', true);
-                } else {
-                    $('#delAdjustStok').prop('checked', true).prop('disabled', false);
-                }
+                $('#delAdjustStok').prop('checked', true).prop('disabled', false);
 
                 // Set form action URL
                 const actionUrl = "{{ route('laporan.stok.mutasi.destroy', ':id') }}".replace(':id', id);
