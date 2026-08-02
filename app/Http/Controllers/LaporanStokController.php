@@ -233,6 +233,8 @@ class LaporanStokController extends Controller
                             $penjualanPeriod += $qtyKeluar;
                         } elseif ($m->jenis_transaksi === 'Retur Pembelian') {
                             $returBeliPeriod += $qtyKeluar;
+                        } elseif ($m->jenis_transaksi === 'Saldo Awal') {
+                            // Skip Saldo Awal entries from period totals because $stokAwal is already the baseline!
                         } else {
                             if ($qtyMasuk > 0) $opnameMasukPeriod += $qtyMasuk;
                             if ($qtyKeluar > 0) $opnameKeluarPeriod += $qtyKeluar;
@@ -572,6 +574,8 @@ class LaporanStokController extends Controller
                             $penjualan_keluar = $m->qty_keluar;
                         } elseif ($m->jenis_transaksi === 'Retur Pembelian') {
                             $retur_beli = $m->qty_keluar;
+                        } elseif ($m->jenis_transaksi === 'Saldo Awal') {
+                            // Skip Saldo Awal from being counted as an active movement
                         } else {
                             // Opname or adjustments
                             if ($m->qty_masuk > 0) {
@@ -630,8 +634,10 @@ class LaporanStokController extends Controller
 
                         if (in_array($m->jenis_transaksi, ['Stok Opname', 'Batal Stok Opname', 'Batal Stok Opname (Edit)']) && isset($m->saldo_akhir)) {
                             $running = (float)$m->saldo_akhir;
+                        } elseif ($m->jenis_transaksi === 'Saldo Awal') {
+                            // Saldo Awal is already the baseline ($stokAwal); do not alter $running
                         } else {
-                            $running = $running + $m->qty_masuk - $m->qty_keluar;
+                            $running = $running + (float)$m->qty_masuk - (float)$m->qty_keluar;
                         }
 
                         $movements->push([
