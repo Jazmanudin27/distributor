@@ -96,11 +96,15 @@
                                     <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Saldo Awal
                                 </button>
                                 <button type="button" class="btn btn-outline-danger btn-sm fw-bold shadow-sm rounded-3" 
-                                        onclick="if(confirm('Apakah Anda yakin ingin memulihkan stok real-time & menghapus seluruh record Saldo Awal pada bulan ini dari mutasi?')) document.getElementById('formRecalculateStok').submit();">
-                                    <i class="fa-solid fa-rotate-left me-1"></i> Pulihkan Stok & Hapus Saldo Awal Bulan Ini
+                                        onclick="if(confirm('Apakah Anda yakin ingin memulihkan/menyinkronkan kembali stok fisik real-time barang dari riwayat transaksi & opname?')) document.getElementById('formRecalculateStok').submit();">
+                                    <i class="fa-solid fa-rotate me-1"></i> Pulihkan Stok Real-Time
                                 </button>
                             </div>
                         </div>
+
+                        <form action="{{ route('laporan.stok.saldo-awal.recalculate') }}" method="POST" id="formRecalculateStok" class="d-none">
+                            @csrf
+                        </form>
 
                         <div class="alert alert-info py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2">
                             <i class="fa-solid fa-circle-info fs-6"></i>
@@ -135,7 +139,7 @@
                                             $estimasiSaldoAwal = $stokSaatIni - $totalMasuk + $totalKeluar;
 
                                             $lastSA = $lastSaldoAwals->get($b->kode_barang);
-                                            $defaultValue = old('items.' . $index . '.saldo_awal', $estimasiSaldoAwal);
+                                            $defaultValue = old('items.' . $index . '.saldo_awal', $lastSA !== null ? (float)$lastSA : $estimasiSaldoAwal);
 
                                             $satuans = $b->satuans->sortByDesc('isi');
                                             $breakdown = [];
@@ -158,7 +162,7 @@
                                             }
                                         @endphp
                                         <tr>
-                                            <td class="text-center">{{ ($barangs->currentPage() - 1) * $barangs->perPage() + $index + 1 }}</td>
+                                            <td class="text-center">{{ $loop->iteration }}</td>
                                             <td class="font-monospace text-secondary text-center">
                                                 <div>{{ $b->kode_barang }}</div>
                                                 @if ($b->kode_item)
@@ -237,16 +241,9 @@
                             </table>
                         </div>
 
-                        @if ($barangs->hasPages())
-                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3 gap-2">
-                                <div class="small text-muted">
-                                    Menampilkan {{ $barangs->firstItem() }} - {{ $barangs->lastItem() }} dari {{ $barangs->total() }} barang
-                                </div>
-                                <div>
-                                    {{ $barangs->links() }}
-                                </div>
-                            </div>
-                        @endif
+                        <div class="small text-muted mt-2">
+                            Total <strong class="text-dark">{{ $barangs->count() }}</strong> barang ditampilkan (Tanpa Pagination).
+                        </div>
 
                         @if ($barangs->isNotEmpty())
                             <div class="d-flex justify-content-end mt-3">
@@ -255,11 +252,6 @@
                                 </button>
                             </div>
                         @endif
-                    </form>
-
-                    <form action="{{ route('laporan.stok.saldo-awal.recalculate') }}" method="POST" id="formRecalculateStok" class="d-none">
-                        @csrf
-                        <input type="hidden" name="tanggal" value="{{ request('tanggal', $tanggalSaldoAwal) }}">
                     </form>
                 </div>
             </div>

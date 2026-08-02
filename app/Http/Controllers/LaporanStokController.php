@@ -12,6 +12,8 @@ use App\Models\ReturPenjualan;
 use App\Models\Pembelian;
 use App\Models\ReturPembelian;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 use Carbon\Carbon;
 
 class LaporanStokController extends Controller
@@ -640,6 +642,7 @@ class LaporanStokController extends Controller
     public function saldoAwalIndex(Request $request)
     {
         $this->authorizeReport('stok');
+        $this->ensureSaldoAwalGsTableExists();
 
         $kategoris = Kategori::orderBy('nama_kategori', 'asc')->get();
         $merks = Merk::orderBy('nama_merk', 'asc')->get();
@@ -665,25 +668,21 @@ class LaporanStokController extends Controller
             });
         }
 
-        $barangs = $query->orderBy('nama_barang', 'asc')->paginate(100)->appends($request->query());
-
-        // Get latest 'Saldo Awal' mutation for each product if exists
-        $lastSaldoAwals = DB::table('stok_mutasi')
-            ->where('jenis_transaksi', 'Saldo Awal')
-            ->whereIn('id', function($q) {
-                $q->selectRaw('MAX(id)')
-                  ->from('stok_mutasi')
-                  ->where('jenis_transaksi', 'Saldo Awal')
-                  ->groupBy('kode_barang');
-            })
-            ->get()
-            ->keyBy('kode_barang');
+        $barangs = $query->orderBy('nama_barang', 'asc')->get();
 
         $tanggalSaldoAwal = $request->input('tanggal', date('Y-m-01'));
+        $bulan = (int)date('m', strtotime($tanggalSaldoAwal));
+        $tahun = (int)date('Y', strtotime($tanggalSaldoAwal));
+
+        // Get saved Saldo Awal from table 'saldo_awal_gs' for this month & year
+        $lastSaldoAwals = DB::table('saldo_awal_gs')
+            ->where('bulan', $bulan)
+            ->where('tahun', $tahun)
+            ->pluck('qty', 'kode_barang');
 
         $kodeBarangs = $barangs->pluck('kode_barang')->toArray();
 
-        // Calculate total mutations (masuk and keluar) on or after $tanggalSaldoAwal for each product (excluding Saldo Awal itself)
+        // Calculate total mutations (masuk and keluar) on or after $tanggalSaldoAwal for each product
         $mutasiPeriod = DB::table('stok_mutasi')
             ->select('kode_barang', 
                 DB::raw('SUM(qty_masuk) as total_masuk'), 
@@ -703,8 +702,9 @@ class LaporanStokController extends Controller
     public function saldoAwalStore(Request $request)
     {
         $this->authorizeReport('stok');
+        $this->ensureSaldoAwalGsTableExists();
 
-        @ini_set('max_input_vars', 5000);
+        @ini_set('max_input_vars', 10000);
 
         $request->validate([
             'tanggal' => 'required|date',
@@ -715,7 +715,8 @@ class LaporanStokController extends Controller
 
         DB::transaction(function() use ($request) {
             $tanggal = $request->tanggal;
-            $noRef = 'SA-' . date('Ymd', strtotime($tanggal));
+            $bulan = (int)date('m', strtotime($tanggal));
+            $tahun = (int)date('Y', strtotime($tanggal));
 
             foreach ($request->items as $item) {
                 if (!isset($item['kode_barang'])) {
@@ -725,55 +726,32 @@ class LaporanStokController extends Controller
                 $kb = $item['kode_barang'];
                 $targetSaldoAwal = (isset($item['saldo_awal']) && $item['saldo_awal'] !== '' && $item['saldo_awal'] !== null) ? (float)$item['saldo_awal'] : 0.0;
 
-                $barang = Barang::lockForUpdate()->findOrFail($kb);
-
-                // Delete or update existing Saldo Awal for this product on this exact date
-                DB::table('stok_mutasi')
-                    ->where('kode_barang', $kb)
-                    ->where('jenis_transaksi', 'Saldo Awal')
-                    ->where('tanggal', $tanggal)
-                    ->delete();
-
-                // Insert new Saldo Awal record (for reporting purposes only)
-                DB::table('stok_mutasi')->insert([
-                    'kode_barang' => $kb,
-                    'tanggal' => $tanggal,
-                    'jenis_transaksi' => 'Saldo Awal',
-                    'no_referensi' => $noRef,
-                    'qty_masuk' => $targetSaldoAwal,
-                    'qty_keluar' => 0,
-                    'saldo_awal' => 0,
-                    'saldo_akhir' => $targetSaldoAwal,
-                    'id_user' => auth()->id() ?? 1,
-                    'keterangan' => 'Setting / Generate Saldo Awal Stok Barang',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                // Save strictly into 'saldo_awal_gs' table without touching stok_mutasi or barang.stok
+                DB::table('saldo_awal_gs')->updateOrInsert(
+                    [
+                        'kode_barang' => $kb,
+                        'bulan' => $bulan,
+                        'tahun' => $tahun,
+                    ],
+                    [
+                        'tanggal' => $tanggal,
+                        'qty' => $targetSaldoAwal,
+                        'keterangan' => 'Setting Saldo Awal Stok Barang',
+                        'updated_at' => now(),
+                    ]
+                );
             }
         });
 
-        return redirect()->route('laporan.stok.saldo-awal.index')
-            ->with('success', 'Setting Saldo Awal laporan berhasil disimpan (tanpa mengubah stok fisik/real-time barang)!');
+        return redirect()->route('laporan.stok.saldo-awal.index', ['tanggal' => $request->tanggal])
+            ->with('success', 'Setting Saldo Awal berhasil disimpan ke tabel saldo_awal_gs (tanpa masuk mutasi dan tanpa mengubah stok barang)!');
     }
 
     public function recalculateRealStok(Request $request)
     {
         $this->authorizeReport('stok');
 
-        $tanggal = $request->input('tanggal', date('Y-m-d'));
-        $bulan = date('m', strtotime($tanggal));
-        $tahun = date('Y', strtotime($tanggal));
-        $namaBulan = \Carbon\Carbon::parse($tanggal)->translatedFormat('F Y');
-
-        DB::transaction(function() use ($bulan, $tahun) {
-            // 1. Delete all 'Saldo Awal' mutation records for that specific month & year
-            DB::table('stok_mutasi')
-                ->where('jenis_transaksi', 'Saldo Awal')
-                ->whereYear('tanggal', $tahun)
-                ->whereMonth('tanggal', $bulan)
-                ->delete();
-
-            // 2. Recalculate real-time stock for all products from genuine transactions & opname
+        DB::transaction(function() {
             $barangs = Barang::all();
             foreach ($barangs as $b) {
                 $kb = $b->kode_barang;
@@ -813,8 +791,8 @@ class LaporanStokController extends Controller
             }
         });
 
-        return redirect()->route('laporan.stok.saldo-awal.index', ['tanggal' => $tanggal])
-            ->with('success', "Data Saldo Awal periode $namaBulan berhasil dihapus dari mutasi dan stok real-time barang telah dipulihkan!");
+        return redirect()->route('laporan.stok.saldo-awal.index')
+            ->with('success', 'Stok real-time fisik barang berhasil dipulihkan & disinkronkan kembali dari mutasi transaksi!');
     }
 
     public function mutasiIndex(Request $request)
@@ -887,52 +865,22 @@ class LaporanStokController extends Controller
             return redirect()->back()->with('error', 'Data mutasi tidak ditemukan.');
         }
 
-        $kb = $mutasi->kode_barang;
-        $adjustStok = !$request->has('adjust_stok') || $request->adjust_stok == '1';
+        $adjustStok = $request->has('adjust_stok') && $request->adjust_stok == '1';
 
-        DB::transaction(function() use ($mutasi, $id, $kb, $adjustStok) {
-            // Delete mutation record
-            DB::table('stok_mutasi')->where('id', $id)->delete();
-
-            if ($adjustStok) {
-                // Recalculate genuine stock balance for this product from remaining valid transactions & opname
-                $b = Barang::lockForUpdate()->find($kb);
-                if ($b) {
-                    $opname = DB::table('stok_mutasi')
-                        ->where('kode_barang', $kb)
-                        ->where('jenis_transaksi', 'Stok Opname')
-                        ->orderBy('id', 'desc')
-                        ->first();
-
-                    if ($opname) {
-                        $opnameId = $opname->id;
-                        $stokBase = (float)$opname->saldo_akhir;
-                        $movements = DB::table('stok_mutasi')
-                            ->where('kode_barang', $kb)
-                            ->where('id', '>', $opnameId)
-                            ->where('jenis_transaksi', '!=', 'Saldo Awal')
-                            ->get();
-                        $net = $movements->sum(function($m) {
-                            return (float)$m->qty_masuk - (float)$m->qty_keluar;
-                        });
-                        $b->stok = $stokBase + $net;
-                        $b->save();
-                    } else {
-                        $movements = DB::table('stok_mutasi')
-                            ->where('kode_barang', $kb)
-                            ->where('jenis_transaksi', '!=', 'Saldo Awal')
-                            ->get();
-                        $net = $movements->sum(function($m) {
-                            return (float)$m->qty_masuk - (float)$m->qty_keluar;
-                        });
-                        $b->stok = $net;
-                        $b->save();
-                    }
+        DB::transaction(function() use ($mutasi, $id, $adjustStok) {
+            if ($adjustStok && $mutasi->jenis_transaksi !== 'Saldo Awal') {
+                $barang = Barang::lockForUpdate()->find($mutasi->kode_barang);
+                if ($barang) {
+                    $netEffect = (float)$mutasi->qty_masuk - (float)$mutasi->qty_keluar;
+                    $barang->stok = (float)$barang->stok - $netEffect;
+                    $barang->save();
                 }
             }
+
+            DB::table('stok_mutasi')->where('id', $id)->delete();
         });
 
-        return redirect()->back()->with('success', "Data mutasi ({$mutasi->jenis_transaksi} - {$mutasi->no_referensi}) berhasil dihapus dan stok barang telah dipulihkan!");
+        return redirect()->back()->with('success', "Data mutasi ({$mutasi->jenis_transaksi} - {$mutasi->no_referensi}) berhasil dihapus!");
     }
 
     private function authorizeReport($type)
@@ -940,6 +888,24 @@ class LaporanStokController extends Controller
         $permission = 'view-laporan_' . $type;
         if (!auth()->user()->can($permission)) {
             abort(403, 'Anda tidak memiliki akses ke laporan ini.');
+        }
+    }
+
+    private function ensureSaldoAwalGsTableExists()
+    {
+        if (!Schema::hasTable('saldo_awal_gs')) {
+            Schema::create('saldo_awal_gs', function (Blueprint $table) {
+                $table->id('id');
+                $table->string('kode_barang', 50)->nullable();
+                $table->integer('bulan')->nullable();
+                $table->integer('tahun')->nullable();
+                $table->date('tanggal')->nullable();
+                $table->string('qty')->nullable();
+                $table->text('keterangan')->nullable();
+                $table->dateTime('created_at')->nullable()->useCurrent();
+                $table->dateTime('updated_at')->nullable()->useCurrent()->useCurrentOnUpdate();
+                $table->unique(['kode_barang', 'bulan', 'tahun'], 'saldo_awal_gs_uniq_saldo_barang_bulantahun');
+            });
         }
     }
 }
