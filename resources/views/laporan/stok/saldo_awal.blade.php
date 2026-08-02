@@ -88,15 +88,23 @@
                                            value="{{ request('tanggal', $tanggalSaldoAwal) }}" required>
                                 </div>
                             </div>
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-2 flex-wrap">
                                 <button type="button" id="btnAutoGenerateHitungMundur" class="btn btn-info text-white btn-sm fw-bold shadow-sm rounded-3">
                                     <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Auto-Fill (Stok Saat Ini - Masuk + Keluar)
                                 </button>
                                 <button type="submit" class="btn btn-success btn-sm fw-bold px-4 shadow-sm rounded-3">
                                     <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Saldo Awal
                                 </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm fw-bold shadow-sm rounded-3" 
+                                        onclick="if(confirm('Apakah Anda yakin ingin memulihkan/menyinkronkan kembali stok fisik real-time barang dari riwayat transaksi & opname?')) document.getElementById('formRecalculateStok').submit();">
+                                    <i class="fa-solid fa-rotate me-1"></i> Pulihkan Stok Real-Time
+                                </button>
                             </div>
                         </div>
+
+                        <form action="{{ route('laporan.stok.saldo-awal.recalculate') }}" method="POST" id="formRecalculateStok" class="d-none">
+                            @csrf
+                        </form>
 
                         <div class="alert alert-info py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2">
                             <i class="fa-solid fa-circle-info fs-6"></i>

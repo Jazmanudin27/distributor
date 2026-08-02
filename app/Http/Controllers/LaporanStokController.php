@@ -734,7 +734,7 @@ class LaporanStokController extends Controller
                     ->where('tanggal', $tanggal)
                     ->delete();
 
-                // Insert new Saldo Awal record
+                // Insert new Saldo Awal record (for reporting purposes only)
                 DB::table('stok_mutasi')->insert([
                     'kode_barang' => $kb,
                     'tanggal' => $tanggal,
@@ -749,25 +749,59 @@ class LaporanStokController extends Controller
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
-
-                // Recalculate current stock for barang: targetSaldoAwal + (mutations after tanggal excluding Saldo Awal)
-                $movementsAfter = DB::table('stok_mutasi')
-                    ->where('kode_barang', $kb)
-                    ->where('tanggal', '>=', $tanggal)
-                    ->where('jenis_transaksi', '!=', 'Saldo Awal')
-                    ->get();
-
-                $subsequentNetChange = $movementsAfter->sum(function($m) {
-                    return (float)$m->qty_masuk - (float)$m->qty_keluar;
-                });
-
-                $barang->stok = $targetSaldoAwal + $subsequentNetChange;
-                $barang->save();
             }
         });
 
         return redirect()->route('laporan.stok.saldo-awal.index')
-            ->with('success', 'Saldo awal stok barang berhasil disimpan dan diperbarui!');
+            ->with('success', 'Setting Saldo Awal laporan berhasil disimpan (tanpa mengubah stok fisik/real-time barang)!');
+    }
+
+    public function recalculateRealStok(Request $request)
+    {
+        $this->authorizeReport('stok');
+
+        DB::transaction(function() {
+            $barangs = Barang::all();
+            foreach ($barangs as $b) {
+                $kb = $b->kode_barang;
+
+                $opname = DB::table('stok_mutasi')
+                    ->where('kode_barang', $kb)
+                    ->where('jenis_transaksi', 'Stok Opname')
+                    ->orderBy('id', 'desc')
+                    ->first();
+
+                if ($opname) {
+                    $opnameId = $opname->id;
+                    $stokBase = (float)$opname->saldo_akhir;
+                    $movements = DB::table('stok_mutasi')
+                        ->where('kode_barang', $kb)
+                        ->where('id', '>', $opnameId)
+                        ->where('jenis_transaksi', '!=', 'Saldo Awal')
+                        ->get();
+                    $net = $movements->sum(function($m) {
+                        return (float)$m->qty_masuk - (float)$m->qty_keluar;
+                    });
+                    $b->stok = $stokBase + $net;
+                    $b->save();
+                } else {
+                    $movements = DB::table('stok_mutasi')
+                        ->where('kode_barang', $kb)
+                        ->where('jenis_transaksi', '!=', 'Saldo Awal')
+                        ->get();
+                    if ($movements->isNotEmpty()) {
+                        $net = $movements->sum(function($m) {
+                            return (float)$m->qty_masuk - (float)$m->qty_keluar;
+                        });
+                        $b->stok = $net;
+                        $b->save();
+                    }
+                }
+            }
+        });
+
+        return redirect()->route('laporan.stok.saldo-awal.index')
+            ->with('success', 'Stok real-time fisik barang berhasil dipulihkan & disinkronkan kembali dari mutasi transaksi!');
     }
 
     private function authorizeReport($type)
