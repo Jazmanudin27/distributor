@@ -232,6 +232,9 @@ class LaporanStokController extends Controller
                             $penjualanPeriod += $qtyKeluar;
                         } elseif ($m->jenis_transaksi === 'Retur Pembelian') {
                             $returBeliPeriod += $qtyKeluar;
+                        } elseif ($m->jenis_transaksi === 'Saldo Awal') {
+                            // Saldo Awal is the baseline stock, NOT an in-period Penyesuaian (+)
+                            continue;
                         } else {
                             if ($qtyMasuk > 0) $opnameMasukPeriod += $qtyMasuk;
                             if ($qtyKeluar > 0) $opnameKeluarPeriod += $qtyKeluar;

@@ -116,7 +116,8 @@
                                     @forelse ($barangs as $index => $b)
                                         @php
                                             $lastSA = $lastSaldoAwals->get($b->kode_barang);
-                                            $defaultValue = $lastSA ? (float)$lastSA->saldo_akhir : (float)$b->stok;
+                                            // If lastSA exists and has the exact same date as the selected effective date, use lastSA->saldo_akhir; otherwise default to current available stock ($b->stok)
+                                            $defaultValue = ($lastSA && $lastSA->tanggal == $tanggalSaldoAwal) ? (float)$lastSA->saldo_akhir : (float)$b->stok;
 
                                             $satuans = $b->satuans->sortByDesc('isi');
                                             $breakdown = [];
