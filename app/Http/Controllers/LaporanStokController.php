@@ -760,7 +760,20 @@ class LaporanStokController extends Controller
     {
         $this->authorizeReport('stok');
 
-        DB::transaction(function() {
+        $tanggal = $request->input('tanggal', date('Y-m-d'));
+        $bulan = date('m', strtotime($tanggal));
+        $tahun = date('Y', strtotime($tanggal));
+        $namaBulan = \Carbon\Carbon::parse($tanggal)->translatedFormat('F Y');
+
+        DB::transaction(function() use ($bulan, $tahun) {
+            // 1. Delete all 'Saldo Awal' mutation records for that specific month & year
+            DB::table('stok_mutasi')
+                ->where('jenis_transaksi', 'Saldo Awal')
+                ->whereYear('tanggal', $tahun)
+                ->whereMonth('tanggal', $bulan)
+                ->delete();
+
+            // 2. Recalculate real-time stock for all products from genuine transactions & opname
             $barangs = Barang::all();
             foreach ($barangs as $b) {
                 $kb = $b->kode_barang;
@@ -800,8 +813,8 @@ class LaporanStokController extends Controller
             }
         });
 
-        return redirect()->route('laporan.stok.saldo-awal.index')
-            ->with('success', 'Stok real-time fisik barang berhasil dipulihkan & disinkronkan kembali dari mutasi transaksi!');
+        return redirect()->route('laporan.stok.saldo-awal.index', ['tanggal' => $tanggal])
+            ->with('success', "Data Saldo Awal periode $namaBulan berhasil dihapus dari mutasi dan stok real-time barang telah dipulihkan!");
     }
 
     public function mutasiIndex(Request $request)

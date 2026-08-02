@@ -96,14 +96,15 @@
                                     <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Saldo Awal
                                 </button>
                                 <button type="button" class="btn btn-outline-danger btn-sm fw-bold shadow-sm rounded-3" 
-                                        onclick="if(confirm('Apakah Anda yakin ingin memulihkan/menyinkronkan kembali stok fisik real-time barang dari riwayat transaksi & opname?')) document.getElementById('formRecalculateStok').submit();">
-                                    <i class="fa-solid fa-rotate me-1"></i> Pulihkan Stok Real-Time
+                                        onclick="if(confirm('Apakah Anda yakin ingin memulihkan stok real-time & menghapus seluruh record Saldo Awal pada bulan ini dari mutasi?')) document.getElementById('formRecalculateStok').submit();">
+                                    <i class="fa-solid fa-rotate-left me-1"></i> Pulihkan Stok & Hapus Saldo Awal Bulan Ini
                                 </button>
                             </div>
                         </div>
 
                         <form action="{{ route('laporan.stok.saldo-awal.recalculate') }}" method="POST" id="formRecalculateStok" class="d-none">
                             @csrf
+                            <input type="hidden" name="tanggal" value="{{ request('tanggal', $tanggalSaldoAwal) }}">
                         </form>
 
                         <div class="alert alert-info py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2">
