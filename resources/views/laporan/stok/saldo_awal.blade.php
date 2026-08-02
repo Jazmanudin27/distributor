@@ -89,12 +89,21 @@
                                 </div>
                             </div>
                             <div class="d-flex gap-2">
-                                <button type="button" id="btnAutoGenerate" class="btn btn-info text-white btn-sm fw-bold shadow-sm rounded-3">
-                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Auto-Generate dari Stok Available Saat Ini
+                                <button type="button" id="btnAutoGenerateHitungMundur" class="btn btn-info text-white btn-sm fw-bold shadow-sm rounded-3">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Auto-Fill (Stok Saat Ini - Masuk + Keluar)
                                 </button>
                                 <button type="submit" class="btn btn-success btn-sm fw-bold px-4 shadow-sm rounded-3">
                                     <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Saldo Awal
                                 </button>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-circle-info fs-6"></i>
+                            <div>
+                                <strong>Rumus Hitung Mundur Saldo Awal:</strong> 
+                                <span class="badge bg-white text-dark border ms-1 font-monospace">Saldo Awal = Stok Saat Ini &minus; Total Penerimaan (Masuk) &plus; Total Pengeluaran (Keluar)</span>
+                                sejak tanggal {{ \Carbon\Carbon::parse($tanggalSaldoAwal)->format('d/m/Y') }}.
                             </div>
                         </div>
 
@@ -104,53 +113,65 @@
                                     <tr>
                                         <th width="40">No</th>
                                         <th width="120">Kode Barang</th>
-                                        <th width="120">Kode Item</th>
                                         <th>Nama Barang</th>
                                         <th width="130">Kategori / Merk</th>
-                                        <th width="140">Stok Available Saat Ini</th>
-                                        <th width="160">Saldo Awal Terakhir</th>
-                                        <th width="180">Input Saldo Awal Baru</th>
+                                        <th width="130">Stok Saat Ini</th>
+                                        <th width="170">Mutasi Sejak Tgl Ini (Masuk / Keluar)</th>
+                                        <th width="160">Estimasi Saldo Awal</th>
+                                        <th width="170">Input Saldo Awal Baru</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse ($barangs as $index => $b)
                                         @php
+                                            $m = $mutasiPeriod->get($b->kode_barang);
+                                            $totalMasuk = $m ? (float)$m->total_masuk : 0;
+                                            $totalKeluar = $m ? (float)$m->total_keluar : 0;
+                                            $stokSaatIni = (float)$b->stok;
+                                            $estimasiSaldoAwal = $stokSaatIni - $totalMasuk + $totalKeluar;
+
                                             $lastSA = $lastSaldoAwals->get($b->kode_barang);
-                                            $defaultValue = $lastSA ? (float)$lastSA->saldo_akhir : (float)$b->stok;
+                                            $defaultValue = old('items.' . $index . '.saldo_awal', $estimasiSaldoAwal);
                                         @endphp
                                         <tr>
                                             <td class="text-center">{{ ($barangs->currentPage() - 1) * $barangs->perPage() + $index + 1 }}</td>
-                                            <td class="font-monospace text-secondary text-center">{{ $b->kode_barang }}</td>
-                                            <td class="font-monospace text-center">{{ $b->kode_item ?? '-' }}</td>
+                                            <td class="font-monospace text-secondary text-center">
+                                                <div>{{ $b->kode_barang }}</div>
+                                                @if ($b->kode_item)
+                                                    <div class="text-muted small">({{ $b->kode_item }})</div>
+                                                @endif
+                                            </td>
                                             <td class="fw-bold">{{ $b->nama_barang }}</td>
                                             <td class="small">
                                                 <div><span class="badge bg-secondary opacity-75">{{ $b->kategori ?? '-' }}</span></div>
                                                 <div class="text-muted mt-1">{{ $b->merk ?? '-' }}</div>
                                             </td>
                                             <td class="text-end font-monospace fw-bold">
-                                                <span class="badge bg-primary text-wrap fs-7 px-3 py-2">
+                                                <span class="badge bg-primary text-wrap fs-7 px-3 py-1.5">
                                                     {{ $b->formatStok($b->stok) }}
                                                 </span>
                                             </td>
-                                            <td class="text-center small">
-                                                @if ($lastSA)
-                                                    <span class="text-success fw-semibold font-monospace">
-                                                        {{ number_format($lastSA->saldo_akhir, 0, ',', '.') }}
-                                                    </span>
-                                                    <div class="text-muted" style="font-size: 10px;">
-                                                        Tgl: {{ \Carbon\Carbon::parse($lastSA->tanggal)->format('d/m/Y') }}
-                                                    </div>
+                                            <td class="text-center font-monospace small">
+                                                @if ($totalMasuk > 0 || $totalKeluar > 0)
+                                                    <div class="text-success"><i class="fa-solid fa-arrow-down me-1"></i> Masuk: +{{ $totalMasuk }}</div>
+                                                    <div class="text-danger"><i class="fa-solid fa-arrow-up me-1"></i> Keluar: -{{ $totalKeluar }}</div>
                                                 @else
-                                                    <span class="text-muted opacity-50">&mdash; Belum ada &mdash;</span>
+                                                    <span class="text-muted opacity-50">&mdash; Tidak ada mutasi &mdash;</span>
                                                 @endif
+                                            </td>
+                                            <td class="text-center font-monospace fw-bold text-dark">
+                                                <span class="fs-7 text-primary">{{ $estimasiSaldoAwal }}</span>
+                                                <div class="text-muted opacity-75" style="font-size: 10px;" title="Rumus: {{ $stokSaatIni }} - {{ $totalMasuk }} + {{ $totalKeluar }}">
+                                                    ({{ $stokSaatIni }} &minus; {{ $totalMasuk }} &plus; {{ $totalKeluar }})
+                                                </div>
                                             </td>
                                             <td>
                                                 <input type="hidden" name="items[{{ $index }}][kode_barang]" value="{{ $b->kode_barang }}">
                                                 <div class="input-group input-group-sm">
                                                     <input type="number" step="any" name="items[{{ $index }}][saldo_awal]" 
                                                            class="form-control form-control-sm text-end fw-bold font-monospace input-saldo-awal" 
-                                                           data-stok-available="{{ (float)$b->stok }}"
-                                                           value="{{ old('items.' . $index . '.saldo_awal', $defaultValue) }}" min="0">
+                                                           data-estimasi="{{ $estimasiSaldoAwal }}"
+                                                           value="{{ $defaultValue }}" min="0">
                                                     <span class="input-group-text bg-light small">{{ $b->satuans->sortBy('isi')->first()->satuan ?? 'PCS' }}</span>
                                                 </div>
                                             </td>
@@ -199,14 +220,23 @@
                 width: '100%'
             });
 
-            // Auto Generate Button Logic
-            $('#btnAutoGenerate').on('click', function() {
-                if (confirm('Apakah Anda yakin ingin mengisi nilai Saldo Awal secara otomatis dari stok yang tersedia saat ini untuk semua barang di daftar?')) {
-                    $('.input-saldo-awal').each(function() {
-                        const stokAvailable = $(this).data('stok-available');
-                        $(this).val(stokAvailable);
-                    });
-                </div>
+            // Auto-Fill Button Logic (Hitung Mundur Mutasi)
+            $('#btnAutoGenerateHitungMundur').on('click', function() {
+                $('.input-saldo-awal').each(function() {
+                    const estimasi = $(this).data('estimasi');
+                    if (estimasi !== undefined && estimasi !== null) {
+                        $(this).val(estimasi);
+                    }
+                });
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Saldo Awal diisi otomatis berdasarkan hitung mundur mutasi',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
             });
         });
     </script>

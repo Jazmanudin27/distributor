@@ -679,10 +679,24 @@ class LaporanStokController extends Controller
             ->get()
             ->keyBy('kode_barang');
 
-        $tanggalSaldoAwal = $request->input('tanggal', date('Y-01-01'));
+        $tanggalSaldoAwal = $request->input('tanggal', date('Y-m-01'));
+
+        $kodeBarangs = $barangs->pluck('kode_barang')->toArray();
+
+        // Calculate total mutations (masuk and keluar) on or after $tanggalSaldoAwal for each product (excluding Saldo Awal itself)
+        $mutasiPeriod = DB::table('stok_mutasi')
+            ->select('kode_barang', 
+                DB::raw('SUM(qty_masuk) as total_masuk'), 
+                DB::raw('SUM(qty_keluar) as total_keluar'))
+            ->whereIn('kode_barang', $kodeBarangs)
+            ->where('tanggal', '>=', $tanggalSaldoAwal)
+            ->where('jenis_transaksi', '!=', 'Saldo Awal')
+            ->groupBy('kode_barang')
+            ->get()
+            ->keyBy('kode_barang');
 
         return view('laporan.stok.saldo_awal', compact(
-            'barangs', 'kategoris', 'merks', 'lastSaldoAwals', 'tanggalSaldoAwal'
+            'barangs', 'kategoris', 'merks', 'lastSaldoAwals', 'tanggalSaldoAwal', 'mutasiPeriod'
         ));
     }
 
