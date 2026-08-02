@@ -65,18 +65,8 @@
         <div class="text-center mb-3">
             <h4 class="fw-bold mb-1">LAPORAN PERSEDIAAN STOK BARANG</h4>
             <div class="">
-                @php
-                    $namaBulanIndo = [
-                        1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-                        5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-                        9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-                    ];
-                    $bNum = (int)($bulan ?? date('n'));
-                    $tNum = (int)($tahun ?? date('Y'));
-                    $bNama = $namaBulanIndo[$bNum] ?? date('F');
-                @endphp
-                Periode: <strong>{{ $bNama }} {{ $tNum }}</strong>
-                ({{ \Carbon\Carbon::parse($tanggal_mulai)->format('d/m/Y') }} s/d {{ \Carbon\Carbon::parse($tanggal_akhir)->format('d/m/Y') }})
+                Periode: <strong>{{ \Carbon\Carbon::parse($tanggal_mulai)->format('d/m/Y') }}</strong>
+                s/d <strong>{{ \Carbon\Carbon::parse($tanggal_akhir)->format('d/m/Y') }}</strong>
                 &nbsp;|&nbsp; Supplier:
                 <strong>
                     @if ($kode_supplier)
