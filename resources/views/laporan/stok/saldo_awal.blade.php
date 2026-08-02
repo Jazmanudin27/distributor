@@ -123,10 +123,10 @@
                                         <th width="120">Kode Barang</th>
                                         <th>Nama Barang</th>
                                         <th width="130">Kategori / Merk</th>
-                                        <th width="130">Stok Saat Ini</th>
+                                        <th width="150">Stok Saat Ini</th>
                                         <th width="170">Mutasi Sejak Tgl Ini (Masuk / Keluar)</th>
-                                        <th width="160">Estimasi Saldo Awal</th>
-                                        <th width="170">Input Saldo Awal Baru</th>
+                                        <th width="170">Estimasi Saldo Awal</th>
+                                        <th width="280">Input Saldo Awal Baru (Per Satuan / UOM)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -140,6 +140,26 @@
 
                                             $lastSA = $lastSaldoAwals->get($b->kode_barang);
                                             $defaultValue = old('items.' . $index . '.saldo_awal', $estimasiSaldoAwal);
+
+                                            $satuans = $b->satuans->sortByDesc('isi');
+                                            $breakdown = [];
+                                            $remaining = round(abs((float)$defaultValue), 4);
+                                            if ($satuans->count() > 0) {
+                                                $count = $satuans->count();
+                                                $i = 0;
+                                                foreach ($satuans as $sat) {
+                                                    $i++;
+                                                    $factor = (float)($sat->isi ?: 1);
+                                                    if ($i === $count) {
+                                                        $unitQty = round($remaining / $factor, 4);
+                                                        $breakdown[$sat->id] = $unitQty > 0 ? (float)$unitQty : '';
+                                                    } else {
+                                                        $unitQty = floor(round($remaining / $factor, 8));
+                                                        $breakdown[$sat->id] = $unitQty > 0 ? (float)$unitQty : '';
+                                                        $remaining = round($remaining - ($unitQty * $factor), 4);
+                                                    }
+                                                }
+                                            }
                                         @endphp
                                         <tr>
                                             <td class="text-center">{{ ($barangs->currentPage() - 1) * $barangs->perPage() + $index + 1 }}</td>
@@ -168,19 +188,45 @@
                                                 @endif
                                             </td>
                                             <td class="text-center font-monospace fw-bold text-dark">
-                                                <span class="fs-7 text-primary">{{ $estimasiSaldoAwal }}</span>
+                                                <div class="fs-7 text-primary">{{ $b->formatStok($estimasiSaldoAwal) }}</div>
                                                 <div class="text-muted opacity-75" style="font-size: 10px;" title="Rumus: {{ $stokSaatIni }} - {{ $totalMasuk }} + {{ $totalKeluar }}">
-                                                    ({{ $stokSaatIni }} &minus; {{ $totalMasuk }} &plus; {{ $totalKeluar }})
+                                                    ({{ (float)$estimasiSaldoAwal }} Base Qty)
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td class="sa-row-container">
                                                 <input type="hidden" name="items[{{ $index }}][kode_barang]" value="{{ $b->kode_barang }}">
-                                                <div class="input-group input-group-sm">
-                                                    <input type="number" step="any" name="items[{{ $index }}][saldo_awal]" 
-                                                           class="form-control form-control-sm text-end fw-bold font-monospace input-saldo-awal" 
-                                                           data-estimasi="{{ $estimasiSaldoAwal }}"
-                                                           value="{{ $defaultValue }}" min="0">
-                                                    <span class="input-group-text bg-light small">{{ $b->satuans->sortBy('isi')->first()->satuan ?? 'PCS' }}</span>
+                                                <input type="hidden" name="items[{{ $index }}][saldo_awal]" 
+                                                       class="saldo-awal-total-hidden" 
+                                                       data-estimasi="{{ (float)$estimasiSaldoAwal }}"
+                                                       value="{{ (float)$defaultValue }}">
+
+                                                <div class="d-flex flex-wrap gap-1 justify-content-end align-items-center mb-1">
+                                                    @if ($satuans->count() > 0)
+                                                        @foreach ($satuans as $sat)
+                                                            <div class="input-group input-group-sm" style="width: 85px;">
+                                                                <input type="number" step="any" min="0" 
+                                                                       class="form-control form-control-sm text-end font-monospace p-1 uom-sa-input" 
+                                                                       data-isi="{{ (float)$sat->isi }}" 
+                                                                       data-satuan="{{ $sat->satuan }}"
+                                                                       value="{{ $breakdown[$sat->id] ?? '' }}" 
+                                                                       placeholder="0">
+                                                                <span class="input-group-text px-1 text-secondary fw-semibold text-xs" style="font-size: 9px !important; line-height: 1.2;">{{ $sat->satuan }}</span>
+                                                            </div>
+                                                        @endforeach
+                                                    @else
+                                                        <div class="input-group input-group-sm" style="width: 100px;">
+                                                            <input type="number" step="any" min="0" 
+                                                                   class="form-control form-control-sm text-end font-monospace uom-sa-input" 
+                                                                   data-isi="1" 
+                                                                   data-satuan="PCS"
+                                                                   value="{{ $defaultValue != 0 ? (float)$defaultValue : '' }}" 
+                                                                   placeholder="0">
+                                                            <span class="input-group-text px-1.5 text-secondary text-xs">PCS</span>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <div class="text-end text-muted small font-monospace fw-semibold" style="font-size: 0.73rem;">
+                                                    Konversi: <span class="total-sa-converted text-primary fw-bold">{{ $b->formatStok($defaultValue) }}</span>
                                                 </div>
                                             </td>
                                         </tr>
@@ -228,20 +274,63 @@
                 width: '100%'
             });
 
-            // Auto-Fill Button Logic (Hitung Mundur Mutasi)
-            $('#btnAutoGenerateHitungMundur').on('click', function() {
-                $('.input-saldo-awal').each(function() {
-                    const estimasi = $(this).data('estimasi');
-                    if (estimasi !== undefined && estimasi !== null) {
-                        $(this).val(estimasi);
+            // Realtime UOM conversion listener
+            $(document).on('input change', '.uom-sa-input', function() {
+                const container = $(this).closest('.sa-row-container');
+                let totalBase = 0;
+                let parts = [];
+
+                container.find('.uom-sa-input').each(function() {
+                    const valStr = $(this).val();
+                    const val = parseFloat(valStr) || 0;
+                    const factor = parseFloat($(this).data('isi')) || 1;
+                    const unitName = $(this).data('satuan');
+
+                    if (val > 0) {
+                        totalBase += val * factor;
+                        parts.push(`${val} ${unitName}`);
                     }
+                });
+
+                totalBase = Math.round(totalBase * 10000) / 10000;
+                const convertedText = parts.length > 0 ? parts.join(' ') : '0 PCS';
+
+                container.find('.saldo-awal-total-hidden').val(totalBase);
+                container.find('.total-sa-converted').text(convertedText);
+            });
+
+            // Auto-Fill Button Logic (Hitung Mundur Mutasi per Satuan UOM)
+            $('#btnAutoGenerateHitungMundur').on('click', function() {
+                $('.sa-row-container').each(function() {
+                    const container = $(this);
+                    const hiddenInput = container.find('.saldo-awal-total-hidden');
+                    const estimasi = parseFloat(hiddenInput.data('estimasi')) || 0;
+
+                    let remaining = Math.round(Math.abs(estimasi) * 10000) / 10000;
+                    const inputs = container.find('.uom-sa-input');
+                    const count = inputs.length;
+
+                    inputs.each(function(index) {
+                        const factor = parseFloat($(this).data('isi')) || 1;
+                        if (index === count - 1) {
+                            const unitQty = Math.round((remaining / factor) * 10000) / 10000;
+                            $(this).val(unitQty > 0 ? unitQty : '');
+                        } else {
+                            const unitQty = Math.floor(Math.round((remaining / factor) * 100000000) / 100000000);
+                            $(this).val(unitQty > 0 ? unitQty : '');
+                            remaining = Math.round((remaining - (unitQty * factor)) * 10000) / 10000;
+                        }
+                    });
+
+                    // Trigger change to update hidden input & conversion label
+                    inputs.first().trigger('change');
                 });
 
                 Swal.fire({
                     toast: true,
                     position: 'top-end',
                     icon: 'success',
-                    title: 'Saldo Awal diisi otomatis berdasarkan hitung mundur mutasi',
+                    title: 'Saldo Awal dikonversi & diisi otomatis per satuan UOM',
                     showConfirmButton: false,
                     timer: 2000
                 });
