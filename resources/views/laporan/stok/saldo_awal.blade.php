@@ -90,7 +90,7 @@
                             </div>
                             <div class="d-flex gap-2 flex-wrap">
                                 <button type="button" id="btnAutoGenerateHitungMundur" class="btn btn-info text-white btn-sm fw-bold shadow-sm rounded-3">
-                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Auto-Fill (Stok Saat Ini - Masuk + Keluar)
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Auto-Fill (Sesuai Stok Saat Ini)
                                 </button>
                                 <button type="submit" class="btn btn-success btn-sm fw-bold px-4 shadow-sm rounded-3">
                                     <i class="fa-solid fa-floppy-disk me-1"></i> Simpan Saldo Awal
@@ -102,15 +102,6 @@
                             </div>
                         </div>
 
-                        <div class="alert alert-info py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2">
-                            <i class="fa-solid fa-circle-info fs-6"></i>
-                            <div>
-                                <strong>Rumus Hitung Mundur Saldo Awal:</strong> 
-                                <span class="badge bg-white text-dark border ms-1 font-monospace">Saldo Awal = Stok Saat Ini &minus; Total Penerimaan (Masuk) &plus; Total Pengeluaran (Keluar)</span>
-                                sejak tanggal {{ \Carbon\Carbon::parse($tanggalSaldoAwal)->format('d/m/Y') }}.
-                            </div>
-                        </div>
-
                         <div class="table-responsive">
                             <table class="table table-hover table-bordered align-middle text-sm">
                                 <thead class="table-dark text-center align-middle">
@@ -118,25 +109,17 @@
                                         <th width="40">No</th>
                                         <th width="120">Kode Barang</th>
                                         <th>Nama Barang</th>
-                                        <th width="130">Kategori / Merk</th>
-                                        <th width="150">Stok Saat Ini</th>
-                                        <th width="170">Mutasi Sejak Tgl Ini (Masuk / Keluar)</th>
-                                        <th width="170">Estimasi Saldo Awal</th>
-                                        <th width="280">Input Saldo Awal Baru (Per Satuan / UOM)</th>
+                                        <th width="140">Kategori / Merk</th>
+                                        <th width="180">Stok Saat Ini (Rekap Persediaan)</th>
+                                        <th width="320">Input Saldo Awal Baru (Per Satuan / UOM)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse ($barangs as $index => $b)
                                         @php
-                                            $m = $mutasiPeriod->get($b->kode_barang);
-                                            $totalMasuk = $m ? (float)$m->total_masuk : 0;
-                                            $totalKeluar = $m ? (float)$m->total_keluar : 0;
                                             $stokSaatIni = (float)$b->stok;
-                                            $estimasiCalculated = $stokSaatIni - $totalMasuk + $totalKeluar;
-                                            $estimasiSaldoAwal = max(0, $estimasiCalculated);
-
                                             $lastSA = $lastSaldoAwals->get($b->kode_barang);
-                                            $defaultValue = max(0, (float)old('items.' . $index . '.saldo_awal', $lastSA !== null ? (float)$lastSA : $estimasiSaldoAwal));
+                                            $defaultValue = max(0, (float)old('items.' . $index . '.saldo_awal', $lastSA !== null ? (float)$lastSA : $stokSaatIni));
 
                                             $satuans = $b->satuans->sortByDesc('isi');
                                             $breakdown = [];
@@ -175,26 +158,13 @@
                                                 <span class="badge bg-primary text-wrap fs-7 px-3 py-1.5">
                                                     {{ $b->formatStok($b->stok) }}
                                                 </span>
-                                            </td>
-                                            <td class="text-center font-monospace small">
-                                                @if ($totalMasuk > 0 || $totalKeluar > 0)
-                                                    <div class="text-success"><i class="fa-solid fa-arrow-down me-1"></i> Masuk: +{{ $totalMasuk }}</div>
-                                                    <div class="text-danger"><i class="fa-solid fa-arrow-up me-1"></i> Keluar: -{{ $totalKeluar }}</div>
-                                                @else
-                                                    <span class="text-muted opacity-50">&mdash; Tidak ada mutasi &mdash;</span>
-                                                @endif
-                                            </td>
-                                            <td class="text-center font-monospace fw-bold text-dark">
-                                                <div class="fs-7 text-primary">{{ $b->formatStok($estimasiSaldoAwal) }}</div>
-                                                <div class="text-muted opacity-75" style="font-size: 10px;" title="Rumus: {{ $stokSaatIni }} - {{ $totalMasuk }} + {{ $totalKeluar }}">
-                                                    ({{ (float)$estimasiSaldoAwal }} Base Qty)
-                                                </div>
+                                                <div class="text-muted small fw-normal" style="font-size: 11px;">({{ $stokSaatIni }} Base Qty)</div>
                                             </td>
                                             <td class="sa-row-container">
                                                 <input type="hidden" name="items[{{ $index }}][kode_barang]" value="{{ $b->kode_barang }}">
                                                 <input type="hidden" name="items[{{ $index }}][saldo_awal]" 
                                                        class="saldo-awal-total-hidden" 
-                                                       data-estimasi="{{ (float)$estimasiSaldoAwal }}"
+                                                       data-estimasi="{{ (float)$stokSaatIni }}"
                                                        value="{{ (float)$defaultValue }}">
 
                                                 <div class="d-flex flex-wrap gap-1 justify-content-end align-items-center mb-1">
@@ -229,7 +199,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center py-4 text-muted">
+                                            <td colspan="6" class="text-center py-4 text-muted">
                                                 Tidak ada data barang ditemukan.
                                             </td>
                                         </tr>
