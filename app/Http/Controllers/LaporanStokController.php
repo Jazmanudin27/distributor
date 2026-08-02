@@ -708,10 +708,14 @@ class LaporanStokController extends Controller
 
         $request->validate([
             'tanggal' => 'required|date',
-            'items' => 'required|array|min:1',
+            'items' => 'nullable|array',
             'items.*.kode_barang' => 'required|exists:barang,kode_barang',
             'items.*.saldo_awal' => 'nullable|numeric|min:0',
         ]);
+
+        if (empty($request->items)) {
+            return redirect()->back()->with('error', 'Tidak ada data barang yang dikirim untuk disimpan.');
+        }
 
         DB::transaction(function() use ($request) {
             $tanggal = $request->tanggal;

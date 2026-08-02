@@ -102,10 +102,6 @@
                             </div>
                         </div>
 
-                        <form action="{{ route('laporan.stok.saldo-awal.recalculate') }}" method="POST" id="formRecalculateStok" class="d-none">
-                            @csrf
-                        </form>
-
                         <div class="alert alert-info py-2 px-3 small rounded-3 mb-3 d-flex align-items-center gap-2">
                             <i class="fa-solid fa-circle-info fs-6"></i>
                             <div>
@@ -252,6 +248,10 @@
                                 </button>
                             </div>
                         @endif
+                    </form>
+
+                    <form action="{{ route('laporan.stok.saldo-awal.recalculate') }}" method="POST" id="formRecalculateStok" class="d-none">
+                        @csrf
                     </form>
                 </div>
             </div>
