@@ -402,7 +402,7 @@ class LaporanStokController extends Controller
             $stokAwal = 0;
             $stokAkhir = 0;
 
-            if ($isPrintOrExcel && $kode_barang) {
+            if ($kode_barang) {
                 $barang = Barang::with('satuans')->find($kode_barang);
                 if ($barang) {
                     // Check if there is a Stok Opname or Saldo Awal within [tanggal_mulai, tanggal_akhir]

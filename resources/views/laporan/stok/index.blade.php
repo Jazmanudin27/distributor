@@ -97,16 +97,23 @@
                         </div>
 
                         <div class="row g-2">
-                            <div class="col-6">
+                            <div class="col-4">
+                                <button type="submit" onclick="this.form.action='{{ route('laporan.stok') }}'; this.form.target='_self';"
+                                    class="btn btn-primary w-100 py-2 fw-bold hover-scale shadow-sm d-flex align-items-center justify-content-center gap-1"
+                                    style="height: 38px;">
+                                    <i class="fa-solid fa-eye"></i> Tampilkan
+                                </button>
+                            </div>
+                            <div class="col-4">
                                 <button type="submit" onclick="this.form.action='{{ route('laporan.stok.cetak') }}'; this.form.target='_blank';"
-                                    class="btn btn-primary w-100 py-2 fw-bold hover-scale shadow-sm d-flex align-items-center justify-content-center gap-2"
+                                    class="btn btn-outline-primary w-100 py-2 fw-bold hover-scale shadow-sm d-flex align-items-center justify-content-center gap-1"
                                     style="height: 38px;">
                                     <i class="fa-solid fa-print"></i> Cetak
                                 </button>
                             </div>
-                            <div class="col-6">
+                            <div class="col-4">
                                 <button type="submit" onclick="this.form.action='{{ route('laporan.stok.excel') }}'; this.form.target='_self';"
-                                    class="btn btn-success w-100 py-2 fw-bold hover-scale shadow-sm d-flex align-items-center justify-content-center gap-2"
+                                    class="btn btn-success w-100 py-2 fw-bold hover-scale shadow-sm d-flex align-items-center justify-content-center gap-1"
                                     style="height: 38px;">
                                     <i class="fa-solid fa-file-excel"></i> Excel
                                 </button>
@@ -115,7 +122,7 @@
 
                         <div class="mt-3">
                             <a href="{{ route('laporan.stok.saldo-awal.index') }}" 
-                               class="btn btn-outline-primary w-100 py-2 fw-bold hover-scale shadow-sm d-flex align-items-center justify-content-center gap-2"
+                               class="btn btn-outline-secondary w-100 py-2 fw-bold hover-scale shadow-sm d-flex align-items-center justify-content-center gap-2"
                                style="height: 38px;">
                                 <i class="fa-solid fa-calculator"></i> Setting / Generate Saldo Awal
                             </a>
@@ -124,6 +131,112 @@
                 </div>
             </div>
         </div>
+
+        @if (isset($barang) && $barang)
+            <div class="col-12 mt-4">
+                <div class="card shadow border-0 rounded-4 overflow-hidden">
+                    <div class="card-header card-premium-header text-white py-3 border-0 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                        <div>
+                            <h5 class="mb-0 fw-bold text-white">
+                                <i class="fa-solid fa-clock-rotate-left me-2"></i> Kartu Mutasi Stok: {{ $barang->nama_barang }}
+                            </h5>
+                            <small class="text-white-50">Kode: <span class="font-monospace fw-bold text-white">{{ $barang->kode_barang }}</span> | Periode: {{ \Carbon\Carbon::parse($tanggal_mulai)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($tanggal_akhir)->format('d/m/Y') }}</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-white text-dark py-2 px-3 fs-7">
+                                Saldo Awal: <strong>{{ $barang->formatStok($stokAwal) }}</strong>
+                            </span>
+                            <span class="badge bg-success py-2 px-3 fs-7">
+                                Saldo Akhir: <strong>{{ $barang->formatStok($stokAkhir) }}</strong>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered table-hover align-middle mb-0 text-sm">
+                                <thead class="table-dark text-center align-middle">
+                                    <tr>
+                                        <th rowspan="2" width="40">No</th>
+                                        <th rowspan="2" width="100">Tanggal</th>
+                                        <th rowspan="2" width="130">No. Referensi</th>
+                                        <th rowspan="2">Keterangan / Pelanggan / Sales</th>
+                                        <th colspan="4" class="bg-success text-white py-1">PENERIMAAN (MASUK)</th>
+                                        <th colspan="3" class="bg-danger text-white py-1">PENGELUARAN (KELUAR)</th>
+                                        <th rowspan="2" width="130">Saldo Running</th>
+                                    </tr>
+                                    <tr class="table-secondary text-dark small text-center">
+                                        <th width="80" class="bg-success bg-opacity-25">Pembelian</th>
+                                        <th width="80" class="bg-success bg-opacity-25">Retur Jual</th>
+                                        <th width="80" class="bg-success bg-opacity-25">Batal Jual</th>
+                                        <th width="80" class="bg-success bg-opacity-25">Opname (+)</th>
+                                        <th width="80" class="bg-danger bg-opacity-25">Penjualan</th>
+                                        <th width="80" class="bg-danger bg-opacity-25">Retur Beli</th>
+                                        <th width="80" class="bg-danger bg-opacity-25">Opname (-)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($movements as $index => $m)
+                                        <tr>
+                                            <td class="text-center font-monospace">{{ $index + 1 }}</td>
+                                            <td class="text-center font-monospace small">
+                                                {{ \Carbon\Carbon::parse($m['tanggal'])->format('d/m/Y') }}
+                                            </td>
+                                            <td class="font-monospace fw-bold text-primary">{{ $m['no_referensi'] }}</td>
+                                            <td>
+                                                <div class="fw-semibold">{{ $m['keterangan'] }}</div>
+                                                @if (isset($m['pelanggan']) && $m['pelanggan'] && $m['pelanggan'] !== '-')
+                                                    <div class="small text-muted"><i class="fa-solid fa-user me-1"></i> {{ $m['pelanggan'] }} ({{ $m['wilayah'] ?? '-' }})</div>
+                                                @endif
+                                                @if (isset($m['nama_sales']) && $m['nama_sales'] && $m['nama_sales'] !== '-')
+                                                    <div class="small text-muted"><i class="fa-solid fa-id-badge me-1"></i> Sales: {{ $m['nama_sales'] }}</div>
+                                                @endif
+                                            </td>
+
+                                            {{-- MASUK --}}
+                                            <td class="text-end font-monospace text-success fw-bold">
+                                                {{ $m['pembelian_masuk'] > 0 ? $barang->formatStok($m['pembelian_masuk']) : '-' }}
+                                            </td>
+                                            <td class="text-end font-monospace text-success fw-bold">
+                                                {{ $m['retur_jual'] > 0 ? $barang->formatStok($m['retur_jual']) : '-' }}
+                                            </td>
+                                            <td class="text-end font-monospace text-success fw-bold">
+                                                {{ isset($m['batal_jual']) && $m['batal_jual'] > 0 ? $barang->formatStok($m['batal_jual']) : '-' }}
+                                            </td>
+                                            <td class="text-end font-monospace text-success fw-bold">
+                                                {{ $m['opname_masuk'] > 0 ? $barang->formatStok($m['opname_masuk']) : '-' }}
+                                            </td>
+
+                                            {{-- KELUAR --}}
+                                            <td class="text-end font-monospace text-danger fw-bold">
+                                                {{ $m['penjualan_keluar'] > 0 ? $barang->formatStok($m['penjualan_keluar']) : '-' }}
+                                            </td>
+                                            <td class="text-end font-monospace text-danger fw-bold">
+                                                {{ $m['retur_beli'] > 0 ? $barang->formatStok($m['retur_beli']) : '-' }}
+                                            </td>
+                                            <td class="text-end font-monospace text-danger fw-bold">
+                                                {{ $m['opname_keluar'] > 0 ? $barang->formatStok($m['opname_keluar']) : '-' }}
+                                            </td>
+
+                                            {{-- SALDO --}}
+                                            <td class="text-end font-monospace fw-bold text-dark">
+                                                {{ $barang->formatStok($m['saldo']) }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="12" class="text-center py-4 text-muted">
+                                                <i class="fa-solid fa-inbox fa-2x mb-2 d-block opacity-50"></i>
+                                                Tidak ada riwayat mutasi stok untuk barang ini dalam periode tanggal tersebut.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
     </div>
 @endsection
 
