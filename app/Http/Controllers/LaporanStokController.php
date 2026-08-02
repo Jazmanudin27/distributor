@@ -153,8 +153,24 @@ class LaporanStokController extends Controller
                             });
                             $stokAwal = $baseStock + $netToStart;
                         } else {
-                            // Saldo Awal set during the month (e.g. date 2 of month) -> use its value directly as Stok Awal column
-                            $stokAwal = (float)$saRecord->saldo_akhir;
+                            // Saldo Awal set on a later date in the month (e.g. 03 Aug, while tanggal_mulai is 01 Aug)
+                            // Calculate backward: stokAwal(01 Aug) = Saldo Awal(03 Aug) - (penerimaan before 03 Aug) + (pengeluaran before 03 Aug)
+                            $movementsBackward = DB::table('stok_mutasi')
+                                ->where('kode_barang', $kb)
+                                ->where('jenis_transaksi', '!=', 'Saldo Awal')
+                                ->where('tanggal', '>=', $tanggal_mulai)
+                                ->where(function($q) use ($saRecord) {
+                                    $q->where('tanggal', '<', $saRecord->tanggal)
+                                      ->orWhere(function($sub) use ($saRecord) {
+                                          $sub->where('tanggal', '=', $saRecord->tanggal)
+                                              ->where('id', '<', $saRecord->id);
+                                      });
+                                })
+                                ->get();
+                            $netBackward = $movementsBackward->sum(function($m) {
+                                return (float)$m->qty_masuk - (float)$m->qty_keluar;
+                            });
+                            $stokAwal = (float)$saRecord->saldo_akhir - $netBackward;
                         }
                     } else {
                         // Check latest Stok Opname <= $tanggal_mulai or first mutation
@@ -438,7 +454,24 @@ class LaporanStokController extends Controller
                             });
                             $stokAwal = $baseStock + $netToStart;
                         } else {
-                            $stokAwal = (float)$saRecord->saldo_akhir;
+                            // Saldo Awal set on a later date in the month (e.g. 03 Aug, while tanggal_mulai is 01 Aug)
+                            // Calculate backward: stokAwal(01 Aug) = Saldo Awal(03 Aug) - (penerimaan before 03 Aug) + (pengeluaran before 03 Aug)
+                            $movementsBackward = DB::table('stok_mutasi')
+                                ->where('kode_barang', $kode_barang)
+                                ->where('jenis_transaksi', '!=', 'Saldo Awal')
+                                ->where('tanggal', '>=', $tanggal_mulai)
+                                ->where(function($q) use ($saRecord) {
+                                    $q->where('tanggal', '<', $saRecord->tanggal)
+                                      ->orWhere(function($sub) use ($saRecord) {
+                                          $sub->where('tanggal', '=', $saRecord->tanggal)
+                                              ->where('id', '<', $saRecord->id);
+                                      });
+                                })
+                                ->get();
+                            $netBackward = $movementsBackward->sum(function($m) {
+                                return (float)$m->qty_masuk - (float)$m->qty_keluar;
+                            });
+                            $stokAwal = (float)$saRecord->saldo_akhir - $netBackward;
                         }
                     } else {
                         $lastMutationBefore = DB::table('stok_mutasi')
