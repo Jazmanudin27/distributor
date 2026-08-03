@@ -176,7 +176,7 @@
 
                             <td class="text-end fw-bold font-monospace">{{ $b->formatStok($item['stok_akhir']) }}</td>
                             <td class="text-end fw-bold font-monospace">
-                                {{ number_format($item['stok_akhir'], 0, ',', '.') }} {{ $item['satuan'] }}
+                                {{ number_format($item['stok_akhir'], 0, ',', '.') }}
                             </td>
                         </tr>
                     @empty
