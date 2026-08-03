@@ -98,14 +98,24 @@
                             <th class="text-white" style="padding: 4px;">Kategori</th>
                             <th class="text-white" style="padding: 4px;">Merk</th>
                             <th width="120" class="text-end text-white" style="padding: 4px;">Stok Min</th>
-                            <th width="200" class="text-end text-white" style="padding: 4px;">Stok Fisik</th>
-                            <th width="180" class="text-center text-white" style="padding: 4px; background-color: #6f42c1;">Konversi Satuan</th>
+                            <th width="160" class="text-end text-white" style="padding: 4px;">Stok Fisik</th>
+                            <th width="90" class="text-center text-white" style="padding: 4px; background-color: #5a67d8;">Satuan 1</th>
+                            <th width="90" class="text-center text-white" style="padding: 4px; background-color: #5a67d8;">Satuan 2</th>
+                            <th width="90" class="text-center text-white" style="padding: 4px; background-color: #5a67d8;">Satuan 3</th>
+                            <th width="90" class="text-center text-white" style="padding: 4px; background-color: #5a67d8;">Satuan 4</th>
                         </tr>
                     </thead>
                     <tbody>
                         @php $num = 1; @endphp
                         @foreach ($items as $item)
                             @if (($tampilkan_stok_kosong ?? false) || (float) $item->stok > 0)
+                                @php
+                                    $satuanArr = $item->satuans->sortByDesc('isi')->values();
+                                    $satuanCount = $satuanArr->count();
+                                    $smallestSatuan = $satuanArr->last();
+                                    $smallestName = $smallestSatuan ? $smallestSatuan->satuan : 'PCS';
+                                    $smallestIsi  = ($smallestSatuan && $smallestSatuan->isi > 0) ? $smallestSatuan->isi : 1;
+                                @endphp
                                 <tr>
                                     <td class="text-center">{{ $num++ }}</td>
                                     <td>{{ $item->kode_barang }}</td>
@@ -116,47 +126,23 @@
                                         {{ $item->formatStok($item->stok_min) }}
                                     </td>
                                     <td class="text-end fw-bold text-dark font-monospace">
-                                        {{ $item->formatStok($item->stok) }}</td>
-                                    <td class="text-center" style="font-size: 10px; color: #555;">
-                                        @php
-                                            $satuans = $item->satuans->sortByDesc('isi');
-                                            $satuanCount = $satuans->count();
-                                            $satuanArr = $satuans->values();
-                                        @endphp
-                                        @if ($satuanCount > 0)
-                                            @foreach ($satuanArr as $idx => $sat)
-                                                @php
-                                                    // Hitung isi dalam satuan terkecil
-                                                    $smallestSatuan = $satuanArr->last();
-                                                    $isiPcs = ($smallestSatuan->isi > 0)
-                                                        ? round($sat->isi / $smallestSatuan->isi)
-                                                        : $sat->isi;
-                                                @endphp
-                                                @if ($idx < $satuanCount - 1)
-                                                    {{-- Bukan satuan terkecil --}}
-                                                    @php
-                                                        $nextSat = $satuanArr[$idx + 1];
-                                                        $isiNext = ($nextSat->isi > 0 && $sat->isi > 0)
-                                                            ? round($sat->isi / $nextSat->isi)
-                                                            : $sat->isi;
-                                                    @endphp
-                                                    <span style="display:inline-block; background:#e8f4fd; border:1px solid #90c4f0; border-radius:4px; padding:1px 5px; margin:1px; white-space:nowrap;">
-                                                        <b>{{ $sat->satuan }}</b> = {{ $isiNext }} {{ $nextSat->satuan }}
-                                                        @if ($idx < $satuanCount - 2)
-                                                            &nbsp;<span style="color:#888;">({{ number_format($isiPcs) }} {{ $smallestSatuan->satuan }})</span>
-                                                        @endif
-                                                    </span>
-                                                @else
-                                                    {{-- Satuan terkecil --}}
-                                                    <span style="display:inline-block; background:#fff3cd; border:1px solid #ffc107; border-radius:4px; padding:1px 5px; margin:1px; white-space:nowrap; color:#856404;">
-                                                        <b>{{ $sat->satuan }}</b> (terkecil)
-                                                    </span>
-                                                @endif
-                                            @endforeach
-                                        @else
-                                            <span class="text-muted">PCS</span>
-                                        @endif
+                                        {{ $item->formatStok($item->stok) }}
                                     </td>
+                                    {{-- Satuan 1 s/d 4 --}}
+                                    @for ($s = 0; $s < 4; $s++)
+                                        @if ($s < $satuanCount)
+                                            @php
+                                                $sat = $satuanArr[$s];
+                                                $isiVal = round($sat->isi / $smallestIsi);
+                                            @endphp
+                                            <td class="text-center font-monospace"
+                                                style="font-size: 10px; background-color: #f5f3ff; color: #3730a3;">
+                                                <b>{{ $sat->satuan }}</b> = {{ number_format($isiVal) }} {{ $smallestName }}
+                                            </td>
+                                        @else
+                                            <td style="background-color: #fafafa; color: #ccc;" class="text-center">-</td>
+                                        @endif
+                                    @endfor
                                 </tr>
                             @endif
                         @endforeach
