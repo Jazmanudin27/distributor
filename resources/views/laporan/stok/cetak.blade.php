@@ -99,6 +99,7 @@
                             <th class="text-white" style="padding: 4px;">Merk</th>
                             <th width="120" class="text-end text-white" style="padding: 4px;">Stok Min</th>
                             <th width="200" class="text-end text-white" style="padding: 4px;">Stok Fisik</th>
+                            <th width="180" class="text-center text-white" style="padding: 4px; background-color: #6f42c1;">Konversi Satuan</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -116,6 +117,46 @@
                                     </td>
                                     <td class="text-end fw-bold text-dark font-monospace">
                                         {{ $item->formatStok($item->stok) }}</td>
+                                    <td class="text-center" style="font-size: 10px; color: #555;">
+                                        @php
+                                            $satuans = $item->satuans->sortByDesc('isi');
+                                            $satuanCount = $satuans->count();
+                                            $satuanArr = $satuans->values();
+                                        @endphp
+                                        @if ($satuanCount > 0)
+                                            @foreach ($satuanArr as $idx => $sat)
+                                                @php
+                                                    // Hitung isi dalam satuan terkecil
+                                                    $smallestSatuan = $satuanArr->last();
+                                                    $isiPcs = ($smallestSatuan->isi > 0)
+                                                        ? round($sat->isi / $smallestSatuan->isi)
+                                                        : $sat->isi;
+                                                @endphp
+                                                @if ($idx < $satuanCount - 1)
+                                                    {{-- Bukan satuan terkecil --}}
+                                                    @php
+                                                        $nextSat = $satuanArr[$idx + 1];
+                                                        $isiNext = ($nextSat->isi > 0 && $sat->isi > 0)
+                                                            ? round($sat->isi / $nextSat->isi)
+                                                            : $sat->isi;
+                                                    @endphp
+                                                    <span style="display:inline-block; background:#e8f4fd; border:1px solid #90c4f0; border-radius:4px; padding:1px 5px; margin:1px; white-space:nowrap;">
+                                                        <b>{{ $sat->satuan }}</b> = {{ $isiNext }} {{ $nextSat->satuan }}
+                                                        @if ($idx < $satuanCount - 2)
+                                                            &nbsp;<span style="color:#888;">({{ number_format($isiPcs) }} {{ $smallestSatuan->satuan }})</span>
+                                                        @endif
+                                                    </span>
+                                                @else
+                                                    {{-- Satuan terkecil --}}
+                                                    <span style="display:inline-block; background:#fff3cd; border:1px solid #ffc107; border-radius:4px; padding:1px 5px; margin:1px; white-space:nowrap; color:#856404;">
+                                                        <b>{{ $sat->satuan }}</b> (terkecil)
+                                                    </span>
+                                                @endif
+                                            @endforeach
+                                        @else
+                                            <span class="text-muted">PCS</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endif
                         @endforeach
