@@ -204,7 +204,14 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td class="text-secondary small">{{ Str::limit($item->alamat_pelanggan, 50) }}</td>
+                                 <td class="text-secondary small">
+                                     <div>{{ Str::limit($item->alamat_pelanggan, 50) }}</div>
+                                     @if ($item->alamat_toko && $item->alamat_toko !== $item->alamat_pelanggan)
+                                         <div class="text-muted mt-1" style="font-size: 0.75rem;">
+                                             <i class="fa-solid fa-truck me-1 opacity-75"></i>Toko: {{ Str::limit($item->alamat_toko, 50) }}
+                                         </div>
+                                     @endif
+                                 </td>
                                 <td class="text-end fw-semibold text-success small">
                                     Rp {{ number_format((float) $item->limit_pelanggan, 0, ',', '.') }}
                                 </td>

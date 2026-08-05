@@ -70,6 +70,7 @@ class PelangganController extends Controller
             'kode_pelanggan' => 'required',
             'nama_pelanggan' => 'required',
             'alamat_pelanggan' => 'required',
+            'alamat_toko' => 'nullable|string|max:150',
             'no_hp_pelanggan' => 'required',
             'limit_pelanggan' => 'required',
             'metode_bayar' => 'required',
@@ -81,6 +82,10 @@ class PelangganController extends Controller
         ]);
         
         $data['approve'] = 1; // Default to approved for desktop admin creation
+        
+        if (empty($data['alamat_toko'])) {
+            $data['alamat_toko'] = $data['alamat_pelanggan'];
+        }
         
         \App\Models\Pelanggan::create($data);
         
@@ -100,10 +105,11 @@ class PelangganController extends Controller
     {
         $row = Pelanggan::findOrFail($id);
 
-        $row->update($request->validate([
+        $data = $request->validate([
             'kode_pelanggan' => 'required',
             'nama_pelanggan' => 'required',
             'alamat_pelanggan' => 'required',
+            'alamat_toko' => 'nullable|string|max:150',
             'no_hp_pelanggan' => 'required',
             'limit_pelanggan' => 'required',
             'metode_bayar' => 'required',
@@ -112,7 +118,13 @@ class PelangganController extends Controller
             'status' => 'required|integer',
             'jenis_pelanggan' => 'nullable|string|max:30',
             'kode_sales' => 'nullable|string|exists:users,nik'
-        ]));
+        ]);
+
+        if (empty($data['alamat_toko'])) {
+            $data['alamat_toko'] = $data['alamat_pelanggan'];
+        }
+
+        $row->update($data);
         
         return redirect()->route('pelanggan.index')->with('success', 'Data berhasil diubah');
     }

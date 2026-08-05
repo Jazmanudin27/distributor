@@ -226,13 +226,25 @@
                             </div>
 
                             <!-- Alamat Pelanggan -->
-                            <div class="col-12">
+                            <div class="col-md-6">
                                 <label for="alamat_pelanggan" class="form-label fs-7 fw-bold text-secondary">Alamat
                                     Pelanggan</label>
                                 <textarea name="alamat_pelanggan" id="alamat_pelanggan"
                                     class="form-control form-control-sm @error('alamat_pelanggan') is-invalid @enderror" rows="3"
                                     placeholder="Alamat lengkap pelanggan..." required>{{ old('alamat_pelanggan', $item->alamat_pelanggan) }}</textarea>
                                 @error('alamat_pelanggan')
+                                    <div class="text-danger small mt-1"><i
+                                            class="fa-solid fa-triangle-exclamation me-1"></i>{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Alamat Toko -->
+                            <div class="col-md-6">
+                                <label for="alamat_toko" class="form-label fs-7 fw-bold text-secondary">Alamat Toko</label>
+                                <textarea name="alamat_toko" id="alamat_toko"
+                                    class="form-control form-control-sm @error('alamat_toko') is-invalid @enderror" rows="3"
+                                    placeholder="Alamat toko / alamat kirim barang jika berbeda...">{{ old('alamat_toko', $item->alamat_toko) }}</textarea>
+                                @error('alamat_toko')
                                     <div class="text-danger small mt-1"><i
                                             class="fa-solid fa-triangle-exclamation me-1"></i>{{ $message }}</div>
                                 @enderror

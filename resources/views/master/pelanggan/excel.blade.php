@@ -54,6 +54,7 @@
                 <th width="120">Kode Pelanggan</th>
                 <th width="200">Nama Pelanggan</th>
                 <th width="250">Alamat Pelanggan</th>
+                <th width="250">Alamat Toko</th>
                 <th width="120">No. HP</th>
                 <th width="120">Wilayah</th>
                 <th width="120">Sub Wilayah</th>
@@ -84,6 +85,7 @@
                     <td class="text-center">{{ $item->kode_pelanggan }}</td>
                     <td>{{ $item->nama_pelanggan }}</td>
                     <td>{{ $item->alamat_pelanggan }}</td>
+                    <td>{{ $item->alamat_toko ?: '-' }}</td>
                     <td class="text-center">{{ $item->no_hp_pelanggan ?: '-' }}</td>
                     <td>{{ $item->wilayah->nama_wilayah ?? '-' }}</td>
                     <td>{{ $item->subWilayah->nama_wilayah ?? '-' }}</td>
