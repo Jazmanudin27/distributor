@@ -203,7 +203,7 @@ class LaporanPenjualanController extends Controller
                     $row->total_bayar = $paid;
                     $row->total_retur = $returPaid;
                     $sisa = (float)($row->invoice_grand_total - $paid - $returPaid);
-                    $row->sisa_bayar = $sisa < 1 ? 0.0 : $sisa;
+                    $row->sisa_bayar = abs($sisa) < 1 ? 0.0 : $sisa;
                     $row->status_pembayaran = $row->sisa_bayar <= 0 ? 'Lunas' : 'Belum Lunas';
                 }
             }

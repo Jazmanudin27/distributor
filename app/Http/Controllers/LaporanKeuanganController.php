@@ -95,7 +95,7 @@ class LaporanKeuanganController extends Controller
                 foreach ($invoices as $inv) {
                     $paid = ($cashPayments[$inv->no_faktur] ?? 0) + ($transferPayments[$inv->no_faktur] ?? 0) + ($giroPayments[$inv->no_faktur] ?? 0);
                     $rem = (float)$inv->grand_total - $paid;
-                    $remaining = $rem < 1 ? 0.0 : $rem;
+                    $remaining = abs($rem) < 1 ? 0.0 : $rem;
 
                     if ($remaining >= 1) {
                         $invoicesByCustomer[$inv->kode_pelanggan][] = [
@@ -207,7 +207,7 @@ class LaporanKeuanganController extends Controller
                 foreach ($invoices as $inv) {
                     $paid = ($cashPayments[$inv->no_faktur] ?? 0) + ($transferPayments[$inv->no_faktur] ?? 0) + ($giroPayments[$inv->no_faktur] ?? 0);
                     $rem = (float)$inv->grand_total - $paid;
-                    $remaining = $rem < 1 ? 0.0 : $rem;
+                    $remaining = abs($rem) < 1 ? 0.0 : $rem;
 
                     if ($remaining >= 1) {
                         $invoicesByCustomer[$inv->kode_pelanggan][] = [
@@ -348,7 +348,7 @@ class LaporanKeuanganController extends Controller
 
                     $paid = $cashPaid + $transferPaid + $giroPaid;
                     $sisa = (float)($inv->grand_total - $paid - $returPaid);
-                    $sisa_piutang = $sisa < 1 ? 0.0 : $sisa;
+                    $sisa_piutang = abs($sisa) < 1 ? 0.0 : $sisa;
 
                     if ($sisa_piutang >= 1) {
                         $ljt = $inv->pelanggan->ljt ?? 30;
@@ -548,7 +548,7 @@ class LaporanKeuanganController extends Controller
 
                 $paid = $cashPaid + $transferPaid + $giroPaid;
                 $sisa = (float)($inv->grand_total - $paid - $returPaid - $pfRetur);
-                $sisa_piutang = $sisa < 1 ? 0.0 : $sisa;
+                $sisa_piutang = abs($sisa) < 1 ? 0.0 : $sisa;
 
                 if ($sisa_piutang >= 1) {
                     $invDetails = $details->get($inv->no_faktur) ?? collect();
@@ -1171,7 +1171,7 @@ class LaporanKeuanganController extends Controller
                     $total_bayar = (float)($cTot + $tTot + $gTot);
                     $grand_total = (float)$inv->grand_total;
                     $sisa_bayar = $grand_total - $total_bayar - $rTot;
-                    if ($sisa_bayar < 1) {
+                    if (abs($sisa_bayar) < 1) {
                         $sisa_bayar = 0.0;
                     }
 

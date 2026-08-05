@@ -351,7 +351,7 @@ class PenjualanController extends Controller
                 }
 
                 $diskonGlobal = floatval($request->diskon_global ?? 0);
-                $grandTotal = round($subtotalSum - $totalDiskon - $diskonGlobal, 2);
+                $grandTotal = round($subtotalSum - $totalDiskon - $diskonGlobal, 0);
 
                 $penjualan = Penjualan::create([
                     'no_faktur' => $noFaktur,
@@ -726,7 +726,7 @@ class PenjualanController extends Controller
                 }
 
                 $diskonGlobal = floatval($request->diskon_global ?? 0);
-                $grandTotal = round($subtotalSum - $totalDiskon - $diskonGlobal, 2);
+                $grandTotal = round($subtotalSum - $totalDiskon - $diskonGlobal, 0);
 
                 // Change detection for ActivityLog
                 $changes = [];
@@ -1050,12 +1050,10 @@ class PenjualanController extends Controller
         $totalBayarApproved = $item->pembayarans->where('status', 'disetujui')->sum('jumlah');
         $totalBayarPending = $item->pembayarans->where('status', 'pending')->sum('jumlah');
         $totalRetur = $item->getTotalRetur();
-        $sisaBayarValidation = $item->grand_total - ($totalBayarApproved + $totalBayarPending) - $totalRetur;
-        if ($sisaBayarValidation < 1) {
-            $sisaBayarValidation = 0.0;
-        }
+        $rawSisa = $item->grand_total - ($totalBayarApproved + $totalBayarPending) - $totalRetur;
+        $sisaBayarValidation = abs($rawSisa) < 1 ? 0.0 : $rawSisa;
 
-        if ($request->jumlah > $sisaBayarValidation) {
+        if ($sisaBayarValidation > 0 && $request->jumlah > ($sisaBayarValidation + 1)) {
             return redirect()->back()->with('error', 'Jumlah pembayaran melebihi sisa piutang! Sisa saat ini (termasuk pending): Rp ' . number_format($sisaBayarValidation, 0, ',', '.'));
         }
 
@@ -1411,12 +1409,10 @@ class PenjualanController extends Controller
         }
 
         $totalRetur = $item->getTotalRetur();
-        $sisaBayarValidation = $item->grand_total - ($totalBayarApproved + $totalBayarPending) - $totalRetur;
-        if ($sisaBayarValidation < 1) {
-            $sisaBayarValidation = 0.0;
-        }
+        $rawSisa = $item->grand_total - ($totalBayarApproved + $totalBayarPending) - $totalRetur;
+        $sisaBayarValidation = abs($rawSisa) < 1 ? 0.0 : $rawSisa;
 
-        if ($request->jumlah > $sisaBayarValidation) {
+        if ($sisaBayarValidation > 0 && $request->jumlah > ($sisaBayarValidation + 1)) {
             return redirect()->back()->with('error', 'Jumlah pembayaran melebihi sisa piutang! Batas maksimal yang diperbolehkan: Rp ' . number_format($sisaBayarValidation, 0, ',', '.'));
         }
 

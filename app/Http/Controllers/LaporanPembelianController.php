@@ -65,7 +65,7 @@ class LaporanPembelianController extends Controller
                     $invoice->total_bayar = $paid;
                     $invoice->total_retur = $returPaid;
                     $sisa = (float)($invoice->grand_total - $paid - $returPaid);
-                    $invoice->sisa_bayar = $sisa < 1 ? 0.0 : $sisa;
+                    $invoice->sisa_bayar = abs($sisa) < 1 ? 0.0 : $sisa;
                     $invoice->status_pembayaran = $invoice->sisa_bayar <= 0 ? 'Lunas' : 'Belum Lunas';
                 }
 

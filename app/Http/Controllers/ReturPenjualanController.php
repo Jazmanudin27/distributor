@@ -155,6 +155,8 @@ class ReturPenjualanController extends Controller
                     ]);
                 }
 
+                $totalRetur = round($totalRetur, 0);
+
                 $retur = ReturPenjualan::create([
                     'no_retur'       => $noRetur,
                     'tanggal'        => $request->tanggal,
@@ -334,6 +336,8 @@ class ReturPenjualanController extends Controller
                     'kondisi'             => $row['kondisi'] ?? null,
                 ]);
             }
+
+            $totalRetur = round($totalRetur, 0);
 
             $retur->update([
                 'tanggal'        => $request->tanggal,
