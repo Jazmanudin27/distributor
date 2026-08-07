@@ -624,7 +624,7 @@
             <div class="mobile-card p-3">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
-                        <h6 class="fw-semibold mb-1" style="font-size: 0.85rem;">{{ $visit->pelanggan->nama_pelanggan }}
+                        <h6 class="fw-semibold mb-1" style="font-size: 0.85rem;">{{ $visit->pelanggan?->nama_pelanggan ?? 'Pelanggan Tidak Ditemukan' }}
                         </h6>
                         <span class="text-secondary" style="font-size: 0.7rem;">
                             <i class="fa-solid fa-clock me-1"></i> {{ $visit->checkin->format('H:i') }} -
