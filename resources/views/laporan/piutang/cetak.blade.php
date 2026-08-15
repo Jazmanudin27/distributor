@@ -226,6 +226,7 @@
                             <tr>
                                 <th width="40" class="text-center">No</th>
                                 <th>No Faktur</th>
+                                <th class="text-center">Jenis</th>
                                 <th>Tanggal</th>
                                 <th>Pelanggan</th>
                                 <th>Supplier</th>
@@ -234,7 +235,7 @@
                                 <th class="text-center">Umur Piutang</th>
                                 <th class="text-end">Grand Total</th>
                                 <th class="text-end">Total Bayar</th>
-                                <th class="text-end">Retur PF</th>
+                                <th class="text-end">Retur / Refund</th>
                                 <th class="text-end">Sisa Piutang</th>
                                 <th class="text-center">Status</th>
                             </tr>
@@ -253,10 +254,16 @@
                                     $totBayar += $item['total_bayar'];
                                     $totRetur += $item['total_retur'] ?? 0;
                                     $totSisa += $item['sisa_piutang'];
+                                    $isTunai = in_array($item['jenis_transaksi'] ?? '', ['T', 'Tunai']);
                                 @endphp
                                 <tr>
                                     <td class="text-center">{{ $num++ }}</td>
                                     <td>{{ $item['no_faktur'] }}</td>
+                                    <td class="text-center">
+                                        <span class="badge {{ $isTunai ? 'bg-success text-white' : 'bg-warning text-dark' }}" style="font-size: 10px;">
+                                            {{ $isTunai ? 'Tunai' : 'Kredit' }}
+                                        </span>
+                                    </td>
                                     <td>{{ \Carbon\Carbon::parse($item['tanggal'])->format('d/m/Y') }}</td>
                                     <td>{{ $item['pelanggan']->nama_pelanggan }}
                                         ({{ $item['pelanggan']->kode_pelanggan }})
@@ -284,7 +291,7 @@
                         </tbody>
                         <tfoot class="fw-bold">
                             <tr class="table-light">
-                                <td colspan="8" class="text-end">TOTAL KESELURUHAN:</td>
+                                <td colspan="9" class="text-end">TOTAL KESELURUHAN:</td>
                                 <td class="text-end">{{ number_format($totGrand, 0, ',', '.') }}</td>
                                 <td class="text-end text-success">{{ number_format($totBayar, 0, ',', '.') }}</td>
                                 <td class="text-end text-warning">{{ number_format($totRetur, 0, ',', '.') }}</td>

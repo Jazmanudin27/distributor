@@ -161,8 +161,10 @@
 
             // Count overdue invoices relative to selected $tanggal
             $overdueCount = 0;
+            $totalRefundAll = 0;
             $reportDate = \Carbon\Carbon::parse($tanggal);
             foreach ($items as $item) {
+                $totalRefundAll += ($item['total_retur'] ?? 0);
                 $ljt = $item['pelanggan'] ? $item['pelanggan']->ljt ?? 30 : 30;
                 $jatuh_tempo = \Carbon\Carbon::parse($item['tanggal'])->addDays($ljt);
                 if ($reportDate->greaterThan($jatuh_tempo)) {
@@ -173,7 +175,7 @@
             $isSpvSales =
                 auth()->check() &&
                 (strtolower(auth()->user()->role ?? '') === 'spv sales' || auth()->user()->hasRole('spv sales'));
-            $colspanVal = $isSpvSales ? 7 : 5;
+            $colspanVal = $isSpvSales ? 6 : 5;
         @endphp
 
         <table class="kotak-rekap" style="margin-top: 10px;">
@@ -195,9 +197,9 @@
                 <td>FAKTUR KEMBALI</td>
                 <td style="text-align:center;">:</td>
                 <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td>TOTAL REFUND (Rp)</td>
+                <td style="text-align:center;">:</td>
+                <td>{{ $totalRefundAll > 0 ? number_format($totalRefundAll, 0, ',', '.') : '' }}</td>
             </tr>
             <tr>
                 <td>FAKTUR OVERDUE</td>
@@ -251,7 +253,7 @@
                     </tr>
                 @endforeach
                 <tr class="highlight">
-                    <td colspan="{{ $colspanVal + 2 }}" class="text-center fw-bold">TOTAL</td>
+                    <td colspan="{{ $colspanVal }}" class="text-center fw-bold">TOTAL</td>
                     <td class="text-right fw-bold">
                         {{ number_format($totalJumlah, 0, ',', '.') }}
                     </td>
