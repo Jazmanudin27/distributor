@@ -31,7 +31,7 @@ return new class extends Migration
             $table->char('jenis_barang', 20)->nullable();
             $table->unique(['email'], 'users_email');
             $table->index(['role'], 'users_idx_users_role_id');
-            $table->index(['nik'], 'users_idx_users_nik');
+            $table->unique(['nik'], 'users_idx_users_nik');
         });
 
         Schema::enableForeignKeyConstraints();

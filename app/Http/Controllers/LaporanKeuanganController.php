@@ -278,7 +278,6 @@ class LaporanKeuanganController extends Controller
             } else {
                 // detail (per unpaid invoice)
                 $query = Penjualan::with(['pelanggan.wilayah'])
-                    ->whereIn('jenis_transaksi', ['K', 'Kredit'])
                     ->where('batal', 0);
                 
                 if ($kode_supplier) {
@@ -435,7 +434,6 @@ class LaporanKeuanganController extends Controller
 
         if ($isPrintOrExcel) {
             $query = Penjualan::with(['pelanggan.wilayah', 'pelanggan.subWilayah', 'sales'])
-                ->whereIn('jenis_transaksi', ['K', 'Kredit'])
                 ->where('batal', 0)
                 ->where('tanggal', '<=', $tanggal);
             
