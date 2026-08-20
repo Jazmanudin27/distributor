@@ -22,12 +22,11 @@ class PenjualanController extends Controller
         $query = Penjualan::with(['pelanggan.wilayah', 'pembayarans', 'sales']);
 
         if ($request->filled('search')) {
-            $searchTerm = $request->search;
-            $matchingPelangganKodes = \App\Models\Pelanggan::where('nama_pelanggan', 'like', '%' . $searchTerm . '%')
-                ->pluck('kode_pelanggan');
-            $query->where(function ($q) use ($searchTerm, $matchingPelangganKodes) {
-                $q->where('no_faktur', 'like', '%' . $searchTerm . '%')
-                    ->orWhereIn('kode_pelanggan', $matchingPelangganKodes);
+            $query->where(function ($q) use ($request) {
+                $q->where('no_faktur', 'like', '%' . $request->search . '%')
+                    ->orWhereHas('pelanggan', function ($sq) use ($request) {
+                        $sq->where('nama_pelanggan', 'like', '%' . $request->search . '%');
+                    });
             });
         }
 
@@ -64,8 +63,9 @@ class PenjualanController extends Controller
                 });
             }
         } else {
-            // Default: always filter out cancelled (batal) transactions
-            $query->where('batal', 0);
+            if (!$request->filled('search')) {
+                $query->where('batal', 0);
+            }
         }
 
         $kategoriSales = $request->input('kategori_sales', 'non_canvas');
@@ -84,24 +84,21 @@ class PenjualanController extends Controller
         }
 
         if ($kategoriSales === 'canvas') {
-            $canvasSalesNiks = User::where(function ($q) {
-                $q->where('role', 'sales')->orWhere('role', 'Salesman');
-            })->where('is_kanvas', 1)->pluck('nik');
-            $query->whereIn('kode_sales', $canvasSalesNiks);
+            $query->whereHas('sales', function ($q) {
+                $q->where('is_kanvas', 1);
+            });
         } elseif ($kategoriSales === 'non_canvas') {
-            $nonCanvasSalesNiks = User::where(function ($q) {
-                $q->where('role', 'sales')->orWhere('role', 'Salesman');
-            })->where('is_kanvas', 0)->pluck('nik');
-            $query->where(function ($q) use ($nonCanvasSalesNiks) {
-                $q->whereIn('kode_sales', $nonCanvasSalesNiks)
-                    ->orWhereNull('kode_sales');
+            $query->where(function ($q) {
+                $q->whereHas('sales', function ($sq) {
+                    $sq->where('is_kanvas', 0);
+                })->orWhereNull('kode_sales');
             });
         }
 
         if ($request->filled('kode_wilayah')) {
-            $pelangganKodes = \App\Models\Pelanggan::where('kode_wilayah', $request->kode_wilayah)
-                ->pluck('kode_pelanggan');
-            $query->whereIn('kode_pelanggan', $pelangganKodes);
+            $query->whereHas('pelanggan', function ($q) use ($request) {
+                $q->where('kode_wilayah', $request->kode_wilayah);
+            });
         }
 
         $salesmenQuery = User::where(function ($q) {

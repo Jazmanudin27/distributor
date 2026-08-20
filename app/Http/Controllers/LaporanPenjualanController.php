@@ -70,21 +70,21 @@ class LaporanPenjualanController extends Controller
                 if ($jenis_transaksi) $query->where('jenis_transaksi', $jenis_transaksi);
                 
                 if ($kategoriSales === 'canvas') {
-                    $canvasNiks = \App\Models\User::where(function($q) { $q->where('role','sales')->orWhere('role','Salesman'); })->where('is_kanvas', 1)->pluck('nik');
-                    $query->whereIn('kode_sales', $canvasNiks);
+                    $query->whereHas('sales', function($q) {
+                        $q->where('is_kanvas', 1);
+                    });
                 } elseif ($kategoriSales === 'non_canvas') {
-                    $nonCanvasNiks = \App\Models\User::where(function($q) { $q->where('role','sales')->orWhere('role','Salesman'); })->where('is_kanvas', 0)->pluck('nik');
-                    $query->where(function($q) use ($nonCanvasNiks) {
-                        $q->whereIn('kode_sales', $nonCanvasNiks)->orWhereNull('kode_sales');
+                    $query->where(function($q) {
+                        $q->whereHas('sales', function($sq) {
+                            $sq->where('is_kanvas', 0);
+                        })->orWhereNull('kode_sales');
                     });
                 }
 
                 if ($kode_supplier) {
-                    $supplierBarangKodes = \App\Models\Barang::where('kode_supplier', $kode_supplier)->pluck('kode_barang');
-                    $matchingFakturs = \Illuminate\Support\Facades\DB::table('penjualan_detail')
-                        ->whereIn('kode_barang', $supplierBarangKodes)
-                        ->pluck('no_faktur')->unique();
-                    $query->whereIn('no_faktur', $matchingFakturs);
+                    $query->whereHas('details.barang', function($q) use ($kode_supplier) {
+                        $q->where('kode_supplier', $kode_supplier);
+                    });
                 }
 
                 $items = $query->orderBy('tanggal', 'asc')->orderBy('no_faktur', 'asc')->get();

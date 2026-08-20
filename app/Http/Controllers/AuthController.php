@@ -27,7 +27,7 @@ class AuthController extends Controller
         ]);
 
         // We map 'username' input to the 'name' column in the users table
-        if (Auth::attempt(['name' => $credentials['username'], 'password' => $credentials['password']], true)) {
+        if (Auth::attempt(['name' => $credentials['username'], 'password' => $credentials['password']])) {
             $user = Auth::user();
 
             // Cek status aktif
