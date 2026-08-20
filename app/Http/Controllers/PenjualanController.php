@@ -84,21 +84,24 @@ class PenjualanController extends Controller
         }
 
         if ($kategoriSales === 'canvas') {
-            $query->whereHas('sales', function ($q) {
-                $q->where('is_kanvas', 1);
-            });
+            $canvasSalesNiks = User::where(function ($q) {
+                $q->where('role', 'sales')->orWhere('role', 'Salesman');
+            })->where('is_kanvas', 1)->pluck('nik');
+            $query->whereIn('kode_sales', $canvasSalesNiks);
         } elseif ($kategoriSales === 'non_canvas') {
-            $query->where(function ($q) {
-                $q->whereHas('sales', function ($sq) {
-                    $sq->where('is_kanvas', 0);
-                })->orWhereNull('kode_sales');
+            $nonCanvasSalesNiks = User::where(function ($q) {
+                $q->where('role', 'sales')->orWhere('role', 'Salesman');
+            })->where('is_kanvas', 0)->pluck('nik');
+            $query->where(function ($q) use ($nonCanvasSalesNiks) {
+                $q->whereIn('kode_sales', $nonCanvasSalesNiks)
+                    ->orWhereNull('kode_sales');
             });
         }
 
         if ($request->filled('kode_wilayah')) {
-            $query->whereHas('pelanggan', function ($q) use ($request) {
-                $q->where('kode_wilayah', $request->kode_wilayah);
-            });
+            $pelangganByWilayah = \App\Models\Pelanggan::where('kode_wilayah', $request->kode_wilayah)
+                ->pluck('kode_pelanggan');
+            $query->whereIn('kode_pelanggan', $pelangganByWilayah);
         }
 
         $salesmenQuery = User::where(function ($q) {
