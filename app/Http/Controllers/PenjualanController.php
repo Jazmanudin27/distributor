@@ -22,11 +22,12 @@ class PenjualanController extends Controller
         $query = Penjualan::with(['pelanggan.wilayah', 'pembayarans', 'sales']);
 
         if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('no_faktur', 'like', '%' . $request->search . '%')
-                    ->orWhereHas('pelanggan', function ($sq) use ($request) {
-                        $sq->where('nama_pelanggan', 'like', '%' . $request->search . '%');
-                    });
+            $searchTerm = $request->search;
+            $matchingPelangganKodes = \App\Models\Pelanggan::where('nama_pelanggan', 'like', '%' . $searchTerm . '%')
+                ->pluck('kode_pelanggan');
+            $query->where(function ($q) use ($searchTerm, $matchingPelangganKodes) {
+                $q->where('no_faktur', 'like', '%' . $searchTerm . '%')
+                    ->orWhereIn('kode_pelanggan', $matchingPelangganKodes);
             });
         }
 
@@ -63,9 +64,8 @@ class PenjualanController extends Controller
                 });
             }
         } else {
-            if (!$request->filled('search')) {
-                $query->where('batal', 0);
-            }
+            // Default: always filter out cancelled (batal) transactions
+            $query->where('batal', 0);
         }
 
         $kategoriSales = $request->input('kategori_sales', 'non_canvas');
