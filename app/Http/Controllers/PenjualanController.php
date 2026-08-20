@@ -99,9 +99,9 @@ class PenjualanController extends Controller
         }
 
         if ($request->filled('kode_wilayah')) {
-            $pelangganByWilayah = \App\Models\Pelanggan::where('kode_wilayah', $request->kode_wilayah)
+            $pelangganKodes = \App\Models\Pelanggan::where('kode_wilayah', $request->kode_wilayah)
                 ->pluck('kode_pelanggan');
-            $query->whereIn('kode_pelanggan', $pelangganByWilayah);
+            $query->whereIn('kode_pelanggan', $pelangganKodes);
         }
 
         $salesmenQuery = User::where(function ($q) {
