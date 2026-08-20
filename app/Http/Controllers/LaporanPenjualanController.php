@@ -88,63 +88,6 @@ class LaporanPenjualanController extends Controller
                 }
 
                 $items = $query->orderBy('tanggal', 'asc')->orderBy('no_faktur', 'asc')->get();
-
-                $invoiceIds = $items->pluck('no_faktur')->toArray();
-
-                $cashPayments = DB::table('penjualan_pembayaran')
-                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
-                    ->where('status', 'disetujui')
-                    ->where('jenis_bayar', '!=', 'Retur')
-                    ->whereIn('no_faktur', $invoiceIds)
-                    ->groupBy('no_faktur')
-                    ->pluck('total', 'no_faktur')
-                    ->toArray();
-
-                $returPayments = DB::table('penjualan_pembayaran')
-                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
-                    ->where('status', 'disetujui')
-                    ->where('jenis_bayar', 'Retur')
-                    ->whereIn('no_faktur', $invoiceIds)
-                    ->groupBy('no_faktur')
-                    ->pluck('total', 'no_faktur')
-                    ->toArray();
-
-                $transferPayments = DB::table('penjualan_pembayaran_transfer')
-                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
-                    ->where('status', 'disetujui')
-                    ->whereIn('no_faktur', $invoiceIds)
-                    ->groupBy('no_faktur')
-                    ->pluck('total', 'no_faktur')
-                    ->toArray();
-
-                $giroPayments = DB::table('penjualan_pembayaran_giro')
-                    ->select('no_faktur', DB::raw('SUM(jumlah) as total'))
-                    ->where('status', 'disetujui')
-                    ->whereIn('no_faktur', $invoiceIds)
-                    ->groupBy('no_faktur')
-                    ->pluck('total', 'no_faktur')
-                    ->toArray();
-
-                $potongFakturReturs = DB::table('retur_penjualan')
-                    ->select('no_faktur', DB::raw('SUM(total) as total'))
-                    ->whereIn('no_faktur', $invoiceIds)
-                    ->groupBy('no_faktur')
-                    ->pluck('total', 'no_faktur')
-                    ->toArray();
-
-                foreach ($items as $inv) {
-                    $cashPaid = $cashPayments[$inv->no_faktur] ?? 0;
-                    $transferPaid = $transferPayments[$inv->no_faktur] ?? 0;
-                    $giroPaid = $giroPayments[$inv->no_faktur] ?? 0;
-                    $returPaid = $returPayments[$inv->no_faktur] ?? 0;
-                    $pfRetur = $potongFakturReturs[$inv->no_faktur] ?? 0;
-
-                    $inv->total_bayar = $cashPaid + $transferPaid + $giroPaid;
-                    $inv->total_retur = $returPaid + $pfRetur;
-                    $sisa = (float)($inv->grand_total - $inv->total_bayar - $inv->total_retur);
-                    $inv->sisa_bayar = abs($sisa) < 1 ? 0.0 : $sisa;
-                    $inv->status_pembayaran = $inv->sisa_bayar <= 0 ? 'Lunas' : 'Belum Lunas';
-                }
             } else {
                 // detail (Format 2 & 3) - flat query using Query Builder
                 $query = DB::table('penjualan_detail')

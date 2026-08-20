@@ -100,9 +100,6 @@
                         <th
                             style="border: 1px solid #000; background-color: #f2f2f2; font-weight: bold; padding: 4px 6px;">
                             No Faktur</th>
-                        <th class="text-center"
-                            style="border: 1px solid #000; text-align: center; background-color: #f2f2f2; font-weight: bold; padding: 4px 6px;">
-                            Jenis</th>
                         <th
                             style="border: 1px solid #000; background-color: #f2f2f2; font-weight: bold; padding: 4px 6px;">
                             Tanggal</th>
@@ -124,18 +121,6 @@
                         <th class="text-end"
                             style="border: 1px solid #000; text-align: right; background-color: #f2f2f2; font-weight: bold; padding: 4px 6px;">
                             Grand Total</th>
-                        <th class="text-end"
-                            style="border: 1px solid #000; text-align: right; background-color: #f2f2f2; font-weight: bold; padding: 4px 6px;">
-                            Retur / Refund</th>
-                        <th class="text-end"
-                            style="border: 1px solid #000; text-align: right; background-color: #f2f2f2; font-weight: bold; padding: 4px 6px;">
-                            Total Bayar</th>
-                        <th class="text-end"
-                            style="border: 1px solid #000; text-align: right; background-color: #f2f2f2; font-weight: bold; padding: 4px 6px;">
-                            Sisa Piutang</th>
-                        <th class="text-center"
-                            style="border: 1px solid #000; text-align: center; background-color: #f2f2f2; font-weight: bold; padding: 4px 6px;">
-                            Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -144,19 +129,12 @@
                         $totTotal = 0;
                         $totDiskon = 0;
                         $totGrand = 0;
-                        $totRetur = 0;
-                        $totBayar = 0;
-                        $totSisa = 0;
                     @endphp
                     @foreach ($items as $invoice)
                         @php
                             $totTotal += $invoice->total;
                             $totDiskon += $invoice->diskon;
                             $totGrand += $invoice->grand_total;
-                            $totRetur += ($invoice->total_retur ?? 0);
-                            $totBayar += ($invoice->total_bayar ?? 0);
-                            $totSisa += ($invoice->sisa_bayar ?? 0);
-                            $isTunai = in_array($invoice->jenis_transaksi ?? '', ['T', 'Tunai']);
                         @endphp
                         <tr>
                             <td class="text-center"
@@ -164,12 +142,6 @@
                                 {{ $num++ }}</td>
                             <td style="border: 1px solid #000; padding: 4px 6px; mso-number-format: '\@';">
                                 {{ $invoice->no_faktur }}</td>
-                            <td class="text-center"
-                                style="border: 1px solid #000; text-align: center; padding: 4px 6px;">
-                                <span class="badge {{ $isTunai ? 'bg-success text-white' : 'bg-warning text-dark' }}" style="font-size: 10px;">
-                                    {{ $isTunai ? 'Tunai' : 'Kredit' }}
-                                </span>
-                            </td>
                             <td style="border: 1px solid #000; padding: 4px 6px;">
                                 {{ \Carbon\Carbon::parse($invoice->tanggal)->format('d-m-Y') }}</td>
                             <td style="border: 1px solid #000; padding: 4px 6px;">
@@ -187,29 +159,12 @@
                             <td class="text-end fw-bold"
                                 style="border: 1px solid #000; text-align: right; font-weight: bold; padding: 4px 6px; mso-number-format: '#,##0';">
                                 {{ $numFmt($invoice->grand_total) }}</td>
-                            <td class="text-end text-warning"
-                                style="border: 1px solid #000; text-align: right; padding: 4px 6px; mso-number-format: '#,##0';">
-                                {{ $numFmt($invoice->total_retur ?? 0) }}</td>
-                            <td class="text-end text-success"
-                                style="border: 1px solid #000; text-align: right; padding: 4px 6px; mso-number-format: '#,##0';">
-                                {{ $numFmt($invoice->total_bayar ?? 0) }}</td>
-                            <td class="text-end text-danger fw-bold"
-                                style="border: 1px solid #000; text-align: right; font-weight: bold; padding: 4px 6px; mso-number-format: '#,##0';">
-                                {{ $numFmt($invoice->sisa_bayar ?? 0) }}</td>
-                            <td class="text-center"
-                                style="border: 1px solid #000; text-align: center; padding: 4px 6px;">
-                                @if (($invoice->sisa_bayar ?? 0) <= 0)
-                                    <span class="badge bg-success text-white" style="font-size: 10px;">Lunas</span>
-                                @else
-                                    <span class="badge bg-danger text-white" style="font-size: 10px;">Belum Lunas</span>
-                                @endif
-                            </td>
                         </tr>
                     @endforeach
                 </tbody>
                 <tfoot class="fw-bold">
                     <tr class="table-light">
-                        <td colspan="7" class="text-end"
+                        <td colspan="6" class="text-end"
                             style="border: 1px solid #000; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 4px 6px;">
                             TOTAL KESELURUHAN:</td>
                         <td class="text-end"
@@ -221,16 +176,6 @@
                         <td class="text-end"
                             style="border: 1px solid #000; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 4px 6px; mso-number-format: '#,##0';">
                             {{ $numFmt($totGrand) }}</td>
-                        <td class="text-end text-warning"
-                            style="border: 1px solid #000; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 4px 6px; mso-number-format: '#,##0';">
-                            {{ $numFmt($totRetur) }}</td>
-                        <td class="text-end text-success"
-                            style="border: 1px solid #000; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 4px 6px; mso-number-format: '#,##0';">
-                            {{ $numFmt($totBayar) }}</td>
-                        <td class="text-end text-danger"
-                            style="border: 1px solid #000; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 4px 6px; mso-number-format: '#,##0';">
-                            {{ $numFmt($totSisa) }}</td>
-                        <td style="border: 1px solid #000; background-color: #f2f2f2; padding: 4px 6px;"></td>
                     </tr>
                 </tfoot>
             </table>

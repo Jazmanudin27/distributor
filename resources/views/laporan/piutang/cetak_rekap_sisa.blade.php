@@ -161,10 +161,8 @@
 
             // Count overdue invoices relative to selected $tanggal
             $overdueCount = 0;
-            $totalRefundAll = 0;
             $reportDate = \Carbon\Carbon::parse($tanggal);
             foreach ($items as $item) {
-                $totalRefundAll += ($item['total_retur'] ?? 0);
                 $ljt = $item['pelanggan'] ? $item['pelanggan']->ljt ?? 30 : 30;
                 $jatuh_tempo = \Carbon\Carbon::parse($item['tanggal'])->addDays($ljt);
                 if ($reportDate->greaterThan($jatuh_tempo)) {
@@ -197,9 +195,9 @@
                 <td>FAKTUR KEMBALI</td>
                 <td style="text-align:center;">:</td>
                 <td></td>
-                <td>TOTAL REFUND (Rp)</td>
-                <td style="text-align:center;">:</td>
-                <td>{{ $totalRefundAll > 0 ? number_format($totalRefundAll, 0, ',', '.') : '' }}</td>
+                <td></td>
+                <td></td>
+                <td></td>
             </tr>
             <tr>
                 <td>FAKTUR OVERDUE</td>

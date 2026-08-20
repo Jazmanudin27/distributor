@@ -162,9 +162,6 @@
                             Neto</th>
                         <th class="text-end"
                             style="border: 1px solid #999; text-align: right; color: #000; padding: 5px 6px; mso-number-format:'#,##0';">
-                            Retur/Refund</th>
-                        <th class="text-end"
-                            style="border: 1px solid #999; text-align: right; color: #000; padding: 5px 6px; mso-number-format:'#,##0';">
                             Bayar</th>
                         <th class="text-end"
                             style="border: 1px solid #999; text-align: right; color: #000; padding: 5px 6px; mso-number-format:'#,##0';">
@@ -190,7 +187,6 @@
                         $totalBrutoSum = 0;
                         $totalDiskonSum = 0;
                         $totalNetoSum = 0;
-                        $totalReturSum = 0;
                         $totalBayarSum = 0;
                         $totalSisaSum = 0;
                         $seenInvoices = [];
@@ -202,7 +198,6 @@
                                 $totalBrutoSum += $row->invoice_total;
                                 $totalDiskonSum += $row->invoice_diskon;
                                 $totalNetoSum += $row->invoice_grand_total;
-                                $totalReturSum += ($row->total_retur ?? 0);
                                 $totalBayarSum += $row->total_bayar;
                                 $totalSisaSum += $row->sisa_bayar;
                             }
@@ -267,9 +262,6 @@
                             <td class="text-end fw-bold"
                                 style="border: 1px solid #999; text-align: right; font-weight: bold; padding: 5px 6px; mso-number-format:'#,##0';">
                                 {{ $numFmt($row->invoice_grand_total) }}</td>
-                            <td class="text-end text-warning"
-                                style="border: 1px solid #999; text-align: right; color: orange; padding: 5px 6px; mso-number-format:'#,##0';">
-                                {{ $numFmt($row->total_retur ?? 0) }}</td>
                             <td class="text-end text-success"
                                 style="border: 1px solid #999; text-align: right; color: green; padding: 5px 6px; mso-number-format:'#,##0';">
                                 {{ $numFmt($row->total_bayar) }}</td>
@@ -313,9 +305,6 @@
                         <td class="text-end"
                             style="border: 1px solid #999; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 5px 6px; mso-number-format:'#,##0';">
                             {{ $numFmt($totalNetoSum) }}</td>
-                        <td class="text-end text-warning"
-                            style="border: 1px solid #999; text-align: right; font-weight: bold; background-color: #f2f2f2; color: orange; padding: 5px 6px; mso-number-format:'#,##0';">
-                            {{ $numFmt($totalReturSum) }}</td>
                         <td class="text-end text-success"
                             style="border: 1px solid #999; text-align: right; font-weight: bold; background-color: #f2f2f2; color: green; padding: 5px 6px; mso-number-format:'#,##0';">
                             {{ $numFmt($totalBayarSum) }}</td>

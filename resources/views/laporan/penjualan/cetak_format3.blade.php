@@ -159,9 +159,6 @@
                         <th class="text-center"
                             style="border: 1px solid #000; text-align: center; background-color:#0d6efd; color:#ffffff; font-weight: bold; padding: 8px 6px;">
                             Tanggal</th>
-                        <th class="text-center"
-                            style="border: 1px solid #000; text-align: center; background-color:#0d6efd; color:#ffffff; font-weight: bold; padding: 8px 6px;">
-                            Jenis</th>
                         <th
                             style="border: 1px solid #000; background-color:#0d6efd; color:#ffffff; font-weight: bold; padding: 8px 6px; text-align: left;">
                             Nama Pelanggan</th>
@@ -189,30 +186,13 @@
                         <th class="text-center"
                             style="border: 1px solid #000; text-align: center; background-color:#0d6efd; color:#ffffff; font-weight: bold; padding: 8px 6px;">
                             D3</th>
-                        <th class="text-end"
-                            style="border: 1px solid #000; text-align: right; background-color:#0d6efd; color:#ffffff; font-weight: bold; padding: 8px 6px;">
-                            Subtotal</th>
-                        <th class="text-end"
-                            style="border: 1px solid #000; text-align: right; background-color:#0d6efd; color:#ffffff; font-weight: bold; padding: 8px 6px;">
-                            Retur/Refund</th>
                     </tr>
                 </thead>
                 <tbody>
                     @php
                         $num = 1;
-                        $totSubtotal = 0;
-                        $totReturSum = 0;
-                        $seenInvRetur = [];
                     @endphp
                     @foreach ($items as $row)
-                        @php
-                            $totSubtotal += ($row->detail_total ?? 0);
-                            if (!in_array($row->no_faktur, $seenInvRetur)) {
-                                $seenInvRetur[] = $row->no_faktur;
-                                $totReturSum += ($row->total_retur ?? 0);
-                            }
-                            $isTunai = in_array($row->jenis_transaksi ?? '', ['T', 'Tunai']);
-                        @endphp
                         <tr>
                             <td class="text-center"
                                 style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px;">
@@ -220,12 +200,6 @@
                             <td class="text-center"
                                 style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px;">
                                 {{ formatTanggalShortIndo($row->tanggal) }}</td>
-                            <td class="text-center"
-                                style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px;">
-                                <span class="badge {{ $isTunai ? 'bg-success text-white' : 'bg-warning text-dark' }}" style="font-size: 10px;">
-                                    {{ $isTunai ? 'Tunai' : 'Kredit' }}
-                                </span>
-                            </td>
                             <td style="border: 1px solid #dee2e6; padding: 6px 6px;">
                                 {{ $row->nama_pelanggan ?? '-' }}</td>
                             <td class="text-center"
@@ -254,28 +228,9 @@
                                 style="border: 1px solid #dee2e6; text-align: center; padding: 6px 6px; mso-number-format:'#,##0.00';">
                                 {{ $row->diskon3_persen > 0 ? $pctFmt($row->diskon3_persen) : '' }}
                             </td>
-                            <td class="text-end fw-bold"
-                                style="border: 1px solid #dee2e6; text-align: right; padding: 6px 6px; mso-number-format:'#,##0';">
-                                {{ $numFmt($row->detail_total) }}</td>
-                            <td class="text-end text-warning"
-                                style="border: 1px solid #dee2e6; text-align: right; color: orange; padding: 6px 6px; mso-number-format:'#,##0';">
-                                {{ $numFmt($row->total_retur ?? 0) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
-                <tfoot class="fw-bold">
-                    <tr class="table-light">
-                        <td colspan="12" class="text-end"
-                            style="border: 1px solid #000; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 6px 6px;">
-                            TOTAL KESELURUHAN:</td>
-                        <td class="text-end fw-bold"
-                            style="border: 1px solid #000; text-align: right; font-weight: bold; background-color: #f2f2f2; padding: 6px 6px; mso-number-format:'#,##0';">
-                            {{ $numFmt($totSubtotal) }}</td>
-                        <td class="text-end text-warning"
-                            style="border: 1px solid #000; text-align: right; font-weight: bold; background-color: #f2f2f2; color: orange; padding: 6px 6px; mso-number-format:'#,##0';">
-                            {{ $numFmt($totReturSum) }}</td>
-                    </tr>
-                </tfoot>
             </table>
         @endif
     </div>
