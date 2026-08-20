@@ -83,19 +83,20 @@ class PenjualanKirimanController extends Controller
         $current_kode_wilayah = $request->input('current_kode_wilayah');
         $current_kirimanke = $request->input('current_kirimanke');
 
+        $nonCanvasNiks = \App\Models\User::where(function ($q) {
+            $q->where('role', 'sales')->orWhere('role', 'Salesman');
+        })->where(function($q) { $q->where('is_kanvas', '!=', 1)->orWhereNull('is_kanvas'); })->pluck('nik');
+
         $query = Penjualan::with(['pelanggan.wilayah', 'sales'])
             ->where('batal', 0)
-            ->where(function ($q) {
-                $q->whereDoesntHave('sales')
-                  ->orWhereHas('sales', function ($sq) {
-                      $sq->where('is_kanvas', '!=', 1)->orWhereNull('is_kanvas');
-                  });
+            ->where(function ($q) use ($nonCanvasNiks) {
+                $q->whereIn('kode_sales', $nonCanvasNiks)
+                  ->orWhereNull('kode_sales');
             });
 
         if ($kode_wilayah) {
-            $query->whereHas('pelanggan', function ($q) use ($kode_wilayah) {
-                $q->where('kode_wilayah', $kode_wilayah);
-            });
+            $pelangganKodes = \App\Models\Pelanggan::where('kode_wilayah', $kode_wilayah)->pluck('kode_pelanggan');
+            $query->whereIn('kode_pelanggan', $pelangganKodes);
         }
 
 

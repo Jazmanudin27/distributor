@@ -23,10 +23,11 @@ class AjuanLimitKreditController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->whereHas('pelanggan', function ($q) use ($request) {
-                $q->where('nama_pelanggan', 'like', '%' . $request->search . '%')
-                    ->orWhere('kode_pelanggan', 'like', '%' . $request->search . '%');
-            });
+            $searchTerm = $request->search;
+            $matchingKodes = Pelanggan::where('nama_pelanggan', 'like', '%' . $searchTerm . '%')
+                ->orWhere('kode_pelanggan', 'like', '%' . $searchTerm . '%')
+                ->pluck('kode_pelanggan');
+            $query->whereIn('kode_pelanggan', $matchingKodes);
         }
 
         $ajuans = $query->paginate(15)->appends($request->query());
