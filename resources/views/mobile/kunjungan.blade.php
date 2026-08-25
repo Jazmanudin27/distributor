@@ -907,7 +907,7 @@
                     debounceTimer = setTimeout(() => {
                         const wilayahVal = searchWilayah ? searchWilayah.value : '';
                         fetch(
-                                `{{ route('pelanggan.search') }}?q=${encodeURIComponent(query)}&kode_wilayah=${encodeURIComponent(wilayahVal)}`
+                                `{{ route('pelanggan.search', [], false) }}?q=${encodeURIComponent(query)}&kode_wilayah=${encodeURIComponent(wilayahVal)}`
                             )
                             .then(response => response.json())
                             .then(data => {
@@ -1067,7 +1067,7 @@
                         modalBtnSubmit.removeAttribute('disabled');
 
                         // Update Form Action URL dynamically
-                        const actionUrl = '{{ route('mobile.order.payment', ':no_faktur') }}'.replace(
+                        const actionUrl = '{{ route('mobile.order.payment', ['no_faktur' => ':no_faktur'], false) }}'.replace(
                             ':no_faktur', selectedOption.value);
                         modalForm.setAttribute('action', actionUrl);
 

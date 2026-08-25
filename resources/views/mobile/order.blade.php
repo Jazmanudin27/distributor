@@ -423,7 +423,7 @@
                         return;
                     }
 
-                    fetch(`{{ route('pelanggan.search') }}?q=${encodeURIComponent(q)}`)
+                    fetch(`{{ route('pelanggan.search', [], false) }}?q=${encodeURIComponent(q)}`)
                         .then(res => res.json())
                         .then(data => {
                             customerSearchResults.innerHTML = '';
@@ -542,7 +542,7 @@
                     return;
                 }
 
-                fetch(`{{ route('barang.search') }}?q=${encodeURIComponent(q)}`)
+                fetch(`{{ route('barang.search', [], false) }}?q=${encodeURIComponent(q)}`)
                     .then(res => res.json())
                     .then(data => {
                         productSearchResults.innerHTML = '';

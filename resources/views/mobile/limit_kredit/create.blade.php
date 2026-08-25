@@ -153,7 +153,7 @@
 
                     debounceTimer = setTimeout(() => {
                         const wilayahVal = searchWilayah ? searchWilayah.value : '';
-                        fetch(`{{ route('pelanggan.search') }}?q=${encodeURIComponent(query)}&kode_wilayah=${encodeURIComponent(wilayahVal)}`)
+                        fetch(`{{ route('pelanggan.search', [], false) }}?q=${encodeURIComponent(query)}&kode_wilayah=${encodeURIComponent(wilayahVal)}`)
                             .then(response => response.json())
                             .then(data => {
                                 resultsList.innerHTML = '';
