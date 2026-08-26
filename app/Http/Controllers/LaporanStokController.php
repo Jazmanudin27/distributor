@@ -210,6 +210,7 @@ class LaporanStokController extends Controller
                     }
                     $validMovements = $rawMutationsItem;
 
+                    $running = $stokAwal;
                     $pembelianPeriod = 0;
                     $returJualPeriod = 0;
                     $batalSalesPeriod = 0;
@@ -221,6 +222,15 @@ class LaporanStokController extends Controller
                     foreach ($validMovements as $m) {
                         $qtyMasuk = (float)$m->qty_masuk;
                         $qtyKeluar = (float)$m->qty_keluar;
+                        $prevRunning = $running;
+
+                        if ($m->jenis_transaksi === 'Saldo Awal') {
+                            $running = (float)$m->saldo_akhir;
+                        } elseif ($m->jenis_transaksi === 'Stok Opname') {
+                            $running = (float)$m->saldo_akhir;
+                        } else {
+                            $running = $running + $qtyMasuk - $qtyKeluar;
+                        }
 
                         if ($m->jenis_transaksi === 'Pembelian') {
                             $pembelianPeriod += $qtyMasuk;
@@ -233,14 +243,18 @@ class LaporanStokController extends Controller
                         } elseif ($m->jenis_transaksi === 'Retur Pembelian') {
                             $returBeliPeriod += $qtyKeluar;
                         } elseif ($m->jenis_transaksi === 'Saldo Awal') {
-                            // Skip Saldo Awal entries from period totals because $stokAwal is already the baseline!
+                            // Skip Saldo Awal entries from period totals
                         } else {
-                            if ($qtyMasuk > 0) $opnameMasukPeriod += $qtyMasuk;
-                            if ($qtyKeluar > 0) $opnameKeluarPeriod += $qtyKeluar;
+                            $effectiveDiff = $running - $prevRunning;
+                            if ($effectiveDiff > 0) {
+                                $opnameMasukPeriod += $effectiveDiff;
+                            } elseif ($effectiveDiff < 0) {
+                                $opnameKeluarPeriod += abs($effectiveDiff);
+                            }
                         }
                     }
 
-                    $stokAkhir = $stokAwal + ($pembelianPeriod + $returJualPeriod + $batalSalesPeriod + $opnameMasukPeriod) - ($penjualanPeriod + $returBeliPeriod + $opnameKeluarPeriod);
+                    $stokAkhir = $running;
 
                     // Add computed properties
                     $items->push([
