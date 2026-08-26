@@ -162,7 +162,10 @@ class LaporanStokController extends Controller
                 // 3. Get all mutations in period ordered by date & id
                 $rawMutationsAll = DB::table('stok_mutasi')
                     ->whereIn('kode_barang', $barangIds)
-                    ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
+                    ->whereBetween('tanggal', [
+                        Carbon::parse($tanggal_mulai)->startOfDay()->toDateTimeString(),
+                        Carbon::parse($tanggal_akhir)->endOfDay()->toDateTimeString()
+                    ])
                     ->orderBy('tanggal', 'asc')
                     ->orderBy('id', 'asc')
                     ->get()
@@ -176,8 +179,6 @@ class LaporanStokController extends Controller
                     $hargaJual = $baseSatuan ? (float)$baseSatuan->harga_jual : 0;
 
                     $rawMutationsItem = $rawMutationsAll->get($kb) ?? collect();
-                    $opnameInRange = $rawMutationsItem->whereIn('jenis_transaksi', ['Stok Opname', 'Saldo Awal'])->last();
-
                     $saGsRecord = $saGsMap->get($kb);
 
                     if ($saGsRecord) {
@@ -194,22 +195,20 @@ class LaporanStokController extends Controller
                             });
                             $stokAwal = $saBase + $netBefore;
                         }
-                        $validMovements = $rawMutationsItem;
-                    } elseif ($opnameInRange && isset($opnameInRange->saldo_akhir)) {
-                        $stokAwal = (float)$opnameInRange->saldo_akhir;
-                        $opnameId = $opnameInRange->id;
-                        $validMovements = $rawMutationsItem->filter(function($m) use ($opnameId) {
-                            return $m->id > $opnameId;
-                        });
                     } else {
                         $lastBefore = $lastMutationsBefore->get($kb);
                         if ($lastBefore !== null) {
                             $stokAwal = (float)$lastBefore;
                         } else {
-                            $stokAwal = (float)$b->stok;
+                            $firstInPeriod = $rawMutationsItem->first();
+                            if ($firstInPeriod) {
+                                $stokAwal = (float)$firstInPeriod->saldo_awal;
+                            } else {
+                                $stokAwal = (float)$b->stok;
+                            }
                         }
-                        $validMovements = $rawMutationsItem;
                     }
+                    $validMovements = $rawMutationsItem;
 
                     $pembelianPeriod = 0;
                     $returJualPeriod = 0;
@@ -455,13 +454,15 @@ class LaporanStokController extends Controller
                         ->orderBy('id', 'desc')
                         ->first();
 
-                    $opnameInRange = DB::table('stok_mutasi')
+                    $rawMutations = DB::table('stok_mutasi')
                         ->where('kode_barang', $kode_barang)
-                        ->whereIn('jenis_transaksi', ['Stok Opname', 'Batal Stok Opname', 'Batal Stok Opname (Edit)', 'Saldo Awal'])
-                        ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
-                        ->orderBy('tanggal', 'desc')
-                        ->orderBy('id', 'desc')
-                        ->first();
+                        ->whereBetween('tanggal', [
+                            Carbon::parse($tanggal_mulai)->startOfDay()->toDateTimeString(),
+                            Carbon::parse($tanggal_akhir)->endOfDay()->toDateTimeString()
+                        ])
+                        ->orderBy('tanggal', 'asc')
+                        ->orderBy('id', 'asc')
+                        ->get();
 
                     if ($saGsRecord) {
                         $saBase = (float)$saGsRecord->qty;
@@ -477,31 +478,6 @@ class LaporanStokController extends Controller
                                 ->value('net') ?? 0;
                             $stokAwal = $saBase + (float)$netBefore;
                         }
-
-                        $rawMutations = DB::table('stok_mutasi')
-                            ->where('kode_barang', $kode_barang)
-                            ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
-                            ->orderBy('tanggal', 'asc')
-                            ->orderBy('id', 'asc')
-                            ->get();
-                    } elseif ($opnameInRange && isset($opnameInRange->saldo_akhir)) {
-                        $opnameDate = $opnameInRange->tanggal;
-                        $opnameId = $opnameInRange->id;
-                        $stokAwal = (float)$opnameInRange->saldo_akhir;
-
-                        $rawMutations = DB::table('stok_mutasi')
-                            ->where('kode_barang', $kode_barang)
-                            ->where(function($q) use ($opnameDate, $opnameId) {
-                                $q->where('tanggal', '>', $opnameDate)
-                                  ->orWhere(function($sub) use ($opnameDate, $opnameId) {
-                                      $sub->where('tanggal', '=', $opnameDate)
-                                          ->where('id', '>', $opnameId);
-                                  });
-                            })
-                            ->where('tanggal', '<=', $tanggal_akhir)
-                            ->orderBy('tanggal', 'asc')
-                            ->orderBy('id', 'asc')
-                            ->get();
                     } else {
                         $lastMutationBefore = DB::table('stok_mutasi')
                             ->where('kode_barang', $kode_barang)
@@ -513,15 +489,13 @@ class LaporanStokController extends Controller
                         if ($lastMutationBefore) {
                             $stokAwal = (float)$lastMutationBefore->saldo_akhir;
                         } else {
-                            $stokAwal = (float)$barang->stok;
+                            $firstInPeriod = $rawMutations->first();
+                            if ($firstInPeriod) {
+                                $stokAwal = (float)$firstInPeriod->saldo_awal;
+                            } else {
+                                $stokAwal = (float)$barang->stok;
+                            }
                         }
-
-                        $rawMutations = DB::table('stok_mutasi')
-                            ->where('kode_barang', $kode_barang)
-                            ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir])
-                            ->orderBy('tanggal', 'asc')
-                            ->orderBy('id', 'asc')
-                            ->get();
                     }
 
                     // Pre-fetch related documents to prevent N+1 query overhead
@@ -633,7 +607,9 @@ class LaporanStokController extends Controller
                         }
 
                         if ($m->jenis_transaksi === 'Saldo Awal') {
-                            // Saldo Awal is already the baseline ($stokAwal); do not alter $running
+                            $running = (float)$m->saldo_akhir;
+                        } elseif ($m->jenis_transaksi === 'Stok Opname') {
+                            $running = (float)$m->saldo_akhir;
                         } else {
                             $running = $running + (float)$m->qty_masuk - (float)$m->qty_keluar;
                         }
@@ -871,11 +847,11 @@ class LaporanStokController extends Controller
         }
 
         if ($request->filled('tanggal_mulai')) {
-            $query->where('stok_mutasi.tanggal', '>=', $request->tanggal_mulai);
+            $query->where('stok_mutasi.tanggal', '>=', Carbon::parse($request->tanggal_mulai)->startOfDay()->toDateTimeString());
         }
 
         if ($request->filled('tanggal_akhir')) {
-            $query->where('stok_mutasi.tanggal', '<=', $request->tanggal_akhir);
+            $query->where('stok_mutasi.tanggal', '<=', Carbon::parse($request->tanggal_akhir)->endOfDay()->toDateTimeString());
         }
 
         if ($request->filled('search')) {

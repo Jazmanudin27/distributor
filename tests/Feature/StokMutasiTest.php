@@ -138,4 +138,84 @@ class StokMutasiTest extends TestCase
         ]));
         $response->assertStatus(200);
     }
+
+    public function test_laporan_stok_opname_balance_and_history(): void
+    {
+        $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Admin']);
+        $permission = \Spatie\Permission\Models\Permission::firstOrCreate(['name' => 'view-laporan_stok']);
+        $role->givePermissionTo($permission);
+
+        $user = User::factory()->create([
+            'role' => 'admin',
+            'status' => '1',
+        ]);
+        $user->assignRole($role);
+
+        $barang = Barang::create([
+            'kode_barang' => 'BRG0002',
+            'nama_barang' => 'Barang Opname Test',
+            'stok' => 10,
+            'status' => 1,
+        ]);
+
+        $today = date('Y-m-d');
+
+        // 1. Transaction before opname: Sales 2 units (System should become 8)
+        DB::transaction(function() use ($barang, $user, $today) {
+            StokMutasi::log(
+                $barang->kode_barang,
+                $today,
+                'Penjualan',
+                'TX-JUAL-BEFORE',
+                0.0,
+                2.0,
+                $user->id,
+                'Penjualan sebelum opname'
+            );
+        });
+
+        // 2. Stok Opname: Physical count is 5 units (Difference is -3, logged as qty_keluar = 3)
+        DB::transaction(function() use ($barang, $user, $today) {
+            StokMutasi::log(
+                $barang->kode_barang,
+                $today,
+                'Stok Opname',
+                'TX-OPNAME-01',
+                0.0,
+                3.0,
+                $user->id,
+                'Opname penyesuaian'
+            );
+        });
+
+        // 3. Transaction after opname: Purchase 4 units (System should become 9)
+        DB::transaction(function() use ($barang, $user, $today) {
+            StokMutasi::log(
+                $barang->kode_barang,
+                $today,
+                'Pembelian',
+                'TX-BELI-AFTER',
+                4.0,
+                0.0,
+                $user->id,
+                'Pembelian setelah opname'
+            );
+        });
+
+        // Call the detail (Kartu Stok) report for the period
+        $response = $this->actingAs($user)->get(route('laporan.stok.cetak', [
+            'jenis_laporan' => 'detail',
+            'kode_barang' => $barang->kode_barang,
+            'tanggal_mulai' => $today,
+            'tanggal_akhir' => $today,
+        ]));
+
+        $response->assertStatus(200);
+
+        // Assert that the page contains references of ALL transactions:
+        // both before and after the opname
+        $response->assertSee('TX-JUAL-BEFORE');
+        $response->assertSee('TX-OPNAME-01');
+        $response->assertSee('TX-BELI-AFTER');
+    }
 }
