@@ -496,6 +496,16 @@
                     <i class="fa-solid fa-calculator"></i>
                     <span>Laba Rugi</span>
                 </a>
+                <a href="{{ route('mobile.owner.sales-achievement') }}"
+                    class="nav-item-mobile {{ Request::routeIs('mobile.owner.sales-achievement') ? 'active' : '' }}">
+                    <i class="fa-solid fa-trophy"></i>
+                    <span>Pencapaian</span>
+                </a>
+                <a href="{{ route('mobile.owner.sales-visits') }}"
+                    class="nav-item-mobile {{ Request::routeIs('mobile.owner.sales-visits') ? 'active' : '' }}">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                    <span>Kunjungan</span>
+                </a>
             @else
                 @php $isKanvas = Auth::user()->is_kanvas; @endphp
 
