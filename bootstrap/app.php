@@ -23,9 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         
         $middleware->redirectGuestsTo(function ($request) {
             $uri = $request->getRequestUri();
-            if (str_starts_with($uri, '/m/owner')) {
-                return route('mobile.owner.login');
-            } elseif (str_starts_with($uri, '/m')) {
+            if (str_starts_with($uri, '/m')) {
                 return route('mobile.login');
             }
             return route('login');

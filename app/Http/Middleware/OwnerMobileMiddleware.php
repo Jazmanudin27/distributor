@@ -23,10 +23,12 @@ class OwnerMobileMiddleware
             // Allow owner, admin, and super admin
             if (!in_array($role, ['owner', 'admin', 'super admin', 'superadmin'])) {
                 Auth::logout();
-                return redirect()->route('mobile.owner.login')->with('error', 'Hanya Owner/Admin yang memiliki akses ke halaman ini.');
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return redirect()->route('mobile.login')->with('error', 'Hanya Owner/Admin yang memiliki akses ke halaman ini.');
             }
         } else {
-            return redirect()->route('mobile.owner.login');
+            return redirect()->route('mobile.login');
         }
 
         return $next($request);
