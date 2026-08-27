@@ -17,6 +17,14 @@ class OwnerMobileMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Debugging production values to identify the redirect loop cause
+        dd([
+            'auth_check' => Auth::check(),
+            'user' => Auth::user() ? Auth::user()->only(['id', 'name', 'role', 'email']) : null,
+            'role_raw' => Auth::user() ? Auth::user()->role : null,
+            'role_lower' => Auth::user() ? strtolower(Auth::user()->role ?? '') : null,
+        ]);
+
         if (Auth::check()) {
             $role = strtolower(Auth::user()->role ?? '');
             
