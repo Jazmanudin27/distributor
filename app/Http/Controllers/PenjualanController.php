@@ -385,6 +385,10 @@ class PenjualanController extends Controller
                     $nextNo = $lastBukti ? (intval(substr($lastBukti->no_bukti, 4)) + 1) : 1;
                     $noBukti = $prefix . str_pad($nextNo, 4, '0', STR_PAD_LEFT);
 
+                    // Sales non-canvas: pembayaran tunai langsung disetujui (tidak perlu approval)
+                    // Sales canvas: pembayaran tunai tetap pending (perlu approval dari kantor)
+                    $statusTunai = $isCanvas ? 'pending' : 'disetujui';
+
                     PenjualanPembayaran::create([
                         'no_bukti' => $noBukti,
                         'tanggal' => $request->tanggal,
@@ -394,13 +398,17 @@ class PenjualanController extends Controller
                         'jumlah' => $grandTotal,
                         'keterangan' => 'Pembayaran Tunai Otomatis',
                         'id_user' => Auth::id() ?? 1,
-                        'status' => 'pending',
+                        'status' => $statusTunai,
                     ]);
+
+                    $logDesc = $isCanvas
+                        ? $noBukti . ' (Pending Approval)'
+                        : $noBukti . ' (Disetujui Otomatis - Non-Canvas)';
 
                     ActivityLog::create([
                         'user_id' => Auth::id() ?? 1,
                         'action' => 'Input Pembayaran Tunai',
-                        'description' => $noBukti . ' (Pending Approval)',
+                        'description' => $logDesc,
                         'ip_address' => $request->ip(),
                         'no_faktur' => $penjualan->no_faktur,
                     ]);
