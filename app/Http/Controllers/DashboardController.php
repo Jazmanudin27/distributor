@@ -99,6 +99,10 @@ class DashboardController extends Controller
         $progressPenjualan = $targetPenjualan > 0 ? ($totalPenjualanBulanIni / $targetPenjualan) * 100 : 0;
         $lockAdmin = Setting::getVal('lock_penjualan_admin', '0') === '1';
         $lockSales = Setting::getVal('lock_penjualan_sales', '0') === '1';
+        $autoLockSales = Setting::getVal('auto_lock_penjualan_sales', '1') === '1';
+        $lockSalesStart = Setting::getVal('lock_sales_start', '19:00');
+        $lockSalesEnd = Setting::getVal('lock_sales_end', '06:00');
+        $salesLockStatus = \App\Http\Middleware\CheckPenjualanLock::isSalesLocked();
 
         return view('welcome', compact(
             'totalPenjualanHariIni',
@@ -115,7 +119,11 @@ class DashboardController extends Controller
             'targetPenjualan',
             'progressPenjualan',
             'lockAdmin',
-            'lockSales'
+            'lockSales',
+            'autoLockSales',
+            'lockSalesStart',
+            'lockSalesEnd',
+            'salesLockStatus'
         ));
     }
 
@@ -136,8 +144,21 @@ class DashboardController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $request->validate([
+            'lock_sales_start' => 'nullable|date_format:H:i',
+            'lock_sales_end'   => 'nullable|date_format:H:i',
+        ]);
+
         Setting::setVal('lock_penjualan_admin', $request->has('lock_penjualan_admin') ? '1' : '0');
         Setting::setVal('lock_penjualan_sales', $request->has('lock_penjualan_sales') ? '1' : '0');
+        Setting::setVal('auto_lock_penjualan_sales', $request->has('auto_lock_penjualan_sales') ? '1' : '0');
+
+        if ($request->filled('lock_sales_start')) {
+            Setting::setVal('lock_sales_start', $request->lock_sales_start);
+        }
+        if ($request->filled('lock_sales_end')) {
+            Setting::setVal('lock_sales_end', $request->lock_sales_end);
+        }
 
         return redirect()->back()->with('success', 'Pengaturan kunci input penjualan berhasil diperbarui.');
     }

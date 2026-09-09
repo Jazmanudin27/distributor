@@ -196,13 +196,15 @@ class MobileOwnerController extends Controller
         })->count();
 
         // 6. Top Pencapaian Sales Bulan Ini (Top 5)
-        $salesListQuery = \App\Models\User::whereIn('role', ['sales', 'spv sales'])
+        $salesListQuery = \App\Models\User::salesmen()
             ->where('status', '1');
 
         if ($kategoriSales === 'canvas') {
             $salesListQuery->where('is_kanvas', 1);
         } elseif ($kategoriSales === 'non_canvas') {
-            $salesListQuery->where('is_kanvas', 0);
+            $salesListQuery->where(function ($q) {
+                $q->where('is_kanvas', 0)->orWhereNull('is_kanvas');
+            });
         }
 
         $salesList = $salesListQuery->get();
@@ -661,7 +663,7 @@ class MobileOwnerController extends Controller
         \Illuminate\Support\Facades\DB::enableQueryLog();
 
         // Query sales users
-        $salesList = \App\Models\User::whereIn('role', ['sales', 'spv sales'])
+        $salesList = \App\Models\User::salesmen()
             ->where('status', '1')
             ->get();
 
@@ -721,7 +723,7 @@ class MobileOwnerController extends Controller
 
         $visits = $query->orderBy('checkin', 'desc')->paginate(20)->appends($request->query());
 
-        $salesmen = \App\Models\User::whereIn('role', ['sales', 'spv sales'])
+        $salesmen = \App\Models\User::salesmen()
             ->where('status', '1')
             ->orderBy('name')
             ->get();
@@ -806,7 +808,7 @@ class MobileOwnerController extends Controller
         $monthSales = (float) $monthSalesQuery->sum(DB::raw('(d.qty * d.harga) - d.total_diskon'));
 
         // Fetch lists for filter dropdowns
-        $salesmen = \App\Models\User::whereIn('role', ['sales', 'spv sales'])
+        $salesmen = \App\Models\User::salesmen()
             ->where('status', '1')
             ->orderBy('name')
             ->get();

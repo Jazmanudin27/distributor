@@ -3,6 +3,10 @@
 @section('title', 'Dashboard Sales')
 
 @section('content')
+    @php
+        $salesLock = \App\Http\Middleware\CheckPenjualanLock::isSalesLocked();
+    @endphp
+
     <!-- Welcome/Profile Section -->
     <div class="d-flex align-items-center mb-4">
         <div class="avatar-glow rounded-circle d-flex align-items-center justify-content-center me-3"
@@ -15,6 +19,17 @@
                 {{ Auth::user()->nik ?? '-' }}</span>
         </div>
     </div>
+
+    @if ($salesLock['locked'])
+        <div class="alert alert-warning rounded-4 mb-3 d-flex align-items-center shadow-sm"
+            style="background-color: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.25); color: #fbbf24;">
+            <i class="fa-solid fa-clock-rotate-left me-3 fs-4 text-warning"></i>
+            <div>
+                <span class="d-block fw-bold" style="font-size: 0.82rem;">Input Penjualan Sedang Ditutup</span>
+                <small class="d-block text-white-50" style="font-size: 0.72rem;">{{ $salesLock['message'] }}</small>
+            </div>
+        </div>
+    @endif
 
     @if (strtolower(Auth::user()->role) === 'spv sales')
         <div class="mobile-card p-3 mb-3" style="background: rgba(255, 255, 255, 0.05); border-radius: 16px;">
@@ -263,9 +278,14 @@
                 </div>
                 <div class="col-6">
                     <a href="{{ route('mobile.order.create') }}"
-                        class="btn btn-mobile btn-mobile-primary w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100">
-                        <i class="fa-solid fa-cart-plus mb-2" style="font-size: 1.6rem;"></i>
+                        class="btn btn-mobile {{ $salesLock['locked'] ? 'btn-mobile-secondary' : 'btn-mobile-primary' }} w-100 py-3 d-flex flex-column align-items-center justify-content-center h-100 position-relative">
+                        <i class="fa-solid fa-cart-plus mb-2 {{ $salesLock['locked'] ? 'text-secondary' : '' }}" style="font-size: 1.6rem;"></i>
                         <span style="font-size: 0.85rem;">Input Penjualan</span>
+                        @if ($salesLock['locked'])
+                            <span class="badge bg-danger position-absolute top-0 end-0 m-1" style="font-size: 0.6rem; border-radius: 6px;">
+                                <i class="fa-solid fa-lock me-0.5"></i>Tutup
+                            </span>
+                        @endif
                     </a>
                 </div>
             </div>

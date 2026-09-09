@@ -24,9 +24,13 @@ class MobileBarangController extends Controller
         if ($user && ($user->jenis_sales === 'kategori' || $user->jenis_sales === 'merk')) {
             $allowedItems = array_map('trim', explode(',', $user->jenis_barang ?? ''));
             if ($user->jenis_sales === 'kategori') {
-                $query->whereIn('kategori', $allowedItems);
+                if (!in_array('semua', $allowedItems) && !in_array('Semua Kategori', $allowedItems)) {
+                    $query->whereIn('kategori', $allowedItems);
+                }
             } elseif ($user->jenis_sales === 'merk') {
-                $query->whereIn('merk', $allowedItems);
+                if (!in_array('semua', $allowedItems) && !in_array('Semua Merk', $allowedItems)) {
+                    $query->whereIn('merk', $allowedItems);
+                }
             }
         }
 
@@ -52,7 +56,9 @@ class MobileBarangController extends Controller
         $merksQuery = \App\Models\Merk::query();
         if ($user && $user->jenis_sales === 'merk') {
             $allowedItems = array_map('trim', explode(',', $user->jenis_barang ?? ''));
-            $merksQuery->whereIn('nama_merk', $allowedItems);
+            if (!in_array('semua', $allowedItems) && !in_array('Semua Merk', $allowedItems)) {
+                $merksQuery->whereIn('nama_merk', $allowedItems);
+            }
         }
         $merks = $merksQuery->orderBy('nama_merk', 'asc')->get();
 

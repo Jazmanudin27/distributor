@@ -198,16 +198,36 @@
             </div>
 
             <!-- Quick actions during check-in -->
+            @php
+                $salesLockKunjungan = \App\Http\Middleware\CheckPenjualanLock::isSalesLocked();
+            @endphp
+            @if ($salesLockKunjungan['locked'])
+                <div class="alert alert-warning rounded-3 py-2 px-3 mb-3 small d-flex align-items-center"
+                    style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24;">
+                    <i class="fa-solid fa-clock-rotate-left me-2 fs-5"></i>
+                    <div>
+                        <div class="fw-bold" style="font-size: 0.78rem;">Input Penjualan Sedang Ditutup</div>
+                        <div style="font-size: 0.7rem;" class="opacity-75">{{ $salesLockKunjungan['message'] }}</div>
+                    </div>
+                </div>
+            @endif
+
             <div class="d-grid gap-2 mb-4">
                 @if (Auth::user()->is_kanvas)
                     <a href="{{ route('mobile.order.canvas.create') }}"
-                        class="btn btn-sm btn-mobile btn-mobile-primary py-2">
+                        class="btn btn-sm btn-mobile {{ $salesLockKunjungan['locked'] ? 'btn-mobile-secondary opacity-75' : 'btn-mobile-primary' }} py-2 position-relative">
                         <i class="fa-solid fa-cart-plus me-2"></i> Input Penjualan Canvas Toko Ini
+                        @if ($salesLockKunjungan['locked'])
+                            <span class="badge bg-danger ms-2" style="font-size: 0.65rem;">Tutup</span>
+                        @endif
                     </a>
                 @else
                     <a href="{{ route('mobile.order.create', ['kode_pelanggan' => $activeCheckin->kode_pelanggan]) }}"
-                        class="btn btn-sm btn-mobile btn-mobile-primary py-2">
+                        class="btn btn-sm btn-mobile {{ $salesLockKunjungan['locked'] ? 'btn-mobile-secondary opacity-75' : 'btn-mobile-primary' }} py-2 position-relative">
                         <i class="fa-solid fa-cart-plus me-2"></i> Input Penjualan Untuk Toko Ini
+                        @if ($salesLockKunjungan['locked'])
+                            <span class="badge bg-danger ms-2" style="font-size: 0.65rem;">Tutup</span>
+                        @endif
                     </a>
                 @endif
                 {{-- @if ($unpaidInvoices->isNotEmpty())
@@ -411,7 +431,8 @@
                         <div class="text-end">
                             <div class="mb-1 d-flex justify-content-end gap-1 flex-wrap">
                                 @if ($order->batal === 1)
-                                    <span class="badge bg-danger text-white px-2 py-1" style="font-size: 0.6rem; font-weight: 600; letter-spacing: 0.3px;">
+                                    <span class="badge bg-danger text-white px-2 py-1"
+                                        style="font-size: 0.6rem; font-weight: 600; letter-spacing: 0.3px;">
                                         <i class="fa-solid fa-ban me-1"></i>Batal
                                     </span>
                                 @else
@@ -453,8 +474,10 @@
                     </div>
 
                     @if ($order->batal === 1 && $order->alasan_batal)
-                        <div class="mb-2 p-2 rounded text-danger" style="background-color: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; font-size: 0.7rem; text-align: left;">
-                            <strong><i class="fa-solid fa-circle-info me-1"></i>Alasan Batal:</strong> {{ $order->alasan_batal }}
+                        <div class="mb-2 p-2 rounded text-danger"
+                            style="background-color: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; font-size: 0.7rem; text-align: left;">
+                            <strong><i class="fa-solid fa-circle-info me-1"></i>Alasan Batal:</strong>
+                            {{ $order->alasan_batal }}
                         </div>
                     @endif
 
@@ -624,7 +647,8 @@
             <div class="mobile-card p-3">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
-                        <h6 class="fw-semibold mb-1" style="font-size: 0.85rem;">{{ $visit->pelanggan?->nama_pelanggan ?? 'Pelanggan Tidak Ditemukan' }}
+                        <h6 class="fw-semibold mb-1" style="font-size: 0.85rem;">
+                            {{ $visit->pelanggan?->nama_pelanggan ?? 'Pelanggan Tidak Ditemukan' }}
                         </h6>
                         <span class="text-secondary" style="font-size: 0.7rem;">
                             <i class="fa-solid fa-clock me-1"></i> {{ $visit->checkin->format('H:i') }} -
@@ -1067,8 +1091,10 @@
                         modalBtnSubmit.removeAttribute('disabled');
 
                         // Update Form Action URL dynamically
-                        const actionUrl = '{{ route('mobile.order.payment', ['no_faktur' => ':no_faktur'], false) }}'.replace(
-                            ':no_faktur', selectedOption.value);
+                        const actionUrl =
+                            '{{ route('mobile.order.payment', ['no_faktur' => ':no_faktur'], false) }}'
+                            .replace(
+                                ':no_faktur', selectedOption.value);
                         modalForm.setAttribute('action', actionUrl);
 
                         updateModalJumlahHelper();

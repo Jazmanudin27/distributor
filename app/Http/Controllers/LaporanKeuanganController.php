@@ -410,14 +410,14 @@ class LaporanKeuanganController extends Controller
         $wilayahs = Wilayah::orderBy('nama_wilayah')->get();
         $subWilayahs = SubWilayah::orderBy('nama_wilayah')->get();
         
-        $salesmenQuery = User::where(function ($q) {
-            $q->where('role', 'sales')->orWhere('role', 'Salesman');
-        })->where('status', '1');
+        $salesmenQuery = User::salesmen()->where('status', '1');
 
         if ($kategoriSales === 'canvas') {
             $salesmenQuery->where('is_kanvas', 1);
         } elseif ($kategoriSales === 'non_canvas') {
-            $salesmenQuery->where('is_kanvas', 0);
+            $salesmenQuery->where(function ($q) {
+                $q->where('is_kanvas', 0)->orWhereNull('is_kanvas');
+            });
         }
 
         $salesmen = $salesmenQuery->orderBy('name')->get();
@@ -470,7 +470,9 @@ class LaporanKeuanganController extends Controller
             } elseif ($kategoriSales === 'non_canvas') {
                 $query->where(function ($q) {
                     $q->whereHas('sales', function ($sq) {
-                        $sq->where('is_kanvas', 0);
+                        $sq->where(function ($k) {
+                            $k->where('is_kanvas', 0)->orWhereNull('is_kanvas');
+                        });
                     })->orWhereNull('kode_sales');
                 });
             }
@@ -600,14 +602,14 @@ class LaporanKeuanganController extends Controller
 
         $kategoriSales = $request->input('kategori_sales', 'non_canvas');
 
-        $salesmenQuery = User::where(function ($q) {
-            $q->where('role', 'sales')->orWhere('role', 'Salesman');
-        })->where('status', '1');
+        $salesmenQuery = User::salesmen()->where('status', '1');
 
         if ($kategoriSales === 'canvas') {
             $salesmenQuery->where('is_kanvas', 1);
         } elseif ($kategoriSales === 'non_canvas') {
-            $salesmenQuery->where('is_kanvas', 0);
+            $salesmenQuery->where(function ($q) {
+                $q->where('is_kanvas', 0)->orWhereNull('is_kanvas');
+            });
         }
 
         $salesmen = $salesmenQuery->orderBy('name')->get();
@@ -877,14 +879,14 @@ class LaporanKeuanganController extends Controller
 
         $kategoriSales = $request->input('kategori_sales', 'non_canvas');
 
-        $salesmenQuery = User::where(function ($q) {
-            $q->where('role', 'sales')->orWhere('role', 'Salesman');
-        })->where('status', '1');
+        $salesmenQuery = User::salesmen()->where('status', '1');
 
         if ($kategoriSales === 'canvas') {
             $salesmenQuery->where('is_kanvas', 1);
         } elseif ($kategoriSales === 'non_canvas') {
-            $salesmenQuery->where('is_kanvas', 0);
+            $salesmenQuery->where(function ($q) {
+                $q->where('is_kanvas', 0)->orWhereNull('is_kanvas');
+            });
         }
 
         $salesmen = $salesmenQuery->orderBy('name')->get();
@@ -1011,17 +1013,23 @@ class LaporanKeuanganController extends Controller
             } elseif ($kategoriSales === 'non_canvas') {
                 $cashQuery->where(function ($q) {
                     $q->whereExists(function ($sq) {
-                        $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran.kode_sales')->where('users.is_kanvas', 0);
+                        $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran.kode_sales')->where(function ($k) {
+                            $k->where('users.is_kanvas', 0)->orWhereNull('users.is_kanvas');
+                        });
                     })->orWhereNull('penjualan_pembayaran.kode_sales');
                 });
                 $transferQuery->where(function ($q) {
                     $q->whereExists(function ($sq) {
-                        $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_transfer.kode_sales')->where('users.is_kanvas', 0);
+                        $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_transfer.kode_sales')->where(function ($k) {
+                            $k->where('users.is_kanvas', 0)->orWhereNull('users.is_kanvas');
+                        });
                     })->orWhereNull('penjualan_pembayaran_transfer.kode_sales');
                 });
                 $giroQuery->where(function ($q) {
                     $q->whereExists(function ($sq) {
-                        $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_giro.kode_sales')->where('users.is_kanvas', 0);
+                        $sq->select(DB::raw(1))->from('users')->whereColumn('users.nik', 'penjualan_pembayaran_giro.kode_sales')->where(function ($k) {
+                            $k->where('users.is_kanvas', 0)->orWhereNull('users.is_kanvas');
+                        });
                     })->orWhereNull('penjualan_pembayaran_giro.kode_sales');
                 });
             }

@@ -127,7 +127,7 @@ class MobileOrderController extends Controller
 
         $salesList = [];
         if ($isSpv) {
-            $salesList = \App\Models\User::whereIn('role', ['sales', 'spv sales'])
+            $salesList = \App\Models\User::salesmen()
                 ->where('status', 1)
                 ->orderBy('name')
                 ->get();
@@ -278,12 +278,16 @@ class MobileOrderController extends Controller
             foreach ($request->items as $row) {
                 $barang = Barang::findOrFail($row['kode_barang']);
                 if ($user->jenis_sales === 'kategori') {
-                    if (!in_array($barang->kategori, $allowedItems)) {
-                        return redirect()->back()->withInput()->with('error', "Transaksi ditolak. Barang '{$barang->nama_barang}' di luar kategori yang diizinkan untuk Anda!");
+                    if (!in_array('semua', $allowedItems) && !in_array('Semua Kategori', $allowedItems)) {
+                        if (!in_array($barang->kategori, $allowedItems)) {
+                            return redirect()->back()->withInput()->with('error', "Transaksi ditolak. Barang '{$barang->nama_barang}' di luar kategori yang diizinkan untuk Anda!");
+                        }
                     }
                 } elseif ($user->jenis_sales === 'merk') {
-                    if (!in_array($barang->merk, $allowedItems)) {
-                        return redirect()->back()->withInput()->with('error', "Transaksi ditolak. Barang '{$barang->nama_barang}' di luar merk yang diizinkan untuk Anda!");
+                    if (!in_array('semua', $allowedItems) && !in_array('Semua Merk', $allowedItems)) {
+                        if (!in_array($barang->merk, $allowedItems)) {
+                            return redirect()->back()->withInput()->with('error', "Transaksi ditolak. Barang '{$barang->nama_barang}' di luar merk yang diizinkan untuk Anda!");
+                        }
                     }
                 }
             }

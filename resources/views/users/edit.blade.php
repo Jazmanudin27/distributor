@@ -74,7 +74,9 @@
                     </div>
 
                     @php
-                        $selectedBarang = explode(',', $row->jenis_barang ?? '');
+                        $selectedBarang = array_map('trim', explode(',', $row->jenis_barang ?? ''));
+                        $isSemuaMerk = in_array('semua', old('jenis_barang', $selectedBarang)) || in_array('Semua Merk', old('jenis_barang', $selectedBarang));
+                        $isSemuaKategori = in_array('semua', old('jenis_barang', $selectedBarang)) || in_array('Semua Kategori', old('jenis_barang', $selectedBarang));
                     @endphp
 
                     <div class="mb-3">
@@ -87,27 +89,53 @@
                     </div>
 
                     <div class="mb-3 d-none" id="kategori-container">
-                        <label for="jenis_barang_kategori" class="form-label fs-7 fw-bold text-secondary">Pilih Kategori (Bisa Pilih Banyak)</label>
-                        <select name="jenis_barang[]" id="jenis_barang_kategori" class="form-select form-select-sm" multiple style="height: 120px;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="jenis_barang_kategori" class="form-label fs-7 fw-bold text-secondary mb-0">Pilih Kategori (Bisa Pilih Banyak)</label>
+                            <div class="d-flex gap-1">
+                                <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 rounded" style="font-size: 0.72rem;" onclick="selectAllKategori(true)">
+                                    <i class="fa-solid fa-check-double me-1"></i>Pilih Semua
+                                </button>
+                                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2 rounded" style="font-size: 0.72rem;" onclick="selectAllKategori(false)">
+                                    <i class="fa-solid fa-xmark me-1"></i>Batal
+                                </button>
+                            </div>
+                        </div>
+                        <select name="jenis_barang[]" id="jenis_barang_kategori" class="form-select form-select-sm" multiple style="height: 130px;">
+                            <option value="semua" {{ $isSemuaKategori ? 'selected' : '' }}>
+                                -- Semua Kategori --
+                            </option>
                             @foreach($kategoris as $k)
                                 <option value="{{ $k->nama_kategori }}" {{ in_array($k->nama_kategori, old('jenis_barang', $selectedBarang)) ? 'selected' : '' }}>
                                     {{ $k->nama_kategori }}
                                 </option>
                             @endforeach
                         </select>
-                        <small class="text-muted">Gunakan Ctrl + Klik untuk memilih lebih dari satu kategori.</small>
+                        <small class="text-muted">Pilih <strong>"-- Semua Kategori --"</strong> atau gunakan tombol <strong>"Pilih Semua"</strong>, atau Ctrl + Klik untuk memilih kategori tertentu.</small>
                     </div>
 
                     <div class="mb-3 d-none" id="merk-container">
-                        <label for="jenis_barang_merk" class="form-label fs-7 fw-bold text-secondary">Pilih Merk (Bisa Pilih Banyak)</label>
-                        <select name="jenis_barang[]" id="jenis_barang_merk" class="form-select form-select-sm" multiple style="height: 120px;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="jenis_barang_merk" class="form-label fs-7 fw-bold text-secondary mb-0">Pilih Merk (Bisa Pilih Banyak)</label>
+                            <div class="d-flex gap-1">
+                                <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 rounded" style="font-size: 0.72rem;" onclick="selectAllMerk(true)">
+                                    <i class="fa-solid fa-check-double me-1"></i>Pilih Semua
+                                </button>
+                                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2 rounded" style="font-size: 0.72rem;" onclick="selectAllMerk(false)">
+                                    <i class="fa-solid fa-xmark me-1"></i>Batal
+                                </button>
+                            </div>
+                        </div>
+                        <select name="jenis_barang[]" id="jenis_barang_merk" class="form-select form-select-sm" multiple style="height: 130px;">
+                            <option value="semua" {{ $isSemuaMerk ? 'selected' : '' }}>
+                                -- Semua Merk --
+                            </option>
                             @foreach($merks as $m)
                                 <option value="{{ $m->nama_merk }}" {{ in_array($m->nama_merk, old('jenis_barang', $selectedBarang)) ? 'selected' : '' }}>
                                     {{ $m->nama_merk }}
                                 </option>
                             @endforeach
                         </select>
-                        <small class="text-muted">Gunakan Ctrl + Klik untuk memilih lebih dari satu merk.</small>
+                        <small class="text-muted">Pilih <strong>"-- Semua Merk --"</strong> atau gunakan tombol <strong>"Pilih Semua"</strong>, atau Ctrl + Klik untuk memilih merk tertentu.</small>
                     </div>
 
                     <div class="mb-3 form-check ms-1">
@@ -174,18 +202,47 @@
         }
     }
 
-    function toggleKanvasFields() {
-        const isKanvas = document.getElementById('is_kanvas').checked;
-        const container = document.getElementById('kode-pelanggan-container');
-        container.style.display = isKanvas ? '' : 'none';
-        if (!isKanvas) {
-            document.getElementById('kode_pelanggan').value = '';
+        function selectAllMerk(select) {
+            const selectMerk = document.getElementById('jenis_barang_merk');
+            for (let i = 0; i < selectMerk.options.length; i++) {
+                selectMerk.options[i].selected = select;
+            }
         }
-    }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        toggleRestrictionFields();
-        toggleKanvasFields();
-    });
+        function selectAllKategori(select) {
+            const selectKategori = document.getElementById('jenis_barang_kategori');
+            for (let i = 0; i < selectKategori.options.length; i++) {
+                selectKategori.options[i].selected = select;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleRestrictionFields();
+            toggleKanvasFields();
+
+            const selectMerk = document.getElementById('jenis_barang_merk');
+            if (selectMerk) {
+                selectMerk.addEventListener('change', function(e) {
+                    const semuaOpt = this.querySelector('option[value="semua"]');
+                    if (semuaOpt && semuaOpt.selected) {
+                        for (let i = 0; i < this.options.length; i++) {
+                            this.options[i].selected = true;
+                        }
+                    }
+                });
+            }
+
+            const selectKategori = document.getElementById('jenis_barang_kategori');
+            if (selectKategori) {
+                selectKategori.addEventListener('change', function(e) {
+                    const semuaOpt = this.querySelector('option[value="semua"]');
+                    if (semuaOpt && semuaOpt.selected) {
+                        for (let i = 0; i < this.options.length; i++) {
+                            this.options[i].selected = true;
+                        }
+                    }
+                });
+            }
+        });
 </script>
 @endsection

@@ -19,14 +19,14 @@ class LaporanPenjualanController extends Controller
 
         $kategoriSales = $request->input('kategori_sales', 'non_canvas');
 
-        $salesmenQuery = User::where(function ($q) {
-            $q->where('role', 'sales')->orWhere('role', 'Salesman');
-        })->where('status', '1');
+        $salesmenQuery = User::salesmen()->where('status', '1');
 
         if ($kategoriSales === 'canvas') {
             $salesmenQuery->where('is_kanvas', 1);
         } elseif ($kategoriSales === 'non_canvas') {
-            $salesmenQuery->where('is_kanvas', 0);
+            $salesmenQuery->where(function ($q) {
+                $q->where('is_kanvas', 0)->orWhereNull('is_kanvas');
+            });
         }
 
         $salesmen = $salesmenQuery->orderBy('name')->get();
@@ -76,7 +76,9 @@ class LaporanPenjualanController extends Controller
                 } elseif ($kategoriSales === 'non_canvas') {
                     $query->where(function($q) {
                         $q->whereHas('sales', function($sq) {
-                            $sq->where('is_kanvas', 0);
+                            $sq->where(function ($k) {
+                                $k->where('is_kanvas', 0)->orWhereNull('is_kanvas');
+                            });
                         })->orWhereNull('kode_sales');
                     });
                 }
@@ -115,8 +117,9 @@ class LaporanPenjualanController extends Controller
                     $query->where('sales.is_kanvas', 1);
                 } elseif ($kategoriSales === 'non_canvas') {
                     $query->where(function($q) {
-                        $q->where('sales.is_kanvas', 0)
-                          ->orWhereNull('penjualan.kode_sales');
+                        $q->where(function ($sq) {
+                            $sq->where('sales.is_kanvas', 0)->orWhereNull('sales.is_kanvas');
+                        })->orWhereNull('penjualan.kode_sales');
                     });
                 }
 

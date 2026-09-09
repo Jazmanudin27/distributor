@@ -59,4 +59,19 @@ class User extends Authenticatable
     {
         return $this->belongsTo(\App\Models\Pelanggan::class, 'kode_pelanggan', 'kode_pelanggan');
     }
+
+    /**
+     * Scope query untuk mengambil semua personel sales (sales reguler dan SPV sales).
+     */
+    public function scopeSalesmen($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereIn(\Illuminate\Support\Facades\DB::raw('LOWER(role)'), ['sales', 'salesman', 'spv sales'])
+              ->orWhereIn('role', ['sales', 'Sales', 'Salesman', 'salesman', 'spv sales', 'SPV Sales', 'spv_sales', 'SPV_Sales'])
+              ->orWhereHas('roles', function ($rq) {
+                  $rq->whereIn(\Illuminate\Support\Facades\DB::raw('LOWER(name)'), ['sales', 'salesman', 'spv sales'])
+                    ->orWhereIn('name', ['sales', 'Sales', 'Salesman', 'salesman', 'spv sales', 'SPV Sales', 'spv_sales', 'SPV_Sales']);
+              });
+        });
+    }
 }

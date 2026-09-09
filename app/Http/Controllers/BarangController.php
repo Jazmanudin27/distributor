@@ -238,10 +238,14 @@ class BarangController extends Controller
         if ($user) {
             if ($user->jenis_sales === 'kategori' && $user->jenis_barang) {
                 $categories = array_map('trim', explode(',', $user->jenis_barang));
-                $query->whereIn('kategori', $categories);
+                if (!in_array('semua', $categories) && !in_array('Semua Kategori', $categories)) {
+                    $query->whereIn('kategori', $categories);
+                }
             } elseif ($user->jenis_sales === 'merk' && $user->jenis_barang) {
                 $brands = array_map('trim', explode(',', $user->jenis_barang));
-                $query->whereIn('merk', $brands);
+                if (!in_array('semua', $brands) && !in_array('Semua Merk', $brands)) {
+                    $query->whereIn('merk', $brands);
+                }
             }
         }
 

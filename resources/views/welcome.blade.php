@@ -224,13 +224,22 @@
                         <div>
                             <span class="text-secondary small fw-semibold tracking-wider text-uppercase"
                                 style="font-size: 0.7rem;">Kunci Input Penjualan</span>
-                            <h3 class="fw-bold text-white mt-1 mb-0" style="font-size: 1.4rem;">
-                                @if($lockAdmin && $lockSales)
+                            <h3 class="fw-bold text-white mt-1 mb-0" style="font-size: 1.3rem;">
+                                @php
+                                    $isSalesLocked = $salesLockStatus['locked'] ?? false;
+                                    $salesReason = $salesLockStatus['reason'] ?? null;
+                                @endphp
+
+                                @if($lockAdmin && $isSalesLocked)
                                     <span class="badge bg-danger text-white">Semua Dikunci</span>
                                 @elseif($lockAdmin)
                                     <span class="badge bg-warning text-dark">Admin Dikunci</span>
-                                @elseif($lockSales)
-                                    <span class="badge bg-warning text-dark">Sales Dikunci</span>
+                                @elseif($isSalesLocked)
+                                    @if($salesReason === 'schedule')
+                                        <span class="badge bg-warning text-dark"><i class="fa-solid fa-clock me-1"></i>Sales Tutup (Jadwal Malam)</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark">Sales Dikunci (Manual)</span>
+                                    @endif
                                 @else
                                     <span class="badge bg-success text-white">Aktif (Terbuka)</span>
                                 @endif
@@ -257,10 +266,23 @@
                         </div>
                         <div class="d-flex justify-content-between align-items-center mt-1">
                             <span>Kunci Input Sales (Mobile):</span>
-                            <strong class="{{ $lockSales ? 'text-danger' : 'text-success' }}">
-                                <i class="fa-solid {{ $lockSales ? 'fa-circle-check text-danger' : 'fa-circle-xmark text-success' }} me-1"></i>
-                                {{ $lockSales ? 'YA' : 'TIDAK' }}
-                            </strong>
+                            @if($lockSales)
+                                <strong class="text-danger">
+                                    <i class="fa-solid fa-circle-check text-danger me-1"></i>YA (Manual)
+                                </strong>
+                            @elseif($isSalesLocked && $salesReason === 'schedule')
+                                <strong class="text-warning">
+                                    <i class="fa-solid fa-clock text-warning me-1"></i>TUTUP ({{ $salesLockStatus['start_time'] }} - {{ $salesLockStatus['end_time'] }})
+                                </strong>
+                            @elseif($autoLockSales)
+                                <strong class="text-success">
+                                    <i class="fa-solid fa-circle-xmark text-success me-1"></i>BUKA (Tutup {{ $lockSalesStart }})
+                                </strong>
+                            @else
+                                <strong class="text-success">
+                                    <i class="fa-solid fa-circle-xmark text-success me-1"></i>TIDAK (24 Jam)
+                                </strong>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -530,13 +552,44 @@
                             </label>
                         </div>
 
-                        <!-- Kunci Sales -->
-                        <div class="form-check form-switch mb-2 p-3 rounded-3" style="background: #151821; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; align-items: center;">
+                        <!-- Kunci Sales Manual -->
+                        <div class="form-check form-switch mb-3 p-3 rounded-3" style="background: #151821; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; align-items: center;">
                             <input class="form-check-input ms-0 me-3" type="checkbox" name="lock_penjualan_sales" id="lock_penjualan_sales" value="1" {{ $lockSales ? 'checked' : '' }} style="width: 2.5em; height: 1.25em; cursor: pointer; flex-shrink: 0;">
                             <label class="form-check-label fw-semibold text-white" for="lock_penjualan_sales" style="cursor: pointer;">
-                                Kunci Input Penjualan Sales (Mobile)
-                                <span class="d-block text-secondary fw-normal mt-1" style="font-size: 0.75rem;">Mencegah salesman lapangan membuat order/canvas baru melalui aplikasi mobile.</span>
+                                Kunci Manual Input Penjualan Sales (Mobile)
+                                <span class="d-block text-secondary fw-normal mt-1" style="font-size: 0.75rem;">Mengunci salesman lapangan secara paksa kapan saja saat ini juga.</span>
                             </label>
+                        </div>
+
+                        <!-- Kunci Otomatis Jadwal Operasional (Sales) -->
+                        <div class="p-3 rounded-3 mb-2" style="background: #151821; border: 1px solid rgba(255, 255, 255, 0.05);">
+                            <div class="form-check form-switch d-flex align-items-center mb-3">
+                                <input class="form-check-input ms-0 me-3" type="checkbox" name="auto_lock_penjualan_sales" id="auto_lock_penjualan_sales" value="1" {{ $autoLockSales ? 'checked' : '' }} style="width: 2.5em; height: 1.25em; cursor: pointer; flex-shrink: 0;" onchange="document.getElementById('scheduleTimeInputs').style.display = this.checked ? 'block' : 'none';">
+                                <label class="form-check-label fw-semibold text-white" for="auto_lock_penjualan_sales" style="cursor: pointer;">
+                                    <i class="fa-solid fa-clock text-warning me-1"></i> Kunci Otomatis Sesuai Jam (Sales Mobile)
+                                    <span class="d-block text-secondary fw-normal mt-1" style="font-size: 0.75rem;">Otomatis mengunci order sales di luar jam kerja (misal: malam s/d subuh).</span>
+                                </label>
+                            </div>
+
+                            <div id="scheduleTimeInputs" style="display: {{ $autoLockSales ? 'block' : 'none' }}; border-top: 1px solid rgba(255, 255, 255, 0.07); padding-top: 12px;">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label small text-secondary mb-1">
+                                            <i class="fa-solid fa-moon text-danger me-1"></i> Jam Tutup (Mulai Kunci)
+                                        </label>
+                                        <input type="time" name="lock_sales_start" value="{{ $lockSalesStart ?? '19:00' }}" class="form-control form-control-sm text-white bg-dark border-secondary">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small text-secondary mb-1">
+                                            <i class="fa-solid fa-sun text-warning me-1"></i> Jam Buka (Selesai Kunci)
+                                        </label>
+                                        <input type="time" name="lock_sales_end" value="{{ $lockSalesEnd ?? '06:00' }}" class="form-control form-control-sm text-white bg-dark border-secondary">
+                                    </div>
+                                </div>
+                                <span class="d-block text-secondary mt-2" style="font-size: 0.7rem;">
+                                    <i class="fa-solid fa-circle-info text-info me-1"></i> Default: Ditutup pukul <strong>19:00 WIB</strong> dan dibuka kembali pukul <strong>06:00 WIB</strong>.
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer py-3" style="border-top: 1px solid rgba(255, 255, 255, 0.1);">

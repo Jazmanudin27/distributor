@@ -205,7 +205,7 @@ class MobileDashboardController extends Controller
         $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
 
         // Query sales users
-        $salesList = \App\Models\User::whereIn('role', ['sales', 'spv sales'])
+        $salesList = \App\Models\User::salesmen()
             ->where('status', '1')
             ->get();
 
@@ -265,7 +265,7 @@ class MobileDashboardController extends Controller
 
         $visits = $query->orderBy('checkin', 'desc')->paginate(20)->appends($request->query());
 
-        $salesmen = \App\Models\User::whereIn('role', ['sales', 'spv sales'])
+        $salesmen = \App\Models\User::salesmen()
             ->where('status', '1')
             ->orderBy('name')
             ->get();

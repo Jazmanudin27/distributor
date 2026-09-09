@@ -51,7 +51,7 @@ class PelangganController extends Controller
         $pelanggans = $query->paginate(10)->appends($request->query());
         $wilayahs = Wilayah::all();
         $subWilayahs = SubWilayah::all();
-        $salesmen = \App\Models\User::where(fn($q) => $q->where('role', 'sales')->orWhere('is_kanvas', 1))->where('status', 1)->orderBy('name')->get();
+        $salesmen = \App\Models\User::where(fn($q) => $q->salesmen()->orWhere('is_kanvas', 1))->where('status', 1)->orderBy('name')->get();
         return view('master.pelanggan.index', compact('pelanggans', 'wilayahs', 'subWilayahs', 'salesmen'));
     }
 
@@ -60,7 +60,7 @@ class PelangganController extends Controller
         $item = new Pelanggan();
         $wilayahs = Wilayah::all();
         $subWilayahs = SubWilayah::all();
-        $salesmen = \App\Models\User::where(fn($q) => $q->where('role', 'sales')->orWhere('is_kanvas', 1))->where('status', 1)->orderBy('name')->get();
+        $salesmen = \App\Models\User::where(fn($q) => $q->salesmen()->orWhere('is_kanvas', 1))->where('status', 1)->orderBy('name')->get();
         return view('master.pelanggan.form', compact('item', 'wilayahs', 'subWilayahs', 'salesmen'));
     }
 
@@ -97,7 +97,7 @@ class PelangganController extends Controller
         $item = Pelanggan::findOrFail($id);
         $wilayahs = Wilayah::all();
         $subWilayahs = SubWilayah::all();
-        $salesmen = \App\Models\User::where(fn($q) => $q->where('role', 'sales')->orWhere('is_kanvas', 1))->where('status', 1)->orderBy('name')->get();
+        $salesmen = \App\Models\User::where(fn($q) => $q->salesmen()->orWhere('is_kanvas', 1))->where('status', 1)->orderBy('name')->get();
         return view('master.pelanggan.form', compact('item', 'wilayahs', 'subWilayahs', 'salesmen'));
     }
 

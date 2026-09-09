@@ -47,13 +47,21 @@
                                 <td class="small text-secondary">{{ $item->nik ?? '-' }}</td>
                                 <td>
                                     @if ($item->jenis_sales === 'kategori')
+                                        @php
+                                            $allowedArr = array_map('trim', explode(',', $item->jenis_barang ?? ''));
+                                            $isSemuaKat = in_array('semua', $allowedArr) || in_array('Semua Kategori', $allowedArr);
+                                        @endphp
                                         <span class="badge bg-info-subtle text-info border border-info-subtle"
                                             title="{{ $item->jenis_barang }}">Kategori:
-                                            {{ Str::limit($item->jenis_barang, 25) }}</span>
+                                            {{ $isSemuaKat ? 'Semua Kategori' : Str::limit($item->jenis_barang, 25) }}</span>
                                     @elseif($item->jenis_sales === 'merk')
+                                        @php
+                                            $allowedArr = array_map('trim', explode(',', $item->jenis_barang ?? ''));
+                                            $isSemuaMerk = in_array('semua', $allowedArr) || in_array('Semua Merk', $allowedArr);
+                                        @endphp
                                         <span class="badge bg-warning-subtle text-warning border border-warning-subtle"
                                             title="{{ $item->jenis_barang }}">Merk:
-                                            {{ Str::limit($item->jenis_barang, 25) }}</span>
+                                            {{ $isSemuaMerk ? 'Semua Merk' : Str::limit($item->jenis_barang, 25) }}</span>
                                     @else
                                         <span
                                             class="badge bg-success-subtle text-success border border-success-subtle">Semua

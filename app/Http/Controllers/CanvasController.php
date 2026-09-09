@@ -42,7 +42,7 @@ class CanvasController extends Controller
         $canvasSessions = $query->paginate(15)->withQueryString();
 
         $salesmen = User::where(function ($q) {
-            $q->where('role', 'sales')->orWhere('role', 'Salesman')->orWhere('role', 'Admin');
+            $q->salesmen()->orWhere('role', 'Admin');
         })->where('status', '1')
           ->where('is_kanvas', 1)
           ->orderBy('name')
@@ -57,7 +57,7 @@ class CanvasController extends Controller
     public function create()
     {
         $salesmen = User::where(function ($q) {
-            $q->where('role', 'sales')->orWhere('role', 'Salesman')->orWhere('role', 'Admin');
+            $q->salesmen()->orWhere('role', 'Admin');
         })->where('status', '1')
           ->where('is_kanvas', 1)
           ->orderBy('name')
@@ -571,7 +571,7 @@ class CanvasController extends Controller
         $canvasSessions = $query->paginate(15)->withQueryString();
 
         $salesmen = User::where(function ($q) {
-            $q->where('role', 'sales')->orWhere('role', 'Salesman')->orWhere('role', 'Admin');
+            $q->salesmen()->orWhere('role', 'Admin');
         })->where('status', '1')
           ->where('is_kanvas', 1)
           ->orderBy('name')
@@ -596,7 +596,7 @@ class CanvasController extends Controller
 
         // Get list of sales who have active loading DPBs
         $salesmen = User::where(function ($q) {
-            $q->where('role', 'sales')->orWhere('role', 'Salesman')->orWhere('role', 'Admin');
+            $q->salesmen()->orWhere('role', 'Admin');
         })->where('status', '1')
           ->where('is_kanvas', 1)
           ->whereIn('nik', function($q) {
@@ -869,7 +869,7 @@ class CanvasController extends Controller
             ->get();
 
         $salesmen = User::where(function ($q) {
-            $q->where('role', 'sales')->orWhere('role', 'Salesman')->orWhere('role', 'Admin');
+            $q->salesmen()->orWhere('role', 'Admin');
         })->where('status', '1')
           ->where('is_kanvas', 1)
           ->orderBy('name')

@@ -61,7 +61,7 @@ class ReturPenjualanController extends Controller
         }
         
         $barangs = Barang::where('status', 1)->with('satuans')->orderBy('nama_barang')->get();
-        $salesmen = \App\Models\User::where('role', 'sales')->where('status', 1)->orderBy('name')->get();
+        $salesmen = \App\Models\User::salesmen()->where('status', 1)->orderBy('name')->get();
 
         // Auto-generate RP26010001 (Format: RP + YYMM + 4-digit sequence)
         $today = date('ym');
@@ -220,7 +220,7 @@ class ReturPenjualanController extends Controller
             ->get();
             
         $barangs = Barang::where('status', 1)->with('satuans')->orderBy('nama_barang')->get();
-        $salesmen = \App\Models\User::where('role', 'sales')->where('status', 1)->orderBy('name')->get();
+        $salesmen = \App\Models\User::salesmen()->where('status', 1)->orderBy('name')->get();
 
         return view('retur_penjualan.form', compact('item', 'pelanggans', 'penjualans', 'barangs', 'salesmen'));
     }
