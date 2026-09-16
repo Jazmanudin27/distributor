@@ -92,6 +92,14 @@
                             </select>
                         </div>
 
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-secondary mb-1">Format Laporan</label>
+                            <select name="format" class="form-select form-select-sm">
+                                <option value="1" {{ request('format', $format ?? '1') == '1' ? 'selected' : '' }}>Format 1 (Tanpa Wilayah)</option>
+                                <option value="2" {{ request('format', $format ?? '1') == '2' ? 'selected' : '' }}>Format 2 (Dengan Wilayah)</option>
+                            </select>
+                        </div>
+
                         <div class="row g-2">
                             <div class="col-6">
                                 <button type="submit"

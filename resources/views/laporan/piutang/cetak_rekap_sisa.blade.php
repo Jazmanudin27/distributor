@@ -170,7 +170,8 @@
                 }
             }
 
-            $colspanVal = 6;
+            $fmt = $format ?? request('format', '1');
+            $colspanVal = $fmt == '2' ? 6 : 5;
         @endphp
 
         <table class="kotak-rekap" style="margin-top: 10px;">
@@ -215,7 +216,9 @@
                     <th style="width: 8%">TGL FAKTUR</th>
                     <th style="width: 8%">KODE TRANSAKSI</th>
                     <th style="width: 15%">NAMA PELANGGAN</th>
-                    <th style="width: 8%">WILAYAH</th>
+                    @if (($format ?? request('format', '1')) == '2')
+                        <th style="width: 8%">WILAYAH</th>
+                    @endif
                     <th style="width: 7%">SALES</th>
                     <th style="width: 7%">JUMLAH</th>
                     <th style="width: 14%">TITIP</th>
@@ -236,7 +239,9 @@
                         <td class="text-center">{{ \Carbon\Carbon::parse($item['tanggal'])->format('d-M-Y') }}</td>
                         <td class="text-center">{{ $item['no_faktur'] }}</td>
                         <td class="nama-pelanggan">{{ $item['pelanggan']->nama_pelanggan ?? '-' }}</td>
-                        <td class="text-center">{{ $item['pelanggan']->wilayah->nama_wilayah ?? '-' }}</td>
+                        @if (($format ?? request('format', '1')) == '2')
+                            <td class="text-center">{{ $item['pelanggan']->wilayah->nama_wilayah ?? '-' }}</td>
+                        @endif
                         <td>{{ $item['sales']->name ?? '-' }}</td>
                         <td style="text-align: right">{{ number_format($item['sisa_piutang'], 0, ',', '.') }}</td>
                         <td style="text-align: right"></td>

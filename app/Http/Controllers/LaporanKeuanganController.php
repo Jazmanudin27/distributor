@@ -404,6 +404,7 @@ class LaporanKeuanganController extends Controller
         $sub_wilayah_id = $request->input('sub_wilayah_id');
         $kode_sales = $request->input('kode_sales');
         $kode_supplier = $request->input('kode_supplier');
+        $format = $request->input('format', '1');
         $suppliers = \App\Models\Supplier::orderBy('nama_supplier', 'asc')->get();
 
         // Fetch master data for dropdown filters
@@ -580,7 +581,7 @@ class LaporanKeuanganController extends Controller
             'pelanggans', 'items', 'kode_pelanggan',
             'tanggal', 'wilayah_id', 'sub_wilayah_id', 'kode_sales',
             'wilayahs', 'subWilayahs', 'salesmen', 'kategoriSales',
-            'suppliers', 'kode_supplier'
+            'suppliers', 'kode_supplier', 'format'
         );
 
         if ($isExcel) {

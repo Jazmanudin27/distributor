@@ -97,4 +97,59 @@ class RekapSisaPiutangTunaiTest extends TestCase
         // The fully paid cash sale must NOT appear
         $response->assertDontSee('FK-TUNAI-02');
     }
+
+    public function test_rekap_sisa_piutang_format_1_and_format_2(): void
+    {
+        $adminRole = Role::firstOrCreate(['name' => 'Admin']);
+        $permission = Permission::firstOrCreate(['name' => 'view-laporan_piutang']);
+        $adminRole->givePermissionTo($permission);
+
+        $user = User::factory()->create([
+            'nik' => '998',
+            'role' => 'admin',
+            'status' => '1',
+            'is_kanvas' => 0,
+        ]);
+        $user->assignRole($adminRole);
+
+        $wilayah = Wilayah::create(['kode_wilayah' => 2, 'nama_wilayah' => 'Wilayah Test']);
+
+        $pelanggan = Pelanggan::create([
+            'kode_pelanggan' => 'CUST02',
+            'nama_pelanggan' => 'Toko Format Test',
+            'kode_wilayah' => 2,
+            'limit_pelanggan' => 10000000,
+            'kode_sales' => $user->nik,
+        ]);
+
+        $today = date('Y-m-d');
+
+        Penjualan::create([
+            'no_faktur' => 'FK-FMT-01',
+            'tanggal' => $today,
+            'kode_pelanggan' => $pelanggan->kode_pelanggan,
+            'kode_sales' => $user->nik,
+            'jenis_transaksi' => 'Kredit',
+            'grand_total' => 1000000,
+            'subtotal' => 1000000,
+            'batal' => 0,
+        ]);
+        DB::table('penjualan')->where('no_faktur', 'FK-FMT-01')->update(['tanggal' => $today]);
+
+        // Format 1 should NOT contain WILAYAH header column
+        $responseFmt1 = $this->actingAs($user)->get(route('laporan.rekap-sisa-piutang.cetak', [
+            'tanggal' => $today,
+            'format' => '1',
+        ]));
+        $responseFmt1->assertStatus(200);
+        $responseFmt1->assertDontSee('<th style="width: 8%">WILAYAH</th>', false);
+
+        // Format 2 SHOULD contain WILAYAH header column
+        $responseFmt2 = $this->actingAs($user)->get(route('laporan.rekap-sisa-piutang.cetak', [
+            'tanggal' => $today,
+            'format' => '2',
+        ]));
+        $responseFmt2->assertStatus(200);
+        $responseFmt2->assertSee('<th style="width: 8%">WILAYAH</th>', false);
+    }
 }
