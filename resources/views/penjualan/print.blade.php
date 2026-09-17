@@ -178,8 +178,16 @@
                 </div>
                 <div class="header-address">SIRNAGALIH INDIHIANG</div>
                 <div class="header-address">TASIKMALAYA</div>
-                <div class="header-address">Rek: CIMB NIAGA A.N NANDANG PRISTIWANTO</div>
-                <div class="header-address">800184933300</div>
+                @php
+                    $kodePelangganClean = strtoupper(str_replace(['-', ' '], '', $item->kode_pelanggan ?? ($item->pelanggan->kode_pelanggan ?? '')));
+                @endphp
+                @if ($kodePelangganClean === 'PLG2600423')
+                    <div class="header-address">Rek: CIMB NIAGA A.N CV MITRA JAYA ABADI PERSADA</div>
+                    <div class="header-address">800190458700</div>
+                @else
+                    <div class="header-address">Rek: CIMB NIAGA A.N NANDANG PRISTIWANTO</div>
+                    <div class="header-address">800184933300</div>
+                @endif
             </td>
             <td style="width: 40%; font-size: 14px;">
                 <table class="info-table">
