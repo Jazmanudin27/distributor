@@ -183,7 +183,7 @@
                         str_replace(['-', ' '], '', $item->kode_pelanggan ?? ($item->pelanggan->kode_pelanggan ?? '')),
                     );
                 @endphp
-                @if (in_array($kodePelangganClean, ['PLG2600423', 'PLG2600565']))
+                @if (in_array($kodePelangganClean, ['PLG2600423', 'PLG2600565', 'PLG2600394']))
                     <div class="header-address">Rek: CIMB NIAGA A.N CV MITRA JAYA ABADI PERSADA</div>
                     <div class="header-address">800190458700</div>
                 @else
