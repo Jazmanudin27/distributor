@@ -179,9 +179,11 @@
                 <div class="header-address">SIRNAGALIH INDIHIANG</div>
                 <div class="header-address">TASIKMALAYA</div>
                 @php
-                    $kodePelangganClean = strtoupper(str_replace(['-', ' '], '', $item->kode_pelanggan ?? ($item->pelanggan->kode_pelanggan ?? '')));
+                    $kodePelangganClean = strtoupper(
+                        str_replace(['-', ' '], '', $item->kode_pelanggan ?? ($item->pelanggan->kode_pelanggan ?? '')),
+                    );
                 @endphp
-                @if ($kodePelangganClean === 'PLG2600423')
+                @if (in_array($kodePelangganClean, ['PLG2600423', 'PLG2600565']))
                     <div class="header-address">Rek: CIMB NIAGA A.N CV MITRA JAYA ABADI PERSADA</div>
                     <div class="header-address">800190458700</div>
                 @else
