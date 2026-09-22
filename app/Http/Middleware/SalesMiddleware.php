@@ -17,10 +17,11 @@ class SalesMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::check()) {
-            $role = strtolower(Auth::user()->role ?? '');
+            $user = Auth::user();
+            $role = strtolower($user->role ?? '');
             
             // Jika user bukan sales / spv sales, arahkan ke halaman utama desktop
-            if (!in_array($role, ['sales', 'spv sales'])) {
+            if (!in_array($role, ['sales', 'spv sales', 'spv sales 1', 'spv sales 2']) && !$user->isSpv1() && !$user->isSpv2()) {
                 return redirect('/')->with('error', 'Hanya sales/spv sales yang memiliki akses ke halaman mobile.');
             }
         }

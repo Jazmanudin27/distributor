@@ -156,6 +156,29 @@
                         <small class="text-muted">Pelanggan ini otomatis digunakan saat sales canvas membuat order via mobile.</small>
                     </div>
 
+                    <div class="mb-3" id="spv-config-container">
+                        <label for="spv_type" class="form-label fs-7 fw-bold text-secondary">Tipe SPV Sales</label>
+                        <select name="spv_type" id="spv_type" class="form-select form-select-sm" onchange="toggleSpvSalesFields()">
+                            <option value="1" {{ old('spv_type', $row->effective_spv_type) == '1' ? 'selected' : '' }}>SPV Sales 1 (Semua Sales / Akses Penuh)</option>
+                            <option value="2" {{ old('spv_type', $row->effective_spv_type) == '2' ? 'selected' : '' }}>SPV Sales 2 (Hanya Approval Sales Binaan)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3 d-none" id="spv-sales-binaan-container">
+                        <label class="form-label fs-7 fw-bold text-secondary">Sales Binaan (Pilih Sales yang Dibawahi SPV 2)</label>
+                        <div class="border rounded p-2 bg-light" style="max-height: 200px; overflow-y: auto;">
+                            @php $assignedIds = old('assigned_sales', $row->assigned_sales_ids ?? []); @endphp
+                            @foreach($salesmen as $s)
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="assigned_sales[]" value="{{ $s->id }}" id="sales_{{ $s->id }}" {{ in_array($s->id, $assignedIds) ? 'checked' : '' }}>
+                                    <label class="form-check-label fs-7" for="sales_{{ $s->id }}">
+                                        {{ $s->name }} (NIK: {{ $s->nik ?? '-' }})
+                                    </label>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
                     <div class="mb-4">
                         <label for="status" class="form-label fs-7 fw-bold text-secondary">Status</label>
                         <select name="status" id="status"
@@ -216,9 +239,37 @@
             }
         }
 
+        function toggleSpvSalesFields() {
+            const roleSelect = document.getElementById('role');
+            const role = roleSelect ? roleSelect.value.toLowerCase() : '';
+            const spvConfigContainer = document.getElementById('spv-config-container');
+            const spvSalesBinaanContainer = document.getElementById('spv-sales-binaan-container');
+            const spvTypeSelect = document.getElementById('spv_type');
+            const spvType = spvTypeSelect ? spvTypeSelect.value : '1';
+
+            const isSpv = role.includes('spv sales');
+            if (isSpv || role === 'spv sales 1' || role === 'spv sales 2') {
+                spvConfigContainer.classList.remove('d-none');
+                if (spvType === '2' || role === 'spv sales 2') {
+                    spvSalesBinaanContainer.classList.remove('d-none');
+                } else {
+                    spvSalesBinaanContainer.classList.add('d-none');
+                }
+            } else {
+                spvConfigContainer.classList.add('d-none');
+                spvSalesBinaanContainer.classList.add('d-none');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             toggleRestrictionFields();
             toggleKanvasFields();
+            toggleSpvSalesFields();
+
+            const roleSelect = document.getElementById('role');
+            if (roleSelect) {
+                roleSelect.addEventListener('change', toggleSpvSalesFields);
+            }
 
             const selectMerk = document.getElementById('jenis_barang_merk');
             if (selectMerk) {

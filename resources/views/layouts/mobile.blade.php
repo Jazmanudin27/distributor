@@ -476,7 +476,7 @@
         @php
             $userRole = strtolower(Auth::user()->role ?? '');
             $isOwner = in_array($userRole, ['owner', 'admin', 'super admin', 'superadmin']);
-            $isSpv = $userRole === 'spv sales';
+            $isSpv = in_array($userRole, ['spv sales', 'spv sales 1', 'spv sales 2']) || Auth::user()->isSpv1() || Auth::user()->isSpv2();
         @endphp
         <!-- Bottom Nav -->
         <div class="bottom-nav">

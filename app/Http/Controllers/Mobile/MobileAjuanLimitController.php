@@ -13,8 +13,9 @@ class MobileAjuanLimitController extends Controller
 {
     public function index(Request $request)
     {
-        $role = strtolower(Auth::user()->role ?? '');
-        $isSpv = ($role === 'spv sales');
+        $user = Auth::user();
+        $role = strtolower($user->role ?? '');
+        $isSpv = in_array($role, ['spv sales', 'spv sales 1', 'spv sales 2']) || $user->isSpv1() || $user->isSpv2();
 
         $ajuans = AjuanLimitKredit::with(['pelanggan'])
             ->where('requested_by', Auth::id())
@@ -23,10 +24,15 @@ class MobileAjuanLimitController extends Controller
 
         $pendingAjuans = collect();
         if ($isSpv) {
-            $pendingAjuans = AjuanLimitKredit::with(['pelanggan', 'requester'])
-                ->where('status', 'pending')
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query = AjuanLimitKredit::with(['pelanggan', 'requester'])
+                ->where('status', 'pending');
+
+            if ($user->isSpv2()) {
+                $assignedUserIds = $user->assigned_sales_ids;
+                $query->whereIn('requested_by', $assignedUserIds);
+            }
+
+            $pendingAjuans = $query->orderBy('created_at', 'desc')->get();
         }
 
         return view('mobile.limit_kredit.index', compact('ajuans', 'isSpv', 'pendingAjuans'));
@@ -85,11 +91,19 @@ class MobileAjuanLimitController extends Controller
 
     public function approveSpv(Request $request, $id)
     {
-        if (strtolower(Auth::user()->role) !== 'spv sales') {
+        $user = Auth::user();
+        $role = strtolower($user->role ?? '');
+        $isSpv = in_array($role, ['spv sales', 'spv sales 1', 'spv sales 2']) || $user->isSpv1() || $user->isSpv2();
+
+        if (!$isSpv) {
             abort(403, 'Akses ditolak.');
         }
 
         $ajuan = AjuanLimitKredit::findOrFail($id);
+
+        if ($user->isSpv2() && !in_array($ajuan->requested_by, $user->assigned_sales_ids)) {
+            return back()->with('error', 'Anda tidak memiliki wewenang untuk menyetujui ajuan dari sales ini.');
+        }
 
         if (!$ajuan->isPending()) {
             return back()->with('error', 'Ajuan ini sudah diproses sebelumnya.');
@@ -114,7 +128,11 @@ class MobileAjuanLimitController extends Controller
 
     public function rejectSpv(Request $request, $id)
     {
-        if (strtolower(Auth::user()->role) !== 'spv sales') {
+        $user = Auth::user();
+        $role = strtolower($user->role ?? '');
+        $isSpv = in_array($role, ['spv sales', 'spv sales 1', 'spv sales 2']) || $user->isSpv1() || $user->isSpv2();
+
+        if (!$isSpv) {
             abort(403, 'Akses ditolak.');
         }
 
@@ -125,6 +143,10 @@ class MobileAjuanLimitController extends Controller
         ]);
 
         $ajuan = AjuanLimitKredit::findOrFail($id);
+
+        if ($user->isSpv2() && !in_array($ajuan->requested_by, $user->assigned_sales_ids)) {
+            return back()->with('error', 'Anda tidak memiliki wewenang untuk menolak ajuan dari sales ini.');
+        }
 
         if (!$ajuan->isPending()) {
             return back()->with('error', 'Ajuan ini sudah diproses sebelumnya.');

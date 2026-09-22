@@ -21,7 +21,9 @@ class UserController extends Controller
         $kategoris = \App\Models\Kategori::orderBy('nama_kategori')->get();
         $merks = \App\Models\Merk::orderBy('nama_merk')->get();
         $pelangganList = \App\Models\Pelanggan::orderBy('nama_pelanggan')->get(['kode_pelanggan', 'nama_pelanggan']);
-        return view('users.create', compact('roles', 'kategoris', 'merks', 'pelangganList'));
+        $salesmen = User::salesmen()->orderBy('name')->get();
+
+        return view('users.create', compact('roles', 'kategoris', 'merks', 'pelangganList', 'salesmen'));
     }
 
     public function store(Request $request)
@@ -37,6 +39,8 @@ class UserController extends Controller
             'jenis_barang' => 'nullable|array',
             'is_kanvas' => 'nullable|boolean',
             'kode_pelanggan' => 'nullable|string|exists:pelanggan,kode_pelanggan',
+            'spv_type' => 'nullable|string|in:1,2',
+            'assigned_sales' => 'nullable|array',
         ]);
         
         if (isset($data['jenis_barang']) && is_array($data['jenis_barang'])) {
@@ -51,6 +55,10 @@ class UserController extends Controller
         }
         $data['password'] = bcrypt($data['password'] ?? 'password');
         $user = \App\Models\User::create($data);
+
+        if ($request->filled('assigned_sales')) {
+            $user->assignedSalesmen()->sync($request->assigned_sales);
+        }
 
         // Assign role ke Spatie Permission
         if ($request->role) {
@@ -67,8 +75,9 @@ class UserController extends Controller
         $kategoris = \App\Models\Kategori::orderBy('nama_kategori')->get();
         $merks = \App\Models\Merk::orderBy('nama_merk')->get();
         $pelangganList = \App\Models\Pelanggan::orderBy('nama_pelanggan')->get(['kode_pelanggan', 'nama_pelanggan']);
+        $salesmen = User::salesmen()->where('id', '!=', $id)->orderBy('name')->get();
 
-        return view('users.edit', compact('row', 'roles', 'kategoris', 'merks', 'pelangganList'));
+        return view('users.edit', compact('row', 'roles', 'kategoris', 'merks', 'pelangganList', 'salesmen'));
     }
 
     public function update(Request $request, $id)
@@ -85,6 +94,8 @@ class UserController extends Controller
             'jenis_barang' => 'nullable|array',
             'is_kanvas' => 'nullable|boolean',
             'kode_pelanggan' => 'nullable|string|exists:pelanggan,kode_pelanggan',
+            'spv_type' => 'nullable|string|in:1,2',
+            'assigned_sales' => 'nullable|array',
         ]);
 
         if (isset($data['jenis_barang']) && is_array($data['jenis_barang'])) {
@@ -104,6 +115,8 @@ class UserController extends Controller
             $data['password'] = bcrypt($data['password']);
         }
         $row->update($data);
+
+        $row->assignedSalesmen()->sync($request->assigned_sales ?? []);
 
         // Sync role ke Spatie Permission
         if ($request->role) {

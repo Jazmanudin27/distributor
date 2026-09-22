@@ -31,7 +31,7 @@
         </div>
     @endif
 
-    @if (strtolower(Auth::user()->role) === 'spv sales')
+    @if ($isSpv)
         <div class="mobile-card p-3 mb-3" style="background: rgba(255, 255, 255, 0.05); border-radius: 16px;">
             <form method="GET" action="{{ url()->current() }}" id="filter-form">
                 <div class="d-flex align-items-center justify-content-between">
@@ -52,7 +52,7 @@
         </div>
     @endif
 
-    @if (strtolower(Auth::user()->role) === 'spv sales' && isset($pendingCustomersCount) && $pendingCustomersCount > 0)
+    @if ($isSpv && isset($pendingCustomersCount) && $pendingCustomersCount > 0)
         <div class="alert alert-warning rounded-4 mb-3 d-flex align-items-center justify-content-between"
             style="background-color: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24;">
             <div class="d-flex align-items-center">
@@ -71,7 +71,7 @@
         </div>
     @endif
 
-    @if (strtolower(Auth::user()->role) === 'spv sales' && isset($pendingLimitCount) && $pendingLimitCount > 0)
+    @if ($isSpv && isset($pendingLimitCount) && $pendingLimitCount > 0)
         <div class="alert alert-info rounded-4 mb-3 d-flex align-items-center justify-content-between"
             style="background-color: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #a5b4fc;">
             <div class="d-flex align-items-center">
@@ -91,7 +91,7 @@
         </div>
     @endif
 
-    @if (strtolower(Auth::user()->role) === 'spv sales' && isset($pendingPembelianCount) && $pendingPembelianCount > 0)
+    @if ($isSpv && isset($pendingPembelianCount) && $pendingPembelianCount > 0)
         <div class="alert alert-success rounded-4 mb-3 d-flex align-items-center justify-content-between"
             style="background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399;">
             <div class="d-flex align-items-center">

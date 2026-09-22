@@ -19,7 +19,7 @@ class MobileDashboardController extends Controller
         $user = Auth::user();
         $nik = $user->nik;
         $role = strtolower($user->role ?? '');
-        $isSpv = ($role === 'spv sales');
+        $isSpv = in_array($role, ['spv sales', 'spv sales 1', 'spv sales 2']) || $user->isSpv1() || $user->isSpv2();
 
         // Start and end of the current month
         $startOfMonth = Carbon::now()->startOfMonth()->toDateString();
@@ -40,6 +40,23 @@ class MobileDashboardController extends Controller
             $recentOrdersQuery = Penjualan::with(['pelanggan.wilayah', 'pelanggan.subWilayah', 'sales', 'user'])
                 ->orderBy('created_at', 'desc')
                 ->limit(5);
+
+            if ($user->isSpv2()) {
+                $assignedNiks = $user->assigned_sales_niks;
+                $assignedUserIds = array_map('strval', $user->assigned_sales_ids);
+                $allowedSales = array_merge($assignedNiks, $assignedUserIds);
+
+                $achievedSalesQuery->where(function($q) use ($allowedSales) {
+                    $q->whereIn('kode_sales', $allowedSales)->orWhereIn('id_user', $allowedSales);
+                });
+                $todaySalesQuery->where(function($q) use ($allowedSales) {
+                    $q->whereIn('kode_sales', $allowedSales)->orWhereIn('id_user', $allowedSales);
+                });
+                $todayVisitsQuery->whereIn('kode_sales', $allowedSales);
+                $recentOrdersQuery->where(function($q) use ($allowedSales) {
+                    $q->whereIn('kode_sales', $allowedSales)->orWhereIn('id_user', $allowedSales);
+                });
+            }
 
             if ($kategoriSales === 'canvas') {
                 $achievedSalesQuery->whereHas('sales', function ($q) {
@@ -131,11 +148,25 @@ class MobileDashboardController extends Controller
         $pendingLimitCount = 0;
         $pendingPembelianCount = 0;
         if ($isSpv) {
-            $pendingCustomersCount = Pelanggan::where(function($q) {
+            $custQuery = Pelanggan::where(function($q) {
                 $q->whereNull('approve')->orWhere('approve', 0);
-            })->count();
-            $pendingLimitCount = AjuanLimitKredit::where('status', 'pending')->count();
-            $pendingPembelianCount = Pembelian::whereNull('tanggal_approve')->count();
+            });
+            $limitQuery = AjuanLimitKredit::where('status', 'pending');
+            $pembelianQuery = Pembelian::whereNull('tanggal_approve');
+
+            if ($user->isSpv2()) {
+                $assignedNiks = $user->assigned_sales_niks;
+                $assignedUserIds = array_map('strval', $user->assigned_sales_ids);
+                $allowedSales = array_merge($assignedNiks, $assignedUserIds);
+
+                $custQuery->whereIn('kode_sales', $allowedSales);
+                $limitQuery->whereIn('requested_by', $user->assigned_sales_ids);
+                $pembelianQuery->whereIn('id_user', $allowedSales);
+            }
+
+            $pendingCustomersCount = $custQuery->count();
+            $pendingLimitCount = $limitQuery->count();
+            $pendingPembelianCount = $pembelianQuery->count();
         }
 
         // Target progress percentage
@@ -159,34 +190,11 @@ class MobileDashboardController extends Controller
     public function profile()
     {
         $user = Auth::user();
-        $role = strtolower($user->role ?? '');
-        $isSales = in_array($role, ['sales', 'spv sales']);
-        $nik = $user->nik;
-
-        // Start and end of the current month
-        $startOfMonth = Carbon::now()->startOfMonth()->toDateString();
-        $endOfMonth = Carbon::now()->endOfMonth()->toDateString();
-
-        // Target sales this month (Disabled)
-        $targetAmount = 0;
-
-        // Achieved sales this month
         $achievedSales = 0;
-        $totalOrdersCount = 0;
-        $totalVisitsCount = 0;
-
-        if ($isSales && $nik) {
-            $achievedSales = (float) Penjualan::where('kode_sales', $nik)
-                ->where('batal', 0)
-                ->whereBetween('tanggal', [$startOfMonth, $endOfMonth])
-                ->sum('grand_total');
-
-            $totalOrdersCount = Penjualan::where('kode_sales', $nik)->where('batal', 0)->count();
-            $totalVisitsCount = PenjualanCheckin::where('kode_sales', $nik)->count();
-        }
-
-        // Target progress percentage
+        $targetAmount = 0;
         $progressPercentage = 0;
+        $totalOrdersCount = Penjualan::where('kode_sales', $user->nik)->count();
+        $totalVisitsCount = PenjualanCheckin::where('kode_sales', $user->nik)->count();
 
         return view('mobile.profile', compact('user', 'achievedSales', 'targetAmount', 'progressPercentage', 'totalOrdersCount', 'totalVisitsCount'));
     }
@@ -196,8 +204,10 @@ class MobileDashboardController extends Controller
      */
     public function salesAchievement(Request $request)
     {
-        $role = strtolower(Auth::user()->role ?? '');
-        if ($role !== 'spv sales') {
+        $user = Auth::user();
+        $role = strtolower($user->role ?? '');
+        $isSpv = in_array($role, ['spv sales', 'spv sales 1', 'spv sales 2']) || $user->isSpv1() || $user->isSpv2();
+        if (!$isSpv) {
             abort(403, 'Akses khusus SPV Sales.');
         }
 
@@ -205,9 +215,14 @@ class MobileDashboardController extends Controller
         $tanggal_akhir = $request->input('tanggal_akhir', date('Y-m-d'));
 
         // Query sales users
-        $salesList = \App\Models\User::salesmen()
-            ->where('status', '1')
-            ->get();
+        $salesListQuery = \App\Models\User::salesmen()->where('status', '1');
+
+        if ($user->isSpv2()) {
+            $assignedUserIds = $user->assigned_sales_ids;
+            $salesListQuery->whereIn('id', $assignedUserIds);
+        }
+
+        $salesList = $salesListQuery->get();
 
         $achievements = [];
         foreach ($salesList as $sales) {
@@ -247,8 +262,10 @@ class MobileDashboardController extends Controller
      */
     public function salesVisits(Request $request)
     {
-        $role = strtolower(Auth::user()->role ?? '');
-        if ($role !== 'spv sales') {
+        $user = Auth::user();
+        $role = strtolower($user->role ?? '');
+        $isSpv = in_array($role, ['spv sales', 'spv sales 1', 'spv sales 2']) || $user->isSpv1() || $user->isSpv2();
+        if (!$isSpv) {
             abort(403, 'Akses khusus SPV Sales.');
         }
 
@@ -259,16 +276,24 @@ class MobileDashboardController extends Controller
         $query = \App\Models\PenjualanCheckin::with(['sales', 'pelanggan.wilayah'])
             ->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
 
-        if ($selected_sales !== '') {
+        if ($user->isSpv2()) {
+            $assignedNiks = $user->assigned_sales_niks;
+            if ($selected_sales !== '' && in_array($selected_sales, $assignedNiks)) {
+                $query->where('kode_sales', $selected_sales);
+            } else {
+                $query->whereIn('kode_sales', $assignedNiks);
+            }
+        } elseif ($selected_sales !== '') {
             $query->where('kode_sales', $selected_sales);
         }
 
         $visits = $query->orderBy('checkin', 'desc')->paginate(20)->appends($request->query());
 
-        $salesmen = \App\Models\User::salesmen()
-            ->where('status', '1')
-            ->orderBy('name')
-            ->get();
+        $salesmenQuery = \App\Models\User::salesmen()->where('status', '1');
+        if ($user->isSpv2()) {
+            $salesmenQuery->whereIn('id', $user->assigned_sales_ids);
+        }
+        $salesmen = $salesmenQuery->orderBy('name')->get();
 
         return view('mobile.spv.sales_visits', compact('visits', 'salesmen', 'tanggal_mulai', 'tanggal_akhir', 'selected_sales'));
     }
@@ -278,15 +303,25 @@ class MobileDashboardController extends Controller
      */
     public function pendingPembelianListSpv()
     {
-        $role = strtolower(Auth::user()->role ?? '');
-        if ($role !== 'spv sales') {
+        $user = Auth::user();
+        $role = strtolower($user->role ?? '');
+        $isSpv = in_array($role, ['spv sales', 'spv sales 1', 'spv sales 2']) || $user->isSpv1() || $user->isSpv2();
+        if (!$isSpv) {
             abort(403, 'Akses khusus SPV Sales.');
         }
 
-        $pendingPembelians = Pembelian::with(['supplier', 'details.barang'])
-            ->whereNull('tanggal_approve')
-            ->orderBy('tanggal', 'desc')
-            ->get();
+        $query = Pembelian::with(['supplier', 'details.barang'])
+            ->whereNull('tanggal_approve');
+
+        if ($user->isSpv2()) {
+            $assignedNiks = $user->assigned_sales_niks;
+            $assignedUserIds = array_map('strval', $user->assigned_sales_ids);
+            $allowedSales = array_merge($assignedNiks, $assignedUserIds);
+
+            $query->whereIn('id_user', $allowedSales);
+        }
+
+        $pendingPembelians = $query->orderBy('tanggal', 'desc')->get();
 
         return view('mobile.spv.pembelian_pending', compact('pendingPembelians'));
     }
@@ -296,12 +331,25 @@ class MobileDashboardController extends Controller
      */
     public function approvePembelianSpv(Request $request, $no_faktur)
     {
-        $role = strtolower(Auth::user()->role ?? '');
-        if ($role !== 'spv sales') {
+        $user = Auth::user();
+        $role = strtolower($user->role ?? '');
+        $isSpv = in_array($role, ['spv sales', 'spv sales 1', 'spv sales 2']) || $user->isSpv1() || $user->isSpv2();
+        if (!$isSpv) {
             abort(403, 'Akses khusus SPV Sales.');
         }
 
         $pembelian = Pembelian::findOrFail($no_faktur);
+
+        if ($user->isSpv2()) {
+            $assignedNiks = $user->assigned_sales_niks;
+            $assignedUserIds = array_map('strval', $user->assigned_sales_ids);
+            $allowedSales = array_merge($assignedNiks, $assignedUserIds);
+
+            if (!in_array($pembelian->id_user, $allowedSales)) {
+                return redirect()->route('mobile.spv.pembelian.pending')
+                    ->with('error', 'Anda tidak memiliki wewenang untuk menyetujui pembelian dari sales ini.');
+            }
+        }
 
         if ($pembelian->tanggal_approve) {
             return redirect()->route('mobile.spv.pembelian.pending')

@@ -117,17 +117,29 @@ class MobilePelangganController extends Controller
      */
     public function pendingListSpv()
     {
+        $user = Auth::user();
+        $role = strtolower($user->role ?? '');
+        $isSpv = in_array($role, ['spv sales', 'spv sales 1', 'spv sales 2']) || $user->isSpv1() || $user->isSpv2();
+
         // Only SPV Sales can access
-        if (strtolower(Auth::user()->role) !== 'spv sales') {
+        if (!$isSpv) {
             abort(403, 'Hanya SPV Sales yang memiliki akses ke persetujuan pelanggan.');
         }
 
-        $pendingCustomers = Pelanggan::with(['wilayah', 'subWilayah'])
+        $query = Pelanggan::with(['wilayah', 'subWilayah'])
             ->where(function($q) {
                 $q->whereNull('approve')->orWhere('approve', 0);
-            })
-            ->orderBy('created_at', 'desc')
-            ->get();
+            });
+
+        if ($user->isSpv2()) {
+            $assignedNiks = $user->assigned_sales_niks;
+            $assignedUserIds = array_map('strval', $user->assigned_sales_ids);
+            $allowedSalesIdentifiers = array_merge($assignedNiks, $assignedUserIds);
+            
+            $query->whereIn('kode_sales', $allowedSalesIdentifiers);
+        }
+
+        $pendingCustomers = $query->orderBy('created_at', 'desc')->get();
 
         return view('mobile.pelanggan.pending_spv', compact('pendingCustomers'));
     }
@@ -137,11 +149,26 @@ class MobilePelangganController extends Controller
      */
     public function approveSpv($kode_pelanggan)
     {
-        if (strtolower(Auth::user()->role) !== 'spv sales') {
+        $user = Auth::user();
+        $role = strtolower($user->role ?? '');
+        $isSpv = in_array($role, ['spv sales', 'spv sales 1', 'spv sales 2']) || $user->isSpv1() || $user->isSpv2();
+
+        if (!$isSpv) {
             abort(403, 'Akses ditolak.');
         }
 
         $pelanggan = Pelanggan::findOrFail($kode_pelanggan);
+
+        if ($user->isSpv2()) {
+            $assignedNiks = $user->assigned_sales_niks;
+            $assignedUserIds = array_map('strval', $user->assigned_sales_ids);
+            $allowedSalesIdentifiers = array_merge($assignedNiks, $assignedUserIds);
+
+            if (!in_array($pelanggan->kode_sales, $allowedSalesIdentifiers)) {
+                return redirect()->route('mobile.spv.pelanggan.pending')->with('error', 'Anda tidak memiliki wewenang untuk menyetujui pelanggan dari sales ini.');
+            }
+        }
+
         $pelanggan->update([
             'approve' => 1,
             'status' => 1,
@@ -155,12 +182,26 @@ class MobilePelangganController extends Controller
      */
     public function rejectSpv($kode_pelanggan)
     {
-        if (strtolower(Auth::user()->role) !== 'spv sales') {
+        $user = Auth::user();
+        $role = strtolower($user->role ?? '');
+        $isSpv = in_array($role, ['spv sales', 'spv sales 1', 'spv sales 2']) || $user->isSpv1() || $user->isSpv2();
+
+        if (!$isSpv) {
             abort(403, 'Akses ditolak.');
         }
 
         $pelanggan = Pelanggan::findOrFail($kode_pelanggan);
-        
+
+        if ($user->isSpv2()) {
+            $assignedNiks = $user->assigned_sales_niks;
+            $assignedUserIds = array_map('strval', $user->assigned_sales_ids);
+            $allowedSalesIdentifiers = array_merge($assignedNiks, $assignedUserIds);
+
+            if (!in_array($pelanggan->kode_sales, $allowedSalesIdentifiers)) {
+                return redirect()->route('mobile.spv.pelanggan.pending')->with('error', 'Anda tidak memiliki wewenang untuk menolak pelanggan dari sales ini.');
+            }
+        }
+
         // Delete or set approve = 2 (Rejected). Setting to 2 is better.
         $pelanggan->update([
             'approve' => 2,
