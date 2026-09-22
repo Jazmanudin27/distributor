@@ -173,6 +173,7 @@ class MobileDashboardController extends Controller
         $progressPercentage = 0;
 
         return view('mobile.dashboard', compact(
+            'isSpv',
             'achievedSales',
             'todaySales',
             'targetAmount',

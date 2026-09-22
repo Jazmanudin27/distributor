@@ -5,6 +5,7 @@
 @section('content')
     @php
         $salesLock = \App\Http\Middleware\CheckPenjualanLock::isSalesLocked();
+        $isSpv = $isSpv ?? (in_array(strtolower(Auth::user()->role ?? ''), ['spv sales', 'spv sales 1', 'spv sales 2']) || (method_exists(Auth::user(), 'isSpv1') && Auth::user()->isSpv1()) || (method_exists(Auth::user(), 'isSpv2') && Auth::user()->isSpv2()));
     @endphp
 
     <!-- Welcome/Profile Section -->
@@ -111,10 +112,7 @@
         </div>
     @endif
 
-    @php
-        $role = strtolower(Auth::user()->role ?? '');
-        $isSpv = $role === 'spv sales';
-    @endphp
+
 
     <!-- Pencapaian Bulan Ini Card -->
     <div class="mobile-card mb-3">
