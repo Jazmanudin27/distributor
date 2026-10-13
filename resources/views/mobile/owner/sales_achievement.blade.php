@@ -44,6 +44,50 @@
             <p class="text-secondary small">Tidak ada akun sales aktif yang ditemukan.</p>
         </div>
     @else
+        @php
+            $grandTotalSales = collect($achievements)->sum('total_sales');
+            $grandTotalOrders = collect($achievements)->sum('invoice_count');
+            $grandTotalVisits = collect($achievements)->sum('visit_count');
+        @endphp
+
+        <!-- Total Summary Card -->
+        <div class="mobile-card p-3 mb-3"
+            style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 78, 59, 0.25) 100%); border: 1px solid rgba(16, 185, 129, 0.3);">
+            <div
+                class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom border-success border-opacity-25">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-success bg-opacity-20 text-success"
+                        style="width: 32px; height: 32px;">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <h6 class="fw-bold text-white mb-0" style="font-size: 0.95rem;">Total Rekap Pencapaian</h6>
+                </div>
+                <span class="badge bg-success bg-opacity-20 text-success fw-normal px-2 py-1"
+                    style="font-size: 0.7rem;">{{ count($achievements) }} Sales</span>
+            </div>
+            <div class="row g-2 align-items-center">
+                <div class="col-12 col-sm-6">
+                    <span class="text-secondary uppercase d-block mb-0.5"
+                        style="font-size: 0.65rem; letter-spacing: 0.5px; font-weight: 500;">Grand Total Penjualan</span>
+                    <h4 class="fw-bold text-success mb-0 font-monospace" style="font-size: 1.3rem;">Rp {{ number_format($grandTotalSales, 0, ',', '.') }}</h4>
+                </div>
+                <div class="col-12 col-sm-6 text-sm-end mt-2 mt-sm-0">
+                    <div class="d-flex justify-content-start justify-content-sm-end gap-3">
+                        <div>
+                            <span class="text-secondary d-block" style="font-size: 0.7rem;">Total Order</span>
+                            <strong class="text-white font-monospace"
+                                style="font-size: 0.85rem;">{{ $grandTotalOrders }} Faktur</strong>
+                        </div>
+                        <div class="border-start border-secondary border-opacity-25 ps-3">
+                            <span class="text-secondary d-block" style="font-size: 0.7rem;">Total Kunjungan</span>
+                            <strong class="text-white font-monospace"
+                                style="font-size: 0.85rem;">{{ $grandTotalVisits }} Kali</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="d-flex flex-column gap-3">
             @foreach ($achievements as $index => $row)
                 @php

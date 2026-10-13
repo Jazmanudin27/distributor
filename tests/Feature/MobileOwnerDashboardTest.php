@@ -124,4 +124,58 @@ class MobileOwnerDashboardTest extends TestCase
         $response->assertSee('Rp 1.500.000');
         $response->assertSee('Rp 800.000');
     }
+
+    /**
+     * Test mobile owner sales achievement page shows grand total summary card.
+     */
+    public function test_mobile_owner_sales_achievement_shows_total_summary(): void
+    {
+        $ownerRole = Role::firstOrCreate(['name' => 'Owner']);
+        $salesRole = Role::firstOrCreate(['name' => 'Sales']);
+
+        $owner = User::create([
+            'name' => 'Owner User',
+            'email' => 'owner2@example.com',
+            'password' => bcrypt('password'),
+            'nik' => 'OWN02',
+            'status' => '1',
+            'role' => 'owner'
+        ]);
+        $owner->assignRole($ownerRole);
+
+        $sales1 = User::create([
+            'name' => 'Alice Sales',
+            'email' => 'alice2@example.com',
+            'password' => bcrypt('password'),
+            'nik' => 'SLS03',
+            'status' => '1',
+            'role' => 'sales'
+        ]);
+        $sales1->assignRole($salesRole);
+
+        Pelanggan::create([
+            'kode_pelanggan' => 'CUST02',
+            'nama_pelanggan' => 'Toko Jaya',
+            'alamat_pelanggan' => 'Jl. Sudirman 12',
+            'status' => 1,
+            'approve' => 1
+        ]);
+
+        Penjualan::create([
+            'no_faktur' => 'FACT-003',
+            'tanggal' => date('Y-m-05'),
+            'kode_pelanggan' => 'CUST02',
+            'kode_sales' => 'SLS03',
+            'grand_total' => 2500000,
+            'jenis_transaksi' => 'Tunai',
+            'batal' => 0,
+            'user_id' => $owner->id
+        ]);
+
+        $response = $this->actingAs($owner)->get(route('mobile.owner.sales-achievement'));
+        $response->assertStatus(200);
+        $response->assertSee('Total Rekap Pencapaian');
+        $response->assertSee('Grand Total Penjualan');
+        $response->assertSee('Rp 2.500.000');
+    }
 }
