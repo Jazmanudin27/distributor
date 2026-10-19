@@ -91,7 +91,7 @@
                                 <select name="no_faktur" id="no_faktur" class="form-select form-select-sm">
                                     <option value="">-- Tanpa Faktur / Umum --</option>
                                     @foreach ($penjualans as $p)
-                                        <option value="{{ $p->no_faktur }}" data-total="{{ $p->grand_total }}"
+                                        <option value="{{ $p->no_faktur }}" data-total="{{ $p->grand_total }}" data-sisa="{{ $p->getSisaPiutang() }}"
                                             {{ old('no_faktur', $item->no_faktur) == $p->no_faktur ? 'selected' : '' }}>
                                             {{ $p->no_faktur }} (Rp {{ number_format($p->grand_total, 0, ',', '.') }})
                                         </option>
@@ -488,7 +488,8 @@
                         url: '{{ route('penjualan.by-pelanggan') }}',
                         type: 'GET',
                         data: {
-                            kode_pelanggan: kodePelanggan
+                            kode_pelanggan: kodePelanggan,
+                            current_faktur: '{{ $item->no_faktur ?? '' }}'
                         },
                         dataType: 'json',
                         success: function(data) {

@@ -1477,11 +1477,13 @@ class PenjualanController extends Controller
             return response()->json([]);
         }
 
+        $currentFaktur = $request->query('current_faktur');
+
         $penjualans = Penjualan::with(['pembayarans'])
             ->where('kode_pelanggan', $kodePelanggan)
             ->where('batal', 0)
             ->orderBy('tanggal', 'desc')
-            ->get(['no_faktur', 'grand_total']);
+            ->get();
 
         $result = $penjualans->map(function ($p) {
             return [
@@ -1489,7 +1491,9 @@ class PenjualanController extends Controller
                 'grand_total'  => $p->grand_total,
                 'sisa_piutang' => $p->getSisaPiutang(),
             ];
-        });
+        })->filter(function ($item) use ($currentFaktur) {
+            return $item['sisa_piutang'] > 0 || ($currentFaktur && $item['no_faktur'] === $currentFaktur);
+        })->values();
 
         return response()->json($result);
     }

@@ -128,16 +128,49 @@ class ReturPenjualanTest extends TestCase
             'batal' => 0,
         ]);
 
+        // Fully paid invoice for pelanggan1 (should not be returned normally)
+        $paidInv = \App\Models\Penjualan::create([
+            'no_faktur' => 'INV-PAID',
+            'tanggal' => date('Y-m-d'),
+            'kode_pelanggan' => $pelanggan1->kode_pelanggan,
+            'jenis_transaksi' => 'T',
+            'jenis_bayar' => 'Tunai',
+            'total' => 50000,
+            'diskon' => 0,
+            'grand_total' => 50000,
+            'id_user' => $user->id,
+            'batal' => 0,
+        ]);
+        \App\Models\PenjualanPembayaran::create([
+            'no_bukti' => 'BYR001',
+            'tanggal' => date('Y-m-d'),
+            'no_faktur' => $paidInv->no_faktur,
+            'kode_pelanggan' => $pelanggan1->kode_pelanggan,
+            'jumlah' => 50000,
+            'id_user' => $user->id,
+            'status' => 'disetujui',
+        ]);
+
         // Query invoices for pelanggan1
         $response = $this->actingAs($user)->getJson(route('penjualan.by-pelanggan', [
             'kode_pelanggan' => $pelanggan1->kode_pelanggan
         ]));
 
         $response->assertStatus(200);
-        $response->assertJsonCount(2); // INV001 and INV002
+        $response->assertJsonCount(2); // INV001 and INV002 only (INV-PAID excluded)
         $response->assertJsonFragment(['no_faktur' => 'INV001', 'grand_total' => '100000.00']);
         $response->assertJsonFragment(['no_faktur' => 'INV002', 'grand_total' => '150000.00']);
         $response->assertJsonMissing(['no_faktur' => 'INV-CANCEL']);
+        $response->assertJsonMissing(['no_faktur' => 'INV-PAID']);
         $response->assertJsonMissing(['no_faktur' => 'INV003']);
+
+        // Query with current_faktur = INV-PAID (should include INV-PAID when editing)
+        $responseWithCurrent = $this->actingAs($user)->getJson(route('penjualan.by-pelanggan', [
+            'kode_pelanggan' => $pelanggan1->kode_pelanggan,
+            'current_faktur' => 'INV-PAID',
+        ]));
+        $responseWithCurrent->assertStatus(200);
+        $responseWithCurrent->assertJsonCount(3);
+        $responseWithCurrent->assertJsonFragment(['no_faktur' => 'INV-PAID']);
     }
 }

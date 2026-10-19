@@ -51,10 +51,14 @@ class ReturPenjualanController extends Controller
         $selectedKode = old('kode_pelanggan');
         if ($selectedKode) {
             $pelanggans = Pelanggan::with(['wilayah'])->where('kode_pelanggan', $selectedKode)->get();
-            $penjualans = Penjualan::where('kode_pelanggan', $selectedKode)
+            $penjualans = Penjualan::with(['pembayarans'])
+                ->where('kode_pelanggan', $selectedKode)
                 ->where('batal', 0)
                 ->orderBy('tanggal', 'desc')
-                ->get();
+                ->get()
+                ->filter(function ($p) {
+                    return $p->getSisaPiutang() > 0;
+                });
         } else {
             $pelanggans = collect();
             $penjualans = collect();
@@ -214,10 +218,14 @@ class ReturPenjualanController extends Controller
         
         $selectedKode = old('kode_pelanggan', $item->kode_pelanggan);
         $pelanggans = Pelanggan::with(['wilayah'])->where('kode_pelanggan', $selectedKode)->get();
-        $penjualans = Penjualan::where('kode_pelanggan', $selectedKode)
+        $penjualans = Penjualan::with(['pembayarans'])
+            ->where('kode_pelanggan', $selectedKode)
             ->where('batal', 0)
             ->orderBy('tanggal', 'desc')
-            ->get();
+            ->get()
+            ->filter(function ($p) use ($item) {
+                return $p->getSisaPiutang() > 0 || $p->no_faktur === $item->no_faktur;
+            });
             
         $barangs = Barang::where('status', 1)->with('satuans')->orderBy('nama_barang')->get();
         $salesmen = \App\Models\User::salesmen()->where('status', 1)->orderBy('name')->get();
